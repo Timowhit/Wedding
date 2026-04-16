@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Forever Planner dashboard — see your wedding countdown, budget snapshot, guest count, and task progress at a glance." />
+    <title>Dashboard — Forever Planner</title>
+    <link rel="stylesheet" href="styles/main.css" />
+    <script type="module" src="scripts/dashboard.js"></script>
+  </head>
+  <body>
+    <!-- Skip navigation for screen readers -->
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+
+    <!-- ===== NAVIGATION ===== -->
+    <nav class="site-nav" aria-label="Main navigation">
+      <a href="index.html" class="brand" aria-label="Forever Planner home">💍 Forever Planner</a>
+      <a href="index.html">Dashboard</a>
+      <a href="budget.html">Budget</a>
+      <a href="vendors.html">Vendors</a>
+      <a href="music.html">Music</a>
+      <a href="inspiration.html">Inspiration</a>
+      <a href="guests.html">Guests</a>
+      <a href="checklist.html">Checklist</a>
+    </nav>
+
+    <!-- ===== PAGE HEADER ===== -->
+    <header class="page-header">
+      <h1><em>Our</em> Wedding Dashboard</h1>
+      <p class="subtitle">Everything you need, all in one place.</p>
+    </header>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main id="main-content">
+
+      <!-- Countdown -->
+      <section class="card" aria-labelledby="countdown-heading">
+        <div class="countdown-block">
+          <span id="countdown-number" class="countdown-number" aria-live="polite">—</span>
+          <p class="countdown-label">Days Until Your Wedding</p>
+          <p id="countdown-date-label" class="countdown-date-label"></p>
+        </div>
+
+        <!-- Wedding date setter -->
+        <div class="date-setter">
+          <label for="wedding-date-input">Set your wedding date:</label>
+          <input type="date" id="wedding-date-input" aria-label="Wedding date" />
+          <button class="btn btn-primary" id="set-date-btn">Save Date</button>
+        </div>
+      </section>
+
+      <!-- Stats grid -->
+      <section aria-label="Planning summary">
+        <div class="stats-grid">
+          <div class="stat-card delay-1" role="region" aria-label="Budget stat">
+            <span class="stat-icon" aria-hidden="true">💰</span>
+            <div class="stat-value" id="stat-budget">$0</div>
+            <div class="stat-label">Budget Spent</div>
+          </div>
+          <div class="stat-card delay-2" role="region" aria-label="Guest stat">
+            <span class="stat-icon" aria-hidden="true">👥</span>
+            <div class="stat-value" id="stat-guests">0</div>
+            <div class="stat-label">Guests</div>
+          </div>
+          <div class="stat-card delay-3" role="region" aria-label="Tasks stat">
+            <span class="stat-icon" aria-hidden="true">✅</span>
+            <div class="stat-value" id="stat-tasks">0%</div>
+            <div class="stat-label">Tasks Done</div>
+          </div>
+          <div class="stat-card delay-4" role="region" aria-label="Vendors stat">
+            <span class="stat-icon" aria-hidden="true">🎪</span>
+            <div class="stat-value" id="stat-vendors">0</div>
+            <div class="stat-label">Vendors</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Quick links -->
+      <section class="card" aria-label="Quick navigation">
+        <h2 class="card-title">Quick Links</h2>
+        <div class="stats-grid">
+          <a href="checklist.html" class="stat-card stat-card-link" aria-label="Go to checklist">
+            <span class="stat-icon" aria-hidden="true">📋</span>
+            <div class="stat-label">Checklist</div>
+          </a>
+          <a href="guests.html" class="stat-card stat-card-link" aria-label="Go to guest list">
+            <span class="stat-icon" aria-hidden="true">💌</span>
+            <div class="stat-label">Guest List</div>
+          </a>
+          <a href="music.html" class="stat-card stat-card-link" aria-label="Go to music planner">
+            <span class="stat-icon" aria-hidden="true">🎵</span>
+            <div class="stat-label">Music</div>
+          </a>
+          <a href="inspiration.html" class="stat-card stat-card-link" aria-label="Go to inspiration board">
+            <span class="stat-icon" aria-hidden="true">🌸</span>
+            <div class="stat-label">Inspiration</div>
+          </a>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
