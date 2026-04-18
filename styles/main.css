@@ -280,7 +280,6 @@ textarea {
   font-family: 'DM Sans', sans-serif;
   font-size: .9rem;
   color: var(--text);
-  width: 100%;
   transition: border-color var(--transition), box-shadow var(--transition);
 }
 

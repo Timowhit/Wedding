@@ -17,7 +17,7 @@ import { StorageManager, Toast, escapeHtml, uid, markActiveNav } from './main.js
    ============================================================ */
 class UnsplashService {
   // Replace with your own Unsplash Access Key for production use.
-  static CLIENT_ID = 'UsFchkrUEzUi9-5a_3_kqT9MLpFyLNh7SHEWTTmf5g0';
+  static CLIENT_ID = 'DEMO_KEY';
   static BASE_URL   = 'https://api.unsplash.com/search/photos';
 
   /**
