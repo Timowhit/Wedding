@@ -1,30 +1,24 @@
 /**
- * @file vendors.js
- * @description VendorManager — add, filter, delete wedding vendor contacts
- *              with booking-status tracking.
+ * @file scripts/vendors.js
+ * @description VendorManager — API-backed vendor list with status cycling.
  */
 
-import { StorageManager, Toast, escapeHtml, uid, markActiveNav } from './main.js';
+import api, { Auth }                               from './api.js';
+import { initNav, Toast, escapeHtml, showLoading } from './main.js';
 
-/* ============================================================
-   VendorManager — manages vendor contact list
-   ============================================================ */
+Auth.requireAuth();
+
+const STATUS_STYLES = {
+  Booked:      'badge-confirmed',
+  Declined:    'badge-declined',
+  Contacted:   'badge-pending',
+  Researching: 'badge-cat',
+};
+
 class VendorManager {
-  static STORAGE_KEY = 'vendors';
-
-  /** Status → badge style mapping */
-  static STATUS_STYLES = {
-    Booked:      'badge-confirmed',
-    Declined:    'badge-declined',
-    Contacted:   'badge-pending',
-    Researching: 'badge-cat',
-  };
-
   constructor() {
-    this._vendors       = StorageManager.getList(VendorManager.STORAGE_KEY);
     this._activeFilter  = 'All';
 
-    // Form inputs
     this._nameInput    = document.getElementById('vendor-name');
     this._catSelect    = document.getElementById('vendor-category');
     this._phoneInput   = document.getElementById('vendor-phone');
@@ -34,105 +28,104 @@ class VendorManager {
     this._notesInput   = document.getElementById('vendor-notes');
     this._addBtn       = document.getElementById('add-vendor-btn');
 
-    // List
     this._list        = document.getElementById('vendor-list');
     this._emptyState  = document.getElementById('vendor-empty');
   }
 
-  init() {
-    markActiveNav();
+  async init() {
+    initNav();
     this._bindEvents();
-    this._render();
+    await this._load();
   }
 
   _bindEvents() {
-    this._addBtn.addEventListener('click', () => this._addVendor());
+    this._addBtn.addEventListener('click', () => this._add());
 
-    document.querySelectorAll('.filter-tab').forEach((tab) => {
+    document.querySelectorAll('.filter-tab').forEach((tab) =>
       tab.addEventListener('click', () => {
         document.querySelectorAll('.filter-tab').forEach((t) => t.classList.remove('active'));
         tab.classList.add('active');
         this._activeFilter = tab.dataset.status;
-        this._render();
-      });
-    });
+        this._load();
+      }),
+    );
   }
 
-  _addVendor() {
-    const name = this._nameInput.value.trim();
-    if (!name) {
-      Toast.show('Please enter a vendor name.', 'error');
-      this._nameInput.focus();
-      return;
+  /* ── Load ─────────────────────────────────────────────── */
+  async _load() {
+    showLoading(this._list, 'Loading vendors…');
+    this._emptyState.hidden = true;
+
+    const query = this._activeFilter !== 'All' ? { status: this._activeFilter } : {};
+    try {
+      const { data } = await api.get('/vendors', query);
+      this._renderList(data.vendors);
+    } catch (err) {
+      this._list.innerHTML = '';
+      Toast.show('Could not load vendors.', 'error');
     }
-
-    /** @type {{id:string, name:string, category:string, phone:string, email:string, website:string, status:string, notes:string}} */
-    const vendor = {
-      id:       uid(),
-      name,
-      category: this._catSelect.value,
-      phone:    this._phoneInput.value.trim(),
-      email:    this._emailInput.value.trim(),
-      website:  this._websiteInput.value.trim(),
-      status:   this._statusSelect.value,
-      notes:    this._notesInput.value.trim(),
-    };
-
-    this._vendors.push(vendor);
-    this._persist();
-    this._render();
-    this._clearForm();
-    Toast.show(`${name} added!`, 'success');
   }
 
-  /**
-   * Cycle status of a vendor through the workflow.
-   * @param {string} id
-   */
-  _cycleStatus(id) {
-    const cycle = ['Researching', 'Contacted', 'Booked', 'Declined'];
-    const vendor = this._vendors.find((v) => v.id === id);
-    if (!vendor) return;
-    const idx = cycle.indexOf(vendor.status);
-    vendor.status = cycle[(idx + 1) % cycle.length];
-    this._persist();
-    this._render();
+  /* ── Add ──────────────────────────────────────────────── */
+  async _add() {
+    const name = this._nameInput.value.trim();
+    if (!name) return Toast.show('Please enter a vendor name.', 'error');
+
+    this._addBtn.disabled = true;
+    try {
+      await api.post('/vendors', {
+        name,
+        category: this._catSelect.value,
+        phone:    this._phoneInput.value.trim()   || undefined,
+        email:    this._emailInput.value.trim()   || undefined,
+        website:  this._websiteInput.value.trim() || undefined,
+        status:   this._statusSelect.value,
+        notes:    this._notesInput.value.trim()   || undefined,
+      });
+
+      [this._nameInput, this._phoneInput, this._emailInput,
+       this._websiteInput, this._notesInput].forEach((el) => { el.value = ''; });
+      this._nameInput.focus();
+      Toast.show(`${name} added!`, 'success');
+      await this._load();
+    } catch (err) {
+      Toast.show(err.message || 'Could not add vendor.', 'error');
+    } finally {
+      this._addBtn.disabled = false;
+    }
   }
 
-  /**
-   * Delete vendor by id.
-   * @param {string} id
-   */
-  _deleteVendor(id) {
-    const vendor = this._vendors.find((v) => v.id === id);
-    this._vendors = this._vendors.filter((v) => v.id !== id);
-    this._persist();
-    this._render();
-    if (vendor) Toast.show(`${vendor.name} removed.`);
+  /* ── Cycle status ─────────────────────────────────────── */
+  async _cycleStatus(id) {
+    try {
+      await api.post(`/vendors/${id}/cycle-status`);
+      await this._load();
+    } catch (err) {
+      Toast.show(err.message || 'Could not update status.', 'error');
+    }
   }
 
-  _persist() {
-    StorageManager.setList(VendorManager.STORAGE_KEY, this._vendors);
+  /* ── Delete ───────────────────────────────────────────── */
+  async _delete(id) {
+    try {
+      await api.delete(`/vendors/${id}`);
+      Toast.show('Vendor removed.');
+      await this._load();
+    } catch (err) {
+      Toast.show(err.message || 'Could not remove vendor.', 'error');
+    }
   }
 
-  _clearForm() {
-    [this._nameInput, this._phoneInput, this._emailInput, this._websiteInput, this._notesInput]
-      .forEach((el) => { el.value = ''; });
-    this._nameInput.focus();
-  }
+  /* ── Render ───────────────────────────────────────────── */
+  _renderList(vendors) {
+    this._emptyState.hidden = vendors.length > 0;
+    if (!vendors.length) { this._list.innerHTML = ''; return; }
 
-  _render() {
-    const filtered = this._activeFilter === 'All'
-      ? this._vendors
-      : this._vendors.filter((v) => v.status === this._activeFilter);
-
-    this._emptyState.hidden = filtered.length > 0;
-
-    this._list.innerHTML = filtered.map((v) => {
-      const badgeClass = VendorManager.STATUS_STYLES[v.status] || 'badge-cat';
-      const contactParts = [
-        v.phone  && `<a href="tel:${escapeHtml(v.phone)}" style="color:var(--primary)">${escapeHtml(v.phone)}</a>`,
-        v.email  && `<a href="mailto:${escapeHtml(v.email)}" style="color:var(--primary)">${escapeHtml(v.email)}</a>`,
+    this._list.innerHTML = vendors.map((v) => {
+      const badgeClass = STATUS_STYLES[v.status] || 'badge-cat';
+      const contact = [
+        v.phone   && `<a href="tel:${escapeHtml(v.phone)}" style="color:var(--primary)">${escapeHtml(v.phone)}</a>`,
+        v.email   && `<a href="mailto:${escapeHtml(v.email)}" style="color:var(--primary)">${escapeHtml(v.email)}</a>`,
         v.website && `<a href="${escapeHtml(v.website)}" target="_blank" rel="noopener noreferrer" style="color:var(--primary)">Website ↗</a>`,
       ].filter(Boolean).join(' · ');
 
@@ -142,40 +135,33 @@ class VendorManager {
             <div class="item-name">${escapeHtml(v.name)}</div>
             <div class="item-meta">
               <span class="item-badge badge-cat">${escapeHtml(v.category)}</span>
-              ${contactParts ? `&nbsp;· ${contactParts}` : ''}
-              ${v.notes ? `<br><em style="font-style:italic;opacity:.8">${escapeHtml(v.notes)}</em>` : ''}
+              ${contact ? `&nbsp;· ${contact}` : ''}
+              ${v.notes ? `<br><em style="opacity:.8">${escapeHtml(v.notes)}</em>` : ''}
             </div>
           </div>
           <button class="item-badge ${badgeClass} status-btn"
-                  aria-label="Status: ${escapeHtml(v.status)}. Click to change."
-                  style="border:none;cursor:pointer;white-space:nowrap;">
+                  style="border:none;cursor:pointer;white-space:nowrap;"
+                  aria-label="Status: ${escapeHtml(v.status)}. Click to change.">
             ${escapeHtml(v.status)}
           </button>
-          <button class="btn btn-danger delete-btn" aria-label="Remove ${escapeHtml(v.name)}">✕</button>
-        </li>
-      `;
+          <button class="btn btn-danger delete-btn"
+                  aria-label="Remove ${escapeHtml(v.name)}">✕</button>
+        </li>`;
     }).join('');
 
-    // Delegate status cycle
-    this._list.querySelectorAll('.status-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        this._cycleStatus(btn.closest('.item-card').dataset.id);
-      });
-    });
-
-    // Delegate delete
-    this._list.querySelectorAll('.delete-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        this._deleteVendor(btn.closest('.item-card').dataset.id);
-      });
-    });
+    this._list.querySelectorAll('.status-btn').forEach((btn) =>
+      btn.addEventListener('click', () =>
+        this._cycleStatus(btn.closest('.item-card').dataset.id),
+      ),
+    );
+    this._list.querySelectorAll('.delete-btn').forEach((btn) =>
+      btn.addEventListener('click', () =>
+        this._delete(btn.closest('.item-card').dataset.id),
+      ),
+    );
   }
 }
 
-/* ============================================================
-   Bootstrap
-   ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
-  const manager = new VendorManager();
-  manager.init();
+  new VendorManager().init();
 });

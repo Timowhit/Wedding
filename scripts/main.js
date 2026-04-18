@@ -1,62 +1,19 @@
 /**
- * @file main.js
- * @description Shared utilities: storage management, toast notifications,
- *              active nav link, and helper functions.
- * Forever Planner — Wedding Planning Helper
+ * @file scripts/main.js
+ * @description Shared UI utilities for Forever Planner.
+ *
+ * Exports:
+ *   Toast          — non-blocking notifications
+ *   formatCurrency — USD formatter
+ *   escapeHtml     — XSS-safe string escaping
+ *   uid            — simple client-side unique ID (kept for optimistic UI)
+ *   markActiveNav  — highlights the current page in the nav
+ *   initNav        — wires up the logout button and user display name
  */
 
 'use strict';
 
-/* ============================================================
-   StorageManager — wraps localStorage with error handling
-   ============================================================ */
-export class StorageManager {
-  /**
-   * Retrieve an array from localStorage.
-   * @param {string} key
-   * @returns {Array}
-   */
-  static getList(key) {
-    try {
-      return JSON.parse(localStorage.getItem(key)) ?? [];
-    } catch {
-      return [];
-    }
-  }
-
-  /**
-   * Persist an array to localStorage.
-   * @param {string} key
-   * @param {Array} data
-   */
-  static setList(key, data) {
-    localStorage.setItem(key, JSON.stringify(data));
-  }
-
-  /**
-   * Retrieve a single value from localStorage.
-   * @param {string} key
-   * @param {*} defaultVal
-   * @returns {*}
-   */
-  static getValue(key, defaultVal = null) {
-    try {
-      const raw = localStorage.getItem(key);
-      return raw !== null ? JSON.parse(raw) : defaultVal;
-    } catch {
-      return defaultVal;
-    }
-  }
-
-  /**
-   * Persist a single value to localStorage.
-   * @param {string} key
-   * @param {*} value
-   */
-  static setValue(key, value) {
-    localStorage.setItem(key, JSON.stringify(value));
-  }
-}
+import { Auth } from './api.js';
 
 /* ============================================================
    Toast — non-blocking UI notifications
@@ -64,7 +21,6 @@ export class StorageManager {
 export class Toast {
   static _container = null;
 
-  /** Initialise or return the toast container element. */
   static _getContainer() {
     if (!this._container) {
       this._container = document.createElement('div');
@@ -77,22 +33,27 @@ export class Toast {
   }
 
   /**
-   * Show a toast message.
    * @param {string} message
-   * @param {'default'|'success'|'error'} type
-   * @param {number} duration  ms before auto-dismiss
+   * @param {'default'|'success'|'error'} [type]
+   * @param {number} [duration]
    */
   static show(message, type = 'default', duration = 2800) {
-    const container = this._getContainer();
     const el = document.createElement('div');
     el.className = `toast${type !== 'default' ? ' ' + type : ''}`;
     el.textContent = message;
-    container.appendChild(el);
+    this._getContainer().appendChild(el);
     setTimeout(() => {
-      el.style.opacity = '0';
+      el.style.opacity    = '0';
       el.style.transition = 'opacity .3s ease';
       setTimeout(() => el.remove(), 350);
     }, duration);
+  }
+
+  /** Show field-level validation errors returned by the API. */
+  static showErrors(errors = []) {
+    if (!errors.length) return;
+    const msg = errors.map((e) => e.msg).join(' · ');
+    Toast.show(msg, 'error', 4000);
   }
 }
 
@@ -106,16 +67,19 @@ export class Toast {
  * @returns {string}
  */
 export function formatCurrency(amount) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+  return new Intl.NumberFormat('en-US', {
+    style:    'currency',
+    currency: 'USD',
+  }).format(amount ?? 0);
 }
 
 /**
- * Escape user-provided strings to prevent XSS.
+ * Escape user-provided strings to prevent XSS in innerHTML.
  * @param {string} str
  * @returns {string}
  */
 export function escapeHtml(str) {
-  return String(str)
+  return String(str ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -123,7 +87,8 @@ export function escapeHtml(str) {
 }
 
 /**
- * Generate a simple unique ID.
+ * Generate a lightweight client-side unique ID.
+ * Used only for optimistic UI (real IDs come from the server).
  * @returns {string}
  */
 export function uid() {
@@ -137,8 +102,65 @@ export function markActiveNav() {
   const current = window.location.pathname.split('/').pop() || 'index.html';
   document.querySelectorAll('.site-nav a').forEach((a) => {
     const href = a.getAttribute('href');
-    if (href === current || (current === '' && href === 'index.html')) {
-      a.classList.add('active');
-    }
+    a.classList.toggle(
+      'active',
+      href === current || (current === '' && href === 'index.html'),
+    );
   });
+}
+
+/**
+ * Initialise the navigation bar:
+ *   • Marks the active link
+ *   • Injects the user's display name (if an element with id="nav-user" exists)
+ *   • Wires up any element with id="logout-btn" to Auth.logout()
+ */
+export function initNav() {
+  markActiveNav();
+
+  // Show display name
+  const nameEl = document.getElementById('nav-user');
+  if (nameEl) {
+    const user = Auth.getUser();
+    nameEl.textContent = user?.display_name || user?.email || '';
+  }
+
+  // Wire logout
+  const logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      Auth.logout();
+    });
+  }
+}
+
+/* ============================================================
+   Loading / empty-state helpers
+   ============================================================ */
+
+/**
+ * Show a full-section skeleton loader inside `container`.
+ * @param {HTMLElement} container
+ * @param {string}      [message]
+ */
+export function showLoading(container, message = 'Loading…') {
+  container.innerHTML = `
+    <div class="loading-state" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span>
+      <span>${escapeHtml(message)}</span>
+    </div>`;
+}
+
+/**
+ * Show an API/network error message inside `container`.
+ * @param {HTMLElement} container
+ * @param {string}      [message]
+ */
+export function showError(container, message = 'Something went wrong. Please try again.') {
+  container.innerHTML = `
+    <div class="error-state" role="alert">
+      <span class="empty-icon" aria-hidden="true">⚠️</span>
+      <p>${escapeHtml(message)}</p>
+    </div>`;
 }

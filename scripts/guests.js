@@ -1,147 +1,138 @@
 /**
- * @file guests.js
- * @description GuestManager — add, filter, update, and delete wedding
- *              guests with RSVP tracking, dietary needs, and plus-ones.
+ * @file scripts/guests.js
+ * @description GuestManager — API-backed guest list with RSVP cycling.
  */
 
-import { StorageManager, Toast, escapeHtml, uid, markActiveNav } from './main.js';
+import api, { Auth }                               from './api.js';
+import { initNav, Toast, escapeHtml, showLoading } from './main.js';
 
-/* ============================================================
-   GuestManager — manages the guest list
-   ============================================================ */
+Auth.requireAuth();
+
+const BADGE_MAP = {
+  Confirmed: 'badge-confirmed',
+  Declined:  'badge-declined',
+  Pending:   'badge-pending',
+};
+
 class GuestManager {
-  static STORAGE_KEY = 'guests';
-
-  /** RSVP value → badge CSS class */
-  static BADGE_MAP = {
-    Confirmed: 'badge-confirmed',
-    Declined:  'badge-declined',
-    Pending:   'badge-pending',
-  };
-
   constructor() {
-    /** @type {Array<{id:string, name:string, rsvp:string, diet:string, plusOne:string}>} */
-    this._guests       = StorageManager.getList(GuestManager.STORAGE_KEY);
     this._activeFilter = 'All';
 
-    // Form inputs
-    this._nameInput   = document.getElementById('guest-name');
-    this._rsvpSelect  = document.getElementById('guest-rsvp');
-    this._dietInput   = document.getElementById('guest-diet');
+    this._nameInput    = document.getElementById('guest-name');
+    this._rsvpSelect   = document.getElementById('guest-rsvp');
+    this._dietInput    = document.getElementById('guest-diet');
     this._plusOneInput = document.getElementById('guest-plusone');
-    this._addBtn      = document.getElementById('add-guest-btn');
+    this._addBtn       = document.getElementById('add-guest-btn');
 
-    // Stats
     this._statTotal     = document.getElementById('stat-total');
     this._statConfirmed = document.getElementById('stat-confirmed');
     this._statPending   = document.getElementById('stat-pending');
     this._statDeclined  = document.getElementById('stat-declined');
 
-    // List
-    this._list       = document.getElementById('guest-list');
-    this._emptyState = document.getElementById('guest-empty');
+    this._list          = document.getElementById('guest-list');
+    this._emptyState    = document.getElementById('guest-empty');
   }
 
-  init() {
-    markActiveNav();
+  async init() {
+    initNav();
     this._bindEvents();
-    this._render();
+    await this._load();
   }
 
   _bindEvents() {
-    this._addBtn.addEventListener('click', () => this._addGuest());
+    this._addBtn.addEventListener('click', () => this._add());
     this._nameInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') this._addGuest();
+      if (e.key === 'Enter') this._add();
     });
 
-    document.querySelectorAll('.filter-tab').forEach((tab) => {
+    document.querySelectorAll('.filter-tab').forEach((tab) =>
       tab.addEventListener('click', () => {
         document.querySelectorAll('.filter-tab').forEach((t) => t.classList.remove('active'));
         tab.classList.add('active');
         this._activeFilter = tab.dataset.rsvp;
-        this._render();
-      });
-    });
+        this._load();
+      }),
+    );
   }
 
-  _addGuest() {
-    const name = this._nameInput.value.trim();
-    if (!name) {
-      Toast.show('Please enter a guest name.', 'error');
-      this._nameInput.focus();
-      return;
+  /* ── Load ─────────────────────────────────────────────── */
+  async _load() {
+    showLoading(this._list, 'Loading guests…');
+    this._emptyState.hidden = true;
+
+    const query = this._activeFilter !== 'All' ? { rsvp: this._activeFilter } : {};
+    try {
+      const { data } = await api.get('/guests', query);
+      this._renderStats(data.stats);
+      this._renderList(data.guests);
+    } catch (err) {
+      this._list.innerHTML = '';
+      Toast.show('Could not load guests.', 'error');
     }
-
-    /** @type {{id:string, name:string, rsvp:string, diet:string, plusOne:string}} */
-    const guest = {
-      id:      uid(),
-      name,
-      rsvp:    this._rsvpSelect.value,
-      diet:    this._dietInput.value.trim(),
-      plusOne: this._plusOneInput.value.trim(),
-    };
-
-    this._guests.push(guest);
-    this._persist();
-    this._render();
-    this._clearForm();
-    Toast.show(`${name} added!`, 'success');
   }
 
-  /**
-   * Cycle a guest's RSVP status: Pending → Confirmed → Declined → Pending.
-   * @param {string} id
-   */
-  _cycleRsvp(id) {
-    const cycle = ['Pending', 'Confirmed', 'Declined'];
-    const guest = this._guests.find((g) => g.id === id);
-    if (!guest) return;
-    const idx = cycle.indexOf(guest.rsvp);
-    guest.rsvp = cycle[(idx + 1) % cycle.length];
-    this._persist();
-    this._render();
+  /* ── Add ──────────────────────────────────────────────── */
+  async _add() {
+    const name = this._nameInput.value.trim();
+    if (!name) return Toast.show('Please enter a guest name.', 'error');
+
+    this._addBtn.disabled = true;
+    try {
+      await api.post('/guests', {
+        name,
+        rsvp:    this._rsvpSelect.value,
+        diet:    this._dietInput.value.trim()    || undefined,
+        plusOne: this._plusOneInput.value.trim() || undefined,
+      });
+      [this._nameInput, this._dietInput, this._plusOneInput].forEach((el) => { el.value = ''; });
+      this._nameInput.focus();
+      Toast.show(`${name} added!`, 'success');
+      await this._load();
+    } catch (err) {
+      Toast.show(err.message || 'Could not add guest.', 'error');
+    } finally {
+      this._addBtn.disabled = false;
+    }
   }
 
-  /**
-   * Delete a guest by id.
-   * @param {string} id
-   */
-  _deleteGuest(id) {
-    const guest = this._guests.find((g) => g.id === id);
-    this._guests = this._guests.filter((g) => g.id !== id);
-    this._persist();
-    this._render();
-    if (guest) Toast.show(`${guest.name} removed.`);
+  /* ── Cycle RSVP ───────────────────────────────────────── */
+  async _cycleRsvp(id) {
+    try {
+      await api.post(`/guests/${id}/cycle-rsvp`);
+      await this._load();
+    } catch (err) {
+      Toast.show(err.message || 'Could not update RSVP.', 'error');
+    }
   }
 
-  _persist() {
-    StorageManager.setList(GuestManager.STORAGE_KEY, this._guests);
+  /* ── Delete ───────────────────────────────────────────── */
+  async _delete(id) {
+    try {
+      await api.delete(`/guests/${id}`);
+      Toast.show('Guest removed.');
+      await this._load();
+    } catch (err) {
+      Toast.show(err.message || 'Could not remove guest.', 'error');
+    }
   }
 
-  _clearForm() {
-    [this._nameInput, this._dietInput, this._plusOneInput].forEach((el) => { el.value = ''; });
-    this._nameInput.focus();
+  /* ── Render ───────────────────────────────────────────── */
+  _renderStats({ total, confirmed, pending, declined }) {
+    this._statTotal.textContent     = total;
+    this._statConfirmed.textContent = confirmed;
+    this._statPending.textContent   = pending;
+    this._statDeclined.textContent  = declined;
   }
 
-  _render() {
-    // Update summary stats
-    this._statTotal.textContent     = this._guests.length;
-    this._statConfirmed.textContent = this._guests.filter((g) => g.rsvp === 'Confirmed').length;
-    this._statPending.textContent   = this._guests.filter((g) => g.rsvp === 'Pending').length;
-    this._statDeclined.textContent  = this._guests.filter((g) => g.rsvp === 'Declined').length;
+  _renderList(guests) {
+    this._emptyState.hidden = guests.length > 0;
+    if (!guests.length) { this._list.innerHTML = ''; return; }
 
-    // Filter
-    const filtered = this._activeFilter === 'All'
-      ? this._guests
-      : this._guests.filter((g) => g.rsvp === this._activeFilter);
-
-    this._emptyState.hidden = filtered.length > 0;
-
-    this._list.innerHTML = filtered.map((g) => {
-      const badge = GuestManager.BADGE_MAP[g.rsvp] || 'badge-cat';
+    this._list.innerHTML = guests.map((g) => {
+      const badge = BADGE_MAP[g.rsvp] || 'badge-cat';
       const meta  = [
-        g.diet    && `🥗 ${escapeHtml(g.diet)}`,
-        g.plusOne && `+1: ${escapeHtml(g.plusOne)}`,
+        g.diet     && `🥗 ${escapeHtml(g.diet)}`,
+        g.plus_one && `+1: ${escapeHtml(g.plus_one)}`,
       ].filter(Boolean).join(' · ');
 
       return `
@@ -151,35 +142,28 @@ class GuestManager {
             ${meta ? `<div class="item-meta">${meta}</div>` : ''}
           </div>
           <button class="item-badge ${badge} rsvp-btn"
-                  aria-label="RSVP: ${escapeHtml(g.rsvp)}. Click to change."
-                  style="border:none;cursor:pointer;white-space:nowrap;">
+                  style="border:none;cursor:pointer;white-space:nowrap;"
+                  aria-label="RSVP: ${escapeHtml(g.rsvp)}. Click to change.">
             ${escapeHtml(g.rsvp)}
           </button>
-          <button class="btn btn-danger delete-btn" aria-label="Remove ${escapeHtml(g.name)}">✕</button>
-        </li>
-      `;
+          <button class="btn btn-danger delete-btn"
+                  aria-label="Remove ${escapeHtml(g.name)}">✕</button>
+        </li>`;
     }).join('');
 
-    // Delegate RSVP cycle
-    this._list.querySelectorAll('.rsvp-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        this._cycleRsvp(btn.closest('.item-card').dataset.id);
-      });
-    });
-
-    // Delegate delete
-    this._list.querySelectorAll('.delete-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        this._deleteGuest(btn.closest('.item-card').dataset.id);
-      });
-    });
+    this._list.querySelectorAll('.rsvp-btn').forEach((btn) =>
+      btn.addEventListener('click', () =>
+        this._cycleRsvp(btn.closest('.item-card').dataset.id),
+      ),
+    );
+    this._list.querySelectorAll('.delete-btn').forEach((btn) =>
+      btn.addEventListener('click', () =>
+        this._delete(btn.closest('.item-card').dataset.id),
+      ),
+    );
   }
 }
 
-/* ============================================================
-   Bootstrap
-   ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
-  const manager = new GuestManager();
-  manager.init();
+  new GuestManager().init();
 });

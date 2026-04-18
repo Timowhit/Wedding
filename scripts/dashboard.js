@@ -1,134 +1,105 @@
 /**
- * @file dashboard.js
- * @description Dashboard controller: manages wedding countdown timer
- *              and pulls summary stats from other modules' localStorage data.
+ * @file scripts/dashboard.js
+ * @description Dashboard — countdown timer + API-backed summary stats.
  */
 
-import { StorageManager, formatCurrency, markActiveNav } from './main.js';
+import api, { Auth }                  from './api.js';
+import { initNav, formatCurrency, Toast } from './main.js';
 
-/* ============================================================
-   DashboardController — orchestrates the dashboard view
-   ============================================================ */
-class DashboardController {
-  constructor() {
-    this._timerInterval = null;
+Auth.requireAuth();
 
-    // DOM refs
-    this._countdownEl   = document.getElementById('countdown-number');
-    this._dateLabelEl   = document.getElementById('countdown-date-label');
-    this._dateInput     = document.getElementById('wedding-date-input');
-    this._setDateBtn    = document.getElementById('set-date-btn');
+/* ── DOM refs ──────────────────────────────────────────────── */
+const countdownEl  = document.getElementById('countdown-number');
+const dateLabelEl  = document.getElementById('countdown-date-label');
+const dateInput    = document.getElementById('wedding-date-input');
+const setDateBtn   = document.getElementById('set-date-btn');
+const statBudget   = document.getElementById('stat-budget');
+const statGuests   = document.getElementById('stat-guests');
+const statTasks    = document.getElementById('stat-tasks');
+const statVendors  = document.getElementById('stat-vendors');
 
-    // Stat refs
-    this._statBudget    = document.getElementById('stat-budget');
-    this._statGuests    = document.getElementById('stat-guests');
-    this._statTasks     = document.getElementById('stat-tasks');
-    this._statVendors   = document.getElementById('stat-vendors');
-  }
+let timerInterval = null;
 
-  /** Boot the dashboard. */
-  init() {
-    markActiveNav();
-    this._bindEvents();
-    this._loadSavedDate();
-    this._renderStats();
-  }
+/* ── Boot ──────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', async () => {
+  initNav();
+  loadSavedDate();
+  await renderStats();
+});
 
-  /** Attach UI event listeners. */
-  _bindEvents() {
-    this._setDateBtn.addEventListener('click', () => this._saveDate());
-    this._dateInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') this._saveDate();
-    });
-  }
+/* ── Wedding date (stored in user profile via API) ─────────── */
+function parseLocalDate(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
 
-  /** Restore persisted wedding date and start timer. */
-  _loadSavedDate() {
-    const saved = StorageManager.getValue('weddingDate');
-    if (saved) {
-      this._dateInput.value = saved;
-      this._startCountdown(this._parseLocalDate(saved));
-    }
-  }
-
-  /**
-   * Parse a YYYY-MM-DD string as a local-timezone Date (not UTC).
-   * Using new Date('YYYY-MM-DD') parses as UTC midnight, which shifts
-   * the displayed date backward in timezones behind UTC (e.g. UTC-7).
-   * @param {string} dateStr  format: YYYY-MM-DD
-   * @returns {Date}
-   */
-  _parseLocalDate(dateStr) {
-    const [year, month, day] = dateStr.split('-').map(Number);
-    return new Date(year, month - 1, day); // month is 0-indexed
-  }
-
-  /** Persist and activate a new wedding date. */
-  _saveDate() {
-    const val = this._dateInput.value;
-    if (!val) return;
-    StorageManager.setValue('weddingDate', val);
-    this._startCountdown(this._parseLocalDate(val));
-  }
-
-  /**
-   * Start (or restart) the countdown interval to a target date.
-   * @param {Date} targetDate
-   */
-  _startCountdown(targetDate) {
-    // Clear any existing interval
-    if (this._timerInterval) clearInterval(this._timerInterval);
-
-    // Format the human-readable target date label
-    const opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    this._dateLabelEl.textContent = targetDate.toLocaleDateString('en-US', opts);
-
-    const update = () => {
-      const now  = new Date();
-      const diff = targetDate - now;
-
-      if (diff <= 0) {
-        this._countdownEl.textContent = '🎉';
-        this._dateLabelEl.textContent = 'Today is the big day!';
-        clearInterval(this._timerInterval);
-        return;
-      }
-
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      this._countdownEl.textContent = days;
-    };
-
-    update();
-    this._timerInterval = setInterval(update, 60_000); // refresh every minute
-  }
-
-  /** Pull aggregate stats from other module keys and render them. */
-  _renderStats() {
-    // Budget: sum all item amounts
-    const budgetItems = StorageManager.getList('budgetItems');
-    const totalSpent  = budgetItems.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
-    this._statBudget.textContent = formatCurrency(totalSpent);
-
-    // Guests: count
-    const guests = StorageManager.getList('guests');
-    this._statGuests.textContent = guests.length;
-
-    // Tasks: percentage complete
-    const tasks = StorageManager.getList('tasks');
-    const done  = tasks.filter((t) => t.done).length;
-    const pct   = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
-    this._statTasks.textContent = `${pct}%`;
-
-    // Vendors: count
-    const vendors = StorageManager.getList('vendors');
-    this._statVendors.textContent = vendors.length;
+function loadSavedDate() {
+  // Prefer the profile wedding_date; fall back to localStorage cache
+  const user = Auth.getUser();
+  const saved = user?.wedding_date || localStorage.getItem('fp_wedding_date');
+  if (saved) {
+    const iso = saved.substring(0, 10); // handles ISO timestamp or plain date
+    dateInput.value = iso;
+    startCountdown(parseLocalDate(iso));
   }
 }
 
-/* ============================================================
-   Bootstrap
-   ============================================================ */
-document.addEventListener('DOMContentLoaded', () => {
-  const controller = new DashboardController();
-  controller.init();
+setDateBtn.addEventListener('click', async () => {
+  const val = dateInput.value;
+  if (!val) return;
+
+  try {
+    await api.patch('/auth/me', { weddingDate: val });
+    localStorage.setItem('fp_wedding_date', val);
+
+    // Update cached user
+    const user = Auth.getUser() ?? {};
+    user.wedding_date = val;
+    Auth.setUser(user);
+
+    startCountdown(parseLocalDate(val));
+    Toast.show('Wedding date saved!', 'success');
+  } catch (err) {
+    Toast.show(err.message || 'Could not save date.', 'error');
+  }
 });
+
+function startCountdown(targetDate) {
+  if (timerInterval) clearInterval(timerInterval);
+
+  const opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  dateLabelEl.textContent = targetDate.toLocaleDateString('en-US', opts);
+
+  const tick = () => {
+    const diff = targetDate - new Date();
+    if (diff <= 0) {
+      countdownEl.textContent = '🎉';
+      dateLabelEl.textContent = 'Today is the big day!';
+      clearInterval(timerInterval);
+      return;
+    }
+    countdownEl.textContent = Math.floor(diff / 86_400_000);
+  };
+
+  tick();
+  timerInterval = setInterval(tick, 60_000);
+}
+
+/* ── Stats ─────────────────────────────────────────────────── */
+async function renderStats() {
+  try {
+    const [budgetRes, guestsRes, tasksRes, vendorsRes] = await Promise.all([
+      api.get('/budget/summary'),
+      api.get('/guests'),
+      api.get('/checklist'),
+      api.get('/vendors'),
+    ]);
+
+    statBudget.textContent  = formatCurrency(budgetRes.data.spent);
+    statGuests.textContent  = guestsRes.data.stats.total;
+    statTasks.textContent   = `${tasksRes.data.progress.pct}%`;
+    statVendors.textContent = vendorsRes.data.vendors.length;
+  } catch (err) {
+    console.error('Dashboard stats error:', err);
+  }
+}

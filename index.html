@@ -9,10 +9,8 @@
     <script type="module" src="scripts/dashboard.js"></script>
   </head>
   <body>
-    <!-- Skip navigation for screen readers -->
     <a class="skip-link" href="#main-content">Skip to main content</a>
 
-    <!-- ===== NAVIGATION ===== -->
     <nav class="site-nav" aria-label="Main navigation">
       <a href="index.html" class="brand" aria-label="Forever Planner home">💍 Forever Planner</a>
       <a href="index.html">Dashboard</a>
@@ -22,15 +20,17 @@
       <a href="inspiration.html">Inspiration</a>
       <a href="guests.html">Guests</a>
       <a href="checklist.html">Checklist</a>
+      <span class="nav-user-group">
+        <span id="nav-user" class="nav-user-name"></span>
+        <button id="logout-btn" class="btn btn-ghost nav-logout">Sign Out</button>
+      </span>
     </nav>
 
-    <!-- ===== PAGE HEADER ===== -->
     <header class="page-header">
       <h1><em>Our</em> Wedding Dashboard</h1>
       <p class="subtitle">Everything you need, all in one place.</p>
     </header>
 
-    <!-- ===== MAIN CONTENT ===== -->
     <main id="main-content">
 
       <!-- Countdown -->
@@ -41,7 +41,6 @@
           <p id="countdown-date-label" class="countdown-date-label"></p>
         </div>
 
-        <!-- Wedding date setter -->
         <div class="date-setter">
           <label for="wedding-date-input">Set your wedding date:</label>
           <input type="date" id="wedding-date-input" aria-label="Wedding date" />

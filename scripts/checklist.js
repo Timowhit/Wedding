@@ -1,58 +1,36 @@
 /**
- * @file checklist.js
- * @description ChecklistManager — add, complete, filter, and delete
- *              wedding planning tasks with category and due-date support.
+ * @file scripts/checklist.js
+ * @description ChecklistManager — API-backed tasks with toggle, seed, filter.
  */
 
-import { StorageManager, Toast, escapeHtml, uid, markActiveNav } from './main.js';
+import api, { Auth }                               from './api.js';
+import { initNav, Toast, escapeHtml, showLoading } from './main.js';
 
-/* ============================================================
-   ChecklistManager — manages the task list
-   ============================================================ */
+Auth.requireAuth();
+
 class ChecklistManager {
-  static STORAGE_KEY = 'tasks';
-
-  /** Sample tasks to seed the checklist for a demo / first run. */
-  static SEED_TASKS = [
-    { text: 'Book the venue',               category: 'Venue',       due: '' },
-    { text: 'Choose a caterer',             category: 'Catering',    due: '' },
-    { text: 'Order wedding dress',          category: 'Attire',      due: '' },
-    { text: 'Book the photographer',        category: 'Photography', due: '' },
-    { text: 'Send save-the-date cards',     category: 'Invitations', due: '' },
-    { text: 'Book hair & makeup artist',    category: 'Beauty',      due: '' },
-    { text: 'Choose wedding flowers',       category: 'Flowers',     due: '' },
-    { text: 'Book honeymoon travel',        category: 'Honeymoon',   due: '' },
-    { text: 'Finalise guest list',          category: 'Other',       due: '' },
-    { text: 'Arrange transportation',       category: 'Other',       due: '' },
-  ];
-
   constructor() {
-    /** @type {Array<{id:string, text:string, category:string, due:string, done:boolean}>} */
-    this._tasks        = StorageManager.getList(ChecklistManager.STORAGE_KEY);
     this._activeFilter = 'All';
 
-    // Form inputs
-    this._taskInput  = document.getElementById('task-text');
-    this._catSelect  = document.getElementById('task-category');
-    this._dueInput   = document.getElementById('task-due');
-    this._addBtn     = document.getElementById('add-task-btn');
-    this._seedBtn    = document.getElementById('seed-tasks-btn');
+    this._taskInput    = document.getElementById('task-text');
+    this._catSelect    = document.getElementById('task-category');
+    this._dueInput     = document.getElementById('task-due');
+    this._addBtn       = document.getElementById('add-task-btn');
+    this._seedBtn      = document.getElementById('seed-tasks-btn');
 
-    // Progress
     this._progressBar  = document.getElementById('checklist-progress-bar');
     this._progressWrap = document.getElementById('checklist-progress-wrap');
     this._progressText = document.getElementById('progress-text');
     this._progressPct  = document.getElementById('progress-pct');
 
-    // List
-    this._list       = document.getElementById('task-list');
-    this._emptyState = document.getElementById('task-empty');
+    this._list         = document.getElementById('task-list');
+    this._emptyState   = document.getElementById('task-empty');
   }
 
-  init() {
-    markActiveNav();
+  async init() {
+    initNav();
     this._bindEvents();
-    this._render();
+    await this._load();
   }
 
   _bindEvents() {
@@ -60,134 +38,119 @@ class ChecklistManager {
     this._taskInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') this._addTask();
     });
-
-    this._seedBtn.addEventListener('click', () => this._seedTasks());
+    this._seedBtn.addEventListener('click', () => this._seed());
 
     document.querySelectorAll('.filter-tab').forEach((tab) => {
       tab.addEventListener('click', () => {
         document.querySelectorAll('.filter-tab').forEach((t) => t.classList.remove('active'));
         tab.classList.add('active');
         this._activeFilter = tab.dataset.cat;
-        this._render();
+        this._load();
       });
     });
   }
 
-  _addTask() {
+  /* ── Load ─────────────────────────────────────────────── */
+  async _load() {
+    showLoading(this._list, 'Loading tasks…');
+    this._emptyState.hidden = true;
+
+    const query = {};
+    if (this._activeFilter === 'active') query.status   = 'active';
+    else if (this._activeFilter === 'done') query.status = 'done';
+    else if (!['All'].includes(this._activeFilter)) query.category = this._activeFilter;
+
+    try {
+      const { data } = await api.get('/checklist', query);
+      this._renderProgress(data.progress);
+      this._renderList(data.tasks);
+    } catch (err) {
+      this._list.innerHTML = '';
+      Toast.show('Could not load tasks.', 'error');
+    }
+  }
+
+  /* ── Add ──────────────────────────────────────────────── */
+  async _addTask() {
     const text = this._taskInput.value.trim();
-    if (!text) {
-      Toast.show('Please enter a task description.', 'error');
+    if (!text) return Toast.show('Please enter a task description.', 'error');
+
+    this._addBtn.disabled = true;
+    try {
+      await api.post('/checklist', {
+        text,
+        category: this._catSelect.value,
+        dueDate:  this._dueInput.value || undefined,
+      });
+      this._taskInput.value = '';
+      this._dueInput.value  = '';
       this._taskInput.focus();
-      return;
-    }
-
-    /** @type {{id:string, text:string, category:string, due:string, done:boolean}} */
-    const task = {
-      id:       uid(),
-      text,
-      category: this._catSelect.value,
-      due:      this._dueInput.value,
-      done:     false,
-    };
-
-    this._tasks.push(task);
-    this._persist();
-    this._render();
-    this._clearForm();
-    Toast.show('Task added!', 'success');
-  }
-
-  /** Load demo tasks (skip any already-present by text). */
-  _seedTasks() {
-    const existing = new Set(this._tasks.map((t) => t.text));
-    let added = 0;
-    ChecklistManager.SEED_TASKS.forEach((seed) => {
-      if (!existing.has(seed.text)) {
-        this._tasks.push({ id: uid(), ...seed, done: false });
-        added++;
-      }
-    });
-    if (added > 0) {
-      this._persist();
-      this._render();
-      Toast.show(`${added} example tasks added!`, 'success');
-    } else {
-      Toast.show('All example tasks already added.');
+      Toast.show('Task added!', 'success');
+      await this._load();
+    } catch (err) {
+      Toast.show(err.message || 'Could not add task.', 'error');
+    } finally {
+      this._addBtn.disabled = false;
     }
   }
 
-  /**
-   * Toggle a task's completion state.
-   * @param {string} id
-   */
-  _toggleTask(id) {
-    const task = this._tasks.find((t) => t.id === id);
-    if (!task) return;
-    task.done = !task.done;
-    this._persist();
-    this._render();
+  /* ── Toggle ───────────────────────────────────────────── */
+  async _toggle(id) {
+    try {
+      await api.post(`/checklist/${id}/toggle`);
+      await this._load();
+    } catch (err) {
+      Toast.show(err.message || 'Could not update task.', 'error');
+    }
   }
 
-  /**
-   * Delete a task by id.
-   * @param {string} id
-   */
-  _deleteTask(id) {
-    this._tasks = this._tasks.filter((t) => t.id !== id);
-    this._persist();
-    this._render();
-    Toast.show('Task removed.');
+  /* ── Delete ───────────────────────────────────────────── */
+  async _delete(id) {
+    try {
+      await api.delete(`/checklist/${id}`);
+      Toast.show('Task removed.');
+      await this._load();
+    } catch (err) {
+      Toast.show(err.message || 'Could not delete task.', 'error');
+    }
   }
 
-  _persist() {
-    StorageManager.setList(ChecklistManager.STORAGE_KEY, this._tasks);
+  /* ── Seed ─────────────────────────────────────────────── */
+  async _seed() {
+    this._seedBtn.disabled = true;
+    try {
+      const { data } = await api.post('/checklist/seed');
+      Toast.show(
+        data.added > 0 ? `${data.added} example tasks added!` : 'All example tasks already added.',
+        data.added > 0 ? 'success' : 'default',
+      );
+      await this._load();
+    } catch (err) {
+      Toast.show(err.message || 'Could not seed tasks.', 'error');
+    } finally {
+      this._seedBtn.disabled = false;
+    }
   }
 
-  _clearForm() {
-    this._taskInput.value = '';
-    this._dueInput.value  = '';
-    this._taskInput.focus();
-  }
-
-  /**
-   * Format a date string to a human-readable label.
-   * @param {string} dateStr  YYYY-MM-DD
-   * @returns {string}
-   */
-  _formatDue(dateStr) {
-    if (!dateStr) return '';
-    const d = new Date(dateStr + 'T00:00:00');
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  }
-
-  /** Re-render progress and filtered task list. */
-  _render() {
-    const total = this._tasks.length;
-    const done  = this._tasks.filter((t) => t.done).length;
-    const pct   = total ? Math.round((done / total) * 100) : 0;
-
-    // Progress
+  /* ── Render ───────────────────────────────────────────── */
+  _renderProgress({ total, done, pct }) {
     this._progressBar.style.width = `${pct}%`;
     this._progressWrap.setAttribute('aria-valuenow', pct);
     this._progressText.textContent = `${done} of ${total} task${total !== 1 ? 's' : ''} complete`;
     this._progressPct.textContent  = `${pct}%`;
+  }
 
-    // Filter
-    let filtered;
-    if (this._activeFilter === 'All') {
-      filtered = this._tasks;
-    } else if (this._activeFilter === 'active') {
-      filtered = this._tasks.filter((t) => !t.done);
-    } else if (this._activeFilter === 'done') {
-      filtered = this._tasks.filter((t) => t.done);
-    } else {
-      filtered = this._tasks.filter((t) => t.category === this._activeFilter);
-    }
+  _renderList(tasks) {
+    this._emptyState.hidden = tasks.length > 0;
+    if (!tasks.length) { this._list.innerHTML = ''; return; }
 
-    this._emptyState.hidden = filtered.length > 0;
+    this._list.innerHTML = tasks.map((t) => {
+      const due = t.due_date
+        ? new Date(t.due_date + 'T00:00:00').toLocaleDateString('en-US', {
+            month: 'short', day: 'numeric', year: 'numeric',
+          })
+        : '';
 
-    this._list.innerHTML = filtered.map((t) => {
-      const dueLabel = this._formatDue(t.due);
       return `
         <li class="item-card${t.done ? ' completed' : ''}" data-id="${escapeHtml(t.id)}">
           <button class="check-btn${t.done ? ' done' : ''} toggle-btn"
@@ -199,34 +162,27 @@ class ChecklistManager {
             <div class="item-name">${escapeHtml(t.text)}</div>
             <div class="item-meta">
               <span class="item-badge badge-cat">${escapeHtml(t.category)}</span>
-              ${dueLabel ? `&nbsp;· Due: ${escapeHtml(dueLabel)}` : ''}
+              ${due ? `&nbsp;· Due: ${escapeHtml(due)}` : ''}
             </div>
           </div>
-          <button class="btn btn-danger delete-btn" aria-label="Delete task: ${escapeHtml(t.text)}">✕</button>
-        </li>
-      `;
+          <button class="btn btn-danger delete-btn"
+                  aria-label="Delete: ${escapeHtml(t.text)}">✕</button>
+        </li>`;
     }).join('');
 
-    // Delegate toggle
-    this._list.querySelectorAll('.toggle-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        this._toggleTask(btn.closest('.item-card').dataset.id);
-      });
-    });
-
-    // Delegate delete
-    this._list.querySelectorAll('.delete-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        this._deleteTask(btn.closest('.item-card').dataset.id);
-      });
-    });
+    this._list.querySelectorAll('.toggle-btn').forEach((btn) =>
+      btn.addEventListener('click', () =>
+        this._toggle(btn.closest('.item-card').dataset.id),
+      ),
+    );
+    this._list.querySelectorAll('.delete-btn').forEach((btn) =>
+      btn.addEventListener('click', () =>
+        this._delete(btn.closest('.item-card').dataset.id),
+      ),
+    );
   }
 }
 
-/* ============================================================
-   Bootstrap
-   ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
-  const manager = new ChecklistManager();
-  manager.init();
+  new ChecklistManager().init();
 });
