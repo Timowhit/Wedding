@@ -1,6 +1,14 @@
 /**
  * @file models/Guest.js
  * @description Data-access layer for the `guests` table.
+ *
+ * FIX: Guest.update previously used COALESCE for every column, which made
+ * it impossible to deliberately clear a nullable field (e.g. removing a
+ * dietary requirement) — passing null was silently ignored.
+ *
+ * The fix uses a dynamic SET-clause builder (same pattern as Vendor.js)
+ * so only the fields that are explicitly present in `fields` are touched,
+ * and a field CAN be set to null if the caller passes null for it.
  */
 
 'use strict';
@@ -44,17 +52,41 @@ class Guest {
     return rows[0];
   }
 
-  static async update(id, userId, { name, rsvp, diet, plusOne }) {
-    const { rows } = await query(
-      `UPDATE guests
-       SET name     = COALESCE($3, name),
-           rsvp     = COALESCE($4, rsvp),
-           diet     = COALESCE($5, diet),
-           plus_one = COALESCE($6, plus_one)
-       WHERE id = $1 AND user_id = $2
-       RETURNING *`,
-      [id, userId, name ?? null, rsvp ?? null, diet ?? null, plusOne ?? null],
-    );
+  /**
+   * Partial update — only keys present in `fields` are changed.
+   * Explicitly passing `null` for a nullable column (diet, plusOne)
+   * will clear that column, unlike the old COALESCE approach.
+   *
+   * @param {string} id
+   * @param {string} userId
+   * @param {{ name?: string, rsvp?: string, diet?: string|null, plusOne?: string|null }} fields
+   */
+  static async update(id, userId, fields) {
+    const setClauses = [];
+    const params     = [];
+
+    const add = (col, val) => {
+      params.push(val);
+      setClauses.push(`${col} = $${params.length}`);
+    };
+
+    if (fields.name    !== undefined) add('name',     fields.name);
+    if (fields.rsvp    !== undefined) add('rsvp',     fields.rsvp);
+    // Use explicit null so callers can clear these fields
+    if (fields.diet    !== undefined) add('diet',     fields.diet    ?? null);
+    if (fields.plusOne !== undefined) add('plus_one', fields.plusOne ?? null);
+
+    // Nothing to update — return current row unchanged
+    if (!setClauses.length) return Guest.findById(id, userId);
+
+    params.push(id, userId);
+    const sql = `
+      UPDATE guests
+      SET ${setClauses.join(', ')}
+      WHERE id = $${params.length - 1} AND user_id = $${params.length}
+      RETURNING *`;
+
+    const { rows } = await query(sql, params);
     return rows[0] ?? null;
   }
 

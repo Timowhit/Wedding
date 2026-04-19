@@ -21,7 +21,7 @@ const validate = (req, _res, next) => {
   if (result.isEmpty()) return next();
 
   const errors = result.array().map(({ path, msg }) => ({ field: path, msg }));
-  throw ApiError.unprocessable('Validation failed', errors);
+  return next(new ApiError.unprocessable('Validation failed', errors));
 };
 
 module.exports = validate;
