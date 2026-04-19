@@ -22,6 +22,7 @@ const morgan       = require('morgan');
 
 const { testConnection }    = require('./db');
 const routes                = require('./routes');
+const path                  = require('path');
 const errorHandler          = require('./middleware/errorHandler');
 const { apiLimiter }        = require('./middleware/rateLimiter');
 const logger                = require('./utils/logger');
@@ -30,7 +31,7 @@ const app  = express();
 const PORT = process.env.PORT || 3000;
 
 /* ── Security headers ───────────────────────────────────────── */
-app.use(helmet());
+app.use(helmet({ contentSecurityPolicy: false }));
 
 /* ── CORS ───────────────────────────────────────────────────── */
 app.use(cors({
@@ -62,6 +63,9 @@ app.use('/api', apiLimiter);
 
 /* ── Routes ─────────────────────────────────────────────────── */
 app.use('/api/v1', routes);
+
+// ── Static files ─────────────────────────────────────────────
+app.use(express.static(path.join(__dirname, 'public')));
 
 /* ── 404 fallthrough ────────────────────────────────────────── */
 app.use((_req, res) => {
