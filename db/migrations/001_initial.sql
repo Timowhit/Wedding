@@ -47,6 +47,10 @@ CREATE TABLE IF NOT EXISTS checklist_tasks (
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- ── checklist_tasks Constraint ───────────────────────────────
+ALTER TABLE checklist_tasks 
+  ADD CONSTRAINT uq_task_user_text UNIQUE (user_id, text);
+
 -- ── guests ───────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS guests (
   id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
