@@ -69,9 +69,9 @@ app.use("/api/v1", routes);
 
 // ── Static files ─────────────────────────────────────────────
 const staticDir =
-  process.env.NODE_ENV === 'production'
-    ? path.join(__dirname, '..', 'dist')
-    : path.join(__dirname, '..', 'public');
+  process.env.NODE_ENV === "production"
+    ? path.join(__dirname, "..", "dist")
+    : path.join(__dirname, "..", "public");
 app.use(express.static(staticDir));
 
 /* ── 404 fallthrough ────────────────────────────────────────── */

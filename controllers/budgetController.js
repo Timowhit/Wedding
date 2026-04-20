@@ -3,12 +3,16 @@
  * @description CRUD for budget items and budget limit management.
  */
 
-'use strict';
+"use strict";
 
-const Budget       = require('../models/Budget');
-const ApiError     = require('../utils/ApiError');
-const asyncHandler = require('../utils/asyncHandler');
-const { sendSuccess, sendCreated, sendNoContent } = require('../utils/response');
+const Budget = require("../models/Budget");
+const ApiError = require("../utils/ApiError");
+const asyncHandler = require("../utils/asyncHandler");
+const {
+  sendSuccess,
+  sendCreated,
+  sendNoContent,
+} = require("../utils/response");
 
 /* ── Summary (limit + spent + remaining) ───────────────────── */
 const getSummary = asyncHandler(async (req, res) => {
@@ -49,7 +53,7 @@ const createItem = asyncHandler(async (req, res) => {
 /* ── Delete expense item ─────────────────────────────────────── */
 const deleteItem = asyncHandler(async (req, res) => {
   const deleted = await Budget.delete(req.params.id, req.user.id);
-  if (!deleted) throw ApiError.notFound('Expense not found');
+  if (!deleted) {throw ApiError.notFound("Expense not found");}
   sendNoContent(res);
 });
 

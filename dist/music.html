@@ -3,7 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Plan your wedding music — search the iTunes catalog for songs and build playlists for every part of your special day." />
+    <meta
+      name="description"
+      content="Plan your wedding music — search the iTunes catalog for songs and build playlists for every part of your special day."
+    />
     <title>Music — Forever Planner</title>
     <link rel="stylesheet" href="styles/main.css" />
     <script type="module" src="scripts/music.bundle.js"></script>
@@ -12,7 +15,9 @@
     <a class="skip-link" href="#main-content">Skip to main content</a>
 
     <nav class="site-nav" aria-label="Main navigation">
-      <a href="index.html" class="brand" aria-label="Forever Planner home">💍 Forever Planner</a>
+      <a href="index.html" class="brand" aria-label="Forever Planner home"
+        >💍 Forever Planner</a
+      >
       <a href="index.html">Dashboard</a>
       <a href="budget.html">Budget</a>
       <a href="vendors.html">Vendors</a>
@@ -24,20 +29,31 @@
 
     <header class="page-header">
       <h1><em>Music</em> Planner</h1>
-      <p class="subtitle">Search songs and build your wedding playlists. Powered by iTunes Search API.</p>
+      <p class="subtitle">
+        Search songs and build your wedding playlists. Powered by iTunes Search
+        API.
+      </p>
     </header>
 
     <main id="main-content">
-
       <!-- Song search (iTunes API) -->
       <section class="card" aria-labelledby="music-search-heading">
         <h2 class="card-title" id="music-search-heading">🔍 Search Songs</h2>
         <div class="search-row">
-          <label for="music-search-input" class="visually-hidden">Search songs or artists</label>
-          <input type="text" id="music-search-input"
-                 placeholder="Search by song or artist…"
-                 aria-label="Search songs or artists" />
-          <select id="music-section-select" class="music-section-select" aria-label="Add to playlist section">
+          <label for="music-search-input" class="visually-hidden"
+            >Search songs or artists</label
+          >
+          <input
+            type="text"
+            id="music-search-input"
+            placeholder="Search by song or artist…"
+            aria-label="Search songs or artists"
+          />
+          <select
+            id="music-section-select"
+            class="music-section-select"
+            aria-label="Add to playlist section"
+          >
             <option value="Processional">Processional</option>
             <option value="Ceremony">Ceremony</option>
             <option value="Cocktail Hour">Cocktail Hour</option>
@@ -45,11 +61,21 @@
             <option value="Reception">Reception</option>
             <option value="Last Dance">Last Dance</option>
           </select>
-          <button class="btn btn-primary" id="music-search-btn" aria-label="Search">Search</button>
+          <button
+            class="btn btn-primary"
+            id="music-search-btn"
+            aria-label="Search"
+          >
+            Search
+          </button>
         </div>
 
         <!-- Search results from iTunes -->
-        <div id="music-results" aria-live="polite" aria-label="Search results"></div>
+        <div
+          id="music-results"
+          aria-live="polite"
+          aria-label="Search results"
+        ></div>
       </section>
 
       <!-- Playlist sections -->
@@ -65,15 +91,20 @@
           <p>Your playlist is empty. Search for songs above and add them!</p>
         </div>
       </section>
-
     </main>
 
     <!-- Visually hidden utility class -->
     <style>
       .visually-hidden {
-        position: absolute; width: 1px; height: 1px;
-        padding: 0; margin: -1px; overflow: hidden;
-        clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
       }
     </style>
   </body>

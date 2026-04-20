@@ -7,19 +7,19 @@
  * errors and serialises them into the standard envelope.
  */
 
-'use strict';
+"use strict";
 
-const logger   = require('../utils/logger');
-const ApiError = require('../utils/ApiError');
+const logger = require("../utils/logger");
+const ApiError = require("../utils/ApiError");
 
 // eslint-disable-next-line no-unused-vars
 const errorHandler = (err, req, res, next) => {
   /* ── Validation errors from express-validator ─────────── */
-  if (err.type === 'entity.parse.failed') {
+  if (err.type === "entity.parse.failed") {
     return res.status(400).json({
       success: false,
-      message: 'Invalid JSON body',
-      errors:  [],
+      message: "Invalid JSON body",
+      errors: [],
     });
   }
 
@@ -34,46 +34,52 @@ const errorHandler = (err, req, res, next) => {
     return res.status(err.statusCode).json({
       success: false,
       message: err.message,
-      errors:  err.errors,
+      errors: err.errors,
     });
   }
 
   /* ── JWT errors ─────────────────────────────────────────── */
-  if (err.name === 'JsonWebTokenError') {
-    return res.status(401).json({ success: false, message: 'Invalid token', errors: [] });
+  if (err.name === "JsonWebTokenError") {
+    return res
+      .status(401)
+      .json({ success: false, message: "Invalid token", errors: [] });
   }
-  if (err.name === 'TokenExpiredError') {
-    return res.status(401).json({ success: false, message: 'Token expired', errors: [] });
+  if (err.name === "TokenExpiredError") {
+    return res
+      .status(401)
+      .json({ success: false, message: "Token expired", errors: [] });
   }
 
   /* ── PostgreSQL constraint errors ───────────────────────── */
-  if (err.code === '23505') {
+  if (err.code === "23505") {
     // unique_violation
     return res.status(409).json({
       success: false,
-      message: 'A record with that value already exists.',
-      errors:  [],
+      message: "A record with that value already exists.",
+      errors: [],
     });
   }
-  if (err.code === '23503') {
+  if (err.code === "23503") {
     // foreign_key_violation
     return res.status(400).json({
       success: false,
-      message: 'Related record not found.',
-      errors:  [],
+      message: "Related record not found.",
+      errors: [],
     });
   }
 
   /* ── Unknown / programmer errors ───────────────────────── */
-  logger.error('Unhandled error', {
+  logger.error("Unhandled error", {
     message: err.message,
-    stack:   err.stack,
-    path:    req.path,
-    method:  req.method,
+    stack: err.stack,
+    path: req.path,
+    method: req.method,
   });
 
   const message =
-    process.env.NODE_ENV === 'production' ? 'Internal Server Error' : err.message;
+    process.env.NODE_ENV === "production"
+      ? "Internal Server Error"
+      : err.message;
 
   return res.status(500).json({ success: false, message, errors: [] });
 };

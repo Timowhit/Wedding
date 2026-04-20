@@ -5,20 +5,20 @@
  * to req.user.
  */
 
-'use strict';
+"use strict";
 
-const { verifyToken } = require('../utils/jwt');
-const ApiError        = require('../utils/ApiError');
-const asyncHandler    = require('../utils/asyncHandler');
-const { query }       = require('../db');
+const { verifyToken } = require("../utils/jwt");
+const ApiError = require("../utils/ApiError");
+const asyncHandler = require("../utils/asyncHandler");
+const { query } = require("../db");
 
 /**
  * Require a valid JWT.  Populates req.user = { id, email }.
  */
 const authenticate = asyncHandler(async (req, _res, next) => {
   const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith('Bearer ')) {
-    throw ApiError.unauthorized('No token provided');
+  if (!authHeader?.startsWith("Bearer ")) {
+    throw ApiError.unauthorized("No token provided");
   }
 
   const token = authHeader.slice(7);
@@ -26,12 +26,12 @@ const authenticate = asyncHandler(async (req, _res, next) => {
 
   // Confirm user still exists (guards against deleted accounts)
   const { rows } = await query(
-    'SELECT id, email, display_name FROM users WHERE id = $1',
+    "SELECT id, email, display_name FROM users WHERE id = $1",
     [decoded.id],
   );
 
   if (!rows.length) {
-    throw ApiError.unauthorized('User no longer exists');
+    throw ApiError.unauthorized("User no longer exists");
   }
 
   req.user = rows[0];
@@ -45,16 +45,16 @@ const authenticate = asyncHandler(async (req, _res, next) => {
  */
 const optionalAuth = asyncHandler(async (req, _res, next) => {
   const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith('Bearer ')) return next();
+  if (!authHeader?.startsWith("Bearer ")) {return next();}
 
   try {
-    const token   = authHeader.slice(7);
+    const token = authHeader.slice(7);
     const decoded = verifyToken(token);
     const { rows } = await query(
-      'SELECT id, email, display_name FROM users WHERE id = $1',
+      "SELECT id, email, display_name FROM users WHERE id = $1",
       [decoded.id],
     );
-    if (rows.length) req.user = rows[0];
+    if (rows.length) {req.user = rows[0];}
   } catch {
     // swallow — treat as unauthenticated
   }

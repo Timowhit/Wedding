@@ -3,7 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Manage your wedding guest list — track RSVPs, dietary requirements, and plus-ones all in one place." />
+    <meta
+      name="description"
+      content="Manage your wedding guest list — track RSVPs, dietary requirements, and plus-ones all in one place."
+    />
     <title>Guests — Forever Planner</title>
     <link rel="stylesheet" href="styles/main.css" />
     <script type="module" src="scripts/guests.bundle.js"></script>
@@ -12,7 +15,9 @@
     <a class="skip-link" href="#main-content">Skip to main content</a>
 
     <nav class="site-nav" aria-label="Main navigation">
-      <a href="index.html" class="brand" aria-label="Forever Planner home">💍 Forever Planner</a>
+      <a href="index.html" class="brand" aria-label="Forever Planner home"
+        >💍 Forever Planner</a
+      >
       <a href="index.html">Dashboard</a>
       <a href="budget.html">Budget</a>
       <a href="vendors.html">Vendors</a>
@@ -28,7 +33,6 @@
     </header>
 
     <main id="main-content">
-
       <!-- Summary stats -->
       <section aria-label="Guest summary">
         <div class="stats-grid">
@@ -62,7 +66,12 @@
         <div class="form-row two-col">
           <div class="field-group">
             <label for="guest-name">Full Name *</label>
-            <input type="text" id="guest-name" placeholder="e.g. Jane Smith" aria-required="true" />
+            <input
+              type="text"
+              id="guest-name"
+              placeholder="e.g. Jane Smith"
+              aria-required="true"
+            />
           </div>
           <div class="field-group">
             <label for="guest-rsvp">RSVP Status</label>
@@ -77,19 +86,33 @@
         <div class="form-row two-col">
           <div class="field-group">
             <label for="guest-diet">Dietary Requirements</label>
-            <input type="text" id="guest-diet" placeholder="e.g. Vegan, Gluten-free" />
+            <input
+              type="text"
+              id="guest-diet"
+              placeholder="e.g. Vegan, Gluten-free"
+            />
           </div>
           <div class="field-group">
             <label for="guest-plusone">Plus-One Name</label>
-            <input type="text" id="guest-plusone" placeholder="e.g. John Smith" />
+            <input
+              type="text"
+              id="guest-plusone"
+              placeholder="e.g. John Smith"
+            />
           </div>
         </div>
 
-        <button class="btn btn-primary btn-full" id="add-guest-btn">Add Guest</button>
+        <button class="btn btn-primary btn-full" id="add-guest-btn">
+          Add Guest
+        </button>
       </section>
 
       <!-- Filter tabs -->
-      <div class="filter-tabs" role="group" aria-label="Filter guests by RSVP status">
+      <div
+        class="filter-tabs"
+        role="group"
+        aria-label="Filter guests by RSVP status"
+      >
         <button class="filter-tab active" data-rsvp="All">All</button>
         <button class="filter-tab" data-rsvp="Confirmed">Confirmed</button>
         <button class="filter-tab" data-rsvp="Pending">Pending</button>
@@ -104,7 +127,6 @@
           <p>No guests added yet. Add your first guest above!</p>
         </div>
       </section>
-
     </main>
   </body>
 </html>

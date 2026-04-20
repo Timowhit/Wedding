@@ -3,7 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Build your wedding inspiration board — search Unsplash for beautiful photos and save your favourites." />
+    <meta
+      name="description"
+      content="Build your wedding inspiration board — search Unsplash for beautiful photos and save your favourites."
+    />
     <title>Inspiration — Forever Planner</title>
     <link rel="stylesheet" href="styles/main.css" />
     <script type="module" src="scripts/inspiration.js"></script>
@@ -12,7 +15,9 @@
     <a class="skip-link" href="#main-content">Skip to main content</a>
 
     <nav class="site-nav" aria-label="Main navigation">
-      <a href="index.html" class="brand" aria-label="Forever Planner home">💍 Forever Planner</a>
+      <a href="index.html" class="brand" aria-label="Forever Planner home"
+        >💍 Forever Planner</a
+      >
       <a href="index.html">Dashboard</a>
       <a href="budget.html">Budget</a>
       <a href="vendors.html">Vendors</a>
@@ -24,34 +29,59 @@
 
     <header class="page-header">
       <h1><em>Inspiration</em> Board</h1>
-      <p class="subtitle">Search Unsplash for wedding imagery and save your favourites.</p>
+      <p class="subtitle">
+        Search Unsplash for wedding imagery and save your favourites.
+      </p>
     </header>
 
     <main id="main-content">
-
       <!-- Search -->
       <section class="card" aria-labelledby="inspo-search-heading">
         <h2 class="card-title" id="inspo-search-heading">🔍 Search Images</h2>
         <div class="search-row">
-          <label for="inspo-search-input" class="visually-hidden">Search wedding images</label>
-          <input type="text" id="inspo-search-input"
-                 placeholder="e.g. floral arch, rustic barn, beach ceremony…"
-                 aria-label="Search images on Unsplash" />
+          <label for="inspo-search-input" class="visually-hidden"
+            >Search wedding images</label
+          >
+          <input
+            type="text"
+            id="inspo-search-input"
+            placeholder="e.g. floral arch, rustic barn, beach ceremony…"
+            aria-label="Search images on Unsplash"
+          />
           <button class="btn btn-primary" id="inspo-search-btn">Search</button>
         </div>
 
         <!-- Quick suggestion buttons -->
         <div class="quick-suggestions" aria-label="Quick search suggestions">
-          <button class="filter-tab suggestion-btn" data-q="wedding flowers">Flowers</button>
-          <button class="filter-tab suggestion-btn" data-q="wedding venue">Venues</button>
-          <button class="filter-tab suggestion-btn" data-q="wedding cake">Cakes</button>
-          <button class="filter-tab suggestion-btn" data-q="bridal gown">Gowns</button>
-          <button class="filter-tab suggestion-btn" data-q="wedding table decor">Table Decor</button>
-          <button class="filter-tab suggestion-btn" data-q="outdoor wedding">Outdoor</button>
+          <button class="filter-tab suggestion-btn" data-q="wedding flowers">
+            Flowers
+          </button>
+          <button class="filter-tab suggestion-btn" data-q="wedding venue">
+            Venues
+          </button>
+          <button class="filter-tab suggestion-btn" data-q="wedding cake">
+            Cakes
+          </button>
+          <button class="filter-tab suggestion-btn" data-q="bridal gown">
+            Gowns
+          </button>
+          <button
+            class="filter-tab suggestion-btn"
+            data-q="wedding table decor"
+          >
+            Table Decor
+          </button>
+          <button class="filter-tab suggestion-btn" data-q="outdoor wedding">
+            Outdoor
+          </button>
         </div>
 
         <!-- Results grid -->
-        <div id="inspo-results" aria-live="polite" aria-label="Image search results"></div>
+        <div
+          id="inspo-results"
+          aria-live="polite"
+          aria-label="Image search results"
+        ></div>
       </section>
 
       <!-- Saved board -->
@@ -61,21 +91,30 @@
           <span id="saved-count" class="saved-count-label"></span>
         </h2>
 
-        <div class="inspo-grid" id="saved-grid" aria-label="Saved inspiration images"></div>
+        <div
+          class="inspo-grid"
+          id="saved-grid"
+          aria-label="Saved inspiration images"
+        ></div>
 
         <div class="empty-state" id="board-empty" hidden>
           <span class="empty-icon" aria-hidden="true">🌸</span>
           <p>Your inspiration board is empty. Search and save images above!</p>
         </div>
       </section>
-
     </main>
 
     <style>
       .visually-hidden {
-        position: absolute; width: 1px; height: 1px;
-        padding: 0; margin: -1px; overflow: hidden;
-        clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
       }
     </style>
   </body>

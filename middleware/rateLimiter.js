@@ -4,18 +4,18 @@
  * route groups.
  */
 
-'use strict';
+"use strict";
 
-const rateLimit = require('express-rate-limit');
+const rateLimit = require("express-rate-limit");
 
 const windowMs = Number(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000; // 15 min
-const max      = Number(process.env.RATE_LIMIT_MAX)        || 100;
+const max = Number(process.env.RATE_LIMIT_MAX) || 100;
 
 const handler = (_req, res) =>
   res.status(429).json({
     success: false,
-    message: 'Too many requests. Please try again later.',
-    errors:  [],
+    message: "Too many requests. Please try again later.",
+    errors: [],
   });
 
 /**
@@ -25,7 +25,7 @@ const apiLimiter = rateLimit({
   windowMs,
   max,
   standardHeaders: true,
-  legacyHeaders:   false,
+  legacyHeaders: false,
   handler,
 });
 
@@ -34,9 +34,9 @@ const apiLimiter = rateLimit({
  */
 const authLimiter = rateLimit({
   windowMs,
-  max:             10,
+  max: 10,
   standardHeaders: true,
-  legacyHeaders:   false,
+  legacyHeaders: false,
   handler,
   skipSuccessfulRequests: true, // don't count successful logins
 });

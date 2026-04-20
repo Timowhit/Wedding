@@ -3,10 +3,10 @@
  * @description Data-access layer for the `users` table.
  */
 
-'use strict';
+"use strict";
 
-const bcrypt   = require('bcryptjs');
-const { query } = require('../db');
+const bcrypt = require("bcryptjs");
+const { query } = require("../db");
 
 const ROUNDS = Number(process.env.BCRYPT_ROUNDS) || 12;
 
@@ -15,17 +15,16 @@ class User {
 
   static async findById(id) {
     const { rows } = await query(
-      'SELECT id, email, display_name, wedding_date, created_at FROM users WHERE id = $1',
+      "SELECT id, email, display_name, wedding_date, created_at FROM users WHERE id = $1",
       [id],
     );
     return rows[0] ?? null;
   }
 
   static async findByEmail(email) {
-    const { rows } = await query(
-      'SELECT * FROM users WHERE email = $1',
-      [email.toLowerCase().trim()],
-    );
+    const { rows } = await query("SELECT * FROM users WHERE email = $1", [
+      email.toLowerCase().trim(),
+    ]);
     return rows[0] ?? null;
   }
 
@@ -66,7 +65,10 @@ class User {
 
   static async updatePassword(id, newPassword) {
     const hash = await bcrypt.hash(newPassword, ROUNDS);
-    await query('UPDATE users SET password_hash = $2 WHERE id = $1', [id, hash]);
+    await query("UPDATE users SET password_hash = $2 WHERE id = $1", [
+      id,
+      hash,
+    ]);
   }
 
   /* ── AUTH HELPERS ─────────────────────────────────────── */

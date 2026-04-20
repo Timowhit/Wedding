@@ -3,16 +3,16 @@
  * @description Data-access layer for budget_items and budget_limits.
  */
 
-'use strict';
+"use strict";
 
-const { query } = require('../db');
+const { query } = require("../db");
 
 class Budget {
   /* ── LIMIT ────────────────────────────────────────────── */
 
   static async getLimit(userId) {
     const { rows } = await query(
-      'SELECT total FROM budget_limits WHERE user_id = $1',
+      "SELECT total FROM budget_limits WHERE user_id = $1",
       [userId],
     );
     return rows[0]?.total ?? 0;
@@ -43,14 +43,14 @@ class Budget {
       params.push(category);
       sql += ` AND category = $${params.length}`;
     }
-    sql += ' ORDER BY created_at DESC';
+    sql += " ORDER BY created_at DESC";
     const { rows } = await query(sql, params);
     return rows;
   }
 
   static async findById(id, userId) {
     const { rows } = await query(
-      'SELECT * FROM budget_items WHERE id = $1 AND user_id = $2',
+      "SELECT * FROM budget_items WHERE id = $1 AND user_id = $2",
       [id, userId],
     );
     return rows[0] ?? null;
@@ -72,7 +72,7 @@ class Budget {
 
   static async delete(id, userId) {
     const { rowCount } = await query(
-      'DELETE FROM budget_items WHERE id = $1 AND user_id = $2',
+      "DELETE FROM budget_items WHERE id = $1 AND user_id = $2",
       [id, userId],
     );
     return rowCount > 0;
@@ -81,7 +81,7 @@ class Budget {
   /** Sum of all expense amounts for a user. */
   static async totalSpent(userId) {
     const { rows } = await query(
-      'SELECT COALESCE(SUM(amount), 0) AS total FROM budget_items WHERE user_id = $1',
+      "SELECT COALESCE(SUM(amount), 0) AS total FROM budget_items WHERE user_id = $1",
       [userId],
     );
     return Number(rows[0].total);

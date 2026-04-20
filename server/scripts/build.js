@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * @file scripts/build.js
  * @description Production build for the Forever Planner frontend.
@@ -94,7 +95,7 @@ function jsOptions(_watch) {
     format: "esm",
     outdir: path.join(DIST, "scripts"),
     platform: "browser",
-    target: ['chrome100', 'firefox100', 'safari16', 'edge100'],
+    target: ["chrome100", "firefox100", "safari16", "edge100"],
     sourcemap: !IS_PROD,
     minify: IS_PROD,
     // Tree-shake dead code in production
@@ -177,5 +178,5 @@ function reportSizes(meta) {
   }
 })().catch((err) => {
   console.error("\n❌  Build failed:", err.message);
-  process.exit(1);
+  throw new Error("Build failed");
 });

@@ -4,7 +4,7 @@
  * are forwarded to Express's next(err) automatically.
  */
 
-'use strict';
+"use strict";
 
 /**
  * @param {Function} fn  Async express handler (req, res, next) => Promise

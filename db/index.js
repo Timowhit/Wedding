@@ -5,27 +5,29 @@
  * never imports `pg` directly.
  */
 
-'use strict';
+"use strict";
 
-const { Pool } = require('pg');
-const logger   = require('../utils/logger');
+const { Pool } = require("pg");
+const logger = require("../utils/logger");
 
 const pool = new Pool({
-  host:               process.env.DB_HOST     || 'localhost',
-  port:               Number(process.env.DB_PORT) || 5432,
-  database:           process.env.DB_NAME     || 'forever_planner',
-  user:               process.env.DB_USER     || 'postgres',
-  password:           process.env.DB_PASSWORD || '',
-  max:                Number(process.env.DB_POOL_MAX) || 10,
-  idleTimeoutMillis:  Number(process.env.DB_POOL_IDLE_TIMEOUT) || 30_000,
-  connectionTimeoutMillis: Number(process.env.DB_POOL_CONNECTION_TIMEOUT) || 2_000,
-  ssl: process.env.NODE_ENV === 'production'
-    ? { rejectUnauthorized: true }
-    : false,
+  host: process.env.DB_HOST || "localhost",
+  port: Number(process.env.DB_PORT) || 5432,
+  database: process.env.DB_NAME || "forever_planner",
+  user: process.env.DB_USER || "postgres",
+  password: process.env.DB_PASSWORD || "",
+  max: Number(process.env.DB_POOL_MAX) || 10,
+  idleTimeoutMillis: Number(process.env.DB_POOL_IDLE_TIMEOUT) || 30_000,
+  connectionTimeoutMillis:
+    Number(process.env.DB_POOL_CONNECTION_TIMEOUT) || 2_000,
+  ssl:
+    process.env.NODE_ENV === "production"
+      ? { rejectUnauthorized: true }
+      : false,
 });
 
-pool.on('error', (err) => {
-  logger.error('Unexpected PostgreSQL pool error', { error: err.message });
+pool.on("error", (err) => {
+  logger.error("Unexpected PostgreSQL pool error", { error: err.message });
 });
 
 /* ── helpers ─────────────────────────────────────────────── */
@@ -55,12 +57,12 @@ const getClient = () => pool.connect();
 const withTransaction = async (fn) => {
   const client = await pool.connect();
   try {
-    await client.query('BEGIN');
+    await client.query("BEGIN");
     const result = await fn(client);
-    await client.query('COMMIT');
+    await client.query("COMMIT");
     return result;
   } catch (err) {
-    await client.query('ROLLBACK');
+    await client.query("ROLLBACK");
     throw err;
   } finally {
     client.release();
@@ -72,8 +74,8 @@ const withTransaction = async (fn) => {
  * Called at startup — throws if connection fails.
  */
 const testConnection = async () => {
-  const { rows } = await pool.query('SELECT NOW() AS now');
-  logger.info('Database connected', { serverTime: rows[0].now });
+  const { rows } = await pool.query("SELECT NOW() AS now");
+  logger.info("Database connected", { serverTime: rows[0].now });
 };
 
 module.exports = { query, getClient, withTransaction, testConnection, pool };

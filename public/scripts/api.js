@@ -15,41 +15,56 @@
  *   await api.delete(`/budget/${id}`);
  */
 
-'use strict';
+"use strict";
 
 /* ── Token storage ─────────────────────────────────────────── */
-const TOKEN_KEY = 'fp_token';
-const USER_KEY  = 'fp_user';
+const TOKEN_KEY = "fp_token";
+const USER_KEY = "fp_user";
 
 export const Auth = {
   /** @returns {string|null} */
-  getToken()  { return localStorage.getItem(TOKEN_KEY); },
+  getToken() {
+    return localStorage.getItem(TOKEN_KEY);
+  },
 
   /** @param {string} token */
-  setToken(token)  { localStorage.setItem(TOKEN_KEY, token); },
+  setToken(token) {
+    localStorage.setItem(TOKEN_KEY, token);
+  },
 
   /** @returns {{ id, email, display_name }|null} */
   getUser() {
-    try { return JSON.parse(localStorage.getItem(USER_KEY)); }
-    catch { return null; }
+    try {
+      return JSON.parse(localStorage.getItem(USER_KEY));
+    } catch {
+      return null;
+    }
   },
 
   /** @param {{ id, email, display_name }} user */
-  setUser(user)  { localStorage.setItem(USER_KEY, JSON.stringify(user)); },
+  setUser(user) {
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+  },
 
   clearSession() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
   },
 
-  isLoggedIn() { return !!this.getToken(); },
+  isLoggedIn() {
+    return !!this.getToken();
+  },
 
   /**
    * Register a new account.
    * @param {{ email, password, displayName? }} payload
    */
   async register({ email, password, displayName }) {
-    const { data } = await api.post('/auth/register', { email, password, displayName });
+    const { data } = await api.post("/auth/register", {
+      email,
+      password,
+      displayName,
+    });
     Auth.setToken(data.token);
     Auth.setUser(data.user);
     return data;
@@ -60,7 +75,7 @@ export const Auth = {
    * @param {{ email, password }} payload
    */
   async login({ email, password }) {
-    const { data } = await api.post('/auth/login', { email, password });
+    const { data } = await api.post("/auth/login", { email, password });
     Auth.setToken(data.token);
     Auth.setUser(data.user);
     return data;
@@ -68,7 +83,7 @@ export const Auth = {
 
   logout() {
     Auth.clearSession();
-    window.location.href = '/login.html';
+    window.location.href = "/login.html";
   },
 
   /**
@@ -77,7 +92,7 @@ export const Auth = {
    */
   requireAuth() {
     if (!Auth.isLoggedIn()) {
-      window.location.href = '/login.html';
+      window.location.href = "/login.html";
     }
   },
 };
@@ -91,14 +106,14 @@ export class ApiResponseError extends Error {
    */
   constructor(status, message, errors = []) {
     super(message);
-    this.name   = 'ApiResponseError';
+    this.name = "ApiResponseError";
     this.status = status;
     this.errors = errors;
   }
 }
 
 /* ── Core client ───────────────────────────────────────────── */
-const BASE_URL = '/api/v1';
+const BASE_URL = "/api/v1";
 
 const api = {
   /**
@@ -112,22 +127,24 @@ const api = {
    * @returns {Promise<{ success: boolean, data: *, meta?: * }>}
    * @throws {ApiResponseError}
    */
-  async request(path, { method = 'GET', body, query } = {}) {
+  async request(path, { method = "GET", body, query } = {}) {
     // Build URL
     let url = `${BASE_URL}${path}`;
     if (query && Object.keys(query).length) {
       const filtered = Object.fromEntries(
-        Object.entries(query).filter(([, v]) => v !== undefined && v !== null && v !== ''),
+        Object.entries(query).filter(
+          ([, v]) => v !== undefined && v !== null && v !== "",
+        ),
       );
       if (Object.keys(filtered).length) {
-        url += '?' + new URLSearchParams(filtered).toString();
+        url += "?" + new URLSearchParams(filtered).toString();
       }
     }
 
     // Build headers
-    const headers = { 'Content-Type': 'application/json' };
+    const headers = { "Content-Type": "application/json" };
     const token = Auth.getToken();
-    if (token) headers['Authorization'] = `Bearer ${token}`;
+    if (token) {headers["Authorization"] = `Bearer ${token}`;}
 
     // Fetch
     const resp = await fetch(url, {
@@ -137,7 +154,7 @@ const api = {
     });
 
     // 204 No Content — nothing to parse
-    if (resp.status === 204) return { success: true, data: null };
+    if (resp.status === 204) {return { success: true, data: null };}
 
     const json = await resp.json().catch(() => ({
       success: false,
@@ -149,13 +166,16 @@ const api = {
       // Token expired or invalid → kick to login
       if (resp.status === 401) {
         Auth.clearSession();
-        window.location.href = '/login.html';
-        throw new ApiResponseError(401, 'Session expired. Please log in again.');
+        window.location.href = "/login.html";
+        throw new ApiResponseError(
+          401,
+          "Session expired. Please log in again.",
+        );
       }
       throw new ApiResponseError(
         resp.status,
         json.message || `HTTP ${resp.status}`,
-        json.errors  || [],
+        json.errors || [],
       );
     }
 
@@ -164,11 +184,21 @@ const api = {
 
   /* ── Convenience methods ───────────────────────────────── */
 
-  get(path, query)       { return this.request(path, { method: 'GET', query }); },
-  post(path, body)       { return this.request(path, { method: 'POST', body }); },
-  put(path, body)        { return this.request(path, { method: 'PUT', body }); },
-  patch(path, body)      { return this.request(path, { method: 'PATCH', body }); },
-  delete(path)           { return this.request(path, { method: 'DELETE' }); },
+  get(path, query) {
+    return this.request(path, { method: "GET", query });
+  },
+  post(path, body) {
+    return this.request(path, { method: "POST", body });
+  },
+  put(path, body) {
+    return this.request(path, { method: "PUT", body });
+  },
+  patch(path, body) {
+    return this.request(path, { method: "PATCH", body });
+  },
+  delete(path) {
+    return this.request(path, { method: "DELETE" });
+  },
 };
 
 export default api;

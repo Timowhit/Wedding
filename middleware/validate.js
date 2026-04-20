@@ -7,10 +7,10 @@
  *   router.post('/path', [...validationChain], validate, controller);
  */
 
-'use strict';
+"use strict";
 
-const { validationResult } = require('express-validator');
-const ApiError = require('../utils/ApiError');
+const { validationResult } = require("express-validator");
+const ApiError = require("../utils/ApiError");
 
 /**
  * Express middleware that checks for validation errors.
@@ -18,10 +18,10 @@ const ApiError = require('../utils/ApiError');
  */
 const validate = (req, _res, next) => {
   const result = validationResult(req);
-  if (result.isEmpty()) return next();
+  if (result.isEmpty()) {return next();}
 
   const errors = result.array().map(({ path, msg }) => ({ field: path, msg }));
-  return next(new ApiError.unprocessable('Validation failed', errors));
+  return next(new ApiError.unprocessable("Validation failed", errors));
 };
 
 module.exports = validate;

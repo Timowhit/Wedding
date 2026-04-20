@@ -3,19 +3,27 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Sign in or create your Forever Planner account." />
+    <meta
+      name="description"
+      content="Sign in or create your Forever Planner account."
+    />
     <title>Sign In — Forever Planner</title>
     <link rel="stylesheet" href="styles/main.css" />
     <script type="module" src="scripts/login.js"></script>
     <style>
       /* ── Login-page-specific layout ─────────────────────── */
-      body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
 
       .auth-shell {
         width: 100%;
         max-width: 420px;
         padding: 24px 20px 48px;
-        animation: fadeUp .5s ease both;
+        animation: fadeUp 0.5s ease both;
       }
 
       .auth-brand {
@@ -24,7 +32,7 @@
       }
 
       .auth-brand .logo {
-        font-family: 'Cormorant Garamond', serif;
+        font-family: "Cormorant Garamond", serif;
         font-size: 2rem;
         font-weight: 300;
         color: var(--primary);
@@ -33,7 +41,7 @@
       }
 
       .auth-brand .tagline {
-        font-size: .8rem;
+        font-size: 0.8rem;
         color: var(--text-muted);
         letter-spacing: 2px;
         text-transform: uppercase;
@@ -53,7 +61,7 @@
       .auth-tab {
         padding: 10px;
         text-align: center;
-        font-size: .85rem;
+        font-size: 0.85rem;
         font-weight: 500;
         color: var(--text-muted);
         cursor: pointer;
@@ -68,10 +76,18 @@
       }
 
       /* Forms */
-      .auth-form { display: flex; flex-direction: column; gap: 14px; }
-      .auth-form[hidden] { display: none; }
+      .auth-form {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .auth-form[hidden] {
+        display: none;
+      }
 
-      .auth-form .field-group label { margin-bottom: 4px; }
+      .auth-form .field-group label {
+        margin-bottom: 4px;
+      }
 
       .auth-submit {
         margin-top: 4px;
@@ -80,20 +96,22 @@
       /* Divider */
       .auth-divider {
         text-align: center;
-        font-size: .75rem;
+        font-size: 0.75rem;
         color: var(--text-muted);
         margin: 20px 0 0;
       }
 
       /* Field error hints */
       .field-error {
-        font-size: .75rem;
+        font-size: 0.75rem;
         color: var(--danger);
         margin-top: 2px;
         display: none;
       }
 
-      .field-error.visible { display: block; }
+      .field-error.visible {
+        display: block;
+      }
 
       /* Spinner inside button */
       .btn .spinner {
@@ -104,13 +122,14 @@
       }
 
       @media (max-width: 480px) {
-        .auth-shell { padding: 16px 16px 40px; }
+        .auth-shell {
+          padding: 16px 16px 40px;
+        }
       }
     </style>
   </head>
   <body>
     <main class="auth-shell" id="main-content">
-
       <!-- Brand -->
       <div class="auth-brand" aria-label="Forever Planner">
         <span class="logo">💍 Forever Planner</span>
@@ -118,82 +137,169 @@
       </div>
 
       <!-- Tab switcher -->
-      <div class="auth-tabs" role="tablist" aria-label="Sign in or create account">
-        <button class="auth-tab active" role="tab" aria-selected="true"
-                aria-controls="login-form" id="tab-login">
+      <div
+        class="auth-tabs"
+        role="tablist"
+        aria-label="Sign in or create account"
+      >
+        <button
+          class="auth-tab active"
+          role="tab"
+          aria-selected="true"
+          aria-controls="login-form"
+          id="tab-login"
+        >
           Sign In
         </button>
-        <button class="auth-tab" role="tab" aria-selected="false"
-                aria-controls="register-form" id="tab-register">
+        <button
+          class="auth-tab"
+          role="tab"
+          aria-selected="false"
+          aria-controls="register-form"
+          id="tab-register"
+        >
           Create Account
         </button>
       </div>
 
       <!-- Login form -->
-      <form class="auth-form card" id="login-form"
-            role="tabpanel" aria-labelledby="tab-login"
-            novalidate>
+      <form
+        class="auth-form card"
+        id="login-form"
+        role="tabpanel"
+        aria-labelledby="tab-login"
+        novalidate
+      >
         <div class="field-group">
           <label for="login-email">Email</label>
-          <input type="email" id="login-email" autocomplete="email"
-                 placeholder="you@example.com" required />
+          <input
+            type="email"
+            id="login-email"
+            autocomplete="email"
+            placeholder="you@example.com"
+            required
+          />
           <span class="field-error" id="login-email-error"></span>
         </div>
         <div class="field-group">
           <label for="login-password">Password</label>
-          <input type="password" id="login-password" autocomplete="current-password"
-                 placeholder="••••••••" required />
+          <input
+            type="password"
+            id="login-password"
+            autocomplete="current-password"
+            placeholder="••••••••"
+            required
+          />
           <span class="field-error" id="login-password-error"></span>
         </div>
 
-        <div class="field-group" id="login-error-banner" hidden
-             role="alert" style="background:#fde8e8;padding:10px 14px;border-radius:var(--radius-sm);">
-          <span id="login-error-msg" style="color:var(--danger);font-size:.85rem;"></span>
+        <div
+          class="field-group"
+          id="login-error-banner"
+          hidden
+          role="alert"
+          style="
+            background: #fde8e8;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+          "
+        >
+          <span
+            id="login-error-msg"
+            style="color: var(--danger); font-size: 0.85rem"
+          ></span>
         </div>
 
-        <button type="submit" class="btn btn-primary btn-full auth-submit" id="login-btn">
+        <button
+          type="submit"
+          class="btn btn-primary btn-full auth-submit"
+          id="login-btn"
+        >
           Sign In
         </button>
       </form>
 
       <!-- Register form -->
-      <form class="auth-form card" id="register-form"
-            role="tabpanel" aria-labelledby="tab-register"
-            hidden novalidate>
+      <form
+        class="auth-form card"
+        id="register-form"
+        role="tabpanel"
+        aria-labelledby="tab-register"
+        hidden
+        novalidate
+      >
         <div class="field-group">
-          <label for="reg-name">Your Name <span style="color:var(--text-muted)">(optional)</span></label>
-          <input type="text" id="reg-name" autocomplete="name"
-                 placeholder="e.g. Jane & Tom" maxlength="80" />
+          <label for="reg-name"
+            >Your Name
+            <span style="color: var(--text-muted)">(optional)</span></label
+          >
+          <input
+            type="text"
+            id="reg-name"
+            autocomplete="name"
+            placeholder="e.g. Jane & Tom"
+            maxlength="80"
+          />
         </div>
         <div class="field-group">
           <label for="reg-email">Email</label>
-          <input type="email" id="reg-email" autocomplete="email"
-                 placeholder="you@example.com" required />
+          <input
+            type="email"
+            id="reg-email"
+            autocomplete="email"
+            placeholder="you@example.com"
+            required
+          />
           <span class="field-error" id="reg-email-error"></span>
         </div>
         <div class="field-group">
           <label for="reg-password">Password</label>
-          <input type="password" id="reg-password" autocomplete="new-password"
-                 placeholder="Min 8 chars, 1 uppercase, 1 number" required />
+          <input
+            type="password"
+            id="reg-password"
+            autocomplete="new-password"
+            placeholder="Min 8 chars, 1 uppercase, 1 number"
+            required
+          />
           <span class="field-error" id="reg-password-error"></span>
         </div>
         <div class="field-group">
           <label for="reg-confirm">Confirm Password</label>
-          <input type="password" id="reg-confirm" autocomplete="new-password"
-                 placeholder="Repeat password" required />
+          <input
+            type="password"
+            id="reg-confirm"
+            autocomplete="new-password"
+            placeholder="Repeat password"
+            required
+          />
           <span class="field-error" id="reg-confirm-error"></span>
         </div>
 
-        <div class="field-group" id="reg-error-banner" hidden
-             role="alert" style="background:#fde8e8;padding:10px 14px;border-radius:var(--radius-sm);">
-          <span id="reg-error-msg" style="color:var(--danger);font-size:.85rem;"></span>
+        <div
+          class="field-group"
+          id="reg-error-banner"
+          hidden
+          role="alert"
+          style="
+            background: #fde8e8;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+          "
+        >
+          <span
+            id="reg-error-msg"
+            style="color: var(--danger); font-size: 0.85rem"
+          ></span>
         </div>
 
-        <button type="submit" class="btn btn-primary btn-full auth-submit" id="reg-btn">
+        <button
+          type="submit"
+          class="btn btn-primary btn-full auth-submit"
+          id="reg-btn"
+        >
           Create Account
         </button>
       </form>
-
     </main>
   </body>
 </html>
