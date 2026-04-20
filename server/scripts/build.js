@@ -24,7 +24,7 @@ const fs = require("fs");
 const path = require("path");
 
 /* ── Config ──────────────────────────────────────────────────── */
-const ROOT = path.join(__dirname, "..");
+const ROOT = path.join(__dirname, "../..");
 const SRC = path.join(ROOT, "public");
 const DIST = path.join(ROOT, "dist");
 const WATCH = process.argv.includes("--watch");
@@ -94,7 +94,7 @@ function jsOptions(_watch) {
     format: "esm",
     outdir: path.join(DIST, "scripts"),
     platform: "browser",
-    target: ["es2020", "chrome90", "firefox88", "safari14"],
+    target: ['chrome100', 'firefox100', 'safari16', 'edge100'],
     sourcemap: !IS_PROD,
     minify: IS_PROD,
     // Tree-shake dead code in production

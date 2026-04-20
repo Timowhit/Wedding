@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Track your wedding budget — add expenses by category, set a total budget, and see what you've spent at a glance." />
+    <title>Budget — Forever Planner</title>
+    <link rel="stylesheet" href="styles/main.css" />
+    <script type="module" src="scripts/budget.bundle.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+
+    <nav class="site-nav" aria-label="Main navigation">
+      <a href="index.html" class="brand" aria-label="Forever Planner home">💍 Forever Planner</a>
+      <a href="index.html">Dashboard</a>
+      <a href="budget.html">Budget</a>
+      <a href="vendors.html">Vendors</a>
+      <a href="music.html">Music</a>
+      <a href="inspiration.html">Inspiration</a>
+      <a href="guests.html">Guests</a>
+      <a href="checklist.html">Checklist</a>
+    </nav>
+
+    <header class="page-header">
+      <h1><em>Budget</em> Tracker</h1>
+      <p class="subtitle">Keep every dollar accounted for.</p>
+    </header>
+
+    <main id="main-content">
+
+      <!-- Budget overview -->
+      <section aria-label="Budget summary">
+        <div class="budget-summary">
+          <div class="budget-box total">
+            <div class="bval" id="budget-total-display">$0</div>
+            <div class="blabel">Total Budget</div>
+          </div>
+          <div class="budget-box spent">
+            <div class="bval" id="budget-spent-display">$0</div>
+            <div class="blabel">Spent</div>
+          </div>
+          <div class="budget-box remaining">
+            <div class="bval" id="budget-remaining-display">$0</div>
+            <div class="blabel">Remaining</div>
+          </div>
+        </div>
+
+        <!-- Overall progress bar -->
+        <div class="progress-label" aria-hidden="true">
+          <span>Budget used</span>
+          <span id="budget-pct-label">0%</span>
+        </div>
+        <div class="progress-wrap" role="progressbar"
+             aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Percentage of budget used"
+             id="budget-progress-wrap">
+          <div class="progress-bar" id="budget-progress-bar"></div>
+        </div>
+      </section>
+
+      <!-- Set total budget -->
+      <section class="card" aria-labelledby="budget-limit-heading">
+        <h2 class="card-title" id="budget-limit-heading">⚙️ Set Budget Limit</h2>
+        <div class="form-row two-col">
+          <div class="field-group">
+            <label for="budget-limit-input">Total budget ($)</label>
+            <input type="number" id="budget-limit-input" min="0" step="100"
+                   placeholder="e.g. 25000" aria-label="Total budget amount" />
+          </div>
+          <div class="field-group field-group-end">
+            <button class="btn btn-secondary btn-end" id="save-limit-btn">
+              Save Limit
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Add expense -->
+      <section class="card" aria-labelledby="add-expense-heading">
+        <h2 class="card-title" id="add-expense-heading">➕ Add Expense</h2>
+
+        <div class="form-row three-col">
+          <div class="field-group">
+            <label for="expense-name">Description</label>
+            <input type="text" id="expense-name" placeholder="e.g. Florist deposit" aria-required="true" />
+          </div>
+          <div class="field-group">
+            <label for="expense-category">Category</label>
+            <select id="expense-category" aria-label="Expense category">
+              <option value="Venue">Venue</option>
+              <option value="Catering">Catering</option>
+              <option value="Photography">Photography</option>
+              <option value="Flowers">Flowers</option>
+              <option value="Music">Music / DJ</option>
+              <option value="Attire">Attire</option>
+              <option value="Invitations">Invitations</option>
+              <option value="Transportation">Transportation</option>
+              <option value="Honeymoon">Honeymoon</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="expense-amount">Amount ($)</label>
+            <input type="number" id="expense-amount" min="0" step="0.01"
+                   placeholder="0.00" aria-required="true" />
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-full" id="add-expense-btn">Add Expense</button>
+      </section>
+
+      <!-- Filter tabs -->
+      <div class="filter-tabs" role="group" aria-label="Filter by category">
+        <button class="filter-tab active" data-cat="All">All</button>
+        <button class="filter-tab" data-cat="Venue">Venue</button>
+        <button class="filter-tab" data-cat="Catering">Catering</button>
+        <button class="filter-tab" data-cat="Photography">Photography</button>
+        <button class="filter-tab" data-cat="Flowers">Flowers</button>
+        <button class="filter-tab" data-cat="Music">Music / DJ</button>
+        <button class="filter-tab" data-cat="Attire">Attire</button>
+        <button class="filter-tab" data-cat="Other">Other</button>
+      </div>
+
+      <!-- Expense list -->
+      <section aria-label="Expense list">
+        <ul class="item-list" id="expense-list" aria-label="Expenses"></ul>
+        <div class="empty-state" id="budget-empty" hidden>
+          <span class="empty-icon" aria-hidden="true">💸</span>
+          <p>No expenses yet. Add your first one above!</p>
+        </div>
+      </section>
+
+    </main>
+  </body>
+</html>

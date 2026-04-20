@@ -1,0 +1,36 @@
+var p="fp_token",g="fp_user",o={getToken(){return localStorage.getItem(p)},setToken(s){localStorage.setItem(p,s)},getUser(){try{return JSON.parse(localStorage.getItem(g))}catch{return null}},setUser(s){localStorage.setItem(g,JSON.stringify(s))},clearSession(){localStorage.removeItem(p),localStorage.removeItem(g)},isLoggedIn(){return!!this.getToken()},async register({email:s,password:t,displayName:e}){let{data:a}=await v.post("/auth/register",{email:s,password:t,displayName:e});return o.setToken(a.token),o.setUser(a.user),a},async login({email:s,password:t}){let{data:e}=await v.post("/auth/login",{email:s,password:t});return o.setToken(e.token),o.setUser(e.user),e},logout(){o.clearSession(),window.location.href="/login.html"},requireAuth(){o.isLoggedIn()||(window.location.href="/login.html")}},u=class extends Error{constructor(t,e,a=[]){super(e),this.name="ApiResponseError",this.status=t,this.errors=a}},w="/api/v1",v={async request(s,{method:t="GET",body:e,query:a}={}){let r=`${w}${s}`;if(a&&Object.keys(a).length){let y=Object.fromEntries(Object.entries(a).filter(([,m])=>m!=null&&m!==""));Object.keys(y).length&&(r+="?"+new URLSearchParams(y).toString())}let i={"Content-Type":"application/json"},_=o.getToken();_&&(i.Authorization=`Bearer ${_}`);let c=await fetch(r,{method:t,headers:i,body:e!==void 0?JSON.stringify(e):void 0});if(c.status===204)return{success:!0,data:null};let h=await c.json().catch(()=>({success:!1,message:`HTTP ${c.status}`,errors:[]}));if(!c.ok)throw c.status===401?(o.clearSession(),window.location.href="/login.html",new u(401,"Session expired. Please log in again.")):new u(c.status,h.message||`HTTP ${c.status}`,h.errors||[]);return h},get(s,t){return this.request(s,{method:"GET",query:t})},post(s,t){return this.request(s,{method:"POST",body:t})},put(s,t){return this.request(s,{method:"PUT",body:t})},patch(s,t){return this.request(s,{method:"PATCH",body:t})},delete(s){return this.request(s,{method:"DELETE"})}},d=v;var l=class s{static _container=null;static _getContainer(){return this._container||(this._container=document.createElement("div"),this._container.className="toast-container",this._container.setAttribute("aria-live","polite"),this._container.setAttribute("aria-atomic","true"),document.body.appendChild(this._container)),this._container}static show(t,e="default",a=2800){let r=document.createElement("div");r.className=`toast${e!=="default"?" "+e:""}`,r.textContent=t,this._getContainer().appendChild(r),setTimeout(()=>{r.style.opacity="0",r.style.transition="opacity .3s ease",setTimeout(()=>r.remove(),350)},a)}static showErrors(t=[]){if(!t.length)return;let e=t.map(a=>a.msg).join(" \xB7 ");s.show(e,"error",4e3)}};function n(s){return String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}function b(){let s=window.location.pathname.split("/").pop()||"index.html";document.querySelectorAll(".site-nav a").forEach(t=>{let e=t.getAttribute("href");t.classList.toggle("active",e===s||s===""&&e==="index.html")})}function E(){b();let s=document.getElementById("nav-user");if(s){let e=o.getUser();s.textContent=e?.display_name||e?.email||""}let t=document.getElementById("logout-btn");t&&t.addEventListener("click",e=>{e.preventDefault(),o.logout()})}o.requireAuth();var f=class{constructor(){this._searchInput=document.getElementById("inspo-search-input"),this._searchBtn=document.getElementById("inspo-search-btn"),this._resultsEl=document.getElementById("inspo-results"),this._savedGrid=document.getElementById("saved-grid"),this._savedCount=document.getElementById("saved-count"),this._emptyState=document.getElementById("board-empty")}async init(){E(),this._bindEvents(),await this._loadBoard()}_bindEvents(){this._searchBtn.addEventListener("click",()=>this._search()),this._searchInput.addEventListener("keydown",t=>{t.key==="Enter"&&this._search()}),document.querySelectorAll(".suggestion-btn").forEach(t=>t.addEventListener("click",()=>{this._searchInput.value=t.dataset.q,this._search()}))}async _search(){let t=this._searchInput.value.trim();if(!t)return l.show("Enter a search term.","error");this._resultsEl.innerHTML=`
+      <div class="loading-state">
+        <span class="spinner" aria-hidden="true"></span> Searching Unsplash\u2026
+      </div>`;try{let{data:e}=await d.get("/inspiration/search",{q:t,per_page:18}),a=e.results??[];if(!a.length){this._resultsEl.innerHTML=`
+          <p style="color:var(--text-muted);padding:12px 0">
+            No images found for "${n(t)}".
+          </p>`;return}this._resultsEl.innerHTML=`
+        <div class="inspo-grid" role="list" aria-label="Search results" style="margin-top:16px">
+          ${a.map(r=>this._resultCard(r)).join("")}
+        </div>`,this._resultsEl.querySelectorAll(".inspo-save-btn").forEach(r=>{r.addEventListener("click",()=>{let i=r.closest("[data-photo-id]");this._save({photoId:i.dataset.photoId,thumbUrl:i.dataset.thumb,fullUrl:i.dataset.full,altDesc:i.dataset.alt||void 0,sourceLink:i.dataset.link||void 0})})})}catch{this._resultsEl.innerHTML=`
+        <p style="color:var(--danger);padding:12px 0">
+          Search failed. Please check your connection and try again.
+        </p>`}}_resultCard(t){let e=t.urls?.thumb||"",a=t.urls?.regular||t.urls?.full||e,r=t.alt_description||t.description||"Wedding inspiration photo",i=t.links?.html||"#";return`
+      <div class="inspo-card" role="listitem"
+           data-photo-id="${n(t.id)}"
+           data-thumb="${n(e)}"
+           data-full="${n(a)}"
+           data-alt="${n(r)}"
+           data-link="${n(i)}">
+        <img src="${n(e)}" alt="${n(r)}" loading="lazy" />
+        <div class="inspo-overlay">
+          <button class="inspo-save-btn" aria-label="Save: ${n(r)}">
+            \u2665 Save
+          </button>
+        </div>
+      </div>`}async _save(t){try{await d.post("/inspiration",t),l.show("Saved to your inspiration board! \u{1F338}","success"),await this._loadBoard()}catch(e){if(e.status===409)return l.show("Already saved to your board!");l.show(e.message||"Could not save photo.","error")}}async _remove(t){try{await d.delete(`/inspiration/${t}`),l.show("Removed from board."),await this._loadBoard()}catch(e){l.show(e.message||"Could not remove photo.","error")}}async _loadBoard(){try{let{data:t}=await d.get("/inspiration");this._renderBoard(t.photos)}catch{l.show("Could not load inspiration board.","error")}}_renderBoard(t){this._emptyState.hidden=t.length>0,this._savedCount.textContent=t.length?`(${t.length} saved)`:"",this._savedGrid.innerHTML=t.map(e=>`
+      <div class="inspo-card" data-id="${n(e.id)}"
+           role="img" aria-label="${n(e.alt_desc||"Saved inspiration image")}">
+        <a href="${n(e.full_url)}" target="_blank" rel="noopener noreferrer"
+           aria-label="View full size: ${n(e.alt_desc||"photo")}">
+          <img src="${n(e.thumb_url)}"
+               alt="${n(e.alt_desc||"Saved inspiration image")}" loading="lazy" />
+        </a>
+        <button class="inspo-remove-btn remove-saved-btn"
+                aria-label="Remove from board">\u2715</button>
+      </div>`).join(""),this._savedGrid.querySelectorAll(".remove-saved-btn").forEach(e=>e.addEventListener("click",()=>this._remove(e.closest("[data-id]").dataset.id)))}};document.addEventListener("DOMContentLoaded",()=>{new f().init()});

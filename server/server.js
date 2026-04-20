@@ -70,6 +70,12 @@ app.use("/api/v1", routes);
 // ── Static files ─────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, "public")));
 
+const staticDir =
+  process.env.NODE_ENV === 'production'
+    ? path.join(__dirname, '..', 'dist')
+    : path.join(__dirname, '..', 'public');
+app.use(express.static(staticDir));
+
 /* ── 404 fallthrough ────────────────────────────────────────── */
 app.use((_req, res) => {
   res

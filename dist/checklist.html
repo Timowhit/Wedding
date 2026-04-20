@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Stay on track with your wedding planning checklist — add tasks by category, set due dates, and check off completed items." />
+    <title>Checklist — Forever Planner</title>
+    <link rel="stylesheet" href="styles/main.css" />
+    <script type="module" src="scripts/checklist.bundle.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+
+    <nav class="site-nav" aria-label="Main navigation">
+      <a href="index.html" class="brand" aria-label="Forever Planner home">💍 Forever Planner</a>
+      <a href="index.html">Dashboard</a>
+      <a href="budget.html">Budget</a>
+      <a href="vendors.html">Vendors</a>
+      <a href="music.html">Music</a>
+      <a href="inspiration.html">Inspiration</a>
+      <a href="guests.html">Guests</a>
+      <a href="checklist.html">Checklist</a>
+    </nav>
+
+    <header class="page-header">
+      <h1><em>Planning</em> Checklist</h1>
+      <p class="subtitle">Stay organised from engagement to big day.</p>
+    </header>
+
+    <main id="main-content">
+
+      <!-- Progress -->
+      <section aria-label="Progress overview">
+        <div class="progress-label">
+          <span id="progress-text">0 of 0 tasks complete</span>
+          <span id="progress-pct">0%</span>
+        </div>
+        <div class="progress-wrap" role="progressbar"
+             aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Task completion progress"
+             id="checklist-progress-wrap">
+          <div class="progress-bar" id="checklist-progress-bar"></div>
+        </div>
+      </section>
+
+      <!-- Add task form -->
+      <section class="card" aria-labelledby="add-task-heading">
+        <h2 class="card-title" id="add-task-heading">➕ Add Task</h2>
+
+        <div class="form-row three-col">
+          <div class="field-group">
+            <label for="task-text">Task *</label>
+            <input type="text" id="task-text" placeholder="e.g. Book the photographer" aria-required="true" />
+          </div>
+          <div class="field-group">
+            <label for="task-category">Category</label>
+            <select id="task-category" aria-label="Task category">
+              <option value="Venue">Venue</option>
+              <option value="Catering">Catering</option>
+              <option value="Attire">Attire</option>
+              <option value="Flowers">Flowers</option>
+              <option value="Photography">Photography</option>
+              <option value="Invitations">Invitations</option>
+              <option value="Honeymoon">Honeymoon</option>
+              <option value="Beauty">Beauty</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="task-due">Due Date</label>
+            <input type="date" id="task-due" aria-label="Task due date" />
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-full" id="add-task-btn">Add Task</button>
+      </section>
+
+      <!-- Seed default tasks -->
+      <div class="seed-tasks-container">
+        <button class="btn btn-ghost btn-seed-tasks" id="seed-tasks-btn">
+          ✨ Load example tasks
+        </button>
+      </div>
+
+      <!-- Filter tabs -->
+      <div class="filter-tabs" role="group" aria-label="Filter tasks">
+        <button class="filter-tab active" data-cat="All">All</button>
+        <button class="filter-tab" data-cat="active">To Do</button>
+        <button class="filter-tab" data-cat="done">Done</button>
+        <button class="filter-tab" data-cat="Venue">Venue</button>
+        <button class="filter-tab" data-cat="Catering">Catering</button>
+        <button class="filter-tab" data-cat="Attire">Attire</button>
+        <button class="filter-tab" data-cat="Photography">Photography</button>
+      </div>
+
+      <!-- Task list -->
+      <section aria-label="Task list">
+        <ul class="item-list" id="task-list" aria-label="Planning tasks"></ul>
+        <div class="empty-state" id="task-empty" hidden>
+          <span class="empty-icon" aria-hidden="true">📋</span>
+          <p>No tasks yet. Add your first task above or load example tasks!</p>
+        </div>
+      </section>
+
+    </main>
+  </body>
+</html>
