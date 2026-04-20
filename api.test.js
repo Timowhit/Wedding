@@ -16,8 +16,8 @@ process.env.JWT_SECRET = 'test_secret_at_least_32_chars_long!!';
 process.env.DB_NAME    = process.env.DB_NAME || 'forever_planner_test';
 
 const request = require('supertest');
-const app     = require('../server');
-const { pool } = require('../db');
+const app     = require('./server/server');
+const { pool } = require('./db');
 
 /* ── Helpers ─────────────────────────────────────────────────── */
 const TEST_USER = {

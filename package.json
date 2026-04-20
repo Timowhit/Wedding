@@ -2,7 +2,7 @@
   "name": "forever-planner-api",
   "version": "1.0.0",
   "description": "Forever Planner — Wedding Planning REST API",
-  "main": "server.js",
+  "main": "server/server.js",
   "scripts": {
   "start":         "node server/server.js",
   "dev":           "nodemon server/server.js",

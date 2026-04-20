@@ -68,8 +68,6 @@ app.use("/api", apiLimiter);
 app.use("/api/v1", routes);
 
 // ── Static files ─────────────────────────────────────────────
-app.use(express.static(path.join(__dirname, "public")));
-
 const staticDir =
   process.env.NODE_ENV === 'production'
     ? path.join(__dirname, '..', 'dist')
