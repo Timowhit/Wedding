@@ -9,11 +9,16 @@ const { body, param, query } = require("express-validator");
 
 const ctrl = require("../controllers/inspirationController");
 const { authenticate } = require("../middleware/auth");
+const {
+  resolveWedding,
+  requireEditor,
+} = require("../middleware/weddingAccess");
 const validate = require("../middleware/validate");
 
 const router = Router();
 
 router.use(authenticate);
+router.use(resolveWedding);
 
 /* ── Unsplash proxy ─────────────────────────────────────────── */
 router.get(
@@ -35,11 +40,18 @@ router.post(
   body("altDesc").optional({ nullable: true }).trim().isLength({ max: 500 }),
   body("sourceLink").optional({ nullable: true }).isURL(),
   validate,
+  requireEditor,
   ctrl.savePhoto,
 );
 
-router.delete("/board", ctrl.clearBoard);
+router.delete("/board", requireEditor, ctrl.clearBoard);
 
-router.delete("/:id", param("id").isUUID(), validate, ctrl.removePhoto);
+router.delete(
+  "/:id",
+  param("id").isUUID(),
+  validate,
+  requireEditor,
+  ctrl.removePhoto,
+);
 
 module.exports = router;

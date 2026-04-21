@@ -72,7 +72,9 @@ class VendorManager {
   /* ── Add ──────────────────────────────────────────────── */
   async _add() {
     const name = this._nameInput.value.trim();
-    if (!name) {return Toast.show("Please enter a vendor name.", "error");}
+    if (!name) {
+      return Toast.show("Please enter a vendor name.", "error");
+    }
 
     this._addBtn.disabled = true;
     try {

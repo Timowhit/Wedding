@@ -10,7 +10,7 @@ const { query } = require("../db");
 class Vendor {
   static async findAll(userId, status = null) {
     const params = [userId];
-    let sql = "SELECT * FROM vendors WHERE user_id = $1";
+    let sql = "SELECT * FROM vendors WHERE wedding_id = $1";
     if (status) {
       params.push(status);
       sql += ` AND status = $${params.length}`;
@@ -22,7 +22,7 @@ class Vendor {
 
   static async findById(id, userId) {
     const { rows } = await query(
-      "SELECT * FROM vendors WHERE id = $1 AND user_id = $2",
+      "SELECT * FROM vendors WHERE id = $1 AND wedding_id = $2",
       [id, userId],
     );
     return rows[0] ?? null;
@@ -37,7 +37,7 @@ class Vendor {
     { name, category, phone, email, website, status, notes },
   ) {
     const { rows } = await query(
-      `INSERT INTO vendors (user_id, name, category, phone, email, website, status, notes)
+      `INSERT INTO vendors (wedding_id, name, category, phone, email, website, status, notes)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
       [
@@ -63,21 +63,37 @@ class Vendor {
       setClauses.push(`${col} = $${params.length}`);
     };
 
-    if (fields.name !== undefined) {add("name", fields.name);}
-    if (fields.category !== undefined) {add("category", fields.category);}
-    if (fields.phone !== undefined) {add("phone", fields.phone || null);}
-    if (fields.email !== undefined) {add("email", fields.email || null);}
-    if (fields.website !== undefined) {add("website", fields.website || null);}
-    if (fields.status !== undefined) {add("status", fields.status);}
-    if (fields.notes !== undefined) {add("notes", fields.notes || null);}
+    if (fields.name !== undefined) {
+      add("name", fields.name);
+    }
+    if (fields.category !== undefined) {
+      add("category", fields.category);
+    }
+    if (fields.phone !== undefined) {
+      add("phone", fields.phone || null);
+    }
+    if (fields.email !== undefined) {
+      add("email", fields.email || null);
+    }
+    if (fields.website !== undefined) {
+      add("website", fields.website || null);
+    }
+    if (fields.status !== undefined) {
+      add("status", fields.status);
+    }
+    if (fields.notes !== undefined) {
+      add("notes", fields.notes || null);
+    }
 
-    if (!setClauses.length) {return Vendor.findById(id, userId);}
+    if (!setClauses.length) {
+      return Vendor.findById(id, userId);
+    }
 
     params.push(id, userId);
     const sql = `
       UPDATE vendors
       SET ${setClauses.join(", ")}
-      WHERE id = $${params.length - 1} AND user_id = $${params.length}
+      WHERE id = $${params.length - 1} AND wedding_id = $${params.length}
       RETURNING *`;
 
     const { rows } = await query(sql, params);
@@ -86,7 +102,7 @@ class Vendor {
 
   static async delete(id, userId) {
     const { rowCount } = await query(
-      "DELETE FROM vendors WHERE id = $1 AND user_id = $2",
+      "DELETE FROM vendors WHERE id = $1 AND wedding_id = $2",
       [id, userId],
     );
     return rowCount > 0;

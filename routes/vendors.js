@@ -9,6 +9,10 @@ const { body, param, query } = require("express-validator");
 
 const ctrl = require("../controllers/vendorController");
 const { authenticate } = require("../middleware/auth");
+const {
+  resolveWedding,
+  requireEditor,
+} = require("../middleware/weddingAccess");
 const validate = require("../middleware/validate");
 
 const router = Router();
@@ -29,6 +33,7 @@ const CATEGORIES = [
 const STATUSES = ["Researching", "Contacted", "Booked", "Declined"];
 
 router.use(authenticate);
+router.use(resolveWedding);
 
 router.get(
   "/",
@@ -53,6 +58,7 @@ router.post(
   body("status").optional().isIn(STATUSES),
   body("notes").optional({ nullable: true }).trim().isLength({ max: 2000 }),
   validate,
+  requireEditor,
   ctrl.createVendor,
 );
 
@@ -67,6 +73,7 @@ router.patch(
   body("status").optional().isIn(STATUSES),
   body("notes").optional({ nullable: true }).trim().isLength({ max: 2000 }),
   validate,
+  requireEditor,
   ctrl.updateVendor,
 );
 
@@ -74,9 +81,16 @@ router.post(
   "/:id/cycle-status",
   param("id").isUUID(),
   validate,
+  requireEditor,
   ctrl.cycleStatus,
 );
 
-router.delete("/:id", param("id").isUUID(), validate, ctrl.deleteVendor);
+router.delete(
+  "/:id",
+  param("id").isUUID(),
+  validate,
+  requireEditor,
+  ctrl.deleteVendor,
+);
 
 module.exports = router;

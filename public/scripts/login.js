@@ -6,9 +6,26 @@
 
 import { Auth, ApiResponseError } from "./api.js";
 
-/* ── If already logged in, skip straight to dashboard ─────── */
-if (Auth.isLoggedIn()) {
-  window.location.replace("/index.html");
+/* ── Check for OAuth token in URL ─────────────────────────── */
+const urlParams = new URLSearchParams(window.location.search);
+const oauthToken = urlParams.get("token");
+if (oauthToken) {
+  Auth.setToken(oauthToken);
+  // Fetch user to verify token
+  Auth.getUser()
+    .then(() => {
+      window.location.replace("/index.html");
+    })
+    .catch(() => {
+      // Invalid token, clear and show login
+      Auth.logout();
+    });
+  // Don't proceed with normal login logic
+} else {
+  /* ── If already logged in, skip straight to dashboard ─────── */
+  if (Auth.isLoggedIn()) {
+    window.location.replace("/index.html");
+  }
 }
 
 /* ── DOM refs ──────────────────────────────────────────────── */
@@ -91,7 +108,9 @@ loginForm.addEventListener("submit", async (e) => {
     fieldError("login-password-error", "Password is required");
     valid = false;
   }
-  if (!valid) {return;}
+  if (!valid) {
+    return;
+  }
 
   const btn = document.getElementById("login-btn");
   setLoading(btn, true);
@@ -103,8 +122,12 @@ loginForm.addEventListener("submit", async (e) => {
     setLoading(btn, false);
     if (err instanceof ApiResponseError && err.status === 422) {
       err.errors.forEach(({ field, msg }) => {
-        if (field === "email") {fieldError("login-email-error", msg);}
-        if (field === "password") {fieldError("login-password-error", msg);}
+        if (field === "email") {
+          fieldError("login-email-error", msg);
+        }
+        if (field === "password") {
+          fieldError("login-password-error", msg);
+        }
       });
     } else {
       bannerError("login", err.message || "Sign in failed. Please try again.");
@@ -147,7 +170,9 @@ regForm.addEventListener("submit", async (e) => {
     fieldError("reg-confirm-error", "Passwords do not match");
     valid = false;
   }
-  if (!valid) {return;}
+  if (!valid) {
+    return;
+  }
 
   const btn = document.getElementById("reg-btn");
   setLoading(btn, true);
@@ -169,8 +194,12 @@ regForm.addEventListener("submit", async (e) => {
         );
       } else if (err.status === 422) {
         err.errors.forEach(({ field, msg }) => {
-          if (field === "email") {fieldError("reg-email-error", msg);}
-          if (field === "password") {fieldError("reg-password-error", msg);}
+          if (field === "email") {
+            fieldError("reg-email-error", msg);
+          }
+          if (field === "password") {
+            fieldError("reg-password-error", msg);
+          }
         });
       } else {
         bannerError(

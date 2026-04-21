@@ -4,7 +4,7 @@
  */
 
 import api, { Auth } from "./api.js";
-import { initNav, Toast, escapeHtml, showLoading } from "./main.js";
+import { initNav, Toast, escapeHtml } from "./main.js";
 
 Auth.requireAuth();
 
@@ -27,14 +27,18 @@ class MusicManager {
   _bindEvents() {
     this._searchBtn.addEventListener("click", () => this._search());
     this._searchInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {this._search();}
+      if (e.key === "Enter") {
+        this._search();
+      }
     });
   }
 
   /* ── iTunes search (proxied) ──────────────────────────── */
   async _search() {
     const q = this._searchInput.value.trim();
-    if (!q) {return Toast.show("Enter a song or artist to search.", "error");}
+    if (!q) {
+      return Toast.show("Enter a song or artist to search.", "error");
+    }
 
     this._resultsEl.innerHTML = `
       <div class="loading-state">
@@ -115,8 +119,9 @@ class MusicManager {
       Toast.show(`Added to ${payload.section}!`, "success");
       await this._loadPlaylists();
     } catch (err) {
-      if (err.status === 409)
-        {return Toast.show(`Already in ${payload.section}.`);}
+      if (err.status === 409) {
+        return Toast.show(`Already in ${payload.section}.`);
+      }
       Toast.show(err.message || "Could not add track.", "error");
     }
   }
@@ -149,7 +154,9 @@ class MusicManager {
     this._playlistEl.innerHTML = sections
       .map((section) => {
         const tracks = playlists[section] ?? [];
-        if (!tracks.length) {return "";}
+        if (!tracks.length) {
+          return "";
+        }
 
         const slug = section
           .toLowerCase()

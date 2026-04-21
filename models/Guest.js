@@ -18,9 +18,9 @@ const { query } = require("../db");
 const VALID_RSVP = ["Pending", "Confirmed", "Declined"];
 
 class Guest {
-  static async findAll(userId, rsvp = null) {
-    const params = [userId];
-    let sql = "SELECT * FROM guests WHERE user_id = $1";
+  static async findAll(weddingId, rsvp = null) {
+    const params = [weddingId];
+    let sql = "SELECT * FROM guests WHERE wedding_id = $1";
     if (rsvp && VALID_RSVP.includes(rsvp)) {
       params.push(rsvp);
       sql += ` AND rsvp = $${params.length}`;
@@ -32,7 +32,7 @@ class Guest {
 
   static async findById(id, userId) {
     const { rows } = await query(
-      "SELECT * FROM guests WHERE id = $1 AND user_id = $2",
+      "SELECT * FROM guests WHERE id = $1 AND wedding_id = $2",
       [id, userId],
     );
     return rows[0] ?? null;
@@ -47,7 +47,7 @@ class Guest {
     { name, rsvp = "Pending", diet = null, plusOne = null },
   ) {
     const { rows } = await query(
-      `INSERT INTO guests (user_id, name, rsvp, diet, plus_one)
+      `INSERT INTO guests (wedding_id, name, rsvp, diet, plus_one)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
       [userId, name, rsvp, diet || null, plusOne || null],
@@ -73,20 +73,30 @@ class Guest {
       setClauses.push(`${col} = $${params.length}`);
     };
 
-    if (fields.name !== undefined) {add("name", fields.name);}
-    if (fields.rsvp !== undefined) {add("rsvp", fields.rsvp);}
+    if (fields.name !== undefined) {
+      add("name", fields.name);
+    }
+    if (fields.rsvp !== undefined) {
+      add("rsvp", fields.rsvp);
+    }
     // Use explicit null so callers can clear these fields
-    if (fields.diet !== undefined) {add("diet", fields.diet ?? null);}
-    if (fields.plusOne !== undefined) {add("plus_one", fields.plusOne ?? null);}
+    if (fields.diet !== undefined) {
+      add("diet", fields.diet ?? null);
+    }
+    if (fields.plusOne !== undefined) {
+      add("plus_one", fields.plusOne ?? null);
+    }
 
     // Nothing to update — return current row unchanged
-    if (!setClauses.length) {return Guest.findById(id, userId);}
+    if (!setClauses.length) {
+      return Guest.findById(id, userId);
+    }
 
     params.push(id, userId);
     const sql = `
       UPDATE guests
       SET ${setClauses.join(", ")}
-      WHERE id = $${params.length - 1} AND user_id = $${params.length}
+      WHERE id = $${params.length - 1} AND wedding_id = $${params.length}
       RETURNING *`;
 
     const { rows } = await query(sql, params);
@@ -95,7 +105,7 @@ class Guest {
 
   static async delete(id, userId) {
     const { rowCount } = await query(
-      "DELETE FROM guests WHERE id = $1 AND user_id = $2",
+      "DELETE FROM guests WHERE id = $1 AND wedding_id = $2",
       [id, userId],
     );
     return rowCount > 0;
@@ -109,7 +119,7 @@ class Guest {
          COUNT(*) FILTER (WHERE rsvp = 'Confirmed') AS confirmed,
          COUNT(*) FILTER (WHERE rsvp = 'Pending')   AS pending,
          COUNT(*) FILTER (WHERE rsvp = 'Declined')  AS declined
-       FROM guests WHERE user_id = $1`,
+       FROM guests WHERE wedding_id = $1`,
       [userId],
     );
     const r = rows[0];

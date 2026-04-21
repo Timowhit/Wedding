@@ -36,7 +36,9 @@ class ChecklistManager {
   _bindEvents() {
     this._addBtn.addEventListener("click", () => this._addTask());
     this._taskInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {this._addTask();}
+      if (e.key === "Enter") {
+        this._addTask();
+      }
     });
     this._seedBtn.addEventListener("click", () => this._seed());
 
@@ -58,10 +60,13 @@ class ChecklistManager {
     this._emptyState.hidden = true;
 
     const query = {};
-    if (this._activeFilter === "active") {query.status = "active";}
-    else if (this._activeFilter === "done") {query.status = "done";}
-    else if (!["All"].includes(this._activeFilter))
-      {query.category = this._activeFilter;}
+    if (this._activeFilter === "active") {
+      query.status = "active";
+    } else if (this._activeFilter === "done") {
+      query.status = "done";
+    } else if (!["All"].includes(this._activeFilter)) {
+      query.category = this._activeFilter;
+    }
 
     try {
       const { data } = await api.get("/checklist", query);
@@ -76,7 +81,9 @@ class ChecklistManager {
   /* ── Add ──────────────────────────────────────────────── */
   async _addTask() {
     const text = this._taskInput.value.trim();
-    if (!text) {return Toast.show("Please enter a task description.", "error");}
+    if (!text) {
+      return Toast.show("Please enter a task description.", "error");
+    }
 
     this._addBtn.disabled = true;
     try {

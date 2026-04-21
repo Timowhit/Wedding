@@ -14,6 +14,7 @@ const guestRoutes = require("./guests");
 const vendorRoutes = require("./vendors");
 const musicRoutes = require("./music");
 const inspirationRoutes = require("./inspiration");
+const weddingRoutes = require("./weddings");
 
 const router = Router();
 
@@ -24,6 +25,7 @@ router.use("/guests", guestRoutes);
 router.use("/vendors", vendorRoutes);
 router.use("/music", musicRoutes);
 router.use("/inspiration", inspirationRoutes);
+router.use("/weddings", weddingRoutes);
 
 /* ── Health check ───────────────────────────────────────────── */
 router.get("/health", (_req, res) => {

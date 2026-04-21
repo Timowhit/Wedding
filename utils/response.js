@@ -22,7 +22,9 @@
  */
 const sendSuccess = (res, data, status = 200, meta = undefined) => {
   const body = { success: true, data };
-  if (meta) {body.meta = meta;}
+  if (meta) {
+    body.meta = meta;
+  }
   res.status(status).json(body);
 };
 

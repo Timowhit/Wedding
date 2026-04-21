@@ -17,7 +17,9 @@ const {
 /* ── iTunes proxy (keeps API calls off the client) ─────────── */
 const searchItunes = asyncHandler(async (req, res) => {
   const { q, limit = 12 } = req.query;
-  if (!q?.trim()) {throw ApiError.badRequest('Query parameter "q" is required');}
+  if (!q?.trim()) {
+    throw ApiError.badRequest('Query parameter "q" is required');
+  }
 
   const params = new URLSearchParams({
     term: q.trim(),
@@ -27,7 +29,9 @@ const searchItunes = asyncHandler(async (req, res) => {
   });
 
   const resp = await fetch(`https://itunes.apple.com/search?${params}`);
-  if (!resp.ok) {throw ApiError.internal("iTunes API unavailable");}
+  if (!resp.ok) {
+    throw ApiError.internal("iTunes API unavailable");
+  }
 
   const data = await resp.json();
   sendSuccess(res, { results: data.results ?? [] });
@@ -35,7 +39,7 @@ const searchItunes = asyncHandler(async (req, res) => {
 
 /* ── Get all playlists (grouped) ────────────────────────────── */
 const getPlaylists = asyncHandler(async (req, res) => {
-  const playlists = await Music.findAllGrouped(req.user.id);
+  const playlists = await Music.findAllGrouped(req.weddingId);
   sendSuccess(res, { playlists, sections: Music.SECTIONS });
 });
 
@@ -47,7 +51,7 @@ const getSection = asyncHandler(async (req, res) => {
       `Invalid section. Valid sections: ${Music.SECTIONS.join(", ")}`,
     );
   }
-  const tracks = await Music.findBySection(req.user.id, section);
+  const tracks = await Music.findBySection(req.weddingId, section);
   sendSuccess(res, { section, tracks });
 });
 
@@ -62,7 +66,7 @@ const addTrack = asyncHandler(async (req, res) => {
     );
   }
 
-  const track = await Music.create(req.user.id, {
+  const track = await Music.create(req.weddingId, {
     section,
     trackId,
     trackName,
@@ -71,14 +75,18 @@ const addTrack = asyncHandler(async (req, res) => {
     previewUrl,
   });
 
-  if (!track) {throw ApiError.conflict("Track already exists in that section");}
+  if (!track) {
+    throw ApiError.conflict("Track already exists in that section");
+  }
   sendCreated(res, { track });
 });
 
 /* ── Remove track ───────────────────────────────────────────── */
 const removeTrack = asyncHandler(async (req, res) => {
-  const deleted = await Music.delete(req.params.id, req.user.id);
-  if (!deleted) {throw ApiError.notFound("Track not found");}
+  const deleted = await Music.delete(req.params.id, req.weddingId);
+  if (!deleted) {
+    throw ApiError.notFound("Track not found");
+  }
   sendNoContent(res);
 });
 
@@ -88,7 +96,7 @@ const clearSection = asyncHandler(async (req, res) => {
   if (!Music.SECTIONS.includes(section)) {
     throw ApiError.badRequest("Invalid section name");
   }
-  const count = await Music.deleteBySection(req.user.id, section);
+  const count = await Music.deleteBySection(req.weddingId, section);
   sendSuccess(res, { deleted: count });
 });
 

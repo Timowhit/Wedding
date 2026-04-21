@@ -45,7 +45,9 @@ const authenticate = asyncHandler(async (req, _res, next) => {
  */
 const optionalAuth = asyncHandler(async (req, _res, next) => {
   const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith("Bearer ")) {return next();}
+  if (!authHeader?.startsWith("Bearer ")) {
+    return next();
+  }
 
   try {
     const token = authHeader.slice(7);
@@ -54,7 +56,9 @@ const optionalAuth = asyncHandler(async (req, _res, next) => {
       "SELECT id, email, display_name FROM users WHERE id = $1",
       [decoded.id],
     );
-    if (rows.length) {req.user = rows[0];}
+    if (rows.length) {
+      req.user = rows[0];
+    }
   } catch {
     // swallow — treat as unauthenticated
   }

@@ -43,10 +43,7 @@ class Wedding {
 
   /** Find a wedding by its ID. */
   static async findById(id) {
-    const { rows } = await query(
-      "SELECT * FROM weddings WHERE id = $1",
-      [id],
-    );
+    const { rows } = await query("SELECT * FROM weddings WHERE id = $1", [id]);
     return rows[0] ?? null;
   }
 

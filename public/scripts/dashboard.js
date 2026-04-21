@@ -46,7 +46,9 @@ function loadSavedDate() {
 
 setDateBtn.addEventListener("click", async () => {
   const val = dateInput.value;
-  if (!val) {return;}
+  if (!val) {
+    return;
+  }
 
   try {
     await api.patch("/auth/me", { weddingDate: val });
@@ -65,7 +67,9 @@ setDateBtn.addEventListener("click", async () => {
 });
 
 function startCountdown(targetDate) {
-  if (timerInterval) {clearInterval(timerInterval);}
+  if (timerInterval) {
+    clearInterval(timerInterval);
+  }
 
   const opts = {
     weekday: "long",

@@ -342,10 +342,12 @@ textarea {
 .btn-secondary {
   background: var(--secondary);
   color: #fff;
+  margin-top: auto;
+  transform: translateY(-2px);
 }
 .btn-secondary:hover {
   background: #6f9478;
-  transform: translateY(-2px);
+  transform: translateY(-4px);
 }
 
 .btn-ghost {

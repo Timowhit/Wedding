@@ -144,7 +144,9 @@ const api = {
     // Build headers
     const headers = { "Content-Type": "application/json" };
     const token = Auth.getToken();
-    if (token) {headers["Authorization"] = `Bearer ${token}`;}
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
 
     // Fetch
     const resp = await fetch(url, {
@@ -154,7 +156,9 @@ const api = {
     });
 
     // 204 No Content — nothing to parse
-    if (resp.status === 204) {return { success: true, data: null };}
+    if (resp.status === 204) {
+      return { success: true, data: null };
+    }
 
     const json = await resp.json().catch(() => ({
       success: false,

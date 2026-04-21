@@ -9,12 +9,17 @@ const { body, param, query } = require("express-validator");
 
 const ctrl = require("../controllers/guestController");
 const { authenticate } = require("../middleware/auth");
+const {
+  resolveWedding,
+  requireEditor,
+} = require("../middleware/weddingAccess");
 const validate = require("../middleware/validate");
 
 const router = Router();
 const RSVP_VALUES = ["Pending", "Confirmed", "Declined"];
 
 router.use(authenticate);
+router.use(resolveWedding);
 
 router.get(
   "/",
@@ -36,6 +41,7 @@ router.post(
   body("diet").optional().trim().isLength({ max: 300 }),
   body("plusOne").optional().trim().isLength({ max: 200 }),
   validate,
+  requireEditor,
   ctrl.createGuest,
 );
 
@@ -47,11 +53,24 @@ router.patch(
   body("diet").optional({ nullable: true }).trim().isLength({ max: 300 }),
   body("plusOne").optional({ nullable: true }).trim().isLength({ max: 200 }),
   validate,
+  requireEditor,
   ctrl.updateGuest,
 );
 
-router.post("/:id/cycle-rsvp", param("id").isUUID(), validate, ctrl.cycleRsvp);
+router.post(
+  "/:id/cycle-rsvp",
+  param("id").isUUID(),
+  validate,
+  requireEditor,
+  ctrl.cycleRsvp,
+);
 
-router.delete("/:id", param("id").isUUID(), validate, ctrl.deleteGuest);
+router.delete(
+  "/:id",
+  param("id").isUUID(),
+  validate,
+  requireEditor,
+  ctrl.deleteGuest,
+);
 
 module.exports = router;

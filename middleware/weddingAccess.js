@@ -35,7 +35,7 @@ const resolveWedding = asyncHandler(async (req, _res, next) => {
     if (!membership) {
       throw ApiError.forbidden("You are not a member of that wedding");
     }
-    req.weddingId   = requestedId;
+    req.weddingId = requestedId;
     req.weddingRole = membership.role;
   } else {
     const wedding = await Wedding.findPrimaryByUser(req.user.id);
@@ -44,7 +44,7 @@ const resolveWedding = asyncHandler(async (req, _res, next) => {
         "No wedding found. Create one first or accept an invite.",
       );
     }
-    req.weddingId   = wedding.id;
+    req.weddingId = wedding.id;
     req.weddingRole = wedding.role;
   }
 

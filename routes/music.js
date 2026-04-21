@@ -9,6 +9,10 @@ const { body, param, query } = require("express-validator");
 
 const ctrl = require("../controllers/musicController");
 const { authenticate } = require("../middleware/auth");
+const {
+  resolveWedding,
+  requireEditor,
+} = require("../middleware/weddingAccess");
 const validate = require("../middleware/validate");
 
 const router = Router();
@@ -23,6 +27,7 @@ const SECTIONS = [
 ];
 
 router.use(authenticate);
+router.use(resolveWedding);
 
 /* ── iTunes proxy ───────────────────────────────────────────── */
 router.get(
@@ -52,15 +57,23 @@ router.post(
   body("artworkUrl").optional({ nullable: true }).isURL(),
   body("previewUrl").optional({ nullable: true }).isURL(),
   validate,
+  requireEditor,
   ctrl.addTrack,
 );
 
-router.delete("/tracks/:id", param("id").isUUID(), validate, ctrl.removeTrack);
+router.delete(
+  "/tracks/:id",
+  param("id").isUUID(),
+  validate,
+  requireEditor,
+  ctrl.removeTrack,
+);
 
 router.delete(
   "/section/:section",
   param("section").isIn(SECTIONS).withMessage("Invalid section"),
   validate,
+  requireEditor,
   ctrl.clearSection,
 );
 

@@ -4,7 +4,7 @@
  */
 
 import api, { Auth } from "./api.js";
-import { initNav, Toast, escapeHtml, showLoading } from "./main.js";
+import { initNav, Toast, escapeHtml } from "./main.js";
 
 Auth.requireAuth();
 
@@ -27,7 +27,9 @@ class InspirationManager {
   _bindEvents() {
     this._searchBtn.addEventListener("click", () => this._search());
     this._searchInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {this._search();}
+      if (e.key === "Enter") {
+        this._search();
+      }
     });
 
     document.querySelectorAll(".suggestion-btn").forEach((btn) =>
@@ -41,7 +43,9 @@ class InspirationManager {
   /* ── Search (proxied through backend) ─────────────────── */
   async _search() {
     const q = this._searchInput.value.trim();
-    if (!q) {return Toast.show("Enter a search term.", "error");}
+    if (!q) {
+      return Toast.show("Enter a search term.", "error");
+    }
 
     this._resultsEl.innerHTML = `
       <div class="loading-state">
@@ -118,7 +122,9 @@ class InspirationManager {
       Toast.show("Saved to your inspiration board! 🌸", "success");
       await this._loadBoard();
     } catch (err) {
-      if (err.status === 409) {return Toast.show("Already saved to your board!");}
+      if (err.status === 409) {
+        return Toast.show("Already saved to your board!");
+      }
       Toast.show(err.message || "Could not save photo.", "error");
     }
   }

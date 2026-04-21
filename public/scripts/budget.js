@@ -49,7 +49,9 @@ class BudgetManager {
   _bindEvents() {
     this._addBtn.addEventListener("click", () => this._addExpense());
     this._amountInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {this._addExpense();}
+      if (e.key === "Enter") {
+        this._addExpense();
+      }
     });
     this._saveLimitBtn.addEventListener("click", () => this._saveLimit());
 
@@ -100,9 +102,12 @@ class BudgetManager {
     const cat = this._catSelect.value;
     const amount = parseFloat(this._amountInput.value);
 
-    if (!name) {return Toast.show("Please enter a description.", "error");}
-    if (isNaN(amount) || amount <= 0)
-      {return Toast.show("Please enter a valid amount.", "error");}
+    if (!name) {
+      return Toast.show("Please enter a description.", "error");
+    }
+    if (isNaN(amount) || amount <= 0) {
+      return Toast.show("Please enter a valid amount.", "error");
+    }
 
     this._addBtn.disabled = true;
     try {
@@ -122,8 +127,9 @@ class BudgetManager {
   /* ── Save limit ───────────────────────────────────────── */
   async _saveLimit() {
     const val = parseFloat(this._limitInput.value);
-    if (isNaN(val) || val < 0)
-      {return Toast.show("Enter a valid budget amount.", "error");}
+    if (isNaN(val) || val < 0) {
+      return Toast.show("Enter a valid budget amount.", "error");
+    }
 
     try {
       await api.put("/budget/limit", { total: val });

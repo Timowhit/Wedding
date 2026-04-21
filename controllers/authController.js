@@ -17,8 +17,9 @@ const register = asyncHandler(async (req, res) => {
   const { email, password, displayName } = req.body;
 
   const existing = await User.findByEmail(email);
-  if (existing)
-    {throw ApiError.conflict("An account with that email already exists");}
+  if (existing) {
+    throw ApiError.conflict("An account with that email already exists");
+  }
 
   const user = await User.create({ email, password, displayName });
   const token = signToken({ id: user.id, email: user.email });
@@ -31,10 +32,14 @@ const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   const user = await User.findByEmail(email);
-  if (!user) {throw ApiError.unauthorized("Invalid email or password");}
+  if (!user) {
+    throw ApiError.unauthorized("Invalid email or password");
+  }
 
   const match = await User.comparePassword(password, user.password_hash);
-  if (!match) {throw ApiError.unauthorized("Invalid email or password");}
+  if (!match) {
+    throw ApiError.unauthorized("Invalid email or password");
+  }
 
   const token = signToken({ id: user.id, email: user.email });
 
@@ -46,7 +51,9 @@ const login = asyncHandler(async (req, res) => {
 /* ── Get current user ──────────────────────────────────────── */
 const getMe = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user.id);
-  if (!user) {throw ApiError.notFound("User not found");}
+  if (!user) {
+    throw ApiError.notFound("User not found");
+  }
   sendSuccess(res, { user });
 });
 
@@ -54,7 +61,9 @@ const getMe = asyncHandler(async (req, res) => {
 const updateMe = asyncHandler(async (req, res) => {
   const { displayName, weddingDate } = req.body;
   const user = await User.update(req.user.id, { displayName, weddingDate });
-  if (!user) {throw ApiError.notFound("User not found");}
+  if (!user) {
+    throw ApiError.notFound("User not found");
+  }
   sendSuccess(res, { user });
 });
 
@@ -64,10 +73,29 @@ const changePassword = asyncHandler(async (req, res) => {
 
   const user = await User.findByEmail(req.user.email);
   const match = await User.comparePassword(currentPassword, user.password_hash);
-  if (!match) {throw ApiError.badRequest("Current password is incorrect");}
+  if (!match) {
+    throw ApiError.badRequest("Current password is incorrect");
+  }
 
   await User.updatePassword(req.user.id, newPassword);
   sendSuccess(res, { message: "Password updated successfully" });
 });
 
-module.exports = { register, login, getMe, updateMe, changePassword };
+/* ── Google OAuth callback ─────────────────────────────────── */
+const googleCallback = asyncHandler(async (req, res) => {
+  // Passport sets req.user after successful auth
+  const token = signToken({ id: req.user.id, email: req.user.email });
+
+  // Redirect to login page with token
+  const redirectUrl = `/login.html?token=${encodeURIComponent(token)}`;
+  res.redirect(redirectUrl);
+});
+
+module.exports = {
+  register,
+  login,
+  getMe,
+  updateMe,
+  changePassword,
+  googleCallback,
+};

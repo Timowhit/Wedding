@@ -18,10 +18,14 @@ const {
 /* ── Unsplash search proxy ──────────────────────────────────── */
 const searchUnsplash = asyncHandler(async (req, res) => {
   const { q, per_page = 18 } = req.query;
-  if (!q?.trim()) {throw ApiError.badRequest('Query parameter "q" is required');}
+  if (!q?.trim()) {
+    throw ApiError.badRequest('Query parameter "q" is required');
+  }
 
   const key = process.env.UNSPLASH_ACCESS_KEY;
-  if (!key) {throw ApiError.internal("Unsplash key not configured");}
+  if (!key) {
+    throw ApiError.internal("Unsplash key not configured");
+  }
 
   const params = new URLSearchParams({
     query: q.trim(),
@@ -42,7 +46,7 @@ const searchUnsplash = asyncHandler(async (req, res) => {
 
 /* ── Get saved board ────────────────────────────────────────── */
 const getBoard = asyncHandler(async (req, res) => {
-  const photos = await Inspiration.findAll(req.user.id);
+  const photos = await Inspiration.findAll(req.weddingId);
   sendSuccess(res, { photos, count: photos.length });
 });
 
@@ -50,7 +54,7 @@ const getBoard = asyncHandler(async (req, res) => {
 const savePhoto = asyncHandler(async (req, res) => {
   const { photoId, thumbUrl, fullUrl, altDesc, sourceLink } = req.body;
 
-  const photo = await Inspiration.create(req.user.id, {
+  const photo = await Inspiration.create(req.weddingId, {
     photoId,
     thumbUrl,
     fullUrl,
@@ -58,20 +62,24 @@ const savePhoto = asyncHandler(async (req, res) => {
     sourceLink,
   });
 
-  if (!photo) {throw ApiError.conflict("Photo is already saved to your board");}
+  if (!photo) {
+    throw ApiError.conflict("Photo is already saved to your board");
+  }
   sendCreated(res, { photo });
 });
 
 /* ── Remove photo from board ────────────────────────────────── */
 const removePhoto = asyncHandler(async (req, res) => {
-  const deleted = await Inspiration.delete(req.params.id, req.user.id);
-  if (!deleted) {throw ApiError.notFound("Photo not found on your board");}
+  const deleted = await Inspiration.delete(req.params.id, req.weddingId);
+  if (!deleted) {
+    throw ApiError.notFound("Photo not found on your board");
+  }
   sendNoContent(res);
 });
 
 /* ── Clear entire board ─────────────────────────────────────── */
 const clearBoard = asyncHandler(async (req, res) => {
-  const count = await Inspiration.deleteAll(req.user.id);
+  const count = await Inspiration.deleteAll(req.weddingId);
   sendSuccess(res, { deleted: count });
 });
 

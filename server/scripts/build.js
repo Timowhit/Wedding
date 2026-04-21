@@ -59,6 +59,7 @@ function clean() {
 function copyHtml() {
   const files = fs.readdirSync(SRC).filter((f) => f.endsWith(".html"));
   for (const file of files) {
+    // eslint-disable-next-line node/no-unsupported-features/node-builtins
     fs.copyFileSync(path.join(SRC, file), path.join(DIST, file));
   }
   console.log(`✓ ${files.length} HTML files copied`);

@@ -30,7 +30,7 @@ const SEED_TASKS = [
 /* ── List tasks ─────────────────────────────────────────────── */
 const listTasks = asyncHandler(async (req, res) => {
   const { category, status } = req.query;
-  const tasks = await Checklist.findAll(req.user.id, { category, status });
+  const tasks = await Checklist.findAll(req.weddingId, { category, status });
 
   const total = tasks.length;
   const done = tasks.filter((t) => t.done).length;
@@ -47,15 +47,17 @@ const listTasks = asyncHandler(async (req, res) => {
 
 /* ── Get single task ────────────────────────────────────────── */
 const getTask = asyncHandler(async (req, res) => {
-  const task = await Checklist.findById(req.params.id, req.user.id);
-  if (!task) {throw ApiError.notFound("Task not found");}
+  const task = await Checklist.findById(req.params.id, req.weddingId);
+  if (!task) {
+    throw ApiError.notFound("Task not found");
+  }
   sendSuccess(res, { task });
 });
 
 /* ── Create task ────────────────────────────────────────────── */
 const createTask = asyncHandler(async (req, res) => {
   const { text, category, dueDate, sortOrder } = req.body;
-  const task = await Checklist.create(req.user.id, {
+  const task = await Checklist.create(req.weddingId, {
     text,
     category,
     dueDate,
@@ -66,23 +68,29 @@ const createTask = asyncHandler(async (req, res) => {
 
 /* ── Update task (partial) ──────────────────────────────────── */
 const updateTask = asyncHandler(async (req, res) => {
-  const task = await Checklist.update(req.params.id, req.user.id, req.body);
-  if (!task) {throw ApiError.notFound("Task not found");}
+  const task = await Checklist.update(req.params.id, req.weddingId, req.body);
+  if (!task) {
+    throw ApiError.notFound("Task not found");
+  }
   sendSuccess(res, { task });
 });
 
 /* ── Delete task ────────────────────────────────────────────── */
 const deleteTask = asyncHandler(async (req, res) => {
-  const deleted = await Checklist.delete(req.params.id, req.user.id);
-  if (!deleted) {throw ApiError.notFound("Task not found");}
+  const deleted = await Checklist.delete(req.params.id, req.weddingId);
+  if (!deleted) {
+    throw ApiError.notFound("Task not found");
+  }
   sendNoContent(res);
 });
 
 /* ── Toggle done ────────────────────────────────────────────── */
 const toggleTask = asyncHandler(async (req, res) => {
-  const existing = await Checklist.findById(req.params.id, req.user.id);
-  if (!existing) {throw ApiError.notFound("Task not found");}
-  const task = await Checklist.update(req.params.id, req.user.id, {
+  const existing = await Checklist.findById(req.params.id, req.weddingId);
+  if (!existing) {
+    throw ApiError.notFound("Task not found");
+  }
+  const task = await Checklist.update(req.params.id, req.weddingId, {
     done: !existing.done,
   });
   sendSuccess(res, { task });
@@ -90,7 +98,7 @@ const toggleTask = asyncHandler(async (req, res) => {
 
 /* ── Bulk seed ──────────────────────────────────────────────── */
 const seedTasks = asyncHandler(async (req, res) => {
-  const created = await Checklist.bulkCreate(req.user.id, SEED_TASKS);
+  const created = await Checklist.bulkCreate(req.weddingId, SEED_TASKS);
   sendSuccess(res, { added: created.length, tasks: created });
 });
 

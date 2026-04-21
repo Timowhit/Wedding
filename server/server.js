@@ -15,10 +15,14 @@
 
 require("dotenv").config();
 
+// Setup OAuth will be called after requires
+
 const express = require("express");
 const helmet = require("helmet");
 const cors = require("cors");
 const morgan = require("morgan");
+const passport = require("passport");
+const session = require("express-session");
 
 const { testConnection } = require("../db");
 const routes = require("../routes");
@@ -26,6 +30,10 @@ const path = require("path");
 const errorHandler = require("../middleware/errorHandler");
 const { apiLimiter } = require("../middleware/rateLimiter");
 const logger = require("../utils/logger");
+const { setup: setupOAuth } = require("../utils/oauth");
+
+// Setup OAuth
+setupOAuth();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -42,6 +50,22 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
+
+/* ── Session & Passport ─────────────────────────────────────── */
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "change-me-in-production",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      maxAge: 1000 * 60 * 15, // 15 minutes
+    },
+  }),
+);
+app.use(passport.initialize());
+app.use(passport.session());
 
 /* ── Body parsing ───────────────────────────────────────────── */
 app.use(express.json({ limit: "1mb" }));

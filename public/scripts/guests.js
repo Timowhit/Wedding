@@ -42,7 +42,9 @@ class GuestManager {
   _bindEvents() {
     this._addBtn.addEventListener("click", () => this._add());
     this._nameInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {this._add();}
+      if (e.key === "Enter") {
+        this._add();
+      }
     });
 
     document.querySelectorAll(".filter-tab").forEach((tab) =>
@@ -77,7 +79,9 @@ class GuestManager {
   /* ── Add ──────────────────────────────────────────────── */
   async _add() {
     const name = this._nameInput.value.trim();
-    if (!name) {return Toast.show("Please enter a guest name.", "error");}
+    if (!name) {
+      return Toast.show("Please enter a guest name.", "error");
+    }
 
     this._addBtn.disabled = true;
     try {

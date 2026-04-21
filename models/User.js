@@ -24,10 +24,9 @@ class User {
   }
 
   static async findByEmail(email) {
-    const { rows } = await query(
-      "SELECT * FROM users WHERE email = $1",
-      [email.toLowerCase().trim()],
-    );
+    const { rows } = await query("SELECT * FROM users WHERE email = $1", [
+      email.toLowerCase().trim(),
+    ]);
     return rows[0] ?? null;
   }
 
@@ -63,8 +62,10 @@ class User {
    */
   static async upsertGoogleUser({ email, googleId, displayName, avatarUrl }) {
     // Try to find by googleId first
-    let user = await User.findByGoogleId(googleId);
-    if (user) {return user;}
+    const user = await User.findByGoogleId(googleId);
+    if (user) {
+      return user;
+    }
 
     // Try to find by email (link accounts)
     if (email) {
@@ -109,13 +110,18 @@ class User {
 
   static async updatePassword(id, newPassword) {
     const hash = await bcrypt.hash(newPassword, ROUNDS);
-    await query("UPDATE users SET password_hash = $2 WHERE id = $1", [id, hash]);
+    await query("UPDATE users SET password_hash = $2 WHERE id = $1", [
+      id,
+      hash,
+    ]);
   }
 
   /* ── AUTH ─────────────────────────────────────────────── */
 
   static comparePassword(plain, hash) {
-    if (!hash) {return Promise.resolve(false);}
+    if (!hash) {
+      return Promise.resolve(false);
+    }
     return bcrypt.compare(plain, hash);
   }
 }

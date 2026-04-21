@@ -17,11 +17,11 @@
 
 "use strict";
 
-const passport      = require("passport");
+const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const User          = require("../models/User");
-const Wedding       = require("../models/Wedding");
-const logger        = require("./logger");
+const User = require("../models/User");
+const Wedding = require("../models/Wedding");
+const logger = require("./logger");
 
 function setup() {
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
@@ -36,16 +36,16 @@ function setup() {
   passport.use(
     new GoogleStrategy(
       {
-        clientID:     process.env.GOOGLE_CLIENT_ID,
+        clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
         callbackURL,
       },
       async (_accessToken, _refreshToken, profile, done) => {
         try {
-          const email      = profile.emails?.[0]?.value?.toLowerCase() ?? null;
+          const email = profile.emails?.[0]?.value?.toLowerCase() ?? null;
           const displayName = profile.displayName ?? email;
-          const avatarUrl  = profile.photos?.[0]?.value ?? null;
-          const googleId   = profile.id;
+          const avatarUrl = profile.photos?.[0]?.value ?? null;
+          const googleId = profile.id;
 
           // Create or link the user
           const user = await User.upsertGoogleUser({

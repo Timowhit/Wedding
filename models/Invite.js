@@ -84,8 +84,7 @@ class Invite {
   /** True if the invite cannot be used. */
   static isExpired(invite) {
     return (
-      new Date(invite.expires_at) < new Date() ||
-      invite.accepted_at !== null
+      new Date(invite.expires_at) < new Date() || invite.accepted_at !== null
     );
   }
 }

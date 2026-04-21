@@ -9,6 +9,10 @@ const { body, param, query } = require("express-validator");
 
 const ctrl = require("../controllers/checklistController");
 const { authenticate } = require("../middleware/auth");
+const {
+  resolveWedding,
+  requireEditor,
+} = require("../middleware/weddingAccess");
 const validate = require("../middleware/validate");
 
 const router = Router();
@@ -26,9 +30,10 @@ const CATEGORIES = [
 ];
 
 router.use(authenticate);
+router.use(resolveWedding);
 
 /* ── Seed ───────────────────────────────────────────────────── */
-router.post("/seed", ctrl.seedTasks);
+router.post("/seed", requireEditor, ctrl.seedTasks);
 
 /* ── List ───────────────────────────────────────────────────── */
 router.get(
@@ -54,6 +59,7 @@ router.post(
   body("dueDate").optional({ nullable: true }).isISO8601(),
   body("sortOrder").optional().isInt({ min: 0 }),
   validate,
+  requireEditor,
   ctrl.createTask,
 );
 
@@ -66,13 +72,26 @@ router.patch(
   body("dueDate").optional({ nullable: true }).isISO8601(),
   body("done").optional().isBoolean(),
   validate,
+  requireEditor,
   ctrl.updateTask,
 );
 
 /* ── Toggle done ────────────────────────────────────────────── */
-router.post("/:id/toggle", param("id").isUUID(), validate, ctrl.toggleTask);
+router.post(
+  "/:id/toggle",
+  param("id").isUUID(),
+  validate,
+  requireEditor,
+  ctrl.toggleTask,
+);
 
 /* ── Delete ─────────────────────────────────────────────────── */
-router.delete("/:id", param("id").isUUID(), validate, ctrl.deleteTask);
+router.delete(
+  "/:id",
+  param("id").isUUID(),
+  validate,
+  requireEditor,
+  ctrl.deleteTask,
+);
 
 module.exports = router;

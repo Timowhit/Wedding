@@ -6,6 +6,7 @@
 
 const { Router } = require("express");
 const { body } = require("express-validator");
+const passport = require("passport");
 
 const ctrl = require("../controllers/authController");
 const { authenticate } = require("../middleware/auth");
@@ -59,6 +60,17 @@ const passwordRules = [
 /* ── Public routes ──────────────────────────────────────────── */
 router.post("/register", authLimiter, registerRules, validate, ctrl.register);
 router.post("/login", authLimiter, loginRules, validate, ctrl.login);
+
+// OAuth routes
+router.get(
+  "/google",
+  passport.authenticate("google", { scope: ["profile", "email"] }),
+);
+router.get(
+  "/google/callback",
+  passport.authenticate("google", { failureRedirect: "/login" }),
+  ctrl.googleCallback,
+);
 
 /* ── Protected routes ───────────────────────────────────────── */
 router.get("/me", authenticate, ctrl.getMe);

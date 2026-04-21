@@ -18,7 +18,9 @@ const ApiError = require("../utils/ApiError");
  */
 const validate = (req, _res, next) => {
   const result = validationResult(req);
-  if (result.isEmpty()) {return next();}
+  if (result.isEmpty()) {
+    return next();
+  }
 
   const errors = result.array().map(({ path, msg }) => ({ field: path, msg }));
   return next(new ApiError.unprocessable("Validation failed", errors));

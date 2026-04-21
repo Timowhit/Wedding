@@ -8,19 +8,19 @@
 const { query } = require("../db");
 
 class Inspiration {
-  static async findAll(userId) {
+  static async findAll(weddingId) {
     const { rows } = await query(
       `SELECT * FROM inspiration_photos
-       WHERE user_id = $1
+       WHERE wedding_id = $1
        ORDER BY sort_order ASC, created_at ASC`,
-      [userId],
+      [weddingId],
     );
     return rows;
   }
 
   static async findById(id, userId) {
     const { rows } = await query(
-      "SELECT * FROM inspiration_photos WHERE id = $1 AND user_id = $2",
+      "SELECT * FROM inspiration_photos WHERE id = $1 AND wedding_id = $2",
       [id, userId],
     );
     return rows[0] ?? null;
@@ -36,9 +36,9 @@ class Inspiration {
   ) {
     const { rows } = await query(
       `INSERT INTO inspiration_photos
-         (user_id, photo_id, thumb_url, full_url, alt_desc, source_link)
+         (wedding_id, photo_id, thumb_url, full_url, alt_desc, source_link)
        VALUES ($1, $2, $3, $4, $5, $6)
-       ON CONFLICT (user_id, photo_id) DO NOTHING
+       ON CONFLICT (wedding_id, photo_id) DO NOTHING
        RETURNING *`,
       [userId, photoId, thumbUrl, fullUrl, altDesc || null, sourceLink || null],
     );
@@ -47,7 +47,7 @@ class Inspiration {
 
   static async delete(id, userId) {
     const { rowCount } = await query(
-      "DELETE FROM inspiration_photos WHERE id = $1 AND user_id = $2",
+      "DELETE FROM inspiration_photos WHERE id = $1 AND wedding_id = $2",
       [id, userId],
     );
     return rowCount > 0;
@@ -55,7 +55,7 @@ class Inspiration {
 
   static async deleteAll(userId) {
     const { rowCount } = await query(
-      "DELETE FROM inspiration_photos WHERE user_id = $1",
+      "DELETE FROM inspiration_photos WHERE wedding_id = $1",
       [userId],
     );
     return rowCount;

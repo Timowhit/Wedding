@@ -21,13 +21,13 @@
 
 const nodemailer = require("nodemailer");
 
-const APP_URL   = process.env.APP_URL   || "http://localhost:3000";
+const APP_URL = process.env.APP_URL || "http://localhost:3000";
 const FROM_EMAIL = process.env.FROM_EMAIL || "noreply@foreverplanner.com";
 
 function createTransport() {
   return nodemailer.createTransport({
-    host:   process.env.SMTP_HOST,
-    port:   Number(process.env.SMTP_PORT) || 587,
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT) || 587,
     secure: process.env.SMTP_SECURE === "true",
     auth: {
       user: process.env.SMTP_USER,
@@ -49,12 +49,12 @@ async function sendInviteEmail({ to, inviterName, weddingName, token, role }) {
     return;
   }
 
-  const inviteUrl  = `${APP_URL}/invite.html?token=${token}`;
-  const roleLabel  = role === "viewer" ? "view" : "edit";
+  const inviteUrl = `${APP_URL}/invite.html?token=${token}`;
+  const roleLabel = role === "viewer" ? "view" : "edit";
   const transporter = createTransport();
 
   await transporter.sendMail({
-    from:    `Forever Planner 💍 <${FROM_EMAIL}>`,
+    from: `Forever Planner 💍 <${FROM_EMAIL}>`,
     to,
     subject: `${inviterName} invited you to help plan "${weddingName}" 💍`,
     html: `

@@ -264,14 +264,11 @@ describe("Vendors", () => {
   let vendorId;
 
   it("POST /vendors creates a vendor", async () => {
-    const res = await request(app)
-      .post("/api/v1/vendors")
-      .set(auth())
-      .send({
-        name: "Bloom Florists",
-        category: "Florist",
-        status: "Researching",
-      });
+    const res = await request(app).post("/api/v1/vendors").set(auth()).send({
+      name: "Bloom Florists",
+      category: "Florist",
+      status: "Researching",
+    });
     expect(res.status).toBe(201);
     vendorId = res.body.data.vendor.id;
   });

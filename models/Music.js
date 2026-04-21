@@ -22,17 +22,19 @@ class Music {
   }
 
   /** Return all tracks grouped by section. */
-  static async findAllGrouped(userId) {
+  static async findAllGrouped(weddingId) {
     const { rows } = await query(
       `SELECT * FROM music_tracks
-       WHERE user_id = $1
+       WHERE wedding_id = $1
        ORDER BY section ASC, sort_order ASC, created_at ASC`,
-      [userId],
+      [weddingId],
     );
 
     // Group into { section: [track, …] }
     return rows.reduce((acc, row) => {
-      if (!acc[row.section]) {acc[row.section] = [];}
+      if (!acc[row.section]) {
+        acc[row.section] = [];
+      }
       acc[row.section].push(row);
       return acc;
     }, {});
@@ -41,7 +43,7 @@ class Music {
   static async findBySection(userId, section) {
     const { rows } = await query(
       `SELECT * FROM music_tracks
-       WHERE user_id = $1 AND section = $2
+       WHERE wedding_id = $1 AND section = $2
        ORDER BY sort_order ASC, created_at ASC`,
       [userId, section],
     );
@@ -50,7 +52,7 @@ class Music {
 
   static async findById(id, userId) {
     const { rows } = await query(
-      "SELECT * FROM music_tracks WHERE id = $1 AND user_id = $2",
+      "SELECT * FROM music_tracks WHERE id = $1 AND wedding_id = $2",
       [id, userId],
     );
     return rows[0] ?? null;
@@ -66,9 +68,9 @@ class Music {
   ) {
     const { rows } = await query(
       `INSERT INTO music_tracks
-         (user_id, section, track_id, track_name, artist_name, artwork_url, preview_url)
+         (wedding_id, section, track_id, track_name, artist_name, artwork_url, preview_url)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
-       ON CONFLICT (user_id, section, track_id) DO NOTHING
+       ON CONFLICT (wedding_id, section, track_id) DO NOTHING
        RETURNING *`,
       [
         userId,
@@ -85,7 +87,7 @@ class Music {
 
   static async delete(id, userId) {
     const { rowCount } = await query(
-      "DELETE FROM music_tracks WHERE id = $1 AND user_id = $2",
+      "DELETE FROM music_tracks WHERE id = $1 AND wedding_id = $2",
       [id, userId],
     );
     return rowCount > 0;
@@ -93,7 +95,7 @@ class Music {
 
   static async deleteBySection(userId, section) {
     const { rowCount } = await query(
-      "DELETE FROM music_tracks WHERE user_id = $1 AND section = $2",
+      "DELETE FROM music_tracks WHERE wedding_id = $1 AND section = $2",
       [userId, section],
     );
     return rowCount;

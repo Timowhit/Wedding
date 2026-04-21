@@ -9,6 +9,10 @@ const { body, query, param } = require("express-validator");
 
 const ctrl = require("../controllers/budgetController");
 const { authenticate } = require("../middleware/auth");
+const {
+  resolveWedding,
+  requireEditor,
+} = require("../middleware/weddingAccess");
 const validate = require("../middleware/validate");
 
 const router = Router();
@@ -28,6 +32,7 @@ const CATEGORIES = [
 
 // All budget routes require auth
 router.use(authenticate);
+router.use(resolveWedding);
 
 /* ── Summary ────────────────────────────────────────────────── */
 router.get("/summary", ctrl.getSummary);
@@ -39,6 +44,7 @@ router.put(
     .isFloat({ min: 0 })
     .withMessage("Total must be a non-negative number"),
   validate,
+  requireEditor,
   ctrl.setLimit,
 );
 
@@ -62,6 +68,7 @@ router.post(
     .isFloat({ gt: 0 })
     .withMessage("Amount must be greater than 0"),
   validate,
+  requireEditor,
   ctrl.createItem,
 );
 
@@ -69,6 +76,7 @@ router.delete(
   "/:id",
   param("id").isUUID().withMessage("Invalid item ID"),
   validate,
+  requireEditor,
   ctrl.deleteItem,
 );
 

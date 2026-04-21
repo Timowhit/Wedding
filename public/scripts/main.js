@@ -51,7 +51,9 @@ export class Toast {
 
   /** Show field-level validation errors returned by the API. */
   static showErrors(errors = []) {
-    if (!errors.length) {return;}
+    if (!errors.length) {
+      return;
+    }
     const msg = errors.map((e) => e.msg).join(" · ");
     Toast.show(msg, "error", 4000);
   }

@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="styles/main.css" />
     <script type="module" src="scripts/login.bundle.js"></script>
     <style>
-      /* ── Login-page-specific layout ─────────────────────── */
       body {
         display: flex;
         align-items: center;
@@ -30,7 +29,6 @@
         text-align: center;
         margin-bottom: 32px;
       }
-
       .auth-brand .logo {
         font-family: "Cormorant Garamond", serif;
         font-size: 2rem;
@@ -39,7 +37,6 @@
         letter-spacing: 3px;
         display: block;
       }
-
       .auth-brand .tagline {
         font-size: 0.8rem;
         color: var(--text-muted);
@@ -48,7 +45,6 @@
         margin-top: 4px;
       }
 
-      /* Tab switcher */
       .auth-tabs {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -57,7 +53,6 @@
         overflow: hidden;
         margin-bottom: 24px;
       }
-
       .auth-tab {
         padding: 10px;
         text-align: center;
@@ -69,13 +64,11 @@
         border: none;
         transition: all var(--transition);
       }
-
       .auth-tab.active {
         background: var(--primary);
         color: #fff;
       }
 
-      /* Forms */
       .auth-form {
         display: flex;
         flex-direction: column;
@@ -84,36 +77,56 @@
       .auth-form[hidden] {
         display: none;
       }
-
-      .auth-form .field-group label {
-        margin-bottom: 4px;
-      }
-
       .auth-submit {
         margin-top: 4px;
       }
 
-      /* Divider */
-      .auth-divider {
-        text-align: center;
-        font-size: 0.75rem;
-        color: var(--text-muted);
-        margin: 20px 0 0;
+      /* Google button */
+      .btn-google {
+        background: #fff;
+        color: #3c4043;
+        border: 1px solid #dadce0;
+        justify-content: center;
+        gap: 10px;
+        font-size: 0.9rem;
+        transition: background 0.2s;
+      }
+      .btn-google:hover {
+        background: #f8f9fa;
+        transform: none;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+      }
+      .btn-google img {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
       }
 
-      /* Field error hints */
+      .auth-divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        margin: 4px 0;
+      }
+      .auth-divider::before,
+      .auth-divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+
       .field-error {
         font-size: 0.75rem;
         color: var(--danger);
         margin-top: 2px;
         display: none;
       }
-
       .field-error.visible {
         display: block;
       }
-
-      /* Spinner inside button */
       .btn .spinner {
         width: 14px;
         height: 14px;
@@ -130,8 +143,7 @@
   </head>
   <body>
     <main class="auth-shell" id="main-content">
-      <!-- Brand -->
-      <div class="auth-brand" aria-label="Forever Planner">
+      <div class="auth-brand">
         <span class="logo">💍 Forever Planner</span>
         <span class="tagline">Your wedding, beautifully organised</span>
       </div>
@@ -170,6 +182,17 @@
         aria-labelledby="tab-login"
         novalidate
       >
+        <!-- Google Sign In -->
+        <a href="/api/v1/auth/google" class="btn btn-google btn-full">
+          <img
+            src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+            alt=""
+          />
+          Continue with Google
+        </a>
+
+        <div class="auth-divider">or</div>
+
         <div class="field-group">
           <label for="login-email">Email</label>
           <input
@@ -228,6 +251,17 @@
         hidden
         novalidate
       >
+        <!-- Google Sign Up -->
+        <a href="/api/v1/auth/google" class="btn btn-google btn-full">
+          <img
+            src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+            alt=""
+          />
+          Sign up with Google
+        </a>
+
+        <div class="auth-divider">or</div>
+
         <div class="field-group">
           <label for="reg-name"
             >Your Name
@@ -237,7 +271,7 @@
             type="text"
             id="reg-name"
             autocomplete="name"
-            placeholder="e.g. Jane & Tom"
+            placeholder="e.g. Jane &amp; Tom"
             maxlength="80"
           />
         </div>
