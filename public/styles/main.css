@@ -43,6 +43,8 @@
   padding: 0;
 }
 
+[hidden] { display: none !important; }
+
 /* ---------- BASE ---------- */
 html {
   scroll-behavior: smooth;
@@ -271,7 +273,7 @@ main {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  
+
 }
 
 label {
