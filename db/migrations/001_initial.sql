@@ -1,9 +1,10 @@
 -- ============================================================
 --  Forever Planner — initial schema
---  Run via: node db/migrate.js
+--  FIXED: wrapped ADD CONSTRAINT uq_task_user_text in a DO
+--  block so re-running this file (via the old migrate.js) does
+--  not error with "relation already exists".
 -- ============================================================
 
--- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- ── users ────────────────────────────────────────────────────
@@ -48,8 +49,16 @@ CREATE TABLE IF NOT EXISTS checklist_tasks (
 );
 
 -- ── checklist_tasks Constraint ───────────────────────────────
-ALTER TABLE checklist_tasks 
-  ADD CONSTRAINT uq_task_user_text UNIQUE (user_id, text);
+-- Wrapped in DO block so re-running this file is safe.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'uq_task_user_text'
+  ) THEN
+    ALTER TABLE checklist_tasks
+      ADD CONSTRAINT uq_task_user_text UNIQUE (user_id, text);
+  END IF;
+END $$;
 
 -- ── guests ───────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS guests (

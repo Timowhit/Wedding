@@ -1,15 +1,19 @@
 /**
  * @file controllers/authController.js
- * @description Handles user registration, login, profile, and
- * password change.
+ *
+ * Fix: register() now creates a default wedding for the new user,
+ * matching what oauth.js already does for Google sign-ins.
+ * Without this, resolveWedding() throws 404 for every new user
+ * and all feature routes (budget, checklist, etc.) are unusable.
  */
 
 "use strict";
 
-const User = require("../models/User");
-const { signToken } = require("../utils/jwt");
-const ApiError = require("../utils/ApiError");
-const asyncHandler = require("../utils/asyncHandler");
+const User    = require("../models/User");
+const Wedding = require("../models/Wedding");   // ← added
+const { signToken }   = require("../utils/jwt");
+const ApiError        = require("../utils/ApiError");
+const asyncHandler    = require("../utils/asyncHandler");
 const { sendSuccess, sendCreated } = require("../utils/response");
 
 /* ── Register ──────────────────────────────────────────────── */
@@ -22,8 +26,15 @@ const register = asyncHandler(async (req, res) => {
   }
 
   const user = await User.create({ email, password, displayName });
-  const token = signToken({ id: user.id, email: user.email });
 
+  // Create a default wedding so resolveWedding() works immediately.
+  // (oauth.js does the same thing for Google sign-ins.)
+  const weddingName = displayName
+    ? `${displayName}'s Wedding`
+    : "Our Wedding";
+  await Wedding.create(user.id, { name: weddingName });
+
+  const token = signToken({ id: user.id, email: user.email });
   sendCreated(res, { token, user });
 });
 
@@ -42,8 +53,6 @@ const login = asyncHandler(async (req, res) => {
   }
 
   const token = signToken({ id: user.id, email: user.email });
-
-  // Strip hash from response
   const { password_hash: _, ...safeUser } = user;
   sendSuccess(res, { token, user: safeUser });
 });
@@ -83,12 +92,8 @@ const changePassword = asyncHandler(async (req, res) => {
 
 /* ── Google OAuth callback ─────────────────────────────────── */
 const googleCallback = asyncHandler(async (req, res) => {
-  // Passport sets req.user after successful auth
   const token = signToken({ id: req.user.id, email: req.user.email });
-
-  // Redirect to login page with token
-  const redirectUrl = `/login.html?token=${encodeURIComponent(token)}`;
-  res.redirect(redirectUrl);
+  res.redirect(`/login.html?token=${encodeURIComponent(token)}`);
 });
 
 module.exports = {

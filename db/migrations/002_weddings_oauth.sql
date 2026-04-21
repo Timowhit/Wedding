@@ -1,32 +1,33 @@
 -- ============================================================
 --  Forever Planner — weddings, OAuth, and invite system
---  Run via: node db/migrate.js
+--  FIXED: replaced invalid ADD CONSTRAINT IF NOT EXISTS syntax
+--  with DO $$ blocks that check pg_constraint first.
+--  Safe to re-run on a database where part of this already ran.
 -- ============================================================
 
 -- ── Add OAuth + avatar fields to users ───────────────────────
-ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id   TEXT UNIQUE;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url  TEXT;
--- Allow NULL password_hash for OAuth-only users
+ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id  TEXT UNIQUE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
 ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
 
--- ── weddings (shared workspace) ──────────────────────────────
+-- ── weddings ──────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS weddings (
-  id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  name          TEXT        NOT NULL DEFAULT 'Our Wedding',
-  wedding_date  DATE,
-  created_by    UUID        REFERENCES users(id) ON DELETE SET NULL,
-  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  id           UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  name         TEXT        NOT NULL DEFAULT 'Our Wedding',
+  wedding_date DATE,
+  created_by   UUID        REFERENCES users(id) ON DELETE SET NULL,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- ── wedding_members (many users ↔ many weddings) ─────────────
+-- ── wedding_members ───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS wedding_members (
-  id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  wedding_id  UUID        NOT NULL REFERENCES weddings(id) ON DELETE CASCADE,
-  user_id     UUID        NOT NULL REFERENCES users(id)   ON DELETE CASCADE,
-  role        TEXT        NOT NULL DEFAULT 'editor'
-                CHECK (role IN ('owner', 'editor', 'viewer')),
-  joined_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  wedding_id UUID        NOT NULL REFERENCES weddings(id) ON DELETE CASCADE,
+  user_id    UUID        NOT NULL REFERENCES users(id)   ON DELETE CASCADE,
+  role       TEXT        NOT NULL DEFAULT 'editor'
+               CHECK (role IN ('owner', 'editor', 'viewer')),
+  joined_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (wedding_id, user_id)
 );
 
@@ -53,30 +54,64 @@ ALTER TABLE vendors            ADD COLUMN IF NOT EXISTS wedding_id UUID REFERENC
 ALTER TABLE music_tracks       ADD COLUMN IF NOT EXISTS wedding_id UUID REFERENCES weddings(id) ON DELETE CASCADE;
 ALTER TABLE inspiration_photos ADD COLUMN IF NOT EXISTS wedding_id UUID REFERENCES weddings(id) ON DELETE CASCADE;
 
--- Unique constraints on wedding_id for upsert operations
-ALTER TABLE budget_limits ADD CONSTRAINT IF NOT EXISTS uq_budget_limits_wedding UNIQUE (wedding_id);
+-- Unique constraint on budget_limits.wedding_id
+-- (ADD CONSTRAINT IF NOT EXISTS is not valid PostgreSQL — use a DO block)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'uq_budget_limits_wedding'
+  ) THEN
+    ALTER TABLE budget_limits
+      ADD CONSTRAINT uq_budget_limits_wedding UNIQUE (wedding_id);
+  END IF;
+END $$;
 
--- Update checklist unique to use wedding_id
+-- Update checklist unique constraint to use wedding_id
 ALTER TABLE checklist_tasks DROP CONSTRAINT IF EXISTS uq_task_user_text;
-ALTER TABLE checklist_tasks ADD CONSTRAINT uq_task_wedding_text UNIQUE (wedding_id, text);
 
--- Update music unique to use wedding_id  
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'uq_task_wedding_text'
+  ) THEN
+    ALTER TABLE checklist_tasks
+      ADD CONSTRAINT uq_task_wedding_text UNIQUE (wedding_id, text);
+  END IF;
+END $$;
+
+-- Update music unique constraint to use wedding_id
 ALTER TABLE music_tracks DROP CONSTRAINT IF EXISTS music_tracks_user_id_section_track_id_key;
-ALTER TABLE music_tracks ADD CONSTRAINT IF NOT EXISTS uq_music_wedding_section_track UNIQUE (wedding_id, section, track_id);
 
--- Update inspiration unique to use wedding_id
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'uq_music_wedding_section_track'
+  ) THEN
+    ALTER TABLE music_tracks
+      ADD CONSTRAINT uq_music_wedding_section_track UNIQUE (wedding_id, section, track_id);
+  END IF;
+END $$;
+
+-- Update inspiration unique constraint to use wedding_id
 ALTER TABLE inspiration_photos DROP CONSTRAINT IF EXISTS inspiration_photos_user_id_photo_id_key;
-ALTER TABLE inspiration_photos ADD CONSTRAINT IF NOT EXISTS uq_inspo_wedding_photo UNIQUE (wedding_id, photo_id);
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'uq_inspo_wedding_photo'
+  ) THEN
+    ALTER TABLE inspiration_photos
+      ADD CONSTRAINT uq_inspo_wedding_photo UNIQUE (wedding_id, photo_id);
+  END IF;
+END $$;
 
 -- ── Migrate existing data ─────────────────────────────────────
--- Create a wedding for each existing user and populate wedding_id on their data
 DO $$
 DECLARE
   u   RECORD;
   wid UUID;
 BEGIN
   FOR u IN SELECT id, display_name, wedding_date FROM users LOOP
-    -- Check if this user already has a wedding (idempotent)
     SELECT wm.wedding_id INTO wid
     FROM   wedding_members wm
     WHERE  wm.user_id = u.id AND wm.role = 'owner'
@@ -95,7 +130,6 @@ BEGIN
       VALUES (wid, u.id, 'owner');
     END IF;
 
-    -- Back-fill wedding_id on all feature rows
     UPDATE budget_items       SET wedding_id = wid WHERE user_id = u.id AND wedding_id IS NULL;
     UPDATE budget_limits      SET wedding_id = wid WHERE user_id = u.id AND wedding_id IS NULL;
     UPDATE checklist_tasks    SET wedding_id = wid WHERE user_id = u.id AND wedding_id IS NULL;
