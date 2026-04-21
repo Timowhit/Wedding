@@ -1059,7 +1059,7 @@ textarea {
 }
 
 /* ── Mobile overrides ─────────────────────────────────────── */
-@media (max-width: 700px) {
+@media (max-width: 1050px) {
   /* Show hamburger, remove the old gap-only rule */
   .hamburger {
     display: flex;
