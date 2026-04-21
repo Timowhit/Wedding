@@ -35,12 +35,16 @@ const IS_PROD = !WATCH;
 const JS_ENTRIES = [
   "scripts/budget.js",
   "scripts/checklist.js",
-  "scripts/dashboard.js",
   "scripts/guests.js",
+  //"scripts/index.js",
   "scripts/inspiration.js",
+  "scripts/invite.js",
   "scripts/login.js",
   "scripts/music.js",
+  "scripts/settings.js",
   "scripts/vendors.js",
+  "scripts/dashboard.js",
+  //"scripts/weddings.js",
 ].map((f) => path.join(SRC, f));
 
 const CSS_ENTRY = path.join(SRC, "styles", "main.css");
