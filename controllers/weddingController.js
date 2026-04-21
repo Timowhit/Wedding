@@ -219,6 +219,12 @@ const acceptInvite = asyncHandler(async (req, res) => {
   sendSuccess(res, { message: "Invite accepted successfully" });
 });
 
+/** GET /weddings/my-pending-invites */
+const getMyPendingInvites = asyncHandler(async (req, res) => {
+  const invites = await Invite.findPendingForEmail(req.user.email);
+  sendSuccess(res, { invites });
+});
+
 module.exports = {
   listWeddings,
   createWedding,
@@ -232,4 +238,5 @@ module.exports = {
   deleteInvite,
   getInvite,
   acceptInvite,
+  getMyPendingInvites,
 };

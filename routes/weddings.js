@@ -67,7 +67,7 @@ router.post(
 
 /* ── All routes below require authentication ────────────────── */
 router.use(authenticate);
-
+router.get("/my-pending-invites", ctrl.getMyPendingInvites);
 /* Wedding CRUD */
 router.get("/", ctrl.listWeddings);
 router.post("/", weddingRules, validate, ctrl.createWedding);

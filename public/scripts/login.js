@@ -114,6 +114,7 @@ loginForm.addEventListener("submit", async (e) => {
 
   try {
     await Auth.login({ email, password });
+    sessionStorage.setItem("fp_fresh_login", "1");
     window.location.replace("/index.html");
   } catch (err) {
     setLoading(btn, false);
@@ -180,6 +181,7 @@ regForm.addEventListener("submit", async (e) => {
       password,
       displayName: displayName || undefined,
     });
+    sessionStorage.setItem("fp_fresh_login", "1");
     window.location.replace("/index.html");
   } catch (err) {
     setLoading(btn, false);

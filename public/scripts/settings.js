@@ -210,56 +210,56 @@ class SettingsManager {
 
   /* ── Invites ──────────────────────────────────────────── */
   async _sendInvite() {
-  const email = this._inviteEmailInput.value.trim();
-  const role = this._inviteRoleSelect.value;
-  if (!email) {
-    return Toast.show("Please enter an email address.", "error");
-  }
-
-  this._sendInviteBtn.disabled = true;
-  
-  // Hide link box from previous attempt
-  document.getElementById("invite-link-container").style.display = "none";
-
-  try {
-    const { data } = await api.post(
-      `/weddings/${this._currentWedding.id}/members`,
-      { email, role },
-    );
-    this._inviteEmailInput.value = "";
-
-    if (data.invite) {
-      // Build the invite URL
-      const inviteUrl = `${window.location.origin}/invite.html?token=${data.invite.token}`;
-      
-      // Show the copy-link box (SMTP may not be configured)
-      const linkContainer = document.getElementById("invite-link-container");
-      const linkText = document.getElementById("invite-link-text");
-      const copyBtn = document.getElementById("copy-link-btn");
-      
-      linkText.textContent = inviteUrl;
-      linkContainer.style.display = "block";
-      
-      // Wire up copy button
-      copyBtn.onclick = () => {
-        navigator.clipboard.writeText(inviteUrl).then(() => {
-          copyBtn.textContent = "Copied!";
-          setTimeout(() => (copyBtn.textContent = "Copy"), 2000);
-        });
-      };
-
-      Toast.show("Invite created! Copy the link below.", "success");
-    } else {
-      Toast.show("Member added directly!", "success");
+    const email = this._inviteEmailInput.value.trim();
+    const role = this._inviteRoleSelect.value;
+    if (!email) {
+      return Toast.show("Please enter an email address.", "error");
     }
 
-    await this._load();
-  } catch (err) {
-    Toast.show(err.message || "Could not send invite.", "error");
-  } finally {
-    this._sendInviteBtn.disabled = false;
+    this._sendInviteBtn.disabled = true;
+
+    // Hide link box from previous attempt
+    document.getElementById("invite-link-container").style.display = "none";
+
+    try {
+      const { data } = await api.post(
+        `/weddings/${this._currentWedding.id}/members`,
+        { email, role },
+      );
+      this._inviteEmailInput.value = "";
+
+      if (data.invite) {
+        // Build the invite URL
+        const inviteUrl = `${window.location.origin}/invite.html?token=${data.invite.token}`;
+
+        // Show the copy-link box (SMTP may not be configured)
+        const linkContainer = document.getElementById("invite-link-container");
+        const linkText = document.getElementById("invite-link-text");
+        const copyBtn = document.getElementById("copy-link-btn");
+
+        linkText.textContent = inviteUrl;
+        linkContainer.style.display = "block";
+
+        // Wire up copy button
+        copyBtn.onclick = () => {
+          navigator.clipboard.writeText(inviteUrl).then(() => {
+            copyBtn.textContent = "Copied!";
+            setTimeout(() => (copyBtn.textContent = "Copy"), 2000);
+          });
+        };
+
+        Toast.show("Invite created! Copy the link below.", "success");
+      } else {
+        Toast.show("Member added directly!", "success");
+      }
+
+      await this._load();
+    } catch (err) {
+      Toast.show(err.message || "Could not send invite.", "error");
+    } finally {
+      this._sendInviteBtn.disabled = false;
+    }
   }
-}
 
   _renderInvites(invites) {
     this._invitesList.innerHTML = "";

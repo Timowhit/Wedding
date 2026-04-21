@@ -213,6 +213,7 @@
             placeholder="••••••••••••"
             required
           />
+          <span class="field-error" id="login-password-error"></span>
         </div>
 
         <div
@@ -269,7 +270,7 @@
             type="text"
             id="reg-name"
             autocomplete="name"
-            placeholder="e.g. Jane &amp; Tom"
+            placeholder="e.g. Ale &amp; Tim"
             maxlength="80"
           />
         </div>
@@ -282,6 +283,7 @@
             placeholder="email@example.com"
             required
           />
+          <span class="field-error" id="reg-email-error"></span>
         </div>
         <div class="field-group">
           <label for="reg-password">Password</label>
@@ -289,7 +291,7 @@
             type="password"
             id="reg-password"
             autocomplete="new-password"
-            placeholder="Min 8 char, 1 uppercase, 1 number, 1 symbol"
+            placeholder="Min 8 chars, 1 uppercase, 1 number"
             required
           />
           <span class="field-error" id="reg-password-error"></span>

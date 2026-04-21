@@ -81,6 +81,22 @@ class Invite {
     return rowCount > 0;
   }
 
+  /** Pending (unexpired, unaccepted) invites addressed to this email. */
+  static async findPendingForEmail(email) {
+    const { rows } = await query(
+      `SELECT wi.*, w.name AS wedding_name, u.display_name AS invited_by_name
+      FROM   wedding_invites wi
+      JOIN   weddings w ON w.id = wi.wedding_id
+      JOIN   users    u ON u.id = wi.invited_by
+      WHERE  LOWER(wi.invited_email) = LOWER($1)
+        AND  wi.accepted_at IS NULL
+        AND  wi.expires_at  > NOW()
+      ORDER BY wi.created_at DESC`,
+      [email],
+    );
+    return rows;
+  }
+
   /** True if the invite cannot be used. */
   static isExpired(invite) {
     return (

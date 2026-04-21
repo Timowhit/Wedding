@@ -4,7 +4,7 @@
  */
 
 import api, { Auth } from "./api.js";
-import { initNav, formatCurrency, Toast } from "./main.js";
+import { initNav, formatCurrency, Toast, showInviteModal } from "./main.js";
 
 Auth.requireAuth();
 
@@ -24,6 +24,21 @@ let timerInterval = null;
 document.addEventListener("DOMContentLoaded", async () => {
   initNav();
   loadSavedDate();
+
+  // Show invite modal on fresh login or if there are pending invites
+  if (sessionStorage.getItem("fp_fresh_login")) {
+    sessionStorage.removeItem("fp_fresh_login");
+    try {
+      const { data } = await api.get("/weddings/my-pending-invites");
+      const invites = data.invites || [];
+      if (invites.length > 0) {
+        showInviteModal(invites);
+      }
+    } catch {
+      /* silently ignore */
+    }
+  }
+
   await renderStats();
 });
 
