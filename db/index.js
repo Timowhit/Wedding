@@ -22,7 +22,7 @@ const pool = new Pool({
     Number(process.env.DB_POOL_CONNECTION_TIMEOUT) || 2_000,
   ssl:
     process.env.NODE_ENV === "production"
-      ? { rejectUnauthorized: true }
+      ? { rejectUnauthorized: false }
       : false,
 });
 
