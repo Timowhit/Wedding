@@ -1,31 +1,33 @@
 /**
  * @file scripts/login.js
- * @description Login / register page controller.
- * On success, redirects to index.html.
+ *
+ * Fix: OAuth callback sets the token then calls GET /auth/me to populate
+ * the user in localStorage before redirecting. The old code called the
+ * synchronous Auth.getUser() as if it were a Promise, which always threw
+ * and called Auth.logout() instead of redirecting.
  */
 
-import { Auth, ApiResponseError } from "./api.js";
+import api, { Auth, ApiResponseError } from "./api.js";
 
 /* ── Check for OAuth token in URL ─────────────────────────── */
 const urlParams = new URLSearchParams(window.location.search);
 const oauthToken = urlParams.get("token");
+
 if (oauthToken) {
+  // Persist token then fetch the user profile before redirecting
   Auth.setToken(oauthToken);
-  // Fetch user to verify token
-  Auth.getUser()
-    .then(() => {
+  (async () => {
+    try {
+      const { data } = await api.get("/auth/me");
+      Auth.setUser(data.user);
       window.location.replace("/index.html");
-    })
-    .catch(() => {
-      // Invalid token, clear and show login
-      Auth.logout();
-    });
-  // Don't proceed with normal login logic
-} else {
-  /* ── If already logged in, skip straight to dashboard ─────── */
-  if (Auth.isLoggedIn()) {
-    window.location.replace("/index.html");
-  }
+    } catch {
+      Auth.clearSession();
+      // Fall through to show the login form with an error hint
+    }
+  })();
+} else if (Auth.isLoggedIn()) {
+  window.location.replace("/index.html");
 }
 
 /* ── DOM refs ──────────────────────────────────────────────── */
@@ -37,15 +39,12 @@ const regForm = document.getElementById("register-form");
 /* ── Tab switching ─────────────────────────────────────────── */
 function showTab(tab) {
   const isLogin = tab === "login";
-
   tabLogin.classList.toggle("active", isLogin);
   tabRegister.classList.toggle("active", !isLogin);
   tabLogin.setAttribute("aria-selected", String(isLogin));
   tabRegister.setAttribute("aria-selected", String(!isLogin));
-
   loginForm.hidden = !isLogin;
   regForm.hidden = isLogin;
-
   clearErrors();
 }
 
@@ -79,7 +78,6 @@ function bannerError(prefix, msg) {
   }
 }
 
-/* ── Button loading state ──────────────────────────────────── */
 function setLoading(btn, loading) {
   btn.disabled = loading;
   btn.innerHTML = loading
@@ -87,7 +85,6 @@ function setLoading(btn, loading) {
     : btn.dataset.label;
 }
 
-/* Stash original labels */
 document.getElementById("login-btn").dataset.label = "Sign In";
 document.getElementById("reg-btn").dataset.label = "Create Account";
 

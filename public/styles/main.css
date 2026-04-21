@@ -1009,3 +1009,98 @@ textarea {
     margin-left: 0;
   }
 }
+
+/* ================================================
+   HAMBURGER MENU  (append to end of main.css)
+   ================================================ */
+
+/* ── Desktop: nav-links is a transparent flex row ─────────── */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 4px 6px;
+  flex-wrap: wrap;
+}
+
+/* ── Hamburger button ─────────────────────────────────────── */
+.hamburger {
+  display: none; /* hidden on desktop */
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.hamburger span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+  transition: all var(--transition);
+  transform-origin: center;
+}
+
+/* Animate hamburger → ✕ */
+.hamburger.open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.hamburger.open span:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+.hamburger.open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* ── Mobile overrides ─────────────────────────────────────── */
+@media (max-width: 700px) {
+  /* Show hamburger, remove the old gap-only rule */
+  .hamburger {
+    display: flex;
+    margin-left: auto; /* pushes button to the right */
+  }
+
+  /* Reset user-group so it sits right of hamburger */
+  .nav-user-group {
+    margin-left: 0;
+    padding-left: 6px;
+  }
+
+  /* nav wraps: row 1 = brand + hamburger + user-group, row 2 = links */
+  .site-nav {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  /* Collapsed by default */
+  .nav-links {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    gap: 2px;
+    padding: 8px 0 4px;
+    border-top: 1px solid var(--border);
+    margin-top: 8px;
+    /* sit on its own row */
+    order: 99;
+  }
+
+  /* Open state */
+  .nav-links.open {
+    display: flex;
+  }
+
+  /* Full-width tappable links */
+  .nav-links a {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+  }
+}

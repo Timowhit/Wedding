@@ -1,6 +1,11 @@
 /**
  * @file routes/weddings.js
- * @description Routes for wedding management, members, and invites.
+ *
+ * Fixes applied:
+ *  1. GET /invites/:token is now PUBLIC (moved before router.use(authenticate))
+ *  2. Removed broken requireOwner middleware — controllers do their own checks
+ *  3. Fixed inviteId param validation: .isInt() → .isUUID()
+ *  4. Removed resolveWedding from wedding routes (controllers use req.params.id directly)
  */
 
 "use strict";
@@ -10,13 +15,9 @@ const { body, param } = require("express-validator");
 
 const ctrl = require("../controllers/weddingController");
 const { authenticate } = require("../middleware/auth");
-const { resolveWedding, requireOwner } = require("../middleware/weddingAccess");
 const validate = require("../middleware/validate");
 
 const router = Router();
-
-// All routes require authentication
-router.use(authenticate);
 
 /* ── Validation chains ──────────────────────────────────────── */
 const weddingRules = [
@@ -45,33 +46,49 @@ const roleUpdateRules = [
     .withMessage("Role must be viewer, editor, or owner"),
 ];
 
-/* ── Wedding CRUD ───────────────────────────────────────────── */
+/* ── PUBLIC routes (no auth required) ───────────────────────── */
+
+// Anyone with the link can view invite details before logging in
+router.get(
+  "/invites/:token",
+  param("token").isUUID(),
+  validate,
+  ctrl.getInvite,
+);
+
+// Accept requires auth (to know who is accepting)
+router.post(
+  "/invites/:token/accept",
+  param("token").isUUID(),
+  authenticate,
+  validate,
+  ctrl.acceptInvite,
+);
+
+/* ── All routes below require authentication ────────────────── */
+router.use(authenticate);
+
+/* Wedding CRUD */
 router.get("/", ctrl.listWeddings);
 router.post("/", weddingRules, validate, ctrl.createWedding);
 router.get("/:id", param("id").isUUID(), validate, ctrl.getWedding);
+// Controller does its own owner check — no middleware needed here
 router.patch(
   "/:id",
   param("id").isUUID(),
   weddingRules,
   validate,
-  requireOwner,
   ctrl.updateWedding,
 );
 
-/* ── Members ────────────────────────────────────────────────── */
-router.get(
-  "/:id/members",
-  param("id").isUUID(),
-  validate,
-  resolveWedding,
-  ctrl.listMembers,
-);
+/* Members */
+router.get("/:id/members", param("id").isUUID(), validate, ctrl.listMembers);
+// Controller checks ownership internally
 router.post(
   "/:id/members",
   param("id").isUUID(),
   memberRules,
   validate,
-  requireOwner,
   ctrl.addMember,
 );
 router.patch(
@@ -80,7 +97,6 @@ router.patch(
   param("userId").isUUID(),
   roleUpdateRules,
   validate,
-  requireOwner,
   ctrl.updateMemberRole,
 );
 router.delete(
@@ -88,40 +104,17 @@ router.delete(
   param("weddingId").isUUID(),
   param("userId").isUUID(),
   validate,
-  requireOwner,
   ctrl.removeMember,
 );
 
-/* ── Invites ─────────────────────────────────────────────────── */
-router.get(
-  "/:id/invites",
-  param("id").isUUID(),
-  validate,
-  resolveWedding,
-  ctrl.listInvites,
-);
+/* Invites management (auth required) */
+router.get("/:id/invites", param("id").isUUID(), validate, ctrl.listInvites);
 router.delete(
   "/:weddingId/invites/:inviteId",
   param("weddingId").isUUID(),
-  param("inviteId").isInt(),
+  param("inviteId").isUUID(), // ← was isInt() — inviteId is a UUID
   validate,
-  resolveWedding,
   ctrl.deleteInvite,
-);
-
-/* ── Invite Acceptance (public) ─────────────────────────────── */
-router.get(
-  "/invites/:token",
-  param("token").isUUID(),
-  validate,
-  ctrl.getInvite,
-);
-router.post(
-  "/invites/:token/accept",
-  param("token").isUUID(),
-  authenticate,
-  validate,
-  ctrl.acceptInvite,
 );
 
 module.exports = router;

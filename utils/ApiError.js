@@ -1,29 +1,18 @@
 /**
  * @file utils/ApiError.js
- * @description Structured error class for operational (expected) API errors.
- * Throw these from controllers / models; the global error handler will
- * serialise them into consistent JSON responses.
  */
 
 "use strict";
 
 class ApiError extends Error {
-  /**
-   * @param {number}  statusCode  HTTP status code
-   * @param {string}  message     Human-readable message (may be shown to client)
-   * @param {Array}   [errors]    Field-level validation errors
-   * @param {boolean} [isOperational=true]  false = programmer error (5xx)
-   */
   constructor(statusCode, message, errors = [], isOperational = true) {
     super(message);
     this.name = "ApiError";
     this.statusCode = statusCode;
-    this.errors = errors; // e.g. [{ field: 'email', msg: 'Invalid' }]
+    this.errors = errors;
     this.isOperational = isOperational;
     Error.captureStackTrace(this, this.constructor);
   }
-
-  /* ── convenience factories ─────────────────────────────── */
 
   static badRequest(message = "Bad Request", errors = []) {
     return new ApiError(400, message, errors);
@@ -43,6 +32,11 @@ class ApiError extends Error {
 
   static conflict(message = "Conflict") {
     return new ApiError(409, message);
+  }
+
+  // ← Added: used by expired invite handling
+  static gone(message = "Gone") {
+    return new ApiError(410, message);
   }
 
   static unprocessable(message = "Unprocessable Entity", errors = []) {

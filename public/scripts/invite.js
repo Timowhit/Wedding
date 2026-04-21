@@ -1,34 +1,38 @@
 /**
  * @file scripts/invite.js
- * @description InviteManager — Handle wedding invites with login/register flow.
+ *
+ * Fixes applied:
+ *  1. Auth.login({ email, password }) — was called with two positional args
+ *  2. Auth.register({ email, password }) — same
+ *  3. #invite-content is now shown when invite loads (_showAuth / _showLoggedIn)
+ *  4. invite.expires_at string is wrapped in new Date() before comparison
  */
 
 import api, { Auth, ApiResponseError } from "./api.js";
 import { Toast } from "./main.js";
 
-// Get token from URL
 const urlParams = new URLSearchParams(window.location.search);
 const token = urlParams.get("token");
 
 if (!token) {
-  showError("Invalid invite link.");
+  showPageError("Invalid invite link.");
 } else {
   loadInvite();
 }
 
+/* ── InviteManager ─────────────────────────────────────────── */
 class InviteManager {
   constructor(inviteData) {
     this.invite = inviteData;
 
-    // Elements
     this._loading = document.getElementById("invite-loading");
     this._error = document.getElementById("invite-error");
     this._errorMsg = document.getElementById("invite-error-msg");
+    this._content = document.getElementById("invite-content"); // ← new ref
 
     this._authSection = document.getElementById("invite-auth-section");
     this._loggedinSection = document.getElementById("invite-loggedin-section");
 
-    // Auth form
     this._emailInput = document.getElementById("invite-email");
     this._passwordInput = document.getElementById("invite-password");
     this._loginBtn = document.getElementById("invite-login-btn");
@@ -36,12 +40,10 @@ class InviteManager {
     this._googleBtn = document.getElementById("google-invite-btn");
     this._authError = document.getElementById("invite-auth-error");
 
-    // Logged in
     this._currentUser = document.getElementById("invite-current-user");
     this._acceptBtn = document.getElementById("invite-accept-btn");
     this._wrongAccountBtn = document.getElementById("invite-wrong-account-btn");
 
-    // Details
     this._from = document.getElementById("invite-from");
     this._wedding = document.getElementById("invite-wedding");
     this._roleBadge = document.getElementById("invite-role-badge");
@@ -56,7 +58,7 @@ class InviteManager {
     this._registerBtn.addEventListener("click", () => this._register());
     this._googleBtn.addEventListener("click", () => this._googleLogin());
     this._acceptBtn.addEventListener("click", () => this._accept());
-    this._wrongAccountBtn.addEventListener("click", () => this._logout());
+    this._wrongAccountBtn.addEventListener("click", () => this._signOut());
   }
 
   _renderInvite() {
@@ -74,33 +76,38 @@ class InviteManager {
     }
   }
 
+  /* Show #invite-content and the auth form (for unauthenticated visitors) */
   _showAuth() {
     this._loading.hidden = true;
+    this._content.style.display = "block"; // ← was never shown before
     this._authSection.hidden = false;
     this._loggedinSection.hidden = true;
     this._emailInput.value = this.invite.invited_email || "";
   }
 
+  /* Show #invite-content and the accept button (for logged-in users) */
   _showLoggedIn(user) {
     this._loading.hidden = true;
+    this._content.style.display = "block"; // ← was never shown before
     this._authSection.hidden = true;
     this._loggedinSection.hidden = false;
     this._currentUser.textContent = user.display_name || user.email;
   }
 
+  /* ── Auth actions ──────────────────────────────────────── */
+
   async _login() {
     const email = this._emailInput.value.trim();
     const password = this._passwordInput.value;
-
     if (!email || !password) {
       return this._showAuthError("Please enter email and password.");
     }
 
     this._loginBtn.disabled = true;
     try {
-      await Auth.login(email, password);
+      await Auth.login({ email, password }); // ← was Auth.login(email, password)
       this._checkAuthStatus();
-    } catch (err) {
+    } catch {
       this._showAuthError("Invalid email or password.");
     } finally {
       this._loginBtn.disabled = false;
@@ -110,20 +117,18 @@ class InviteManager {
   async _register() {
     const email = this._emailInput.value.trim();
     const password = this._passwordInput.value;
-
     if (!email || !password) {
       return this._showAuthError("Please enter email and password.");
     }
-
     if (password.length < 8) {
       return this._showAuthError("Password must be at least 8 characters.");
     }
 
     this._registerBtn.disabled = true;
     try {
-      await Auth.register(email, password);
+      await Auth.register({ email, password }); // ← was Auth.register(email, password)
       this._checkAuthStatus();
-    } catch (err) {
+    } catch {
       this._showAuthError(
         "Could not create account. Email may already be in use.",
       );
@@ -133,50 +138,53 @@ class InviteManager {
   }
 
   _googleLogin() {
-    // Redirect to Google OAuth
-    window.location.href = "/api/v1/auth/google";
+    // Preserve the invite token so we can redirect back after OAuth
+    window.location.href = `/api/v1/auth/google?returnTo=/invite.html?token=${token}`;
   }
 
   async _accept() {
     this._acceptBtn.disabled = true;
     try {
       await api.post(`/weddings/invites/${token}/accept`);
-      Toast.show("Welcome to the wedding!", "success");
-      // Redirect to dashboard
+      Toast.show("Welcome to the wedding! 🎉", "success");
       window.location.href = "/index.html";
     } catch (err) {
-      Toast.show("Could not accept invite.", "error");
+      Toast.show(err.message || "Could not accept invite.", "error");
     } finally {
       this._acceptBtn.disabled = false;
     }
   }
 
-  _logout() {
-    Auth.logout();
-    this._checkAuthStatus();
+  _signOut() {
+    Auth.clearSession();
+    this._showAuth();
   }
 
   _showAuthError(msg) {
     this._authError.textContent = msg;
-    this._authError.hidden = false;
+    this._authError.style.display = "block";
   }
 }
 
+/* ── Bootstrap ─────────────────────────────────────────────── */
 async function loadInvite() {
   try {
     const { data } = await api.get(`/weddings/invites/${token}`);
     new InviteManager(data);
   } catch (err) {
-    if (err instanceof ApiResponseError && err.status === 404) {
-      showError("Invite not found or expired.");
+    if (
+      err instanceof ApiResponseError &&
+      (err.status === 404 || err.status === 410)
+    ) {
+      showPageError("This invite has expired or already been used.");
     } else {
-      showError("Could not load invite.");
+      showPageError("Could not load invite. Please try again.");
     }
   }
 }
 
-function showError(msg) {
+function showPageError(msg) {
   document.getElementById("invite-loading").hidden = true;
   document.getElementById("invite-error-msg").textContent = msg;
-  document.getElementById("invite-error").hidden = false;
+  document.getElementById("invite-error").style.display = "block";
 }

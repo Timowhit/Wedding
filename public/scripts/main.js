@@ -1,14 +1,8 @@
 /**
  * @file scripts/main.js
- * @description Shared UI utilities for Forever Planner.
  *
- * Exports:
- *   Toast          — non-blocking notifications
- *   formatCurrency — USD formatter
- *   escapeHtml     — XSS-safe string escaping
- *   uid            — simple client-side unique ID (kept for optimistic UI)
- *   markActiveNav  — highlights the current page in the nav
- *   initNav        — wires up the logout button and user display name
+ * Changes: initNav() now injects a hamburger button on mobile and wraps
+ * page links in a collapsible .nav-links container.
  */
 
 "use strict";
@@ -16,7 +10,7 @@
 import { Auth } from "./api.js";
 
 /* ============================================================
-   Toast — non-blocking UI notifications
+   Toast
    ============================================================ */
 export class Toast {
   static _container = null;
@@ -32,11 +26,6 @@ export class Toast {
     return this._container;
   }
 
-  /**
-   * @param {string} message
-   * @param {'default'|'success'|'error'} [type]
-   * @param {number} [duration]
-   */
   static show(message, type = "default", duration = 2800) {
     const el = document.createElement("div");
     el.className = `toast${type !== "default" ? " " + type : ""}`;
@@ -49,7 +38,6 @@ export class Toast {
     }, duration);
   }
 
-  /** Show field-level validation errors returned by the API. */
   static showErrors(errors = []) {
     if (!errors.length) {
       return;
@@ -63,11 +51,6 @@ export class Toast {
    Utility helpers
    ============================================================ */
 
-/**
- * Format a number as USD currency string.
- * @param {number} amount
- * @returns {string}
- */
 export function formatCurrency(amount) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -75,11 +58,6 @@ export function formatCurrency(amount) {
   }).format(amount ?? 0);
 }
 
-/**
- * Escape user-provided strings to prevent XSS in innerHTML.
- * @param {string} str
- * @returns {string}
- */
 export function escapeHtml(str) {
   return String(str ?? "")
     .replace(/&/g, "&amp;")
@@ -88,18 +66,10 @@ export function escapeHtml(str) {
     .replace(/"/g, "&quot;");
 }
 
-/**
- * Generate a lightweight client-side unique ID.
- * Used only for optimistic UI (real IDs come from the server).
- * @returns {string}
- */
 export function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
 
-/**
- * Mark the current page's nav link as active.
- */
 export function markActiveNav() {
   const current = window.location.pathname.split("/").pop() || "index.html";
   document.querySelectorAll(".site-nav a").forEach((a) => {
@@ -112,22 +82,21 @@ export function markActiveNav() {
 }
 
 /**
- * Initialise the navigation bar:
- *   • Marks the active link
- *   • Injects the user's display name (if an element with id="nav-user" exists)
- *   • Wires up any element with id="logout-btn" to Auth.logout()
+ * Initialise the navigation bar.
+ *  • Marks the active link
+ *  • Injects the user's display name
+ *  • Wires logout button
+ *  • Injects a hamburger button for mobile (wraps page links in .nav-links)
  */
 export function initNav() {
   markActiveNav();
 
-  // Show display name
   const nameEl = document.getElementById("nav-user");
   if (nameEl) {
     const user = Auth.getUser();
     nameEl.textContent = user?.display_name || user?.email || "";
   }
 
-  // Wire logout
   const logoutBtn = document.getElementById("logout-btn");
   if (logoutBtn) {
     logoutBtn.addEventListener("click", (e) => {
@@ -135,17 +104,73 @@ export function initNav() {
       Auth.logout();
     });
   }
+
+  // ── Hamburger menu injection ────────────────────────────
+  const nav = document.querySelector(".site-nav");
+  if (nav && !nav.querySelector(".hamburger")) {
+    const brand = nav.querySelector(".brand");
+    const navUserGroup = nav.querySelector(".nav-user-group");
+    // Only the page links (not brand, not nav-user-group children)
+    const links = [...nav.querySelectorAll("a:not(.brand)")];
+
+    if (links.length && brand) {
+      // 1. Wrap page links in collapsible container
+      const linksWrapper = document.createElement("div");
+      linksWrapper.className = "nav-links";
+      links.forEach((l) => linksWrapper.appendChild(l));
+
+      // 2. Build hamburger button
+      const hamburger = document.createElement("button");
+      hamburger.className = "hamburger";
+      hamburger.setAttribute("aria-label", "Toggle navigation menu");
+      hamburger.setAttribute("aria-expanded", "false");
+      hamburger.innerHTML = "<span></span><span></span><span></span>";
+
+      // 3. Insert into DOM: brand | hamburger | nav-user-group | linksWrapper
+      brand.after(hamburger);
+      if (navUserGroup) {
+        hamburger.after(navUserGroup);
+        navUserGroup.after(linksWrapper);
+      } else {
+        hamburger.after(linksWrapper);
+      }
+
+      // 4. Toggle handler
+      hamburger.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const open = linksWrapper.classList.toggle("open");
+        hamburger.classList.toggle("open", open);
+        hamburger.setAttribute("aria-expanded", String(open));
+      });
+
+      // 5. Close when clicking outside
+      document.addEventListener("click", (e) => {
+        if (
+          !nav.contains(e.target) &&
+          linksWrapper.classList.contains("open")
+        ) {
+          linksWrapper.classList.remove("open");
+          hamburger.classList.remove("open");
+          hamburger.setAttribute("aria-expanded", "false");
+        }
+      });
+
+      // 6. Close when a nav link is followed
+      linksWrapper.addEventListener("click", (e) => {
+        if (e.target.tagName === "A") {
+          linksWrapper.classList.remove("open");
+          hamburger.classList.remove("open");
+          hamburger.setAttribute("aria-expanded", "false");
+        }
+      });
+    }
+  }
 }
 
 /* ============================================================
    Loading / empty-state helpers
    ============================================================ */
 
-/**
- * Show a full-section skeleton loader inside `container`.
- * @param {HTMLElement} container
- * @param {string}      [message]
- */
 export function showLoading(container, message = "Loading…") {
   container.innerHTML = `
     <div class="loading-state" aria-live="polite">
@@ -154,11 +179,6 @@ export function showLoading(container, message = "Loading…") {
     </div>`;
 }
 
-/**
- * Show an API/network error message inside `container`.
- * @param {HTMLElement} container
- * @param {string}      [message]
- */
 export function showError(
   container,
   message = "Something went wrong. Please try again.",
