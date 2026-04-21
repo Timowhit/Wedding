@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Accept Invite — Forever Planner</title>
+    <link rel="stylesheet" href="styles/main.css" />
+    <script type="module" src="scripts/invite.js"></script>
+    <style>
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+      .invite-shell {
+        width: 100%;
+        max-width: 460px;
+        padding: 24px 20px 48px;
+        animation: fadeUp 0.5s ease both;
+      }
+      .invite-brand {
+        text-align: center;
+        margin-bottom: 32px;
+      }
+      .invite-brand .logo {
+        font-family: "Cormorant Garamond", serif;
+        font-size: 2rem;
+        font-weight: 300;
+        color: var(--primary);
+        letter-spacing: 3px;
+        display: block;
+      }
+      .invite-card {
+        text-align: center;
+      }
+      .invite-wedding-name {
+        font-family: "Cormorant Garamond", serif;
+        font-size: 1.8rem;
+        font-weight: 300;
+        color: var(--primary);
+        margin: 8px 0 4px;
+        font-style: italic;
+      }
+      .invite-meta {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        margin-bottom: 24px;
+      }
+      .invite-divider {
+        border: none;
+        border-top: 1px solid var(--border);
+        margin: 20px 0;
+      }
+      .invite-loading,
+      .invite-error,
+      .invite-expired {
+        text-align: center;
+        padding: 32px 20px;
+      }
+      .invite-loading .spinner {
+        width: 40px;
+        height: 40px;
+        border-width: 3px;
+        margin-bottom: 16px;
+      }
+      .big-icon {
+        font-size: 3rem;
+        display: block;
+        margin-bottom: 12px;
+      }
+      .role-badge {
+        display: inline-block;
+        padding: 3px 14px;
+        border-radius: 99px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        background: var(--surface-2);
+        color: var(--text-muted);
+        border: 1px solid var(--border);
+        margin-bottom: 16px;
+      }
+      #invite-content  { display: none; }
+      #invite-loading  { display: block; }
+      #invite-error    { display: none; }
+      #invite-accepted { display: none; }
+    </style>
+  </head>
+  <body>
+    <main class="invite-shell">
+      <!-- Brand -->
+      <div class="invite-brand">
+        <span class="logo">💍 Forever Planner</span>
+      </div>
+
+      <!-- Loading state -->
+      <div id="invite-loading" class="invite-loading card">
+        <span class="spinner" aria-hidden="true"></span>
+        <p style="color:var(--text-muted)">Loading invite…</p>
+      </div>
+
+      <!-- Error state -->
+      <div id="invite-error" class="invite-error card">
+        <span class="big-icon">😔</span>
+        <h2 style="font-family:'Cormorant Garamond',serif;font-weight:300">Invite Not Found</h2>
+        <p id="invite-error-msg" style="color:var(--text-muted);margin:8px 0 24px">
+          This invite may have expired or already been used.
+        </p>
+        <a href="/login.html" class="btn btn-primary">Go to Login</a>
+      </div>
+
+      <!-- Invite details -->
+      <div id="invite-content" class="card invite-card">
+        <span style="font-size:2.5rem">💌</span>
+        <p style="color:var(--text-muted);margin:8px 0 0;font-size:.9rem">
+          <strong id="invite-from"></strong> invited you to help plan
+        </p>
+        <div class="invite-wedding-name" id="invite-wedding"></div>
+        <span class="role-badge" id="invite-role-badge"></span>
+
+        <hr class="invite-divider" />
+
+        <!-- If not logged in, show sign-in options -->
+        <div id="invite-auth-section">
+          <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:16px">
+            Sign in to accept this invitation
+          </p>
+
+          <!-- Google sign-in -->
+          <a id="google-invite-btn" href="#"
+             class="btn btn-ghost btn-full"
+             style="justify-content:center;gap:10px;margin-bottom:10px;font-size:.9rem">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                 width="18" height="18" alt="" />
+            Continue with Google
+          </a>
+
+          <div style="text-align:center;color:var(--text-muted);font-size:.8rem;margin:8px 0">or</div>
+
+          <!-- Email sign-in form -->
+          <div class="field-group" style="margin-bottom:10px">
+            <label for="invite-email">Email</label>
+            <input type="email" id="invite-email" placeholder="you@example.com" autocomplete="email" />
+          </div>
+          <div class="field-group" style="margin-bottom:16px">
+            <label for="invite-password">Password</label>
+            <input type="password" id="invite-password" placeholder="••••••••" autocomplete="current-password" />
+          </div>
+
+          <div id="invite-auth-error"
+               style="display:none;color:var(--danger);font-size:.82rem;margin-bottom:10px;text-align:center">
+          </div>
+
+          <button class="btn btn-primary btn-full" id="invite-login-btn" style="margin-bottom:8px">
+            Sign In &amp; Accept
+          </button>
+          <button class="btn btn-ghost btn-full" id="invite-register-btn">
+            Create Account &amp; Accept
+          </button>
+        </div>
+
+        <!-- If already logged in -->
+        <div id="invite-loggedin-section" style="display:none">
+          <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:16px">
+            You're signed in as <strong id="invite-current-user"></strong>
+          </p>
+          <button class="btn btn-primary btn-full" id="invite-accept-btn">
+            ✓ Accept Invitation
+          </button>
+          <button class="btn btn-ghost btn-full" id="invite-wrong-account-btn"
+                  style="margin-top:8px;font-size:.82rem">
+            Sign in with a different account
+          </button>
+        </div>
+      </div>
+
+      <!-- Accepted state -->
+      <div id="invite-accepted" class="card invite-card">
+        <span class="big-icon">🎉</span>
+        <div class="invite-wedding-name" id="accepted-wedding-name"></div>
+        <p id="accepted-msg" style="color:var(--text-muted);margin:8px 0 24px"></p>
+        <a href="/index.html" class="btn btn-primary btn-full">
+          Open Wedding Planner
+        </a>
+      </div>
+    </main>
+  </body>
+</html>
