@@ -322,6 +322,7 @@ textarea {
   flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 16px;
+  margin-top: 12px;
 }
 .filter-tab {
   padding: 5px 14px;
