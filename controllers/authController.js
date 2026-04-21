@@ -9,11 +9,11 @@
 
 "use strict";
 
-const User    = require("../models/User");
-const Wedding = require("../models/Wedding");   // ← added
-const { signToken }   = require("../utils/jwt");
-const ApiError        = require("../utils/ApiError");
-const asyncHandler    = require("../utils/asyncHandler");
+const User = require("../models/User");
+const Wedding = require("../models/Wedding"); // ← added
+const { signToken } = require("../utils/jwt");
+const ApiError = require("../utils/ApiError");
+const asyncHandler = require("../utils/asyncHandler");
 const { sendSuccess, sendCreated } = require("../utils/response");
 
 /* ── Register ──────────────────────────────────────────────── */
@@ -29,9 +29,7 @@ const register = asyncHandler(async (req, res) => {
 
   // Create a default wedding so resolveWedding() works immediately.
   // (oauth.js does the same thing for Google sign-ins.)
-  const weddingName = displayName
-    ? `${displayName}'s Wedding`
-    : "Our Wedding";
+  const weddingName = displayName ? `${displayName}'s Wedding` : "Our Wedding";
   await Wedding.create(user.id, { name: weddingName });
 
   const token = signToken({ id: user.id, email: user.email });

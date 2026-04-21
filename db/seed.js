@@ -16,60 +16,170 @@ const bcrypt = require("bcryptjs");
 const { pool } = require("./index");
 
 /* ── Demo credentials ────────────────────────────────────────── */
-const DEMO_EMAIL    = "demo@foreverplanner.com";
+const DEMO_EMAIL = "demo@foreverplanner.com";
 const DEMO_PASSWORD = "Demo1234";
-const DEMO_NAME     = "Demo Couple";
-const WEDDING_DATE  = "2026-09-20";
-const WEDDING_NAME  = "Demo Couple's Wedding";
+const DEMO_NAME = "Demo Couple";
+const WEDDING_DATE = "2026-09-20";
+const WEDDING_NAME = "Demo Couple's Wedding";
 
 /* ── Seed data ───────────────────────────────────────────────── */
 const GUESTS = [
-  { name: "Alice Johnson", rsvp: "Confirmed", diet: "Vegan",        plus_one: "Bob Johnson" },
-  { name: "Carol Williams",rsvp: "Confirmed", diet: null,           plus_one: null },
-  { name: "David Brown",   rsvp: "Pending",   diet: "Gluten-free",  plus_one: null },
-  { name: "Emma Davis",    rsvp: "Pending",   diet: null,           plus_one: "Frank Davis" },
-  { name: "Grace Miller",  rsvp: "Declined",  diet: null,           plus_one: null },
+  {
+    name: "Alice Johnson",
+    rsvp: "Confirmed",
+    diet: "Vegan",
+    plus_one: "Bob Johnson",
+  },
+  { name: "Carol Williams", rsvp: "Confirmed", diet: null, plus_one: null },
+  { name: "David Brown", rsvp: "Pending", diet: "Gluten-free", plus_one: null },
+  { name: "Emma Davis", rsvp: "Pending", diet: null, plus_one: "Frank Davis" },
+  { name: "Grace Miller", rsvp: "Declined", diet: null, plus_one: null },
 ];
 
 const VENDORS = [
-  { name: "Bloom & Blossom Florists", category: "Florist",     status: "Booked",       phone: "555-0101", email: "hello@bloomfloral.com",  website: null,                   notes: "Deposit paid. Peonies confirmed." },
-  { name: "Lens & Love Photography",  category: "Photographer",status: "Booked",       phone: "555-0102", email: "contact@lensandlove.com",website: "https://lensandlove.com", notes: "8-hour package." },
-  { name: "The Grand Ballroom",       category: "Venue",       status: "Booked",       phone: "555-0103", email: null,                     website: "https://grandballroom.com",notes: "Capacity 200." },
-  { name: "Sweet Tiers Bakery",       category: "Cake",        status: "Contacted",    phone: "555-0104", email: "orders@sweettiers.com",  website: null,                   notes: "Awaiting tasting appointment." },
-  { name: "Harmony DJ Services",      category: "DJ / Band",   status: "Researching",  phone: null,       email: "info@harmonydj.com",     website: "https://harmonydj.com",notes: null },
+  {
+    name: "Bloom & Blossom Florists",
+    category: "Florist",
+    status: "Booked",
+    phone: "555-0101",
+    email: "hello@bloomfloral.com",
+    website: null,
+    notes: "Deposit paid. Peonies confirmed.",
+  },
+  {
+    name: "Lens & Love Photography",
+    category: "Photographer",
+    status: "Booked",
+    phone: "555-0102",
+    email: "contact@lensandlove.com",
+    website: "https://lensandlove.com",
+    notes: "8-hour package.",
+  },
+  {
+    name: "The Grand Ballroom",
+    category: "Venue",
+    status: "Booked",
+    phone: "555-0103",
+    email: null,
+    website: "https://grandballroom.com",
+    notes: "Capacity 200.",
+  },
+  {
+    name: "Sweet Tiers Bakery",
+    category: "Cake",
+    status: "Contacted",
+    phone: "555-0104",
+    email: "orders@sweettiers.com",
+    website: null,
+    notes: "Awaiting tasting appointment.",
+  },
+  {
+    name: "Harmony DJ Services",
+    category: "DJ / Band",
+    status: "Researching",
+    phone: null,
+    email: "info@harmonydj.com",
+    website: "https://harmonydj.com",
+    notes: null,
+  },
 ];
 
 const BUDGET_LIMIT = 30000;
 const BUDGET_ITEMS = [
-  { name: "Venue deposit",         category: "Venue",       amount: 5000 },
-  { name: "Photographer booking",  category: "Photography", amount: 3200 },
-  { name: "Florist deposit",       category: "Flowers",     amount:  800 },
-  { name: "Wedding dress",         category: "Attire",      amount: 2200 },
-  { name: "Catering estimate",     category: "Catering",    amount: 6000 },
-  { name: "Save-the-date cards",   category: "Invitations", amount:  180 },
+  { name: "Venue deposit", category: "Venue", amount: 5000 },
+  { name: "Photographer booking", category: "Photography", amount: 3200 },
+  { name: "Florist deposit", category: "Flowers", amount: 800 },
+  { name: "Wedding dress", category: "Attire", amount: 2200 },
+  { name: "Catering estimate", category: "Catering", amount: 6000 },
+  { name: "Save-the-date cards", category: "Invitations", amount: 180 },
 ];
 
 const TASKS = [
-  { text: "Book the venue",           category: "Venue",       due_date: "2025-09-01",  done: true  },
-  { text: "Book the photographer",    category: "Photography", due_date: "2025-09-15",  done: true  },
-  { text: "Order wedding dress",      category: "Attire",      due_date: "2025-11-01",  done: false },
-  { text: "Send save-the-date cards", category: "Invitations", due_date: "2025-10-01",  done: false },
-  { text: "Choose a caterer",         category: "Catering",    due_date: "2025-12-01",  done: false },
-  { text: "Book hair & makeup artist",category: "Beauty",      due_date: "2026-01-15",  done: false },
-  { text: "Choose wedding flowers",   category: "Flowers",     due_date: "2026-02-01",  done: false },
-  { text: "Book honeymoon travel",    category: "Honeymoon",   due_date: "2026-03-01",  done: false },
-  { text: "Finalise guest list",      category: "Other",       due_date: "2025-10-15",  done: false },
-  { text: "Arrange transportation",   category: "Other",       due_date: "2026-04-01",  done: false },
+  {
+    text: "Book the venue",
+    category: "Venue",
+    due_date: "2025-09-01",
+    done: true,
+  },
+  {
+    text: "Book the photographer",
+    category: "Photography",
+    due_date: "2025-09-15",
+    done: true,
+  },
+  {
+    text: "Order wedding dress",
+    category: "Attire",
+    due_date: "2025-11-01",
+    done: false,
+  },
+  {
+    text: "Send save-the-date cards",
+    category: "Invitations",
+    due_date: "2025-10-01",
+    done: false,
+  },
+  {
+    text: "Choose a caterer",
+    category: "Catering",
+    due_date: "2025-12-01",
+    done: false,
+  },
+  {
+    text: "Book hair & makeup artist",
+    category: "Beauty",
+    due_date: "2026-01-15",
+    done: false,
+  },
+  {
+    text: "Choose wedding flowers",
+    category: "Flowers",
+    due_date: "2026-02-01",
+    done: false,
+  },
+  {
+    text: "Book honeymoon travel",
+    category: "Honeymoon",
+    due_date: "2026-03-01",
+    done: false,
+  },
+  {
+    text: "Finalise guest list",
+    category: "Other",
+    due_date: "2025-10-15",
+    done: false,
+  },
+  {
+    text: "Arrange transportation",
+    category: "Other",
+    due_date: "2026-04-01",
+    done: false,
+  },
 ];
 
 const MUSIC = [
-  { section: "Processional", track_id: "1440830605", track_name: "A Thousand Years",  artist_name: "Christina Perri" },
-  { section: "First Dance",  track_id: "1440830606", track_name: "Perfect",           artist_name: "Ed Sheeran" },
-  { section: "Last Dance",   track_id: "1440830607", track_name: "Don't Stop Believin'", artist_name: "Journey" },
+  {
+    section: "Processional",
+    track_id: "1440830605",
+    track_name: "A Thousand Years",
+    artist_name: "Christina Perri",
+  },
+  {
+    section: "First Dance",
+    track_id: "1440830606",
+    track_name: "Perfect",
+    artist_name: "Ed Sheeran",
+  },
+  {
+    section: "Last Dance",
+    track_id: "1440830607",
+    track_name: "Don't Stop Believin'",
+    artist_name: "Journey",
+  },
 ];
 
 /* ── Helpers ─────────────────────────────────────────────────── */
-const log  = (msg) => console.log(`  ✓ ${msg}`);
+const log = (msg) => console.log(`  ✓ ${msg}`);
 const skip = (msg) => console.log(`  – ${msg} (already exists, skipped)`);
 
 /* ── Main ────────────────────────────────────────────────────── */
@@ -166,7 +276,16 @@ const skip = (msg) => console.log(`  – ${msg} (already exists, skipped)`);
       await client.query(
         `INSERT INTO vendors (wedding_id, name, category, status, phone, email, website, notes)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-        [weddingId, v.name, v.category, v.status, v.phone, v.email, v.website, v.notes],
+        [
+          weddingId,
+          v.name,
+          v.category,
+          v.status,
+          v.phone,
+          v.email,
+          v.website,
+          v.notes,
+        ],
       );
       log(`${v.name} (${v.status})`);
     }

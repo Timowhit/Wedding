@@ -109,9 +109,9 @@ export function initNav() {
   const nav = document.querySelector(".site-nav");
   if (nav && !nav.querySelector(".hamburger")) {
     const brand = nav.querySelector(".brand");
-    const navUserGroup = nav.querySelector(".nav-user-group");
     // Only the page links (not brand, not nav-user-group children)
     const links = [...nav.querySelectorAll("a:not(.brand)")];
+    const navUserGroup = nav.querySelector(".nav-user-group");
 
     if (links.length && brand) {
       // 1. Wrap page links in collapsible container
@@ -129,9 +129,10 @@ export function initNav() {
       // 3. Insert into DOM: brand | hamburger | nav-user-group | linksWrapper
       brand.after(hamburger);
       if (navUserGroup) {
-        hamburger.after(navUserGroup);
-        navUserGroup.after(linksWrapper);
-      } else {
+        hamburger.after(linksWrapper);
+        linksWrapper.after(navUserGroup);
+      } 
+      else {
         hamburger.after(linksWrapper);
       }
 

@@ -10,7 +10,7 @@
 
 require("dotenv").config();
 
-const fs   = require("fs");
+const fs = require("fs");
 const path = require("path");
 const { pool } = require("./index");
 
@@ -27,7 +27,7 @@ const MIGRATIONS_DIR = path.join(__dirname, "migrations");
 
   // Find which migrations have already been applied
   const { rows } = await pool.query("SELECT filename FROM schema_migrations");
-  const applied  = new Set(rows.map((r) => r.filename));
+  const applied = new Set(rows.map((r) => r.filename));
 
   const files = fs
     .readdirSync(MIGRATIONS_DIR)
@@ -44,10 +44,9 @@ const MIGRATIONS_DIR = path.join(__dirname, "migrations");
     const sql = fs.readFileSync(path.join(MIGRATIONS_DIR, file), "utf8");
     console.log(`Running migration: ${file}`);
     await pool.query(sql);
-    await pool.query(
-      "INSERT INTO schema_migrations (filename) VALUES ($1)",
-      [file],
-    );
+    await pool.query("INSERT INTO schema_migrations (filename) VALUES ($1)", [
+      file,
+    ]);
     console.log(`  \u2713 ${file}`);
     ran++;
   }
