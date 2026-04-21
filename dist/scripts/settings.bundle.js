@@ -1,37 +1,48 @@
-var v="fp_token",p="fp_user",r={getToken(){return localStorage.getItem(v)},setToken(n){localStorage.setItem(v,n)},getUser(){try{return JSON.parse(localStorage.getItem(p))}catch{return null}},setUser(n){localStorage.setItem(p,JSON.stringify(n))},clearSession(){localStorage.removeItem(v),localStorage.removeItem(p)},isLoggedIn(){return!!this.getToken()},async register({email:n,password:t,displayName:e}){let{data:i}=await _.post("/auth/register",{email:n,password:t,displayName:e});return r.setToken(i.token),r.setUser(i.user),i},async login({email:n,password:t}){let{data:e}=await _.post("/auth/login",{email:n,password:t});return r.setToken(e.token),r.setUser(e.user),e},logout(){r.clearSession(),window.location.href="/login.html"},requireAuth(){r.isLoggedIn()||(window.location.href="/login.html")}},h=class extends Error{constructor(t,e,i=[]){super(e),this.name="ApiResponseError",this.status=t,this.errors=i}},b="/api/v1",_={async request(n,{method:t="GET",body:e,query:i}={}){let o=`${b}${n}`;if(i&&Object.keys(i).length){let f=Object.fromEntries(Object.entries(i).filter(([,g])=>g!=null&&g!==""));Object.keys(f).length&&(o+="?"+new URLSearchParams(f).toString())}let c={"Content-Type":"application/json"},l=r.getToken();l&&(c.Authorization=`Bearer ${l}`);let d=await fetch(o,{method:t,headers:c,body:e!==void 0?JSON.stringify(e):void 0});if(d.status===204)return{success:!0,data:null};let m=await d.json().catch(()=>({success:!1,message:`HTTP ${d.status}`,errors:[]}));if(!d.ok)throw d.status===401?(r.clearSession(),window.location.href="/login.html",new h(401,"Session expired. Please log in again.")):new h(d.status,m.message||`HTTP ${d.status}`,m.errors||[]);return m},get(n,t){return this.request(n,{method:"GET",query:t})},post(n,t){return this.request(n,{method:"POST",body:t})},put(n,t){return this.request(n,{method:"PUT",body:t})},patch(n,t){return this.request(n,{method:"PATCH",body:t})},delete(n){return this.request(n,{method:"DELETE"})}},a=_;var s=class n{static _container=null;static _getContainer(){return this._container||(this._container=document.createElement("div"),this._container.className="toast-container",this._container.setAttribute("aria-live","polite"),this._container.setAttribute("aria-atomic","true"),document.body.appendChild(this._container)),this._container}static show(t,e="default",i=2800){let o=document.createElement("div");o.className=`toast${e!=="default"?" "+e:""}`,o.textContent=t,this._getContainer().appendChild(o),setTimeout(()=>{o.style.opacity="0",o.style.transition="opacity .3s ease",setTimeout(()=>o.remove(),350)},i)}static showErrors(t=[]){if(!t.length)return;let e=t.map(i=>i.msg).join(" \xB7 ");n.show(e,"error",4e3)}};function u(n){return String(n??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}function I(){let n=window.location.pathname.split("/").pop()||"index.html";document.querySelectorAll(".site-nav a").forEach(t=>{let e=t.getAttribute("href");t.classList.toggle("active",e===n||n===""&&e==="index.html")})}function y(){I();let n=document.getElementById("nav-user");if(n){let e=r.getUser();n.textContent=e?.display_name||e?.email||""}let t=document.getElementById("logout-btn");t&&t.addEventListener("click",e=>{e.preventDefault(),r.logout()})}function E(n,t="Loading\u2026"){n.innerHTML=`
-    <div class="loading-state" aria-live="polite">
-      <span class="spinner" aria-hidden="true"></span>
-      <span>${u(t)}</span>
-    </div>`}r.requireAuth();var w=class{constructor(){this._weddingNameInput=document.getElementById("wedding-name"),this._weddingDateInput=document.getElementById("wedding-date-input"),this._saveWeddingBtn=document.getElementById("save-wedding-btn"),this._membersList=document.getElementById("members-list"),this._viewerNotice=document.getElementById("viewer-notice"),this._inviteEmailInput=document.getElementById("invite-email-input"),this._inviteRoleSelect=document.getElementById("invite-role-select"),this._sendInviteBtn=document.getElementById("send-invite-btn"),this._invitesList=document.getElementById("invites-list"),this._currentWedding=null,this._currentUserRole=null}async init(){y(),this._bindEvents(),await this._load()}_bindEvents(){this._saveWeddingBtn.addEventListener("click",()=>this._saveWedding()),this._sendInviteBtn.addEventListener("click",()=>this._sendInvite())}async _load(){E(this._membersList,"Loading settings\u2026");try{let{data:t}=await a.get("/weddings");if(t.length===0)throw new Error("No wedding found");this._currentWedding=t[0],this._currentUserRole=this._currentWedding.role;let{data:e}=await a.get(`/weddings/${this._currentWedding.id}/members`);this._renderWedding(),this._renderMembers(e.members);let{data:i}=await a.get(`/weddings/${this._currentWedding.id}/invites`);this._renderInvites(i.invites)}catch{s.show("Could not load settings.","error")}}_renderWedding(){this._weddingNameInput.value=this._currentWedding.name||"",this._weddingDateInput.value=this._currentWedding.wedding_date||"",this._viewerNotice.hidden=this._currentUserRole==="owner",this._saveWeddingBtn.disabled=this._currentUserRole!=="owner",this._inviteEmailInput.disabled=this._currentUserRole!=="owner",this._sendInviteBtn.disabled=this._currentUserRole!=="owner"}async _saveWedding(){let t=this._weddingNameInput.value.trim(),e=this._weddingDateInput.value;try{await a.patch(`/weddings/${this._currentWedding.id}`,{name:t,weddingDate:e}),this._currentWedding.name=t,this._currentWedding.wedding_date=e,s.show("Wedding updated!","success")}catch{s.show("Could not update wedding.","error")}}_renderMembers(t){this._membersList.innerHTML="",t.forEach(e=>{let i=document.createElement("li");i.className="member-item";let o=e.id===r.getUser().id,c=this._currentUserRole==="owner"&&!o;if(i.innerHTML=`
-        <div class="member-info">
-          <div class="member-name">${u(e.display_name||e.email)}</div>
-          <div class="member-email">${u(e.email)}</div>
-        </div>
-        <div class="member-role">
-          ${c?`
-            <select class="role-select" data-user-id="${e.id}">
-              <option value="viewer" ${e.role==="viewer"?"selected":""}>Viewer</option>
-              <option value="editor" ${e.role==="editor"?"selected":""}>Editor</option>
-              <option value="owner" ${e.role==="owner"?"selected":""}>Owner</option>
-            </select>
-          `:`
-            <span class="role-badge">${e.role}</span>
-          `}
-        </div>
-        ${c?`
-          <button class="btn btn-danger btn-sm remove-member-btn" data-user-id="${e.id}">
-            Remove
-          </button>
-        `:""}
-      `,c){let l=i.querySelector(".role-select");l.addEventListener("change",()=>this._changeRole(e.id,l.value)),i.querySelector(".remove-member-btn").addEventListener("click",()=>this._removeMember(e.id))}this._membersList.appendChild(i)})}async _changeRole(t,e){try{await a.patch(`/weddings/${this._currentWedding.id}/members/${t}`,{role:e}),s.show("Role updated!","success"),await this._load()}catch{s.show("Could not update role.","error")}}async _removeMember(t){if(confirm("Are you sure you want to remove this member?"))try{await a.delete(`/weddings/${this._currentWedding.id}/members/${t}`),s.show("Member removed!","success"),await this._load()}catch{s.show("Could not remove member.","error")}}async _sendInvite(){let t=this._inviteEmailInput.value.trim(),e=this._inviteRoleSelect.value;if(!t)return s.show("Please enter an email address.","error");this._sendInviteBtn.disabled=!0;try{await a.post(`/weddings/${this._currentWedding.id}/members`,{email:t,role:e}),this._inviteEmailInput.value="",s.show("Invite sent!","success"),await this._load()}catch{s.show("Could not send invite.","error")}finally{this._sendInviteBtn.disabled=!1}}_renderInvites(t){if(this._invitesList.innerHTML="",t.length===0){this._invitesList.innerHTML="<li class='empty-state'>No pending invites</li>";return}t.forEach(e=>{let i=document.createElement("li");i.className="invite-item";let o=e.accepted_at?"Accepted":e.expires_at<new Date?"Expired":"Pending";i.innerHTML=`
-        <div class="invite-info">
-          <div class="invite-email">${u(e.invited_email)}</div>
-          <div class="invite-role">Role: ${e.role}</div>
-          <div class="invite-status">Status: ${o}</div>
-        </div>
-        ${this._currentUserRole==="owner"?`
-          <button class="btn btn-danger btn-sm delete-invite-btn" data-invite-id="${e.id}">
-            Delete
-          </button>
-        `:""}
-      `,this._currentUserRole==="owner"&&i.querySelector(".delete-invite-btn").addEventListener("click",()=>this._deleteInvite(e.id)),this._invitesList.appendChild(i)})}async _deleteInvite(t){try{await a.delete(`/weddings/${this._currentWedding.id}/invites/${t}`),s.show("Invite deleted!","success"),await this._load()}catch{s.show("Could not delete invite.","error")}}},$=new w;$.init();
+var m="fp_token",
+h="fp_user",
+o={getToken(){return localStorage.getItem(m)},
+setToken(t){localStorage.setItem(m,t)},
+getUser(){try{return JSON.parse(localStorage.getItem(h))}catch{return null}},
+setUser(t){localStorage.setItem(h,JSON.stringify(t))},
+clearSession(){localStorage.removeItem(m),
+    localStorage.removeItem(h)},
+    isLoggedIn(){return!!this.getToken()},
+    async register({email:t,password:e,displayName:n}){let{data:s}=await p.post("/auth/register",{email:t,password:e,displayName:n});
+    return o.setToken(s.token),
+    o.setUser(s.user),s},
+    async login({email:t,password:e}){let{data:n}=await p.post("/auth/login",{email:t,password:e});
+    return o.setToken(n.token),o.setUser(n.user),n},
+    logout(){o.clearSession(),window.location.href="/login.html"},
+    requireAuth(){o.isLoggedIn()||(window.location.href="/login.html")}},
+    l=class extends Error{constructor(e,n,s=[]){super(n),
+        this.name="ApiResponseError",this.status=e,this.errors=s}},
+        k="/api/v1",p={async request(t,{method:e="GET",body:n,query:s}={}){let r=`${k}${t}`;
+        if(s&&Object.keys(s).length){let y=Object.fromEntries(Object.entries(s).filter(([,g])=>g!=null&&g!==""));
+            Object.keys(y).length&&(r+="?"+new URLSearchParams(y).toString())}let f={"Content-Type":"application/json"},
+            w=o.getToken();
+            w&&(f.Authorization=`Bearer ${w}`);
+            let a=await fetch(r,{method:e,headers:f,body:n!==void 0?JSON.stringify(n):void 0});
+            if(a.status===204)return{success:!0,data:null};let d=await a.json().catch(()=>({success:!1,message:`HTTP ${a.status}`,errors:[]}));
+            if(!a.ok)throw a.status===401?(o.clearSession(),
+            window.location.href="/login.html",new l(401,"Session expired. Please log in again.")):new l(a.status,d.message||`HTTP ${a.status}`,
+                d.errors||[]);return d},
+                get(t,e){return this.request(t,{method:"GET",query:e})},
+                post(t,e){return this.request(t,{method:"POST",body:e})},
+                put(t,e){return this.request(t,{method:"PUT",body:e})},
+                patch(t,e){return this.request(t,{method:"PATCH",body:e})},
+                delete(t){return this.request(t,{method:"DELETE"})}},
+                i=p;var c=class t{static _container=null;
+                    static _getContainer(){return this._container||(this._container=document.createElement("div"),
+                        this._container.className="toast-container",
+                        this._container.setAttribute("aria-live","polite"),
+                        this._container.setAttribute("aria-atomic","true"),
+                        document.body.appendChild(this._container)),
+                        this._container}static show(e,n="default",s=2800){let r=document.createElement("div");
+                            r.className=`toast${n!=="default"?" "+n:""}`,
+                            r.textContent=e,this._getContainer().appendChild(r),
+                            setTimeout(()=>{r.style.opacity="0",r.style.transition="opacity .3s ease",
+                                setTimeout(()=>r.remove(),350)},s)}static showErrors(e=[]){if(!e.length)return;
+                                    let n=e.map(s=>s.msg).join(" \xB7 ");t.show(n,"error",4e3)}};
+                                    function v(t){return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(t??0)}function b(){let t=window.location.pathname.split("/").pop()||"index.html";document.querySelectorAll(".site-nav a").forEach(e=>{let n=e.getAttribute("href");e.classList.toggle("active",n===t||t===""&&n==="index.html")})}function E(){b();let t=document.getElementById("nav-user");if(t){let n=o.getUser();t.textContent=n?.display_name||n?.email||""}let e=document.getElementById("logout-btn");e&&e.addEventListener("click",n=>{n.preventDefault(),o.logout()})}o.requireAuth();var S=document.getElementById("countdown-number"),I=document.getElementById("countdown-date-label"),x=document.getElementById("wedding-date-input"),C=document.getElementById("set-date-btn"),L=document.getElementById("stat-budget"),B=document.getElementById("stat-guests"),U=document.getElementById("stat-tasks"),A=document.getElementById("stat-vendors"),u=null;document.addEventListener("DOMContentLoaded",async()=>{E(),D(),await N()});function T(t){let[e,n,s]=t.split("-").map(Number);return new Date(e,n-1,s)}function D(){let e=o.getUser()?.wedding_date||localStorage.getItem("fp_wedding_date");if(e){let n=e.substring(0,10);x.value=n,_(T(n))}}C.addEventListener("click",async()=>{let t=x.value;if(t)try{await i.patch("/auth/me",{weddingDate:t}),localStorage.setItem("fp_wedding_date",t);let e=o.getUser()??{};e.wedding_date=t,o.setUser(e),_(T(t)),c.show("Wedding date saved!","success")}catch(e){c.show(e.message||"Could not save date.","error")}});function _(t){u&&clearInterval(u);let e={weekday:"long",year:"numeric",month:"long",day:"numeric"};I.textContent=t.toLocaleDateString("en-US",e);let n=()=>{let s=t-new Date;if(s<=0){S.textContent="\u{1F389}",I.textContent="Today is the big day!",clearInterval(u);return}S.textContent=Math.floor(s/864e5)};n(),u=setInterval(n,6e4)}async function N(){try{let[t,e,n,s]=await Promise.all([i.get("/budget/summary"),i.get("/guests"),i.get("/checklist"),i.get("/vendors")]);L.textContent=v(t.data.spent),
+                                B.textContent=e.data.stats.total,U.textContent=`${n.data.progress.pct}%`,
+                            A.textContent=s.data.vendors.length}catch(t){console.error("Dashboard stats error:",t)}}
