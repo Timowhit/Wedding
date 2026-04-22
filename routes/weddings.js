@@ -69,9 +69,9 @@ router.post(
 router.use(authenticate);
 router.get("/my-pending-invites", ctrl.getMyPendingInvites);
 router.post(
-  '/:id/share-link',
-  param('id').isUUID(),
-  body('role').optional().isIn(['viewer', 'editor']),
+  "/:id/share-link",
+  param("id").isUUID(),
+  body("role").optional().isIn(["viewer", "editor"]),
   validate,
   ctrl.createShareLink,
 );

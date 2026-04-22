@@ -286,9 +286,22 @@
           </div>
         </div>
 
-        <button class="btn btn-primary" id="send-invite-btn">
-          Send Invite
-        </button>
+        <div
+          style="
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-top: 4px;
+          "
+        >
+          <button class="btn btn-primary" id="send-invite-btn">
+            Send Invite
+          </button>
+          <button class="btn btn-ghost" id="share-wedding-btn" disabled>
+            🔗 Share
+          </button>
+        </div>
 
         <!-- Show invite link if email is not configured -->
         <div id="invite-link-container" style="display: none">

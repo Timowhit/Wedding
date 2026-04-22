@@ -45,9 +45,9 @@ class SettingsManager {
     if (refreshBtn) {
       refreshBtn.addEventListener("click", () => this._load());
     }
-    const shareBtn = document.getElementById('share-wedding-btn');
+    const shareBtn = document.getElementById("share-wedding-btn");
     if (shareBtn) {
-      shareBtn.addEventListener('click', () => this._shareWedding());
+      shareBtn.addEventListener("click", () => this._shareWedding());
     }
   }
 
@@ -96,82 +96,93 @@ class SettingsManager {
     this._inviteEmailInput.disabled = !isOwner;
     this._sendInviteBtn.disabled = !isOwner;
 
-    const shareBtn = document.getElementById('share-wedding-btn');
-    if (shareBtn) {shareBtn.disabled = !isOwner;}
+    const shareBtn = document.getElementById("share-wedding-btn");
+    if (shareBtn) {
+      shareBtn.disabled = !isOwner;
+    }
   }
 
-async _shareWedding() {
-  if (!this._currentWedding) {return;}
+  async _shareWedding() {
+    if (!this._currentWedding) {
+      return;
+    }
 
-  const btn = document.getElementById('share-wedding-btn');
-  const original = btn.innerHTML;
-  btn.disabled = true;
-  btn.textContent = '…';
+    const btn = document.getElementById("share-wedding-btn");
+    const original = btn.innerHTML;
+    btn.disabled = true;
+    btn.textContent = "…";
 
-  try {
-    const { data } = await api.post(
-      `/weddings/${this._currentWedding.id}/share-link`,
-      { role: 'editor' },
+    try {
+      const { data } = await api.post(
+        `/weddings/${this._currentWedding.id}/share-link`,
+        { role: "editor" },
+      );
+      const inviteUrl = `${window.location.origin}/invite.html?token=${data.invite.token}`;
+      this._showShareSheet(
+        inviteUrl,
+        this._currentWedding.name || "Our Wedding",
+      );
+    } catch (err) {
+      Toast.show(err.message || "Could not generate share link.", "error");
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = original;
+    }
+  }
+
+  _showShareSheet(url, weddingName) {
+    document.getElementById("fp-share-modal")?.remove();
+
+    const encodedUrl = encodeURIComponent(url);
+    const msgText = `You're invited to help plan "${weddingName}" on Forever Planner! 💍\n${url}`;
+    const encodedMsg = encodeURIComponent(msgText);
+    const subject = encodeURIComponent(
+      `You're invited to plan "${weddingName}" 💍`,
     );
-    const inviteUrl = `${window.location.origin}/invite.html?token=${data.invite.token}`;
-    this._showShareSheet(inviteUrl, this._currentWedding.name || 'Our Wedding');
-  } catch (err) {
-    Toast.show(err.message || 'Could not generate share link.', 'error');
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = original;
-  }
-}
 
-_showShareSheet(url, weddingName) {
-  document.getElementById('fp-share-modal')?.remove();
-
-  const encodedUrl = encodeURIComponent(url);
-  const msgText    = `You're invited to help plan "${weddingName}" on Forever Planner! 💍\n${url}`;
-  const encodedMsg = encodeURIComponent(msgText);
-  const subject    = encodeURIComponent(`You're invited to plan "${weddingName}" 💍`);
-
-  const channels = [
-    {
-      id: 'copy',
-      label: 'Copy Link',
-      color: '#5b9e6e',
-      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"
+    const channels = [
+      {
+        id: "copy",
+        label: "Copy Link",
+        color: "#5b9e6e",
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"
                   stroke-linecap="round" stroke-linejoin="round">
                <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
                <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
              </svg>`,
-      action: async (btn) => {
-        await navigator.clipboard.writeText(url).catch(() => {});
-        const lbl = btn.querySelector('.share-channel-label');
-        lbl.textContent = 'Copied!';
-        setTimeout(() => { lbl.textContent = 'Copy Link'; }, 2000);
+        action: async (btn) => {
+          await navigator.clipboard.writeText(url).catch(() => {});
+          const lbl = btn.querySelector(".share-channel-label");
+          lbl.textContent = "Copied!";
+          setTimeout(() => {
+            lbl.textContent = "Copy Link";
+          }, 2000);
+        },
       },
-    },
-    {
-      id: 'sms',
-      label: 'Text',
-      color: '#007AFF',
-      icon: `<svg viewBox="0 0 24 24" fill="white">
+      {
+        id: "sms",
+        label: "Text",
+        color: "#007AFF",
+        icon: `<svg viewBox="0 0 24 24" fill="white">
                <path d="M20 2H4a2 2 0 00-2 2v18l4-4h14a2 2 0 002-2V4a2 2 0 00-2-2z"/>
              </svg>`,
-      href: `sms:?&body=${encodedMsg}`,
-    },
-    {
-      id: 'email',
-      label: 'Email',
-      color: '#c9748f',
-      icon: `<svg viewBox="0 0 24 24" fill="white">
+        href: `sms:?&body=${encodedMsg}`,
+      },
+      {
+        id: "email",
+        label: "Email",
+        color: "#c9748f",
+        icon: `<svg viewBox="0 0 24 24" fill="white">
                <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9
                         2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
              </svg>`,
-      href: `mailto:?subject=${subject}&body=${encodedMsg}`,
-    },
-    {
-      id: 'whatsapp',
-      label: 'WhatsApp',
-      color: '#25D366',
-      icon: `<svg viewBox="0 0 24 24" fill="white">
+        href: `mailto:?subject=${subject}&body=${encodedMsg}`,
+      },
+      {
+        id: "whatsapp",
+        label: "WhatsApp",
+        color: "#25D366",
+        icon: `<svg viewBox="0 0 24 24" fill="white">
                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15
                         -.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463
                         -2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606
@@ -189,42 +200,42 @@ _showShareSheet(url, weddingName) {
                         5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005
                         c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
              </svg>`,
-      href: `https://wa.me/?text=${encodedMsg}`,
-    },
-    {
-      id: 'x',
-      label: 'X',
-      color: '#1c1c1e',
-      icon: `<svg viewBox="0 0 24 24" fill="white">
+        href: `https://wa.me/?text=${encodedMsg}`,
+      },
+      {
+        id: "x",
+        label: "X",
+        color: "#1c1c1e",
+        icon: `<svg viewBox="0 0 24 24" fill="white">
                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231
                         -5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161
                         17.52h1.833L7.084 4.126H5.117z"/>
              </svg>`,
-      href: `https://x.com/intent/post?text=${encodedMsg}`,
-    },
-    {
-      id: 'messenger',
-      label: 'Messenger',
-      color: '#0084FF',
-      icon: `<svg viewBox="0 0 24 24" fill="white">
+        href: `https://x.com/intent/post?text=${encodedMsg}`,
+      },
+      {
+        id: "messenger",
+        label: "Messenger",
+        color: "#0084FF",
+        icon: `<svg viewBox="0 0 24 24" fill="white">
                <path d="M12 0C5.373 0 0 4.975 0 11.111c0 3.497 1.745 6.616 4.472
                         8.652V24l4.086-2.242c1.09.301 2.246.464 3.442.464 6.627 0
                         12-4.974 12-11.111C24 4.975 18.627 0 12 0zm1.193 14.963l-3.056
                         -3.259-5.963 3.259L10.096 9l3.136 3.259L19.04 9l-5.847 5.963z"/>
              </svg>`,
-      action: async () => {
-        window.location.href = `fb-messenger://share/?link=${encodedUrl}`;
-        await new Promise(r => setTimeout(r, 600));
-        await navigator.clipboard.writeText(url).catch(() => {});
-        window.open('https://messenger.com', '_blank', 'noopener');
-        Toast.show('Link copied — paste it in Messenger', 'default', 3500);
+        action: async () => {
+          window.location.href = `fb-messenger://share/?link=${encodedUrl}`;
+          await new Promise((r) => setTimeout(r, 600));
+          await navigator.clipboard.writeText(url).catch(() => {});
+          window.open("https://messenger.com", "_blank", "noopener");
+          Toast.show("Link copied — paste it in Messenger", "default", 3500);
+        },
       },
-    },
-    {
-      id: 'instagram',
-      label: 'Instagram',
-      color: '#C13584',
-      icon: `<svg viewBox="0 0 24 24" fill="white">
+      {
+        id: "instagram",
+        label: "Instagram",
+        color: "#C13584",
+        icon: `<svg viewBox="0 0 24 24" fill="white">
                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691
                         4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584
                         -.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644
@@ -244,18 +255,18 @@ _showShareSheet(url, weddingName) {
                         -11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44
                         c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
              </svg>`,
-      action: async () => {
-        await navigator.clipboard.writeText(url).catch(() => {});
-        window.open('https://www.instagram.com', '_blank', 'noopener');
-        Toast.show('Link copied — paste it in Instagram', 'default', 3500);
+        action: async () => {
+          await navigator.clipboard.writeText(url).catch(() => {});
+          window.open("https://www.instagram.com", "_blank", "noopener");
+          Toast.show("Link copied — paste it in Instagram", "default", 3500);
+        },
       },
-    },
-  ];
+    ];
 
-  const overlay = document.createElement('div');
-  overlay.id = 'fp-share-modal';
-  overlay.className = 'share-overlay';
-  overlay.innerHTML = `
+    const overlay = document.createElement("div");
+    overlay.id = "fp-share-modal";
+    overlay.className = "share-overlay";
+    overlay.innerHTML = `
     <div class="share-sheet" role="dialog" aria-modal="true" aria-labelledby="share-sheet-title">
       <div class="share-header">
         <h2 class="share-title" id="share-sheet-title">Share Wedding Invite 💍</h2>
@@ -275,14 +286,18 @@ _showShareSheet(url, weddingName) {
       <p class="share-via">Share via</p>
 
       <div class="share-grid">
-        ${channels.map(ch => `
+        ${channels
+          .map(
+            (ch) => `
           <button class="share-channel" data-channel="${ch.id}" title="${ch.label}">
             <span class="share-channel-icon" style="background:${ch.color}">
               ${ch.icon}
             </span>
             <span class="share-channel-label">${ch.label}</span>
           </button>
-        `).join('')}
+        `,
+          )
+          .join("")}
       </div>
 
       <button class="btn btn-ghost btn-full share-dismiss-btn"
@@ -292,34 +307,46 @@ _showShareSheet(url, weddingName) {
     </div>
   `;
 
-  document.body.appendChild(overlay);
+    document.body.appendChild(overlay);
 
-  const dismiss = () => overlay.remove();
-  overlay.querySelector('.modal-close').addEventListener('click', dismiss);
-  overlay.querySelector('.share-dismiss-btn').addEventListener('click', dismiss);
-  overlay.addEventListener('click', e => { if (e.target === overlay) {dismiss();} });
-
-  // Main copy button
-  overlay.querySelector('.share-copy-main-btn').addEventListener('click', async e => {
-    await navigator.clipboard.writeText(url).catch(() => {});
-    const btn = e.currentTarget;
-    btn.textContent = '✓ Copied';
-    setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
-  });
-
-  // Platform buttons
-  overlay.querySelectorAll('.share-channel').forEach(btn => {
-    const ch = channels.find(c => c.id === btn.dataset.channel);
-    if (!ch) {return;}
-    btn.addEventListener('click', () => {
-      if (ch.action) {
-        ch.action(btn);
-      } else if (ch.href) {
-        window.open(ch.href, '_blank', 'noopener,noreferrer');
+    const dismiss = () => overlay.remove();
+    overlay.querySelector(".modal-close").addEventListener("click", dismiss);
+    overlay
+      .querySelector(".share-dismiss-btn")
+      .addEventListener("click", dismiss);
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) {
+        dismiss();
       }
     });
-  });
-}
+
+    // Main copy button
+    overlay
+      .querySelector(".share-copy-main-btn")
+      .addEventListener("click", async (e) => {
+        await navigator.clipboard.writeText(url).catch(() => {});
+        const btn = e.currentTarget;
+        btn.textContent = "✓ Copied";
+        setTimeout(() => {
+          btn.textContent = "Copy";
+        }, 2000);
+      });
+
+    // Platform buttons
+    overlay.querySelectorAll(".share-channel").forEach((btn) => {
+      const ch = channels.find((c) => c.id === btn.dataset.channel);
+      if (!ch) {
+        return;
+      }
+      btn.addEventListener("click", () => {
+        if (ch.action) {
+          ch.action(btn);
+        } else if (ch.href) {
+          window.open(ch.href, "_blank", "noopener,noreferrer");
+        }
+      });
+    });
+  }
 
   async _saveWedding() {
     const name = this._weddingNameInput.value.trim();

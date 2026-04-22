@@ -1387,7 +1387,9 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform var(--transition), box-shadow var(--transition);
+  transition:
+    transform var(--transition),
+    box-shadow var(--transition);
 }
 
 .share-channel:hover .share-channel-icon {

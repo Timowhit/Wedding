@@ -82,7 +82,7 @@ class Invite {
   }
 
   /** Create a shareable link invite with no specific email target. */
-  static async createShareLink(weddingId, invitedBy, { role = 'editor' } = {}) {
+  static async createShareLink(weddingId, invitedBy, { role = "editor" } = {}) {
     const token = uuidv4();
     const { rows } = await query(
       `INSERT INTO wedding_invites
