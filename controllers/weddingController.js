@@ -197,28 +197,40 @@ const getInvite = asyncHandler(async (req, res) => {
 const acceptInvite = asyncHandler(async (req, res) => {
   const { token } = req.params;
 
-  // Find invite
   const invite = await Invite.findByToken(token);
-  if (!invite) {
-    throw ApiError.notFound("Invite not found");
+  if (!invite) {throw ApiError.notFound('Invite not found');}
+  if (Invite.isExpired(invite)) {throw ApiError.gone('Invite has expired');}
+
+  // Email-targeted invites are single-use — mark them accepted.
+  // Shareable link invites (no email) are reusable — skip that step.
+  const isShareableLink = !invite.invited_email;
+
+  if (!isShareableLink) {
+    const accepted = await Invite.accept(token);
+    if (!accepted) {throw ApiError.conflict('Invite already accepted');}
   }
 
-  if (Invite.isExpired(invite)) {
-    throw ApiError.gone("Invite has expired");
+  // Silently succeed if they're already a member (idempotent join)
+  const existing = await Wedding.getMembership(invite.wedding_id, req.user.id);
+  if (!existing) {
+    await Wedding.addMember(invite.wedding_id, req.user.id, invite.role);
   }
 
-  // Accept the invite (marks as accepted)
-  const accepted = await Invite.accept(token);
-  if (!accepted) {
-    throw ApiError.conflict("Invite already accepted");
-  }
-
-  // Add user to wedding
-  await Wedding.addMember(invite.wedding_id, req.user.id, invite.role);
-
-  sendSuccess(res, { message: "Invite accepted successfully" });
+  sendSuccess(res, { message: 'Invite accepted successfully' });
 });
+/** POST /weddings/:id/share-link */
+const createShareLink = asyncHandler(async (req, res) => {
+  const { role = 'editor' } = req.body;
+  const weddingId = req.params.id;
 
+  const membership = await Wedding.getMembership(weddingId, req.user.id);
+  if (!membership || membership.role !== 'owner') {
+    throw ApiError.forbidden('Only the owner can create share links');
+  }
+
+  const invite = await Invite.createShareLink(weddingId, req.user.id, { role });
+  sendCreated(res, { invite });
+});
 /** GET /weddings/my-pending-invites */
 const getMyPendingInvites = asyncHandler(async (req, res) => {
   const invites = await Invite.findPendingForEmail(req.user.email);
@@ -239,4 +251,5 @@ module.exports = {
   getInvite,
   acceptInvite,
   getMyPendingInvites,
+  createShareLink,
 };

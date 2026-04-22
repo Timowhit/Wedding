@@ -68,6 +68,13 @@ router.post(
 /* ── All routes below require authentication ────────────────── */
 router.use(authenticate);
 router.get("/my-pending-invites", ctrl.getMyPendingInvites);
+router.post(
+  '/:id/share-link',
+  param('id').isUUID(),
+  body('role').optional().isIn(['viewer', 'editor']),
+  validate,
+  ctrl.createShareLink,
+);
 /* Wedding CRUD */
 router.get("/", ctrl.listWeddings);
 router.post("/", weddingRules, validate, ctrl.createWedding);

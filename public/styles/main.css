@@ -99,6 +99,7 @@ body {
   font-weight: 600;
   color: var(--primary);
   letter-spacing: 0.5px;
+  padding: 5px 12px;
   margin-right: 16px;
   text-decoration: none;
   padding: 5px;
@@ -952,6 +953,10 @@ textarea {
     flex-direction: column;
     align-items: center;
   }
+  .hamburger {
+    display: flex;
+    margin-left: 12px;
+  }
 }
 .nav-user-group {
   display: flex;
@@ -1065,7 +1070,7 @@ textarea {
 }
 
 /* ── Mobile overrides ─────────────────────────────────────── */
-@media (max-width: 1050px) {
+@media (max-width: 1250px) {
   /* Show hamburger, remove the old gap-only rule */
   .hamburger {
     display: flex;
@@ -1141,9 +1146,10 @@ textarea {
   box-shadow: 0 0 0 3px rgba(201, 116, 143, 0.15);
 }
 
-@media (max-width: 1050px) {
+@media (max-width: 548px) {
   .wedding-switcher {
-    max-width: 140px;
+    max-width: 0px;
+    padding: 5px 14px;
   }
 }
 
@@ -1271,4 +1277,145 @@ textarea {
   color: var(--danger);
   margin-top: 8px;
   min-height: 1.2em;
+}
+/* ── Share sheet ───────────────────────────────────────────── */
+.share-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+
+.share-sheet {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px 22px;
+  width: min(480px, calc(100vw - 32px));
+  box-shadow: var(--shadow-lg);
+  animation: fadeUp 0.3s ease;
+}
+
+.share-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.share-title {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 1.4rem;
+  font-weight: 300;
+  color: var(--text);
+  letter-spacing: 0.5px;
+}
+
+.share-wedding-name {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 18px;
+  font-style: italic;
+}
+
+.share-link-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  margin-bottom: 22px;
+}
+
+.share-link-url {
+  flex: 1;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.share-via {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.share-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px 2px;
+  margin-bottom: 18px;
+}
+
+.share-channel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 10px 6px 8px;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition);
+}
+
+.share-channel:hover {
+  background: var(--surface-2);
+}
+
+.share-channel:active {
+  transform: scale(0.95);
+}
+
+.share-channel-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.share-channel:hover .share-channel-icon {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}
+
+.share-channel-icon svg {
+  width: 27px;
+  height: 27px;
+}
+
+.share-channel-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-align: center;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+@media (max-width: 400px) {
+  .share-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .share-channel-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+  }
 }

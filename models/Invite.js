@@ -81,6 +81,19 @@ class Invite {
     return rowCount > 0;
   }
 
+  /** Create a shareable link invite with no specific email target. */
+  static async createShareLink(weddingId, invitedBy, { role = 'editor' } = {}) {
+    const token = uuidv4();
+    const { rows } = await query(
+      `INSERT INTO wedding_invites
+        (wedding_id, invited_by, invited_email, token, role)
+      VALUES ($1, $2, NULL, $3, $4)
+      RETURNING *`,
+      [weddingId, invitedBy, token, role],
+    );
+    return rows[0];
+  }
+
   /** Pending (unexpired, unaccepted) invites addressed to this email. */
   static async findPendingForEmail(email) {
     const { rows } = await query(
