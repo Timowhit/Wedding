@@ -1108,7 +1108,8 @@ textarea {
   }
 
   /* Full-width tappable links */
-  .nav-links a {
+  .nav-links a, 
+  .nav-links button.nav-logout {
     width: 100%;
     padding: 10px 14px;
     border-radius: var(--radius-sm);
