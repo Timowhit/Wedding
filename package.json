@@ -13,15 +13,12 @@
     "lint:fix": "eslint . --ext .js --fix",
     "format": "prettier --write \"**/*.{js,json,css,html,md}\"",
     "format:check": "prettier --check \"**/*.{js,json,css,html,md}\"",
-    "build": "node server/scripts/build.js",
-    "build:watch": "node server/scripts/build.js --watch",
     "check": "npm run format:check && npm run lint && npm test"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "esbuild": "^0.28.0",
     "express": "^4.19.2",
     "express-rate-limit": "^7.3.1",
     "express-session": "^1.18.0",
