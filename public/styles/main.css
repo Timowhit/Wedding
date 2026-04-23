@@ -1144,9 +1144,7 @@ textarea {
 .wedding-switcher:focus {
   outline: none;
   border-color: var(--primary);
-  border-radius: 3px;
   box-shadow: 0 0 0 3px rgba(201, 116, 143, 0.15);
-  margin: 10px;
 }
 
 @media (max-width: 548px) {
