@@ -1,14 +1,6 @@
 /**
  * @file server.js
  * @description Forever Planner — Express application entry point.
- *
- * Startup order:
- *   1. Load .env
- *   2. Connect to PostgreSQL (fail fast if unreachable)
- *   3. Mount middleware
- *   4. Mount routes
- *   5. Mount error handler
- *   6. Listen
  */
 
 "use strict";
@@ -36,6 +28,19 @@ setupOAuth();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+/* ── Minimal session store (clears MemoryStore production warning) ── */
+// Sessions are only used for the OAuth redirect round-trip, so a
+// simple Map-based store is sufficient — no leaks, no external deps.
+class MapStore extends session.Store {
+  constructor() {
+    super();
+    this._s = new Map();
+  }
+  get(sid, cb) { cb(null, this._s.get(sid) ?? null); }
+  set(sid, sess, cb) { this._s.set(sid, sess); cb(null); }
+  destroy(sid, cb) { this._s.delete(sid); cb(null); }
+}
+
 /* ── Security headers ───────────────────────────────────────── */
 app.use(helmet({ contentSecurityPolicy: false }));
 
@@ -52,6 +57,7 @@ app.use(
 /* ── Session & Passport ─────────────────────────────────────── */
 app.use(
   session({
+    store: new MapStore(),
     secret: process.env.SESSION_SECRET || "change-me-in-production",
     resave: false,
     saveUninitialized: false,
@@ -118,7 +124,6 @@ const start = async () => {
   }
 };
 
-// Graceful shutdown
 process.on("SIGTERM", () => {
   logger.info("SIGTERM received — shutting down gracefully");
   process.exit(0);
@@ -126,4 +131,4 @@ process.on("SIGTERM", () => {
 
 start();
 
-module.exports = app; // exported for supertest
+module.exports = app;
