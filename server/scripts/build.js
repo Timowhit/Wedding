@@ -20,7 +20,6 @@
 
 "use strict";
 
-const esbuild = require("esbuild");
 const fs = require("fs");
 const path = require("path");
 
@@ -29,25 +28,6 @@ const ROOT = path.join(__dirname, "../..");
 const SRC = path.join(ROOT, "public");
 const DIST = path.join(ROOT, "dist");
 const WATCH = process.argv.includes("--watch");
-const IS_PROD = !WATCH;
-
-// One entry point per HTML page — esbuild resolves their imports automatically
-const JS_ENTRIES = [
-  "scripts/budget.js",
-  "scripts/checklist.js",
-  "scripts/guests.js",
-  //"scripts/index.js",
-  "scripts/inspiration.js",
-  "scripts/invite.js",
-  "scripts/login.js",
-  "scripts/music.js",
-  "scripts/settings.js",
-  "scripts/vendors.js",
-  "scripts/dashboard.js",
-  //"scripts/weddings.js",
-].map((f) => path.join(SRC, f));
-
-const CSS_ENTRY = path.join(SRC, "styles", "main.css");
 
 /* ── Helpers ─────────────────────────────────────────────────── */
 
@@ -89,40 +69,6 @@ function rewriteHtmlScriptTags() {
   console.log("✓ HTML script tags rewritten");
 }
 
-/* ── Build options ───────────────────────────────────────────── */
-
-/** Shared esbuild options for JS bundles */
-function jsOptions(_watch) {
-  return {
-    entryPoints: JS_ENTRIES,
-    entryNames: "[name].bundle",
-    bundle: true,
-    format: "esm",
-    outdir: path.join(DIST, "scripts"),
-    platform: "browser",
-    target: ["chrome100", "firefox100", "safari16", "edge100"],
-    sourcemap: !IS_PROD,
-    minify: IS_PROD,
-    // Tree-shake dead code in production
-    treeShaking: IS_PROD,
-    // Print file sizes after build
-    metafile: true,
-    logLevel: "info",
-  };
-}
-
-/** Shared esbuild options for the CSS bundle */
-function cssOptions() {
-  return {
-    entryPoints: [CSS_ENTRY],
-    bundle: true,
-    outdir: path.join(DIST, "styles"),
-    minify: IS_PROD,
-    sourcemap: !IS_PROD,
-    logLevel: "info",
-  };
-}
-
 /* ── Size reporter ───────────────────────────────────────────── */
 function reportSizes(meta) {
   if (!meta?.outputs) {
@@ -146,10 +92,7 @@ function reportSizes(meta) {
     // ── Watch mode (development) ──────────────────────────
     console.log("👀  Watch mode — rebuilding on changes…\n");
 
-    const [jsCtx, cssCtx] = await Promise.all([
-      esbuild.context(jsOptions(true)),
-      esbuild.context(cssOptions()),
-    ]);
+    const [jsCtx, cssCtx] = await Promise.all([]);
 
     // Initial build
     clean();
@@ -167,10 +110,7 @@ function reportSizes(meta) {
     clean();
     copyHtml();
 
-    const [jsResult] = await Promise.all([
-      esbuild.build(jsOptions(false)),
-      esbuild.build(cssOptions()),
-    ]);
+    const [jsResult] = await Promise.all([]);
 
     rewriteHtmlScriptTags();
 

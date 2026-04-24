@@ -6,7 +6,6 @@
 "use strict";
 
 const { query } = require("../db");
-const { v4: uuidv4 } = require("uuid");
 
 class Invite {
   /**
@@ -16,13 +15,12 @@ class Invite {
    * @param {{ invitedEmail: string, role?: string }} data
    */
   static async create(weddingId, invitedBy, { invitedEmail, role = "editor" }) {
-    const token = uuidv4();
     const { rows } = await query(
       `INSERT INTO wedding_invites
          (wedding_id, invited_by, invited_email, token, role)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [weddingId, invitedBy, invitedEmail.toLowerCase().trim(), token, role],
+      [weddingId, invitedBy, invitedEmail.toLowerCase().trim(), role],
     );
     return rows[0];
   }
@@ -83,13 +81,12 @@ class Invite {
 
   /** Create a shareable link invite with no specific email target. */
   static async createShareLink(weddingId, invitedBy, { role = "editor" } = {}) {
-    const token = uuidv4();
     const { rows } = await query(
       `INSERT INTO wedding_invites
         (wedding_id, invited_by, invited_email, token, role)
       VALUES ($1, $2, NULL, $3, $4)
       RETURNING *`,
-      [weddingId, invitedBy, token, role],
+      [weddingId, invitedBy, role],
     );
     return rows[0];
   }
