@@ -92,7 +92,7 @@ export function initNav() {
   const nav = document.querySelector(".site-nav");
   if (nav && !nav.querySelector(".hamburger")) {
     const brand = nav.querySelector(".brand");
-    const links = [...nav.querySelectorAll("a:not(.brand)")];
+    const links = [...nav.querySelectorAll("a:not(.brand), button.nav-logout")];
     const navUserGroup = nav.querySelector(".nav-user-group");
 
     if (links.length && brand) {
