@@ -33,8 +33,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     } catch {
       /* silently ignore */
     }
-    startInvitePolling(); // ← add this line
-    await Promise.all([renderStats(), loadWeddingInfo()]);
+    startInvitePolling();
   }
 
   await renderStats();

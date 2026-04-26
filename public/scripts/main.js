@@ -317,11 +317,11 @@ function _renderWeddingSwitcher(weddings) {
   });
  
   document.addEventListener("click", (e) => {
-    if (!wrapper.contains(e.target)) closePanel();
+    if (!wrapper.contains(e.target)) {closePanel();}
   });
  
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closePanel();
+    if (e.key === "Escape") {closePanel();}
   });
  
   // ── Mount ─────────────────────────────────────────────────
@@ -555,7 +555,7 @@ export function stopInvitePolling() {
 }
 
 async function _pollInvites() {
-  if (document.getElementById("fp-invite-modal")) return; // modal already open
+  if (document.getElementById("fp-invite-modal")) {return;} // modal already open
   try {
     const { data } = await api.get("/weddings/my-pending-invites");
     const invites    = data.invites || [];
