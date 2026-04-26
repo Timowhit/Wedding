@@ -203,52 +203,134 @@ async function _loadWeddingSwitcher() {
 
 function _renderWeddingSwitcher(weddings) {
   const nav = document.querySelector(".site-nav");
-  if (!nav || nav.querySelector(".wedding-switcher")) {
+  if (!nav || nav.querySelector(".ws-trigger")) {
     return;
   }
-
+ 
   const activeId = WeddingStore.getActiveId() || weddings[0].id;
-
-  const select = document.createElement("select");
-  select.className = "wedding-switcher";
-  select.setAttribute("aria-label", "Switch wedding");
-  select.title = "Switch wedding";
-
+  const activeWedding = weddings.find((w) => w.id === activeId) || weddings[0];
+ 
+  // ── Wrapper ──────────────────────────────────────────────
+  const wrapper = document.createElement("div");
+  wrapper.className = "ws-wrapper";
+  wrapper.setAttribute("role", "region");
+  wrapper.setAttribute("aria-label", "Wedding selector");
+ 
+  // ── Trigger pill ─────────────────────────────────────────
+  const trigger = document.createElement("button");
+  trigger.className = "ws-trigger";
+  trigger.setAttribute("aria-haspopup", "listbox");
+  trigger.setAttribute("aria-expanded", "false");
+  trigger.innerHTML = `
+    <span class="ws-trigger-name">${escapeHtml(activeWedding.name)}</span>
+    <svg class="ws-chevron" viewBox="0 0 12 7" aria-hidden="true">
+      <path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="1.8"
+            fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+ 
+  // ── Dropdown panel ────────────────────────────────────────
+  const panel = document.createElement("div");
+  panel.className = "ws-panel";
+  panel.setAttribute("role", "listbox");
+  panel.setAttribute("aria-label", "Your weddings");
+  panel.hidden = true;
+ 
+  // Header label
+  const header = document.createElement("div");
+  header.className = "ws-panel-header";
+  header.textContent = "Your Weddings";
+  panel.appendChild(header);
+ 
+  // Wedding options
   weddings.forEach((w) => {
-    const opt = document.createElement("option");
-    opt.value = w.id;
-    opt.textContent = w.name;
-    opt.selected = w.id === activeId;
-    select.appendChild(opt);
+    const item = document.createElement("button");
+    item.className = "ws-item" + (w.id === activeId ? " ws-item--active" : "");
+    item.setAttribute("role", "option");
+    item.setAttribute("aria-selected", String(w.id === activeId));
+    item.dataset.id = w.id;
+    item.innerHTML = `
+      <span class="ws-item-ring" aria-hidden="true">
+        ${w.id === activeId ? `<svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="3.5" fill="currentColor"/></svg>` : ""}
+      </span>
+      <span class="ws-item-name">${escapeHtml(w.name)}</span>
+      ${w.id === activeId ? `<svg class="ws-item-check" viewBox="0 0 14 11" aria-hidden="true">
+        <path d="M1 5.5l4 4 8-8" stroke="currentColor" stroke-width="2"
+              fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>` : ""}`;
+    item.addEventListener("click", () => {
+      if (w.id !== activeId) {
+        WeddingStore.setActiveId(w.id);
+        location.reload();
+      }
+      closePanel();
+    });
+    panel.appendChild(item);
   });
-
-  const sep = document.createElement("option");
-  sep.disabled = true;
-  sep.textContent = "──────────";
-  select.appendChild(sep);
-
-  const joinOpt = document.createElement("option");
-  joinOpt.value = "__join__";
-  joinOpt.textContent = "+ Join another…";
-  select.appendChild(joinOpt);
-
-  select.addEventListener("change", () => {
-    const val = select.value;
-    if (val === "__join__") {
-      select.value = activeId;
-      showInviteModal();
-      return;
-    }
-    WeddingStore.setActiveId(val);
-    location.reload();
+ 
+  // Divider + Join option
+  const divider = document.createElement("div");
+  divider.className = "ws-divider";
+  panel.appendChild(divider);
+ 
+  const joinBtn = document.createElement("button");
+  joinBtn.className = "ws-item ws-item--join";
+  joinBtn.setAttribute("role", "option");
+  joinBtn.setAttribute("aria-selected", "false");
+  joinBtn.innerHTML = `
+    <span class="ws-join-icon" aria-hidden="true">
+      <svg viewBox="0 0 12 12"><path d="M6 1v10M1 6h10"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </span>
+    <span class="ws-item-name">Join another…</span>`;
+  joinBtn.addEventListener("click", () => {
+    closePanel();
+    showInviteModal();
   });
-
+  panel.appendChild(joinBtn);
+ 
+  wrapper.appendChild(trigger);
+  wrapper.appendChild(panel);
+ 
+  // ── Open / close ──────────────────────────────────────────
+  function openPanel() {
+    panel.hidden = false;
+    trigger.setAttribute("aria-expanded", "true");
+    wrapper.classList.add("ws-open");
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => panel.classList.add("ws-panel--visible"));
+    });
+  }
+ 
+  function closePanel() {
+    panel.classList.remove("ws-panel--visible");
+    wrapper.classList.remove("ws-open");
+    trigger.setAttribute("aria-expanded", "false");
+    setTimeout(() => {
+      panel.hidden = true;
+    }, 230);
+  }
+ 
+  trigger.addEventListener("click", (e) => {
+    e.stopPropagation();
+    panel.hidden ? openPanel() : closePanel();
+  });
+ 
+  document.addEventListener("click", (e) => {
+    if (!wrapper.contains(e.target)) closePanel();
+  });
+ 
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closePanel();
+  });
+ 
+  // ── Mount ─────────────────────────────────────────────────
   const brand = nav.querySelector(".brand");
   const burger = nav.querySelector(".hamburger");
   if (burger) {
-    nav.insertBefore(select, burger);
+    nav.insertBefore(wrapper, burger);
   } else {
-    brand.after(select);
+    brand.after(wrapper);
   }
 }
 
