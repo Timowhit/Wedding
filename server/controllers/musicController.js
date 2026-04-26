@@ -126,15 +126,16 @@ const searchSpotify = asyncHandler(async (req, res) => {
   console.log("Raw limit:", limit);
   console.log("Parsed limit:", parsedLimit);
   console.log("Safe limit:", safeLimit);
+  const params = new URLSearchParams();
+
+  params.set("q", q.trim());
+  params.set("type", "track");
+  params.set("limit", String(safeLimit));
+
   console.log("FINAL SPOTIFY URL:");
   console.log(`https://api.spotify.com/v1/search?${params.toString()}`);
-  const params = new URLSearchParams({
-    q: q.trim(),
-    type: "track",
-    limit: String(safeLimit),
-  });
 
-  const url = `https://api.spotify.com/v1/search?${params}`;
+  const url = `https://api.spotify.com/v1/search?${params.toString()}`;
 
   const resp = await fetchSpotify(url, token);
 
