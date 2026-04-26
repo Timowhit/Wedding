@@ -206,16 +206,16 @@ function _renderWeddingSwitcher(weddings) {
   if (!nav || nav.querySelector(".ws-trigger")) {
     return;
   }
- 
+
   const activeId = WeddingStore.getActiveId() || weddings[0].id;
   const activeWedding = weddings.find((w) => w.id === activeId) || weddings[0];
- 
+
   // ── Wrapper ──────────────────────────────────────────────
   const wrapper = document.createElement("div");
   wrapper.className = "ws-wrapper";
   wrapper.setAttribute("role", "region");
   wrapper.setAttribute("aria-label", "Wedding selector");
- 
+
   // ── Trigger pill ─────────────────────────────────────────
   const trigger = document.createElement("button");
   trigger.className = "ws-trigger";
@@ -227,20 +227,20 @@ function _renderWeddingSwitcher(weddings) {
       <path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="1.8"
             fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>`;
- 
+
   // ── Dropdown panel ────────────────────────────────────────
   const panel = document.createElement("div");
   panel.className = "ws-panel";
   panel.setAttribute("role", "listbox");
   panel.setAttribute("aria-label", "Your weddings");
   panel.hidden = true;
- 
+
   // Header label
   const header = document.createElement("div");
   header.className = "ws-panel-header";
   header.textContent = "Your Weddings";
   panel.appendChild(header);
- 
+
   // Wedding options
   weddings.forEach((w) => {
     const item = document.createElement("button");
@@ -253,10 +253,14 @@ function _renderWeddingSwitcher(weddings) {
         ${w.id === activeId ? `<svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="3.5" fill="currentColor"/></svg>` : ""}
       </span>
       <span class="ws-item-name">${escapeHtml(w.name)}</span>
-      ${w.id === activeId ? `<svg class="ws-item-check" viewBox="0 0 14 11" aria-hidden="true">
+      ${
+        w.id === activeId
+          ? `<svg class="ws-item-check" viewBox="0 0 14 11" aria-hidden="true">
         <path d="M1 5.5l4 4 8-8" stroke="currentColor" stroke-width="2"
               fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>` : ""}`;
+      </svg>`
+          : ""
+      }`;
     item.addEventListener("click", () => {
       if (w.id !== activeId) {
         WeddingStore.setActiveId(w.id);
@@ -266,12 +270,12 @@ function _renderWeddingSwitcher(weddings) {
     });
     panel.appendChild(item);
   });
- 
+
   // Divider + Join option
   const divider = document.createElement("div");
   divider.className = "ws-divider";
   panel.appendChild(divider);
- 
+
   const joinBtn = document.createElement("button");
   joinBtn.className = "ws-item ws-item--join";
   joinBtn.setAttribute("role", "option");
@@ -288,10 +292,10 @@ function _renderWeddingSwitcher(weddings) {
     showInviteModal();
   });
   panel.appendChild(joinBtn);
- 
+
   wrapper.appendChild(trigger);
   wrapper.appendChild(panel);
- 
+
   // ── Open / close ──────────────────────────────────────────
   function openPanel() {
     panel.hidden = false;
@@ -301,7 +305,7 @@ function _renderWeddingSwitcher(weddings) {
       requestAnimationFrame(() => panel.classList.add("ws-panel--visible"));
     });
   }
- 
+
   function closePanel() {
     panel.classList.remove("ws-panel--visible");
     wrapper.classList.remove("ws-open");
@@ -310,20 +314,24 @@ function _renderWeddingSwitcher(weddings) {
       panel.hidden = true;
     }, 230);
   }
- 
+
   trigger.addEventListener("click", (e) => {
     e.stopPropagation();
     panel.hidden ? openPanel() : closePanel();
   });
- 
+
   document.addEventListener("click", (e) => {
-    if (!wrapper.contains(e.target)) {closePanel();}
+    if (!wrapper.contains(e.target)) {
+      closePanel();
+    }
   });
- 
+
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {closePanel();}
+    if (e.key === "Escape") {
+      closePanel();
+    }
   });
- 
+
   // ── Mount ─────────────────────────────────────────────────
   const brand = nav.querySelector(".brand");
   const burger = nav.querySelector(".hamburger");
@@ -535,7 +543,7 @@ function _modalError(overlay, msg) {
    Invite polling — auto-popup when a new invite arrives
    ============================================================ */
 let _pollInterval = null;
-const _seenTokens  = new Set();
+const _seenTokens = new Set();
 
 /**
  * Call once on app init (e.g. after login).
@@ -543,7 +551,7 @@ const _seenTokens  = new Set();
  */
 export function startInvitePolling(intervalMs = 30_000) {
   stopInvitePolling();
-  _pollInvites();                                       // immediate first check
+  _pollInvites(); // immediate first check
   _pollInterval = setInterval(_pollInvites, intervalMs);
 }
 
@@ -555,10 +563,12 @@ export function stopInvitePolling() {
 }
 
 async function _pollInvites() {
-  if (document.getElementById("fp-invite-modal")) {return;} // modal already open
+  if (document.getElementById("fp-invite-modal")) {
+    return;
+  } // modal already open
   try {
     const { data } = await api.get("/weddings/my-pending-invites");
-    const invites    = data.invites || [];
+    const invites = data.invites || [];
     const newInvites = invites.filter((inv) => !_seenTokens.has(inv.token));
 
     if (newInvites.length > 0) {

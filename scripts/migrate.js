@@ -1,8 +1,8 @@
 /**
- * @file db/migrate.js
+ * @file scripts/migrate.js
  *
  * Tracks applied migrations in a schema_migrations table so each
- * file only ever runs once, even if you call node db/migrate.js
+ * file only ever runs once, even if you call node scripts/migrate.js
  * multiple times.
  */
 
@@ -12,12 +12,11 @@ require("dotenv").config();
 
 const fs = require("fs");
 const path = require("path");
-const { pool } = require("./index");
+const { pool } = require("../server/db");
 
-const MIGRATIONS_DIR = path.join(__dirname, "migrations");
+const MIGRATIONS_DIR = path.join(__dirname, "../server/db/migrations");
 
 (async () => {
-  // Ensure the tracking table exists
   await pool.query(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
       filename   TEXT        PRIMARY KEY,
@@ -25,7 +24,6 @@ const MIGRATIONS_DIR = path.join(__dirname, "migrations");
     )
   `);
 
-  // Find which migrations have already been applied
   const { rows } = await pool.query("SELECT filename FROM schema_migrations");
   const applied = new Set(rows.map((r) => r.filename));
 

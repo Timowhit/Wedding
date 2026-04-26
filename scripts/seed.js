@@ -1,11 +1,7 @@
 /**
- * @file db/seed.js
+ * @file scripts/seed.js
  *
- * Fix: all feature-table INSERTs now use wedding_id instead of user_id,
- * matching the models.  The script creates (or reuses) a wedding for the
- * demo user before inserting any data.
- *
- * Usage:  node db/seed.js
+ * Usage:  node scripts/seed.js
  */
 
 "use strict";
@@ -13,7 +9,7 @@
 require("dotenv").config();
 
 const bcrypt = require("bcryptjs");
-const { pool } = require("./index");
+const { pool } = require("../server/db");
 
 /* ── Demo credentials ────────────────────────────────────────── */
 const DEMO_EMAIL = "demo@foreverplanner.com";

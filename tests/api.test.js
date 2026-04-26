@@ -1,12 +1,5 @@
 /**
  * @file tests/api.test.js
- * @description Integration tests for the Forever Planner API.
- *
- * Requires a running test database:
- *   DB_NAME=forever_planner_test node db/migrate.js
- *
- * Run:
- *   npm test
  */
 
 "use strict";
@@ -16,8 +9,8 @@ process.env.JWT_SECRET = "test_secret_at_least_32_chars_long!!";
 process.env.DB_NAME = process.env.DB_NAME || "forever_planner_test";
 
 const request = require("supertest");
-const app = require("../server/server");
-const { pool } = require("../db");
+const app = require("../server/app");
+const { pool } = require("../server/db");
 
 /* ── Helpers ─────────────────────────────────────────────────── */
 const TEST_USER = {
@@ -26,11 +19,9 @@ const TEST_USER = {
   displayName: "Jest Tester",
 };
 
-let token; // set after login
+let token;
 
-/* ── Teardown ────────────────────────────────────────────────── */
 afterAll(async () => {
-  // Clean up test user and cascade-delete all their data
   await pool.query("DELETE FROM users WHERE email = $1", [TEST_USER.email]);
   await pool.end();
 });
@@ -90,7 +81,7 @@ describe("Auth", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.data.token).toBeDefined();
-      token = res.body.data.token; // refresh token
+      token = res.body.data.token;
     });
 
     it("rejects wrong password with 401", async () => {
