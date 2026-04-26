@@ -383,6 +383,10 @@ export async function showInviteModal(pendingInvites = null) {
                       style="padding:6px 16px;font-size:.82rem;white-space:nowrap;">
                 Accept
               </button>
+              <button class="btn btn-ghost decline-invite-btn"
+                style="padding:6px 16px;font-size:.82rem;white-space:nowrap;">
+                Decline
+              </button>
             </div>
           `,
             )
@@ -427,6 +431,12 @@ export async function showInviteModal(pendingInvites = null) {
     btn.addEventListener("click", () => {
       const token = btn.closest("[data-token]").dataset.token;
       _acceptToken(token, btn, overlay);
+    });
+  });
+  overlay.querySelectorAll(".decline-invite-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const token = btn.closest("[data-token]").dataset.token;
+      _declineToken(token, btn, overlay);
     });
   });
 
@@ -493,10 +503,71 @@ async function _acceptToken(token, btn, overlay) {
     _modalError(overlay, msg);
   }
 }
+async function _declineToken(token, btn, overlay) {
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Declining…";
+
+  try {
+    await api.post(`/weddings/invites/${token}/decline`);
+    const card = btn.closest("[data-token]");
+    card.remove();
+
+    // If no cards left, collapse to the plain join view
+    const remaining = overlay.querySelectorAll(".modal-invite-card");
+    if (remaining.length === 0) {
+      overlay.remove();
+      showInviteModal([]);
+    }
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = original;
+    _modalError(overlay, err.message || "Could not decline invite.");
+  }
+}
 
 function _modalError(overlay, msg) {
   const el = overlay.querySelector("#fp-modal-error");
   el.textContent = msg;
+}
+
+/* ============================================================
+   Invite polling — auto-popup when a new invite arrives
+   ============================================================ */
+let _pollInterval = null;
+const _seenTokens  = new Set();
+
+/**
+ * Call once on app init (e.g. after login).
+ * Default: checks every 30 s. Pass a shorter value during dev.
+ */
+export function startInvitePolling(intervalMs = 30_000) {
+  stopInvitePolling();
+  _pollInvites();                                       // immediate first check
+  _pollInterval = setInterval(_pollInvites, intervalMs);
+}
+
+export function stopInvitePolling() {
+  if (_pollInterval) {
+    clearInterval(_pollInterval);
+    _pollInterval = null;
+  }
+}
+
+async function _pollInvites() {
+  if (document.getElementById("fp-invite-modal")) return; // modal already open
+  try {
+    const { data } = await api.get("/weddings/my-pending-invites");
+    const invites    = data.invites || [];
+    const newInvites = invites.filter((inv) => !_seenTokens.has(inv.token));
+
+    if (newInvites.length > 0) {
+      invites.forEach((inv) => _seenTokens.add(inv.token));
+      showInviteModal(invites); // pops up automatically
+    }
+  } catch {
+    // network blip — silently skip, try again next interval
+  }
 }
 
 /* ============================================================

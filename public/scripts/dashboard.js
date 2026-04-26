@@ -4,6 +4,7 @@
 
 import api, { Auth } from "./api.js";
 import { initNav, formatCurrency, Toast, showInviteModal, t } from "./main.js";
+import { startInvitePolling } from "./main.js";
 
 Auth.requireAuth();
 
@@ -32,6 +33,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     } catch {
       /* silently ignore */
     }
+    startInvitePolling(); // ← add this line
+    await Promise.all([renderStats(), loadWeddingInfo()]);
   }
 
   await renderStats();
