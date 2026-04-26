@@ -116,10 +116,17 @@ const searchSpotify = asyncHandler(async (req, res) => {
     );
   }
 
+  const parsedLimit = parseInt(limit, 10);
+
+  const safeLimit =
+    Number.isFinite(parsedLimit) && parsedLimit > 0
+      ? Math.min(parsedLimit, 25)
+      : 12; // default fallback
+
   const params = new URLSearchParams({
     q: q.trim(),
     type: "track",
-    limit: String(Math.min(Number(limit), 25)),
+    limit: String(safeLimit),
   });
 
   const url = `https://api.spotify.com/v1/search?${params}`;
