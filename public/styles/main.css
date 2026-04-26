@@ -969,10 +969,10 @@ textarea {
 .nav-user-name {
   font-size: 0.8rem;
   color: var(--text-muted);
-  max-width: 140px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  margin-right: 10px;
 }
 
 .nav-logout {

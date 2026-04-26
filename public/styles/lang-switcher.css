@@ -5,8 +5,8 @@
 /* ── Container — fixed top-right, above nav ───────────────── */
 .lang-switcher {
   position: fixed;
-  top: 14px;
-  right: 72px; /* sits left of any scrollbar */
+  top: 8vh;
+  right: 2vw;
   z-index: 300; /* above nav (200) */
 }
 
