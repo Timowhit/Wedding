@@ -29,13 +29,13 @@ const SECTIONS = [
 router.use(authenticate);
 router.use(resolveWedding);
 
-/* ── iTunes proxy ───────────────────────────────────────────── */
+/* ── Spotify proxy ──────────────────────────────────────────── */
 router.get(
   "/search",
   query("q").trim().notEmpty().withMessage("q is required"),
   query("limit").optional().isInt({ min: 1, max: 25 }),
   validate,
-  ctrl.searchItunes,
+  ctrl.searchSpotify,
 );
 
 /* ── Playlists ──────────────────────────────────────────────── */

@@ -1620,3 +1620,25 @@ textarea {
     border-radius: 12px;
   }
 }
+
+/* ── Spotify embed / music enhancements ─────────────────── */
+.music-artwork-placeholder {
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  border-radius: 6px;
+}
+.music-duration {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.spotify-embed-slot iframe {
+  border-radius: 10px;
+  display: block;
+}
+.music-result-card {
+  flex-wrap: wrap;
+}
