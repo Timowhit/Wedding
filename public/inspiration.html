@@ -3,61 +3,58 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta
-      name="description"
-      content="Build your wedding inspiration board — search Unsplash for beautiful photos and save your favourites."
-    />
     <title>Inspiration — Forever Planner</title>
     <link rel="stylesheet" href="styles/main.css" />
+    <link rel="stylesheet" href="styles/lang-switcher.css" />
     <script type="module" src="scripts/inspiration.js"></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
-
     <nav class="site-nav" aria-label="Main navigation">
-      <a href="index.html" class="brand" aria-label="Forever Planner home"
-        >💍 Forever Planner</a
-      >
-      <a href="index.html">Dashboard</a>
-      <a href="budget.html">Budget</a>
-      <a href="vendors.html">Vendors</a>
-      <a href="music.html">Music</a>
-      <a href="inspiration.html">Inspiration</a>
-      <a href="guests.html">Guests</a>
-      <a href="checklist.html">Checklist</a>
-      <a href="settings.html">Settings</a>
+      <a href="index.html" class="brand">💍 Forever Planner</a>
+      <a href="index.html">Dashboard</a><a href="budget.html">Budget</a>
+      <a href="vendors.html">Vendors</a><a href="music.html">Music</a>
+      <a href="inspiration.html">Inspiration</a><a href="guests.html">Guests</a>
+      <a href="checklist.html">Checklist</a><a href="settings.html">Settings</a>
       <button id="logout-btn" class="btn btn-ghost nav-logout">Sign Out</button>
-      <span class="nav-user-group">
-        <span id="nav-user" class="nav-user-name"></span>
-      </span>
+      <span class="nav-user-group"
+        ><span id="nav-user" class="nav-user-name"></span
+      ></span>
     </nav>
-
     <header class="page-header">
-      <h1><em>Inspiration</em> Board</h1>
-      <p class="subtitle">
+      <h1 data-i18n="inspiration.title" data-i18n-html>
+        <em>Inspiration</em> Board
+      </h1>
+      <p class="subtitle" data-i18n="inspiration.subtitle">
         Search Unsplash for wedding imagery and save your favourites.
       </p>
     </header>
-
     <main id="main-content">
-      <!-- Search -->
       <section class="card" aria-labelledby="inspo-search-heading">
-        <h2 class="card-title" id="inspo-search-heading">🔍 Search Images</h2>
+        <h2
+          class="card-title"
+          id="inspo-search-heading"
+          data-i18n="inspiration.searchImages"
+        >
+          🔍 Search Images
+        </h2>
         <div class="search-row">
-          <label for="inspo-search-input" class="visually-hidden"
-            >Search wedding images</label
-          >
           <input
             type="text"
             id="inspo-search-input"
-            placeholder="e.g. floral arch, rustic barn, beach ceremony…"
-            aria-label="Search images on Unsplash"
+            data-i18n="inspiration.searchPlaceholder"
+            data-i18n-attr="placeholder"
+            placeholder="e.g. floral arch, rustic barn…"
           />
-          <button class="btn btn-primary" id="inspo-search-btn">Search</button>
+          <button
+            class="btn btn-primary"
+            id="inspo-search-btn"
+            data-i18n="inspiration.searchBtn"
+          >
+            Search
+          </button>
         </div>
-
-        <!-- Quick suggestion buttons -->
-        <div class="quick-suggestions" aria-label="Quick search suggestions">
+        <div class="quick-suggestions">
           <button class="filter-tab suggestion-btn" data-q="wedding flowers">
             Flowers
           </button>
@@ -80,35 +77,26 @@
             Outdoor
           </button>
         </div>
-
-        <!-- Results grid -->
-        <div
-          id="inspo-results"
-          aria-live="polite"
-          aria-label="Image search results"
-        ></div>
+        <div id="inspo-results" aria-live="polite"></div>
       </section>
-
-      <!-- Saved board -->
       <section class="card" aria-labelledby="saved-board-heading">
-        <h2 class="card-title" id="saved-board-heading">
+        <h2
+          class="card-title"
+          id="saved-board-heading"
+          data-i18n="inspiration.savedBoard"
+        >
           🌸 Saved Board
           <span id="saved-count" class="saved-count-label"></span>
         </h2>
-
-        <div
-          class="inspo-grid"
-          id="saved-grid"
-          aria-label="Saved inspiration images"
-        ></div>
-
+        <div class="inspo-grid" id="saved-grid"></div>
         <div class="empty-state" id="board-empty" hidden>
-          <span class="empty-icon" aria-hidden="true">🌸</span>
-          <p>Your inspiration board is empty. Search and save images above!</p>
+          <span class="empty-icon">🌸</span>
+          <p data-i18n="inspiration.boardEmpty">
+            Your inspiration board is empty. Search and save images above!
+          </p>
         </div>
       </section>
     </main>
-
     <style>
       .visually-hidden {
         position: absolute;

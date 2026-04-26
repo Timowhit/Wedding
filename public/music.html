@@ -3,54 +3,45 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta
-      name="description"
-      content="Plan your wedding music — search the iTunes catalog for songs and build playlists for every part of your special day."
-    />
     <title>Music — Forever Planner</title>
     <link rel="stylesheet" href="styles/main.css" />
+    <link rel="stylesheet" href="styles/lang-switcher.css" />
     <script type="module" src="scripts/music.js"></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
-
     <nav class="site-nav" aria-label="Main navigation">
-      <a href="index.html" class="brand" aria-label="Forever Planner home"
-        >💍 Forever Planner</a
-      >
-      <a href="index.html">Dashboard</a>
-      <a href="budget.html">Budget</a>
-      <a href="vendors.html">Vendors</a>
-      <a href="music.html">Music</a>
-      <a href="inspiration.html">Inspiration</a>
-      <a href="guests.html">Guests</a>
-      <a href="checklist.html">Checklist</a>
-      <a href="settings.html">Settings</a>
+      <a href="index.html" class="brand">💍 Forever Planner</a>
+      <a href="index.html">Dashboard</a><a href="budget.html">Budget</a>
+      <a href="vendors.html">Vendors</a><a href="music.html">Music</a>
+      <a href="inspiration.html">Inspiration</a><a href="guests.html">Guests</a>
+      <a href="checklist.html">Checklist</a><a href="settings.html">Settings</a>
       <button id="logout-btn" class="btn btn-ghost nav-logout">Sign Out</button>
-      <span class="nav-user-group">
-        <span id="nav-user" class="nav-user-name"></span>
-      </span>
+      <span class="nav-user-group"
+        ><span id="nav-user" class="nav-user-name"></span
+      ></span>
     </nav>
-
     <header class="page-header">
-      <h1><em>Music</em> Planner</h1>
-      <p class="subtitle">
-        Search songs and build your wedding playlists. Powered by iTunes Search
-        API.
+      <h1 data-i18n="music.title" data-i18n-html><em>Music</em> Planner</h1>
+      <p class="subtitle" data-i18n="music.subtitle">
+        Search songs and build your wedding playlists.
       </p>
     </header>
-
     <main id="main-content">
-      <!-- Song search (iTunes API) -->
       <section class="card" aria-labelledby="music-search-heading">
-        <h2 class="card-title" id="music-search-heading">🔍 Search Songs</h2>
+        <h2
+          class="card-title"
+          id="music-search-heading"
+          data-i18n="music.searchSongs"
+        >
+          🔍 Search Songs
+        </h2>
         <div class="search-row">
-          <label for="music-search-input" class="visually-hidden"
-            >Search songs or artists</label
-          >
           <input
             type="text"
             id="music-search-input"
+            data-i18n="music.searchPlaceholder"
+            data-i18n-attr="placeholder"
             placeholder="Search by song or artist…"
             aria-label="Search songs or artists"
           />
@@ -69,36 +60,30 @@
           <button
             class="btn btn-primary"
             id="music-search-btn"
-            aria-label="Search"
+            data-i18n="common.search"
           >
             Search
           </button>
         </div>
-
-        <!-- Search results from iTunes -->
-        <div
-          id="music-results"
-          aria-live="polite"
-          aria-label="Search results"
-        ></div>
+        <div id="music-results" aria-live="polite"></div>
       </section>
-
-      <!-- Playlist sections -->
       <section aria-labelledby="playlist-heading">
-        <h2 class="card-title playlist-heading" id="playlist-heading">
+        <h2
+          class="card-title playlist-heading"
+          id="playlist-heading"
+          data-i18n="music.yourPlaylists"
+        >
           🎶 Your Playlists
         </h2>
-
         <div id="playlist-container"></div>
-
         <div class="empty-state" id="playlist-empty" hidden>
-          <span class="empty-icon" aria-hidden="true">🎵</span>
-          <p>Your playlist is empty. Search for songs above and add them!</p>
+          <span class="empty-icon">🎵</span>
+          <p data-i18n="music.empty">
+            Your playlist is empty. Search for songs above and add them!
+          </p>
         </div>
       </section>
     </main>
-
-    <!-- Visually hidden utility class -->
     <style>
       .visually-hidden {
         position: absolute;

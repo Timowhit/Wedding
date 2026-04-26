@@ -1,16 +1,11 @@
 /**
  * @file controllers/authController.js
- *
- * Fix: register() now creates a default wedding for the new user,
- * matching what oauth.js already does for Google sign-ins.
- * Without this, resolveWedding() throws 404 for every new user
- * and all feature routes (budget, checklist, etc.) are unusable.
  */
 
 "use strict";
 
 const User = require("../models/User");
-const Wedding = require("../models/Wedding"); // ← added
+const Wedding = require("../models/Wedding");
 const { signToken } = require("../utils/jwt");
 const ApiError = require("../utils/ApiError");
 const asyncHandler = require("../utils/asyncHandler");
@@ -27,8 +22,6 @@ const register = asyncHandler(async (req, res) => {
 
   const user = await User.create({ email, password, displayName });
 
-  // Create a default wedding so resolveWedding() works immediately.
-  // (oauth.js does the same thing for Google sign-ins.)
   const weddingName = displayName ? `${displayName}'s Wedding` : "Our Wedding";
   await Wedding.create(user.id, { name: weddingName });
 
@@ -66,8 +59,12 @@ const getMe = asyncHandler(async (req, res) => {
 
 /* ── Update profile ────────────────────────────────────────── */
 const updateMe = asyncHandler(async (req, res) => {
-  const { displayName, weddingDate } = req.body;
-  const user = await User.update(req.user.id, { displayName, weddingDate });
+  const { displayName, weddingDate, language } = req.body;
+  const user = await User.update(req.user.id, {
+    displayName,
+    weddingDate,
+    language,
+  });
   if (!user) {
     throw ApiError.notFound("User not found");
   }

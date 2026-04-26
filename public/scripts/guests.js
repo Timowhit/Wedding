@@ -1,18 +1,11 @@
 /**
  * @file scripts/guests.js
- * @description GuestManager — API-backed guest list with RSVP cycling.
  */
 
 import api, { Auth } from "./api.js";
-import { initNav, Toast, escapeHtml, showLoading } from "./main.js";
+import { initNav, Toast, escapeHtml, showLoading, t } from "./main.js";
 
 Auth.requireAuth();
-
-const BADGE_MAP = {
-  Confirmed: "badge-confirmed",
-  Declined: "badge-declined",
-  Pending: "badge-pending",
-};
 
 class GuestManager {
   constructor() {
@@ -59,9 +52,8 @@ class GuestManager {
     );
   }
 
-  /* ── Load ─────────────────────────────────────────────── */
   async _load() {
-    showLoading(this._list, "Loading guests…");
+    showLoading(this._list, t("common.loading"));
     this._emptyState.hidden = true;
 
     const query =
@@ -70,17 +62,16 @@ class GuestManager {
       const { data } = await api.get("/guests", query);
       this._renderStats(data.stats);
       this._renderList(data.guests);
-    } catch (err) {
+    } catch {
       this._list.innerHTML = "";
-      Toast.show("Could not load guests.", "error");
+      Toast.show(t("err.loadGuests"), "error");
     }
   }
 
-  /* ── Add ──────────────────────────────────────────────── */
   async _add() {
     const name = this._nameInput.value.trim();
     if (!name) {
-      return Toast.show("Please enter a guest name.", "error");
+      return Toast.show(t("err.guestRequired"), "error");
     }
 
     this._addBtn.disabled = true;
@@ -91,41 +82,38 @@ class GuestManager {
         diet: this._dietInput.value.trim() || undefined,
         plusOne: this._plusOneInput.value.trim() || undefined,
       });
-      [this._nameInput, this._dietInput, this._plusOneInput].forEach((el) => {
-        el.value = "";
-      });
+      [this._nameInput, this._dietInput, this._plusOneInput].forEach(
+        (el) => (el.value = ""),
+      );
       this._nameInput.focus();
-      Toast.show(`${name} added!`, "success");
+      Toast.show(t("toast.guestAdded", { name }), "success");
       await this._load();
     } catch (err) {
-      Toast.show(err.message || "Could not add guest.", "error");
+      Toast.show(err.message || t("err.addGuest"), "error");
     } finally {
       this._addBtn.disabled = false;
     }
   }
 
-  /* ── Cycle RSVP ───────────────────────────────────────── */
   async _cycleRsvp(id) {
     try {
       await api.post(`/guests/${id}/cycle-rsvp`);
       await this._load();
     } catch (err) {
-      Toast.show(err.message || "Could not update RSVP.", "error");
+      Toast.show(err.message || t("err.loadGuests"), "error");
     }
   }
 
-  /* ── Delete ───────────────────────────────────────────── */
   async _delete(id) {
     try {
       await api.delete(`/guests/${id}`);
-      Toast.show("Guest removed.");
+      Toast.show(t("toast.guestRemoved"));
       await this._load();
     } catch (err) {
-      Toast.show(err.message || "Could not remove guest.", "error");
+      Toast.show(err.message || t("err.addGuest"), "error");
     }
   }
 
-  /* ── Render ───────────────────────────────────────────── */
   _renderStats({ total, confirmed, pending, declined }) {
     this._statTotal.textContent = total;
     this._statConfirmed.textContent = confirmed;
@@ -140,9 +128,19 @@ class GuestManager {
       return;
     }
 
+    // Localised RSVP labels
+    const RSVP_MAP = {
+      Confirmed: { label: t("guests.rsvpConfirmed"), css: "badge-confirmed" },
+      Declined: { label: t("guests.rsvpDeclined"), css: "badge-declined" },
+      Pending: { label: t("guests.rsvpPending"), css: "badge-pending" },
+    };
+
     this._list.innerHTML = guests
       .map((g) => {
-        const badge = BADGE_MAP[g.rsvp] || "badge-cat";
+        const { label, css } = RSVP_MAP[g.rsvp] ?? {
+          label: g.rsvp,
+          css: "badge-cat",
+        };
         const meta = [
           g.diet && `🥗 ${escapeHtml(g.diet)}`,
           g.plus_one && `+1: ${escapeHtml(g.plus_one)}`,
@@ -156,13 +154,13 @@ class GuestManager {
             <div class="item-name">${escapeHtml(g.name)}</div>
             ${meta ? `<div class="item-meta">${meta}</div>` : ""}
           </div>
-          <button class="item-badge ${badge} rsvp-btn"
+          <button class="item-badge ${css} rsvp-btn"
                   style="border:none;cursor:pointer;white-space:nowrap;"
-                  aria-label="RSVP: ${escapeHtml(g.rsvp)}. Click to change.">
-            ${escapeHtml(g.rsvp)}
+                  aria-label="RSVP: ${escapeHtml(label)}. Click to change.">
+            ${escapeHtml(label)}
           </button>
           <button class="btn btn-danger delete-btn"
-                  aria-label="Remove ${escapeHtml(g.name)}">✕</button>
+                  aria-label="${t("common.remove")} ${escapeHtml(g.name)}">✕</button>
         </li>`;
       })
       .join("");
@@ -184,6 +182,4 @@ class GuestManager {
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  new GuestManager().init();
-});
+document.addEventListener("DOMContentLoaded", () => new GuestManager().init());

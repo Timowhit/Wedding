@@ -1,19 +1,11 @@
 /**
  * @file scripts/vendors.js
- * @description VendorManager — API-backed vendor list with status cycling.
  */
 
 import api, { Auth } from "./api.js";
-import { initNav, Toast, escapeHtml, showLoading } from "./main.js";
+import { initNav, Toast, escapeHtml, showLoading, t } from "./main.js";
 
 Auth.requireAuth();
-
-const STATUS_STYLES = {
-  Booked: "badge-confirmed",
-  Declined: "badge-declined",
-  Contacted: "badge-pending",
-  Researching: "badge-cat",
-};
 
 class VendorManager {
   constructor() {
@@ -53,9 +45,8 @@ class VendorManager {
     );
   }
 
-  /* ── Load ─────────────────────────────────────────────── */
   async _load() {
-    showLoading(this._list, "Loading vendors…");
+    showLoading(this._list, t("common.loading"));
     this._emptyState.hidden = true;
 
     const query =
@@ -63,17 +54,16 @@ class VendorManager {
     try {
       const { data } = await api.get("/vendors", query);
       this._renderList(data.vendors);
-    } catch (err) {
+    } catch {
       this._list.innerHTML = "";
-      Toast.show("Could not load vendors.", "error");
+      Toast.show(t("err.loadVendors"), "error");
     }
   }
 
-  /* ── Add ──────────────────────────────────────────────── */
   async _add() {
     const name = this._nameInput.value.trim();
     if (!name) {
-      return Toast.show("Please enter a vendor name.", "error");
+      return Toast.show(t("err.vendorRequired"), "error");
     }
 
     this._addBtn.disabled = true;
@@ -87,48 +77,42 @@ class VendorManager {
         status: this._statusSelect.value,
         notes: this._notesInput.value.trim() || undefined,
       });
-
       [
         this._nameInput,
         this._phoneInput,
         this._emailInput,
         this._websiteInput,
         this._notesInput,
-      ].forEach((el) => {
-        el.value = "";
-      });
+      ].forEach((el) => (el.value = ""));
       this._nameInput.focus();
-      Toast.show(`${name} added!`, "success");
+      Toast.show(t("toast.vendorAdded", { name }), "success");
       await this._load();
     } catch (err) {
-      Toast.show(err.message || "Could not add vendor.", "error");
+      Toast.show(err.message || t("err.addVendor"), "error");
     } finally {
       this._addBtn.disabled = false;
     }
   }
 
-  /* ── Cycle status ─────────────────────────────────────── */
   async _cycleStatus(id) {
     try {
       await api.post(`/vendors/${id}/cycle-status`);
       await this._load();
     } catch (err) {
-      Toast.show(err.message || "Could not update status.", "error");
+      Toast.show(err.message || t("err.loadVendors"), "error");
     }
   }
 
-  /* ── Delete ───────────────────────────────────────────── */
   async _delete(id) {
     try {
       await api.delete(`/vendors/${id}`);
-      Toast.show("Vendor removed.");
+      Toast.show(t("toast.vendorRemoved"));
       await this._load();
     } catch (err) {
-      Toast.show(err.message || "Could not remove vendor.", "error");
+      Toast.show(err.message || t("err.addVendor"), "error");
     }
   }
 
-  /* ── Render ───────────────────────────────────────────── */
   _renderList(vendors) {
     this._emptyState.hidden = vendors.length > 0;
     if (!vendors.length) {
@@ -136,9 +120,20 @@ class VendorManager {
       return;
     }
 
+    // Localised status labels
+    const STATUS_MAP = {
+      Booked: { label: t("vendors.statusBooked"), css: "badge-confirmed" },
+      Declined: { label: t("vendors.statusDeclined"), css: "badge-declined" },
+      Contacted: { label: t("vendors.statusContacted"), css: "badge-pending" },
+      Researching: { label: t("vendors.statusResearching"), css: "badge-cat" },
+    };
+
     this._list.innerHTML = vendors
       .map((v) => {
-        const badgeClass = STATUS_STYLES[v.status] || "badge-cat";
+        const { label, css } = STATUS_MAP[v.status] ?? {
+          label: v.status,
+          css: "badge-cat",
+        };
         const contact = [
           v.phone &&
             `<a href="tel:${escapeHtml(v.phone)}" style="color:var(--primary)">${escapeHtml(v.phone)}</a>`,
@@ -160,13 +155,13 @@ class VendorManager {
               ${v.notes ? `<br><em style="opacity:.8">${escapeHtml(v.notes)}</em>` : ""}
             </div>
           </div>
-          <button class="item-badge ${badgeClass} status-btn"
+          <button class="item-badge ${css} status-btn"
                   style="border:none;cursor:pointer;white-space:nowrap;"
-                  aria-label="Status: ${escapeHtml(v.status)}. Click to change.">
-            ${escapeHtml(v.status)}
+                  aria-label="Status: ${escapeHtml(label)}. Click to change.">
+            ${escapeHtml(label)}
           </button>
           <button class="btn btn-danger delete-btn"
-                  aria-label="Remove ${escapeHtml(v.name)}">✕</button>
+                  aria-label="${t("common.remove")} ${escapeHtml(v.name)}">✕</button>
         </li>`;
       })
       .join("");
@@ -188,6 +183,4 @@ class VendorManager {
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  new VendorManager().init();
-});
+document.addEventListener("DOMContentLoaded", () => new VendorManager().init());

@@ -3,17 +3,13 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta
-      name="description"
-      content="Forever Planner dashboard — see your wedding countdown, budget snapshot, guest count, and task progress at a glance."
-    />
     <title>Dashboard — Forever Planner</title>
     <link rel="stylesheet" href="styles/main.css" />
+    <link rel="stylesheet" href="styles/lang-switcher.css" />
     <script type="module" src="scripts/dashboard.js"></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
-
     <nav class="site-nav" aria-label="Main navigation">
       <a href="index.html" class="brand" aria-label="Forever Planner home"
         >💍 Forever Planner</a
@@ -27,18 +23,19 @@
       <a href="checklist.html">Checklist</a>
       <a href="settings.html">Settings</a>
       <button id="logout-btn" class="btn btn-ghost nav-logout">Sign Out</button>
-      <span class="nav-user-group">
-        <span id="nav-user" class="nav-user-name"></span>
-      </span>
+      <span class="nav-user-group"
+        ><span id="nav-user" class="nav-user-name"></span
+      ></span>
     </nav>
-
     <header class="page-header">
-      <h1><em>Our</em> Wedding Dashboard</h1>
-      <p class="subtitle">Everything you need, all in one place.</p>
+      <h1 data-i18n="dashboard.title" data-i18n-html>
+        <em>Our</em> Wedding Dashboard
+      </h1>
+      <p class="subtitle" data-i18n="dashboard.subtitle">
+        Everything you need, all in one place.
+      </p>
     </header>
-
     <main id="main-content">
-      <!-- Countdown -->
       <section class="card" aria-labelledby="countdown-heading">
         <div class="countdown-block">
           <span
@@ -47,22 +44,29 @@
             aria-live="polite"
             >—</span
           >
-          <p class="countdown-label">Days Until Your Wedding</p>
+          <p class="countdown-label" data-i18n="dashboard.daysUntil">
+            Days Until Your Wedding
+          </p>
           <p id="countdown-date-label" class="countdown-date-label"></p>
         </div>
-
         <div class="date-setter">
-          <label for="wedding-date-input">Set your wedding date:</label>
+          <label for="wedding-date-input" data-i18n="dashboard.setDate"
+            >Set your wedding date:</label
+          >
           <input
             type="date"
             id="wedding-date-input"
             aria-label="Wedding date"
           />
-          <button class="btn btn-primary" id="set-date-btn">Save Date</button>
+          <button
+            class="btn btn-primary"
+            id="set-date-btn"
+            data-i18n="dashboard.saveDate"
+          >
+            Save Date
+          </button>
         </div>
       </section>
-
-      <!-- Stats grid -->
       <section aria-label="Planning summary">
         <div class="stats-grid">
           <a
@@ -73,7 +77,9 @@
           >
             <span class="stat-icon" aria-hidden="true">💰</span>
             <div class="stat-value" id="stat-budget">$0</div>
-            <div class="stat-label">Budget Spent</div>
+            <div class="stat-label" data-i18n="dashboard.budgetSpent">
+              Budget Spent
+            </div>
           </a>
           <a
             href="guests.html"
@@ -83,7 +89,7 @@
           >
             <span class="stat-icon" aria-hidden="true">👥</span>
             <div class="stat-value" id="stat-guests">0</div>
-            <div class="stat-label">Guests</div>
+            <div class="stat-label" data-i18n="dashboard.guests">Guests</div>
           </a>
           <a
             href="checklist.html"
@@ -93,7 +99,9 @@
           >
             <span class="stat-icon" aria-hidden="true">📋</span>
             <div class="stat-value" id="stat-tasks">0%</div>
-            <div class="stat-label">Tasks Done</div>
+            <div class="stat-label" data-i18n="dashboard.tasksDone">
+              Tasks Done
+            </div>
           </a>
           <a
             href="vendors.html"
@@ -103,7 +111,7 @@
           >
             <span class="stat-icon" aria-hidden="true">🎪</span>
             <div class="stat-value" id="stat-vendors">0</div>
-            <div class="stat-label">Vendors</div>
+            <div class="stat-label" data-i18n="dashboard.vendors">Vendors</div>
           </a>
           <a
             href="music.html"
@@ -112,7 +120,7 @@
             aria-label="Go to music planner"
           >
             <span class="stat-icon" aria-hidden="true">🎵</span>
-            <div class="stat-label">Music</div>
+            <div class="stat-label" data-i18n="dashboard.music">Music</div>
           </a>
           <a
             href="inspiration.html"
@@ -121,7 +129,9 @@
             aria-label="Go to inspiration board"
           >
             <span class="stat-icon" aria-hidden="true">🌸</span>
-            <div class="stat-label">Inspiration</div>
+            <div class="stat-label" data-i18n="dashboard.inspiration">
+              Inspiration
+            </div>
           </a>
         </div>
       </section>

@@ -1,10 +1,9 @@
 /**
  * @file scripts/music.js
- * @description MusicManager — iTunes search via API proxy + playlist CRUD.
  */
 
 import api, { Auth } from "./api.js";
-import { initNav, Toast, escapeHtml } from "./main.js";
+import { initNav, Toast, escapeHtml, t } from "./main.js";
 
 Auth.requireAuth();
 
@@ -33,16 +32,15 @@ class MusicManager {
     });
   }
 
-  /* ── iTunes search (proxied) ──────────────────────────── */
   async _search() {
     const q = this._searchInput.value.trim();
     if (!q) {
-      return Toast.show("Enter a song or artist to search.", "error");
+      return Toast.show(t("err.searchRequired"), "error");
     }
 
     this._resultsEl.innerHTML = `
       <div class="loading-state">
-        <span class="spinner" aria-hidden="true"></span> Searching iTunes…
+        <span class="spinner" aria-hidden="true"></span> ${t("music.searching")}
       </div>`;
 
     try {
@@ -52,7 +50,7 @@ class MusicManager {
       if (!tracks.length) {
         this._resultsEl.innerHTML = `
           <p style="color:var(--text-muted);padding:12px 0">
-            No results found for "${escapeHtml(q)}".
+            ${t("music.noResults", { q: escapeHtml(q) })}
           </p>`;
         return;
       }
@@ -60,14 +58,14 @@ class MusicManager {
       const section = this._sectionSelect.value;
       this._resultsEl.innerHTML = `
         <div class="music-results" role="list" aria-label="Search results">
-          ${tracks.map((t) => this._trackCard(t, section)).join("")}
+          ${tracks.map((tr) => this._trackCard(tr, section)).join("")}
         </div>`;
 
       this._resultsEl.querySelectorAll(".add-track-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
           const card = btn.closest("[data-track-id]");
           this._addTrack({
-            section: section,
+            section,
             trackId: card.dataset.trackId,
             trackName: card.dataset.trackName,
             artistName: card.dataset.artistName,
@@ -76,10 +74,10 @@ class MusicManager {
           });
         });
       });
-    } catch (err) {
+    } catch {
       this._resultsEl.innerHTML = `
         <p style="color:var(--danger);padding:12px 0">
-          Search failed. Please check your connection and try again.
+          ${t("music.searchFailed")}
         </p>`;
     }
   }
@@ -95,10 +93,8 @@ class MusicManager {
            data-preview="${escapeHtml(track.previewUrl || "")}">
         ${
           art
-            ? `<img class="music-artwork" src="${escapeHtml(art)}"
-                  alt="${escapeHtml(track.trackName)} artwork" loading="lazy" />`
-            : `<div class="music-artwork" style="background:var(--surface-2);display:flex;
-                  align-items:center;justify-content:center;font-size:1.3rem" aria-hidden="true">🎵</div>`
+            ? `<img class="music-artwork" src="${escapeHtml(art)}" alt="${escapeHtml(track.trackName)} artwork" loading="lazy" />`
+            : `<div class="music-artwork" style="background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:1.3rem" aria-hidden="true">🎵</div>`
         }
         <div class="music-info">
           <div class="music-title">${escapeHtml(track.trackName || "Unknown")}</div>
@@ -106,44 +102,44 @@ class MusicManager {
         </div>
         <button class="btn btn-primary add-track-btn"
                 style="padding:6px 12px;font-size:.8rem;white-space:nowrap;"
-                aria-label="Add ${escapeHtml(track.trackName)} to ${escapeHtml(section)}">
-          + Add
+                aria-label="${t("music.addBtn")} ${escapeHtml(track.trackName)} to ${escapeHtml(section)}">
+          ${t("music.addBtn")}
         </button>
       </div>`;
   }
 
-  /* ── Add track ────────────────────────────────────────── */
   async _addTrack(payload) {
     try {
       await api.post("/music/tracks", payload);
-      Toast.show(`Added to ${payload.section}!`, "success");
+      Toast.show(
+        t("toast.trackAdded", { section: payload.section }),
+        "success",
+      );
       await this._loadPlaylists();
     } catch (err) {
       if (err.status === 409) {
-        return Toast.show(`Already in ${payload.section}.`);
+        return Toast.show(t("toast.trackDupe", { section: payload.section }));
       }
-      Toast.show(err.message || "Could not add track.", "error");
+      Toast.show(err.message || t("err.loadPlaylists"), "error");
     }
   }
 
-  /* ── Remove track ─────────────────────────────────────── */
   async _removeTrack(id) {
     try {
       await api.delete(`/music/tracks/${id}`);
-      Toast.show("Track removed.");
+      Toast.show(t("toast.trackRemoved"));
       await this._loadPlaylists();
     } catch (err) {
-      Toast.show(err.message || "Could not remove track.", "error");
+      Toast.show(err.message || t("err.loadPlaylists"), "error");
     }
   }
 
-  /* ── Load & render playlists ──────────────────────────── */
   async _loadPlaylists() {
     try {
       const { data } = await api.get("/music");
       this._renderPlaylists(data.playlists, data.sections);
-    } catch (err) {
-      Toast.show("Could not load playlists.", "error");
+    } catch {
+      Toast.show(t("err.loadPlaylists"), "error");
     }
   }
 
@@ -175,31 +171,26 @@ class MusicManager {
           <ul class="item-list" aria-label="${escapeHtml(section)} playlist">
             ${tracks
               .map(
-                (t) => `
-              <li class="item-card music-result-card" data-id="${escapeHtml(t.id)}" style="gap:10px">
+                (tr) => `
+              <li class="item-card music-result-card" data-id="${escapeHtml(tr.id)}" style="gap:10px">
                 ${
-                  t.artwork_url
-                    ? `<img class="music-artwork" src="${escapeHtml(t.artwork_url)}"
-                          alt="${escapeHtml(t.track_name)} artwork" loading="lazy" />`
-                    : `<div class="music-artwork" style="background:var(--surface-2);
-                          display:flex;align-items:center;justify-content:center;
-                          font-size:1.2rem" aria-hidden="true">🎵</div>`
+                  tr.artwork_url
+                    ? `<img class="music-artwork" src="${escapeHtml(tr.artwork_url)}" alt="${escapeHtml(tr.track_name)} artwork" loading="lazy" />`
+                    : `<div class="music-artwork" style="background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:1.2rem" aria-hidden="true">🎵</div>`
                 }
                 <div class="music-info">
-                  <div class="music-title" style="font-size:.9rem">
-                    ${escapeHtml(t.track_name || "Unknown")}
-                  </div>
-                  <div class="music-artist">${escapeHtml(t.artist_name || "")}</div>
+                  <div class="music-title" style="font-size:.9rem">${escapeHtml(tr.track_name || "Unknown")}</div>
+                  <div class="music-artist">${escapeHtml(tr.artist_name || "")}</div>
                 </div>
                 ${
-                  t.preview_url
-                    ? `<a href="${escapeHtml(t.preview_url)}" target="_blank" rel="noopener noreferrer"
+                  tr.preview_url
+                    ? `<a href="${escapeHtml(tr.preview_url)}" target="_blank" rel="noopener noreferrer"
                         class="btn btn-ghost" style="padding:4px 10px;font-size:.78rem"
-                        aria-label="Preview ${escapeHtml(t.track_name)}">▶ Preview</a>`
+                        aria-label="${t("music.preview")} ${escapeHtml(tr.track_name)}">${t("music.preview")}</a>`
                     : ""
                 }
                 <button class="btn btn-danger remove-track-btn"
-                        aria-label="Remove ${escapeHtml(t.track_name)}">✕</button>
+                        aria-label="${t("common.remove")} ${escapeHtml(tr.track_name)}">✕</button>
               </li>`,
               )
               .join("")}
@@ -218,6 +209,4 @@ class MusicManager {
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  new MusicManager().init();
-});
+document.addEventListener("DOMContentLoaded", () => new MusicManager().init());

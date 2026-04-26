@@ -3,65 +3,65 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta
-      name="description"
-      content="Manage your wedding vendors — track contact info, categories, notes, and booking status for every vendor in one place."
-    />
     <title>Vendors — Forever Planner</title>
     <link rel="stylesheet" href="styles/main.css" />
+    <link rel="stylesheet" href="styles/lang-switcher.css" />
     <script type="module" src="scripts/vendors.js"></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
-
     <nav class="site-nav" aria-label="Main navigation">
-      <a href="index.html" class="brand" aria-label="Forever Planner home"
-        >💍 Forever Planner</a
-      >
-      <a href="index.html">Dashboard</a>
-      <a href="budget.html">Budget</a>
-      <a href="vendors.html">Vendors</a>
-      <a href="music.html">Music</a>
-      <a href="inspiration.html">Inspiration</a>
-      <a href="guests.html">Guests</a>
-      <a href="checklist.html">Checklist</a>
-      <a href="settings.html">Settings</a>
+      <a href="index.html" class="brand">💍 Forever Planner</a>
+      <a href="index.html">Dashboard</a><a href="budget.html">Budget</a>
+      <a href="vendors.html">Vendors</a><a href="music.html">Music</a>
+      <a href="inspiration.html">Inspiration</a><a href="guests.html">Guests</a>
+      <a href="checklist.html">Checklist</a><a href="settings.html">Settings</a>
       <button id="logout-btn" class="btn btn-ghost nav-logout">Sign Out</button>
-      <span class="nav-user-group">
-        <span id="nav-user" class="nav-user-name"></span>
-      </span>
+      <span class="nav-user-group"
+        ><span id="nav-user" class="nav-user-name"></span
+      ></span>
     </nav>
-
     <header class="page-header">
-      <h1><em>Vendor</em> Manager</h1>
-      <p class="subtitle">Keep all your vendor contacts in one place.</p>
+      <h1 data-i18n="vendors.title" data-i18n-html><em>Vendor</em> Manager</h1>
+      <p class="subtitle" data-i18n="vendors.subtitle">
+        Keep all your vendor contacts in one place.
+      </p>
     </header>
-
     <main id="main-content">
-      <!-- Add vendor form -->
       <section class="card" aria-labelledby="add-vendor-heading">
-        <h2 class="card-title" id="add-vendor-heading">➕ Add Vendor</h2>
-
+        <h2
+          class="card-title"
+          id="add-vendor-heading"
+          data-i18n="vendors.addVendor"
+        >
+          ➕ Add Vendor
+        </h2>
         <div class="form-row two-col">
           <div class="field-group">
-            <label for="vendor-name">Vendor Name *</label>
+            <label for="vendor-name" data-i18n="vendors.vendorName"
+              >Vendor Name *</label
+            >
             <input
               type="text"
               id="vendor-name"
-              placeholder="e.g. Bloom & Blossom Florists"
+              data-i18n="vendors.vendorNamePlaceholder"
+              data-i18n-attr="placeholder"
+              placeholder="e.g. Bloom &amp; Blossom Florists"
               aria-required="true"
             />
           </div>
           <div class="field-group">
-            <label for="vendor-category">Category</label>
-            <select id="vendor-category" aria-label="Vendor category">
+            <label for="vendor-category" data-i18n="vendors.category"
+              >Category</label
+            >
+            <select id="vendor-category">
               <option value="Photographer">Photographer</option>
               <option value="Videographer">Videographer</option>
               <option value="Florist">Florist</option>
               <option value="Caterer">Caterer</option>
               <option value="Venue">Venue</option>
               <option value="DJ / Band">DJ / Band</option>
-              <option value="Hair & Makeup">Hair &amp; Makeup</option>
+              <option value="Hair &amp; Makeup">Hair &amp; Makeup</option>
               <option value="Cake">Cake</option>
               <option value="Officiant">Officiant</option>
               <option value="Transportation">Transportation</option>
@@ -69,34 +69,46 @@
             </select>
           </div>
         </div>
-
         <div class="form-row two-col">
           <div class="field-group">
-            <label for="vendor-phone">Phone</label>
-            <input type="tel" id="vendor-phone" placeholder="(555) 000-0000" />
+            <label for="vendor-phone" data-i18n="vendors.phone">Phone</label>
+            <input
+              type="tel"
+              id="vendor-phone"
+              data-i18n="vendors.phonePlaceholder"
+              data-i18n-attr="placeholder"
+              placeholder="(555) 000-0000"
+            />
           </div>
           <div class="field-group">
-            <label for="vendor-email">Email</label>
+            <label for="vendor-email" data-i18n="vendors.email">Email</label>
             <input
               type="email"
               id="vendor-email"
+              data-i18n="vendors.emailPlaceholder"
+              data-i18n-attr="placeholder"
               placeholder="hello@vendor.com"
             />
           </div>
         </div>
-
         <div class="form-row two-col">
           <div class="field-group">
-            <label for="vendor-website">Website</label>
+            <label for="vendor-website" data-i18n="vendors.website"
+              >Website</label
+            >
             <input
               type="url"
               id="vendor-website"
+              data-i18n="vendors.websitePlaceholder"
+              data-i18n-attr="placeholder"
               placeholder="https://vendor.com"
             />
           </div>
           <div class="field-group">
-            <label for="vendor-status">Booking Status</label>
-            <select id="vendor-status" aria-label="Booking status">
+            <label for="vendor-status" data-i18n="vendors.bookingStatus"
+              >Booking Status</label
+            >
+            <select id="vendor-status">
               <option value="Researching">Researching</option>
               <option value="Contacted">Contacted</option>
               <option value="Booked">Booked ✓</option>
@@ -104,40 +116,64 @@
             </select>
           </div>
         </div>
-
         <div class="field-group vendor-notes-group">
-          <label for="vendor-notes">Notes</label>
+          <label for="vendor-notes" data-i18n="vendors.notes">Notes</label>
           <textarea
             id="vendor-notes"
+            data-i18n="vendors.notesPlaceholder"
+            data-i18n-attr="placeholder"
             placeholder="Deposit paid, contract signed…"
           ></textarea>
         </div>
-
-        <button class="btn btn-primary btn-full" id="add-vendor-btn">
+        <button
+          class="btn btn-primary btn-full"
+          id="add-vendor-btn"
+          data-i18n="vendors.addVendorBtn"
+        >
           Add Vendor
         </button>
       </section>
-
-      <!-- Filter tabs -->
       <div
         class="filter-tabs"
         role="group"
         aria-label="Filter vendors by status"
       >
-        <button class="filter-tab active" data-status="All">All</button>
-        <button class="filter-tab" data-status="Researching">
+        <button
+          class="filter-tab active"
+          data-status="All"
+          data-i18n="common.all"
+        >
+          All
+        </button>
+        <button
+          class="filter-tab"
+          data-status="Researching"
+          data-i18n="vendors.statusResearching"
+        >
           Researching
         </button>
-        <button class="filter-tab" data-status="Contacted">Contacted</button>
-        <button class="filter-tab" data-status="Booked">Booked</button>
+        <button
+          class="filter-tab"
+          data-status="Contacted"
+          data-i18n="vendors.statusContacted"
+        >
+          Contacted
+        </button>
+        <button
+          class="filter-tab"
+          data-status="Booked"
+          data-i18n="vendors.statusBooked"
+        >
+          Booked
+        </button>
       </div>
-
-      <!-- Vendor list -->
       <section aria-label="Vendor list">
-        <ul class="item-list" id="vendor-list" aria-label="Vendors"></ul>
+        <ul class="item-list" id="vendor-list"></ul>
         <div class="empty-state" id="vendor-empty" hidden>
-          <span class="empty-icon" aria-hidden="true">🎪</span>
-          <p>No vendors added yet. Fill in the form above to get started!</p>
+          <span class="empty-icon">🎪</span>
+          <p data-i18n="vendors.empty">
+            No vendors added yet. Fill in the form above to get started!
+          </p>
         </div>
       </section>
     </main>

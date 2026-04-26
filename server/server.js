@@ -36,9 +36,17 @@ class MapStore extends session.Store {
     super();
     this._s = new Map();
   }
-  get(sid, cb) { cb(null, this._s.get(sid) ?? null); }
-  set(sid, sess, cb) { this._s.set(sid, sess); cb(null); }
-  destroy(sid, cb) { this._s.delete(sid); cb(null); }
+  get(sid, cb) {
+    cb(null, this._s.get(sid) ?? null);
+  }
+  set(sid, sess, cb) {
+    this._s.set(sid, sess);
+    cb(null);
+  }
+  destroy(sid, cb) {
+    this._s.delete(sid);
+    cb(null);
+  }
 }
 
 /* ── Security headers ───────────────────────────────────────── */

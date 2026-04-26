@@ -9,6 +9,7 @@
     />
     <title>Budget — Forever Planner</title>
     <link rel="stylesheet" href="styles/main.css" />
+    <link rel="stylesheet" href="styles/lang-switcher.css" />
     <script type="module" src="scripts/budget.js"></script>
   </head>
   <body>
@@ -33,8 +34,10 @@
     </nav>
 
     <header class="page-header">
-      <h1><em>Budget</em> Tracker</h1>
-      <p class="subtitle">Keep every dollar accounted for.</p>
+      <h1 data-i18n="budget.title" data-i18n-html><em>Budget</em> Tracker</h1>
+      <p class="subtitle" data-i18n="budget.subtitle">
+        Keep every dollar accounted for.
+      </p>
     </header>
 
     <main id="main-content">
@@ -43,21 +46,22 @@
         <div class="budget-summary">
           <div class="budget-box total">
             <div class="bval" id="budget-total-display">$0</div>
-            <div class="blabel">Total Budget</div>
+            <div class="blabel" data-i18n="budget.totalBudget">
+              Total Budget
+            </div>
           </div>
           <div class="budget-box spent">
             <div class="bval" id="budget-spent-display">$0</div>
-            <div class="blabel">Spent</div>
+            <div class="blabel" data-i18n="budget.spent">Spent</div>
           </div>
           <div class="budget-box remaining">
             <div class="bval" id="budget-remaining-display">$0</div>
-            <div class="blabel">Remaining</div>
+            <div class="blabel" data-i18n="budget.remaining">Remaining</div>
           </div>
         </div>
 
-        <!-- Overall progress bar -->
         <div class="progress-label" aria-hidden="true">
-          <span>Budget used</span>
+          <span data-i18n="budget.budgetUsed">Budget used</span>
           <span id="budget-pct-label">0%</span>
         </div>
         <div
@@ -75,23 +79,35 @@
 
       <!-- Set total budget -->
       <section class="card" aria-labelledby="budget-limit-heading">
-        <h2 class="card-title" id="budget-limit-heading">
+        <h2
+          class="card-title"
+          id="budget-limit-heading"
+          data-i18n="budget.setBudgetLimit"
+        >
           ⚙️ Set Budget Limit
         </h2>
         <div class="form-row two-col">
           <div class="field-group">
-            <label for="budget-limit-input">Total budget ($)</label>
+            <label for="budget-limit-input" data-i18n="budget.totalBudgetLabel"
+              >Total budget ($)</label
+            >
             <input
               type="number"
               id="budget-limit-input"
               min="0"
               step="100"
+              data-i18n="budget.descriptionPlaceholder"
+              data-i18n-attr="placeholder"
               placeholder="e.g. 25000"
               aria-label="Total budget amount"
             />
           </div>
           <div class="field-group field-group-end">
-            <button class="btn btn-secondary btn-end" id="save-limit-btn">
+            <button
+              class="btn btn-secondary btn-end"
+              id="save-limit-btn"
+              data-i18n="budget.saveLimit"
+            >
               Save Limit
             </button>
           </div>
@@ -100,20 +116,31 @@
 
       <!-- Add expense -->
       <section class="card" aria-labelledby="add-expense-heading">
-        <h2 class="card-title" id="add-expense-heading">➕ Add Expense</h2>
-
+        <h2
+          class="card-title"
+          id="add-expense-heading"
+          data-i18n="budget.addExpense"
+        >
+          ➕ Add Expense
+        </h2>
         <div class="form-row three-col">
           <div class="field-group">
-            <label for="expense-name">Description</label>
+            <label for="expense-name" data-i18n="budget.description"
+              >Description</label
+            >
             <input
               type="text"
               id="expense-name"
+              data-i18n="budget.descriptionPlaceholder"
+              data-i18n-attr="placeholder"
               placeholder="e.g. Florist deposit"
               aria-required="true"
             />
           </div>
           <div class="field-group">
-            <label for="expense-category">Category</label>
+            <label for="expense-category" data-i18n="budget.category"
+              >Category</label
+            >
             <select id="expense-category" aria-label="Expense category">
               <option value="Venue">Venue</option>
               <option value="Catering">Catering</option>
@@ -128,7 +155,9 @@
             </select>
           </div>
           <div class="field-group">
-            <label for="expense-amount">Amount ($)</label>
+            <label for="expense-amount" data-i18n="budget.amount"
+              >Amount ($)</label
+            >
             <input
               type="number"
               id="expense-amount"
@@ -139,15 +168,24 @@
             />
           </div>
         </div>
-
-        <button class="btn btn-primary btn-full" id="add-expense-btn">
+        <button
+          class="btn btn-primary btn-full"
+          id="add-expense-btn"
+          data-i18n="budget.addExpenseBtn"
+        >
           Add Expense
         </button>
       </section>
 
       <!-- Filter tabs -->
       <div class="filter-tabs" role="group" aria-label="Filter by category">
-        <button class="filter-tab active" data-cat="All">All</button>
+        <button
+          class="filter-tab active"
+          data-cat="All"
+          data-i18n="budget.filterAll"
+        >
+          All
+        </button>
         <button class="filter-tab" data-cat="Venue">Venue</button>
         <button class="filter-tab" data-cat="Catering">Catering</button>
         <button class="filter-tab" data-cat="Photography">Photography</button>
@@ -162,7 +200,9 @@
         <ul class="item-list" id="expense-list" aria-label="Expenses"></ul>
         <div class="empty-state" id="budget-empty" hidden>
           <span class="empty-icon" aria-hidden="true">💸</span>
-          <p>No expenses yet. Add your first one above!</p>
+          <p data-i18n="budget.empty">
+            No expenses yet. Add your first one above!
+          </p>
         </div>
       </section>
     </main>

@@ -1,14 +1,12 @@
 /**
  * @file scripts/dashboard.js
- * @description Dashboard — countdown timer + API-backed summary stats.
  */
 
 import api, { Auth } from "./api.js";
-import { initNav, formatCurrency, Toast, showInviteModal } from "./main.js";
+import { initNav, formatCurrency, Toast, showInviteModal, t } from "./main.js";
 
 Auth.requireAuth();
 
-/* ── DOM refs ──────────────────────────────────────────────── */
 const countdownEl = document.getElementById("countdown-number");
 const dateLabelEl = document.getElementById("countdown-date-label");
 const dateInput = document.getElementById("wedding-date-input");
@@ -20,19 +18,16 @@ const statVendors = document.getElementById("stat-vendors");
 
 let timerInterval = null;
 
-/* ── Boot ──────────────────────────────────────────────────── */
 document.addEventListener("DOMContentLoaded", async () => {
   initNav();
   loadSavedDate();
 
-  // Show invite modal on fresh login or if there are pending invites
   if (sessionStorage.getItem("fp_fresh_login")) {
     sessionStorage.removeItem("fp_fresh_login");
     try {
       const { data } = await api.get("/weddings/my-pending-invites");
-      const invites = data.invites || [];
-      if (invites.length > 0) {
-        showInviteModal(invites);
+      if ((data.invites || []).length > 0) {
+        showInviteModal(data.invites);
       }
     } catch {
       /* silently ignore */
@@ -42,18 +37,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   await renderStats();
 });
 
-/* ── Wedding date (stored in user profile via API) ─────────── */
 function parseLocalDate(dateStr) {
   const [y, m, d] = dateStr.split("-").map(Number);
   return new Date(y, m - 1, d);
 }
 
 function loadSavedDate() {
-  // Prefer the profile wedding_date; fall back to localStorage cache
   const user = Auth.getUser();
   const saved = user?.wedding_date || localStorage.getItem("fp_wedding_date");
   if (saved) {
-    const iso = saved.substring(0, 10); // handles ISO timestamp or plain date
+    const iso = saved.substring(0, 10);
     dateInput.value = iso;
     startCountdown(parseLocalDate(iso));
   }
@@ -69,15 +62,14 @@ setDateBtn.addEventListener("click", async () => {
     await api.patch("/auth/me", { weddingDate: val });
     localStorage.setItem("fp_wedding_date", val);
 
-    // Update cached user
     const user = Auth.getUser() ?? {};
     user.wedding_date = val;
     Auth.setUser(user);
 
     startCountdown(parseLocalDate(val));
-    Toast.show("Wedding date saved!", "success");
+    Toast.show(t("toast.dateSaved"), "success");
   } catch (err) {
-    Toast.show(err.message || "Could not save date.", "error");
+    Toast.show(err.message || t("toast.dateSaved"), "error");
   }
 });
 
@@ -109,7 +101,6 @@ function startCountdown(targetDate) {
   timerInterval = setInterval(tick, 60_000);
 }
 
-/* ── Stats ─────────────────────────────────────────────────── */
 async function renderStats() {
   try {
     const [budgetRes, guestsRes, tasksRes, vendorsRes] = await Promise.all([

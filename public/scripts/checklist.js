@@ -1,10 +1,9 @@
 /**
  * @file scripts/checklist.js
- * @description ChecklistManager — API-backed tasks with toggle, seed, filter.
  */
 
 import api, { Auth } from "./api.js";
-import { initNav, Toast, escapeHtml, showLoading } from "./main.js";
+import { initNav, Toast, escapeHtml, showLoading, t } from "./main.js";
 
 Auth.requireAuth();
 
@@ -54,9 +53,8 @@ class ChecklistManager {
     });
   }
 
-  /* ── Load ─────────────────────────────────────────────── */
   async _load() {
-    showLoading(this._list, "Loading tasks…");
+    showLoading(this._list, t("common.loading"));
     this._emptyState.hidden = true;
 
     const query = {};
@@ -64,7 +62,7 @@ class ChecklistManager {
       query.status = "active";
     } else if (this._activeFilter === "done") {
       query.status = "done";
-    } else if (!["All"].includes(this._activeFilter)) {
+    } else if (this._activeFilter !== "All") {
       query.category = this._activeFilter;
     }
 
@@ -72,17 +70,16 @@ class ChecklistManager {
       const { data } = await api.get("/checklist", query);
       this._renderProgress(data.progress);
       this._renderList(data.tasks);
-    } catch (err) {
+    } catch {
       this._list.innerHTML = "";
-      Toast.show("Could not load tasks.", "error");
+      Toast.show(t("err.loadTasks"), "error");
     }
   }
 
-  /* ── Add ──────────────────────────────────────────────── */
   async _addTask() {
     const text = this._taskInput.value.trim();
     if (!text) {
-      return Toast.show("Please enter a task description.", "error");
+      return Toast.show(t("err.taskRequired"), "error");
     }
 
     this._addBtn.disabled = true;
@@ -95,60 +92,61 @@ class ChecklistManager {
       this._taskInput.value = "";
       this._dueInput.value = "";
       this._taskInput.focus();
-      Toast.show("Task added!", "success");
+      Toast.show(t("toast.taskAdded"), "success");
       await this._load();
     } catch (err) {
-      Toast.show(err.message || "Could not add task.", "error");
+      Toast.show(err.message || t("err.addTask"), "error");
     } finally {
       this._addBtn.disabled = false;
     }
   }
 
-  /* ── Toggle ───────────────────────────────────────────── */
   async _toggle(id) {
     try {
       await api.post(`/checklist/${id}/toggle`);
       await this._load();
     } catch (err) {
-      Toast.show(err.message || "Could not update task.", "error");
+      Toast.show(err.message || t("err.addTask"), "error");
     }
   }
 
-  /* ── Delete ───────────────────────────────────────────── */
   async _delete(id) {
     try {
       await api.delete(`/checklist/${id}`);
-      Toast.show("Task removed.");
+      Toast.show(t("toast.taskRemoved"));
       await this._load();
     } catch (err) {
-      Toast.show(err.message || "Could not delete task.", "error");
+      Toast.show(err.message || t("err.addTask"), "error");
     }
   }
 
-  /* ── Seed ─────────────────────────────────────────────── */
   async _seed() {
     this._seedBtn.disabled = true;
     try {
       const { data } = await api.post("/checklist/seed");
       Toast.show(
         data.added > 0
-          ? `${data.added} example tasks added!`
-          : "All example tasks already added.",
+          ? t("toast.seedAdded", { count: data.added })
+          : t("toast.seedNone"),
         data.added > 0 ? "success" : "default",
       );
       await this._load();
     } catch (err) {
-      Toast.show(err.message || "Could not seed tasks.", "error");
+      Toast.show(err.message || t("err.addTask"), "error");
     } finally {
       this._seedBtn.disabled = false;
     }
   }
 
-  /* ── Render ───────────────────────────────────────────── */
   _renderProgress({ total, done, pct }) {
     this._progressBar.style.width = `${pct}%`;
     this._progressWrap.setAttribute("aria-valuenow", pct);
-    this._progressText.textContent = `${done} of ${total} task${total !== 1 ? "s" : ""} complete`;
+    const plural = total !== 1 ? "s" : "";
+    this._progressText.textContent = t("checklist.tasksComplete", {
+      done,
+      total,
+      plural,
+    });
     this._progressPct.textContent = `${pct}%`;
   }
 
@@ -160,9 +158,9 @@ class ChecklistManager {
     }
 
     this._list.innerHTML = tasks
-      .map((t) => {
-        const due = t.due_date
-          ? new Date(t.due_date + "T00:00:00").toLocaleDateString("en-US", {
+      .map((task) => {
+        const due = task.due_date
+          ? new Date(task.due_date + "T00:00:00").toLocaleDateString("en-US", {
               month: "short",
               day: "numeric",
               year: "numeric",
@@ -170,21 +168,21 @@ class ChecklistManager {
           : "";
 
         return `
-        <li class="item-card${t.done ? " completed" : ""}" data-id="${escapeHtml(t.id)}">
-          <button class="check-btn${t.done ? " done" : ""} toggle-btn"
-                  aria-label="${t.done ? "Mark incomplete" : "Mark complete"}: ${escapeHtml(t.text)}"
-                  aria-pressed="${t.done}">
-            ${t.done ? "✓" : ""}
+        <li class="item-card${task.done ? " completed" : ""}" data-id="${escapeHtml(task.id)}">
+          <button class="check-btn${task.done ? " done" : ""} toggle-btn"
+                  aria-label="${task.done ? t("common.active") : t("common.done")}: ${escapeHtml(task.text)}"
+                  aria-pressed="${task.done}">
+            ${task.done ? "✓" : ""}
           </button>
           <div class="item-info">
-            <div class="item-name">${escapeHtml(t.text)}</div>
+            <div class="item-name">${escapeHtml(task.text)}</div>
             <div class="item-meta">
-              <span class="item-badge badge-cat">${escapeHtml(t.category)}</span>
+              <span class="item-badge badge-cat">${escapeHtml(task.category)}</span>
               ${due ? `&nbsp;· Due: ${escapeHtml(due)}` : ""}
             </div>
           </div>
           <button class="btn btn-danger delete-btn"
-                  aria-label="Delete: ${escapeHtml(t.text)}">✕</button>
+                  aria-label="${t("common.delete")}: ${escapeHtml(task.text)}">✕</button>
         </li>`;
       })
       .join("");
@@ -206,6 +204,6 @@ class ChecklistManager {
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  new ChecklistManager().init();
-});
+document.addEventListener("DOMContentLoaded", () =>
+  new ChecklistManager().init(),
+);

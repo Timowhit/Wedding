@@ -1,10 +1,9 @@
 /**
  * @file scripts/inspiration.js
- * @description InspirationManager — Unsplash search (API-proxied) + board CRUD.
  */
 
 import api, { Auth } from "./api.js";
-import { initNav, Toast, escapeHtml } from "./main.js";
+import { initNav, Toast, escapeHtml, t } from "./main.js";
 
 Auth.requireAuth();
 
@@ -40,16 +39,15 @@ class InspirationManager {
     );
   }
 
-  /* ── Search (proxied through backend) ─────────────────── */
   async _search() {
     const q = this._searchInput.value.trim();
     if (!q) {
-      return Toast.show("Enter a search term.", "error");
+      return Toast.show(t("err.searchInspoRequired"), "error");
     }
 
     this._resultsEl.innerHTML = `
       <div class="loading-state">
-        <span class="spinner" aria-hidden="true"></span> Searching Unsplash…
+        <span class="spinner" aria-hidden="true"></span> ${t("inspiration.searching")}
       </div>`;
 
     try {
@@ -62,7 +60,7 @@ class InspirationManager {
       if (!photos.length) {
         this._resultsEl.innerHTML = `
           <p style="color:var(--text-muted);padding:12px 0">
-            No images found for "${escapeHtml(q)}".
+            ${t("inspiration.noResults", { q: escapeHtml(q) })}
           </p>`;
         return;
       }
@@ -84,10 +82,10 @@ class InspirationManager {
           });
         });
       });
-    } catch (err) {
+    } catch {
       this._resultsEl.innerHTML = `
         <p style="color:var(--danger);padding:12px 0">
-          Search failed. Please check your connection and try again.
+          ${t("inspiration.searchFailed")}
         </p>`;
     }
   }
@@ -108,45 +106,42 @@ class InspirationManager {
            data-link="${escapeHtml(link)}">
         <img src="${escapeHtml(thumb)}" alt="${escapeHtml(alt)}" loading="lazy" />
         <div class="inspo-overlay">
-          <button class="inspo-save-btn" aria-label="Save: ${escapeHtml(alt)}">
-            ♥ Save
+          <button class="inspo-save-btn" aria-label="${t("inspiration.saveBtn")}: ${escapeHtml(alt)}">
+            ${t("inspiration.saveBtn")}
           </button>
         </div>
       </div>`;
   }
 
-  /* ── Save to board ────────────────────────────────────── */
   async _save(photo) {
     try {
       await api.post("/inspiration", photo);
-      Toast.show("Saved to your inspiration board! 🌸", "success");
+      Toast.show(t("toast.photoSaved"), "success");
       await this._loadBoard();
     } catch (err) {
       if (err.status === 409) {
-        return Toast.show("Already saved to your board!");
+        return Toast.show(t("toast.photoDupe"));
       }
-      Toast.show(err.message || "Could not save photo.", "error");
+      Toast.show(err.message || t("err.loadBoard"), "error");
     }
   }
 
-  /* ── Remove from board ────────────────────────────────── */
   async _remove(id) {
     try {
       await api.delete(`/inspiration/${id}`);
-      Toast.show("Removed from board.");
+      Toast.show(t("toast.photoRemoved"));
       await this._loadBoard();
     } catch (err) {
-      Toast.show(err.message || "Could not remove photo.", "error");
+      Toast.show(err.message || t("err.loadBoard"), "error");
     }
   }
 
-  /* ── Load & render board ──────────────────────────────── */
   async _loadBoard() {
     try {
       const { data } = await api.get("/inspiration");
       this._renderBoard(data.photos);
-    } catch (err) {
-      Toast.show("Could not load inspiration board.", "error");
+    } catch {
+      Toast.show(t("err.loadBoard"), "error");
     }
   }
 
@@ -167,7 +162,7 @@ class InspirationManager {
                alt="${escapeHtml(p.alt_desc || "Saved inspiration image")}" loading="lazy" />
         </a>
         <button class="inspo-remove-btn remove-saved-btn"
-                aria-label="Remove from board">✕</button>
+                aria-label="${t("common.remove")}">✕</button>
       </div>`,
       )
       .join("");
@@ -182,6 +177,6 @@ class InspirationManager {
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  new InspirationManager().init();
-});
+document.addEventListener("DOMContentLoaded", () =>
+  new InspirationManager().init(),
+);

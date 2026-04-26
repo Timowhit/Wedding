@@ -1,6 +1,8 @@
 "use strict";
 
 import api, { Auth, WeddingStore } from "./api.js";
+import { t, applyTranslations, syncLangFromUser } from "./i18n.js";
+import { initLangSwitcher } from "./lang-switcher.js";
 
 /* ============================================================
    Toast
@@ -69,26 +71,60 @@ export function markActiveNav() {
 }
 
 /* ============================================================
-   Nav init
+   Nav init — translates nav links + initialises lang switcher
    ============================================================ */
+
+/** Map nav link hrefs → i18n keys */
+const NAV_HREF_KEYS = {
+  "index.html": "nav.dashboard",
+  "budget.html": "nav.budget",
+  "vendors.html": "nav.vendors",
+  "music.html": "nav.music",
+  "inspiration.html": "nav.inspiration",
+  "guests.html": "nav.guests",
+  "checklist.html": "nav.checklist",
+  "settings.html": "nav.settings",
+};
+
 export function initNav() {
+  // Sync language from cached user profile (no extra API call)
+  syncLangFromUser(Auth.getUser());
+
   markActiveNav();
 
+  // Display user name
   const nameEl = document.getElementById("nav-user");
   if (nameEl) {
     const user = Auth.getUser();
     nameEl.textContent = user?.display_name || user?.email || "";
   }
 
+  // Translate nav links
+  document.querySelectorAll(".site-nav a:not(.brand)").forEach((link) => {
+    const href = link.getAttribute("href");
+    const key = NAV_HREF_KEYS[href];
+    if (key) {
+      link.textContent = t(key);
+    }
+  });
+
+  // Translate logout button text
   const logoutBtn = document.getElementById("logout-btn");
   if (logoutBtn) {
+    logoutBtn.textContent = t("nav.signOut");
     logoutBtn.addEventListener("click", (e) => {
       e.preventDefault();
       Auth.logout();
     });
   }
 
-  // Hamburger menu injection
+  // Apply all data-i18n translations on the page
+  applyTranslations();
+
+  // Mount the floating language switcher
+  initLangSwitcher();
+
+  // Hamburger menu
   const nav = document.querySelector(".site-nav");
   if (nav && !nav.querySelector(".hamburger")) {
     const brand = nav.querySelector(".brand");
@@ -140,7 +176,7 @@ export function initNav() {
     }
   }
 
-  // Async: inject wedding switcher (fire-and-forget)
+  // Async: inject wedding switcher
   _loadWeddingSwitcher();
 }
 
@@ -155,14 +191,13 @@ async function _loadWeddingSwitcher() {
       return;
     }
 
-    // Initialise active wedding if not yet set
     if (!WeddingStore.getActiveId()) {
       WeddingStore.setActiveId(weddings[0].id);
     }
 
     _renderWeddingSwitcher(weddings);
   } catch {
-    // silently ignore — don't break nav
+    // silently ignore
   }
 }
 
@@ -187,7 +222,6 @@ function _renderWeddingSwitcher(weddings) {
     select.appendChild(opt);
   });
 
-  // Separator + join option
   const sep = document.createElement("option");
   sep.disabled = true;
   sep.textContent = "──────────";
@@ -201,7 +235,6 @@ function _renderWeddingSwitcher(weddings) {
   select.addEventListener("change", () => {
     const val = select.value;
     if (val === "__join__") {
-      // Reset dropdown to current value and open modal instead
       select.value = activeId;
       showInviteModal();
       return;
@@ -210,7 +243,6 @@ function _renderWeddingSwitcher(weddings) {
     location.reload();
   });
 
-  // Insert after brand, before hamburger
   const brand = nav.querySelector(".brand");
   const burger = nav.querySelector(".hamburger");
   if (burger) {
@@ -223,12 +255,6 @@ function _renderWeddingSwitcher(weddings) {
 /* ============================================================
    Invite / Join Modal
    ============================================================ */
-
-/**
- * Show the join-a-wedding modal.
- * Pass an array of pending-invite objects to pre-populate them,
- * or omit/pass null to fetch them automatically.
- */
 export async function showInviteModal(pendingInvites = null) {
   document.getElementById("fp-invite-modal")?.remove();
 
@@ -315,7 +341,6 @@ export async function showInviteModal(pendingInvites = null) {
     }
   });
 
-  // Accept pending-invite cards
   overlay.querySelectorAll(".accept-invite-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const token = btn.closest("[data-token]").dataset.token;
@@ -323,7 +348,6 @@ export async function showInviteModal(pendingInvites = null) {
     });
   });
 
-  // Join with pasted token/link
   joinBtn.addEventListener("click", () => {
     const token = _extractToken(input.value.trim());
     if (!token) {
@@ -362,8 +386,6 @@ async function _acceptToken(token, btn, overlay) {
 
   try {
     await api.post(`/weddings/invites/${token}/accept`);
-
-    // Refresh wedding list and switch context to the newly joined wedding
     const { data } = await api.get("/weddings");
     const weddings = data.weddings || [];
     const joined = weddings.find((w) => w.role !== "owner") ?? weddings.at(-1);
@@ -372,7 +394,10 @@ async function _acceptToken(token, btn, overlay) {
     }
 
     overlay.remove();
-    Toast.show(`Joined "${joined?.name ?? "wedding"}"! 🎉`, "success");
+    Toast.show(
+      t("toast.inviteJoined", { name: joined?.name ?? "wedding" }),
+      "success",
+    );
     setTimeout(() => location.reload(), 900);
   } catch (err) {
     btn.disabled = false;
@@ -413,3 +438,6 @@ export function showError(
       <p>${escapeHtml(message)}</p>
     </div>`;
 }
+
+/* Re-export t so page scripts can import from one place */
+export { t } from "./i18n.js";

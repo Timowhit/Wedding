@@ -1,6 +1,5 @@
 /**
  * @file scripts/budget.js
- * @description BudgetManager — API-backed expense tracking.
  */
 
 import api, { Auth } from "./api.js";
@@ -11,6 +10,7 @@ import {
   escapeHtml,
   showLoading,
   showError,
+  t,
 } from "./main.js";
 
 Auth.requireAuth();
@@ -19,7 +19,6 @@ class BudgetManager {
   constructor() {
     this._activeFilter = "All";
 
-    // Form
     this._nameInput = document.getElementById("expense-name");
     this._catSelect = document.getElementById("expense-category");
     this._amountInput = document.getElementById("expense-amount");
@@ -27,7 +26,6 @@ class BudgetManager {
     this._limitInput = document.getElementById("budget-limit-input");
     this._saveLimitBtn = document.getElementById("save-limit-btn");
 
-    // Summary
     this._totalEl = document.getElementById("budget-total-display");
     this._spentEl = document.getElementById("budget-spent-display");
     this._remainEl = document.getElementById("budget-remaining-display");
@@ -35,7 +33,6 @@ class BudgetManager {
     this._progressBar = document.getElementById("budget-progress-bar");
     this._progressWrap = document.getElementById("budget-progress-wrap");
 
-    // List
     this._list = document.getElementById("expense-list");
     this._emptyState = document.getElementById("budget-empty");
   }
@@ -67,7 +64,6 @@ class BudgetManager {
     });
   }
 
-  /* ── Load summary + items ─────────────────────────────── */
   async _load() {
     await Promise.all([this._loadSummary(), this._loadItems()]);
   }
@@ -77,36 +73,34 @@ class BudgetManager {
       const { data } = await api.get("/budget/summary");
       this._renderSummary(data);
       this._limitInput.value = data.limit > 0 ? data.limit : "";
-    } catch (err) {
-      Toast.show("Could not load budget summary.", "error");
+    } catch {
+      Toast.show(t("err.loadSummary"), "error");
     }
   }
 
   async _loadItems() {
     const query =
       this._activeFilter !== "All" ? { category: this._activeFilter } : {};
-    showLoading(this._list, "Loading expenses…");
+    showLoading(this._list, t("common.loading"));
     this._emptyState.hidden = true;
-
     try {
       const { data } = await api.get("/budget", query);
       this._renderList(data.items);
-    } catch (err) {
-      showError(this._list, "Could not load expenses.");
+    } catch {
+      showError(this._list, t("err.loadExpenses"));
     }
   }
 
-  /* ── Add expense ──────────────────────────────────────── */
   async _addExpense() {
     const name = this._nameInput.value.trim();
     const cat = this._catSelect.value;
     const amount = parseFloat(this._amountInput.value);
 
     if (!name) {
-      return Toast.show("Please enter a description.", "error");
+      return Toast.show(t("err.descRequired"), "error");
     }
     if (isNaN(amount) || amount <= 0) {
-      return Toast.show("Please enter a valid amount.", "error");
+      return Toast.show(t("err.amountRequired"), "error");
     }
 
     this._addBtn.disabled = true;
@@ -115,43 +109,39 @@ class BudgetManager {
       this._nameInput.value = "";
       this._amountInput.value = "";
       this._nameInput.focus();
-      Toast.show(`Added: ${name}`, "success");
+      Toast.show(t("toast.expenseAdded", { name }), "success");
       await this._load();
     } catch (err) {
-      Toast.show(err.message || "Could not add expense.", "error");
+      Toast.show(err.message || t("err.addExpense"), "error");
     } finally {
       this._addBtn.disabled = false;
     }
   }
 
-  /* ── Save limit ───────────────────────────────────────── */
   async _saveLimit() {
     const val = parseFloat(this._limitInput.value);
     if (isNaN(val) || val < 0) {
-      return Toast.show("Enter a valid budget amount.", "error");
+      return Toast.show(t("err.budgetRequired"), "error");
     }
-
     try {
       await api.put("/budget/limit", { total: val });
       await this._loadSummary();
-      Toast.show("Budget limit saved!", "success");
+      Toast.show(t("toast.limitSaved"), "success");
     } catch (err) {
-      Toast.show(err.message || "Could not save limit.", "error");
+      Toast.show(err.message || t("err.addExpense"), "error");
     }
   }
 
-  /* ── Delete ───────────────────────────────────────────── */
   async _deleteItem(id) {
     try {
       await api.delete(`/budget/${id}`);
-      Toast.show("Expense removed.");
+      Toast.show(t("toast.expenseRemoved"));
       await this._load();
     } catch (err) {
-      Toast.show(err.message || "Could not delete expense.", "error");
+      Toast.show(err.message || t("err.addExpense"), "error");
     }
   }
 
-  /* ── Render ───────────────────────────────────────────── */
   _renderSummary({ limit, spent, remaining, pct }) {
     this._totalEl.textContent = formatCurrency(limit);
     this._spentEl.textContent = formatCurrency(spent);
@@ -163,7 +153,6 @@ class BudgetManager {
 
   _renderList(items) {
     this._emptyState.hidden = items.length > 0;
-
     if (!items.length) {
       this._list.innerHTML = "";
       return;
@@ -184,7 +173,7 @@ class BudgetManager {
           ${formatCurrency(item.amount)}
         </strong>
         <button class="btn btn-danger delete-btn"
-                aria-label="Remove ${escapeHtml(item.name)}">✕</button>
+                aria-label="${t("common.remove")} ${escapeHtml(item.name)}">✕</button>
       </li>
     `,
       )
@@ -198,6 +187,4 @@ class BudgetManager {
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  new BudgetManager().init();
-});
+document.addEventListener("DOMContentLoaded", () => new BudgetManager().init());

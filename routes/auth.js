@@ -1,10 +1,5 @@
 /**
  * @file routes/auth.js
- *
- * Fix: added a guard before the Google OAuth routes that returns a
- * meaningful JSON/redirect error when GOOGLE_CLIENT_ID / SECRET are
- * not configured, instead of Passport throwing "Unknown authentication
- * strategy 'google'" and producing an unhandled 500.
  */
 
 "use strict";
@@ -51,6 +46,11 @@ const updateRules = [
     .optional({ nullable: true })
     .isISO8601()
     .withMessage("Wedding date must be a valid date (YYYY-MM-DD)"),
+  // Language preference — accepted values match SUPPORTED_LANGS in i18n.js
+  body("language")
+    .optional()
+    .isIn(["en", "es"])
+    .withMessage("Language must be one of: en, es"),
 ];
 
 const passwordRules = [
@@ -62,10 +62,9 @@ const passwordRules = [
     .withMessage("New password must be at least 8 characters"),
 ];
 
-/* ── Guard: returns a friendly error if OAuth is not configured ── */
+/* ── Guard: friendly error if OAuth not configured ──────────── */
 function requireOAuthConfig(req, res, next) {
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-    // For browser navigation redirect back to login with an error flag
     if (req.headers.accept?.includes("text/html")) {
       return res.redirect("/login.html?error=oauth-not-configured");
     }
@@ -84,7 +83,6 @@ function requireOAuthConfig(req, res, next) {
 router.post("/register", authLimiter, registerRules, validate, ctrl.register);
 router.post("/login", authLimiter, loginRules, validate, ctrl.login);
 
-// Google OAuth — guarded so missing credentials give a clear error
 router.get(
   "/google",
   requireOAuthConfig,
