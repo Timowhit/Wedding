@@ -123,6 +123,10 @@ const searchSpotify = asyncHandler(async (req, res) => {
       ? Math.min(parsedLimit, 25)
       : 12; // default fallback
 
+  console.log("Raw limit:", limit);
+  console.log("Parsed limit:", parsedLimit);
+  console.log("Safe limit:", safeLimit);
+
   const params = new URLSearchParams({
     q: q.trim(),
     type: "track",
