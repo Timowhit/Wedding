@@ -86,9 +86,44 @@ const changePassword = asyncHandler(async (req, res) => {
 });
 
 /* ── Google OAuth callback ─────────────────────────────────── */
+
+/**
+ * FIX: The previous implementation always redirected to /login.html?token=…
+ * regardless of any returnTo param. This broke the invite flow in invite.js,
+ * which navigates to /api/v1/auth/google?returnTo=/invite.html?token=<uuid>
+ * so the user lands back on the invite page after OAuth instead of the
+ * dashboard.
+ *
+ * Security: returnTo is validated to be a relative path (starts with "/",
+ * does not start with "//", contains no protocol) before use, preventing
+ * an open redirect to an external domain.
+ */
 const googleCallback = asyncHandler(async (req, res) => {
   const token = signToken({ id: req.user.id, email: req.user.email });
-  res.redirect(`/login.html?token=${encodeURIComponent(token)}`);
+
+  // Read returnTo from the session (Passport preserves req.session during
+  // the OAuth round-trip) or fall back to the query param on the callback URL.
+  const rawReturnTo =
+    req.session?.returnTo || req.query?.returnTo || "/login.html";
+
+  // Guard: only allow relative paths to prevent open redirect.
+  // A safe relative path starts with "/" but not "//" (protocol-relative).
+  const isSafeRelative =
+    typeof rawReturnTo === "string" &&
+    rawReturnTo.startsWith("/") &&
+    !rawReturnTo.startsWith("//") &&
+    !/^\/[a-z]+:/i.test(rawReturnTo); // blocks /javascript: etc.
+
+  const returnTo = isSafeRelative ? rawReturnTo : "/login.html";
+
+  // Clear the session value now that we've consumed it
+  if (req.session?.returnTo) {
+    delete req.session.returnTo;
+  }
+
+  // Append the JWT token as a query param so the client-side JS can pick it up
+  const separator = returnTo.includes("?") ? "&" : "?";
+  res.redirect(`${returnTo}${separator}token=${encodeURIComponent(token)}`);
 });
 
 module.exports = {

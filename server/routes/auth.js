@@ -1,5 +1,14 @@
 /**
  * @file routes/auth.js
+ *
+ * Fixes applied:
+ *  1. FIX: Store req.query.returnTo in req.session before the Google OAuth
+ *     redirect so Passport preserves it across the round-trip. Without this,
+ *     the returnTo value is lost and googleCallback always falls back to
+ *     /login.html.
+ *  2. FIX: Applied authLimiter to POST /me/password (change password).
+ *     Previously this endpoint had no rate limiting, so a stolen token could
+ *     be used to brute-force new password values without restriction.
  */
 
 "use strict";
@@ -46,7 +55,6 @@ const updateRules = [
     .optional({ nullable: true })
     .isISO8601()
     .withMessage("Wedding date must be a valid date (YYYY-MM-DD)"),
-  // Language preference — accepted values match SUPPORTED_LANGS in i18n.js
   body("language")
     .optional()
     .isIn(["en", "es"])
@@ -86,8 +94,19 @@ router.post("/login", authLimiter, loginRules, validate, ctrl.login);
 router.get(
   "/google",
   requireOAuthConfig,
+  // FIX: persist returnTo into the session before handing off to Passport.
+  // Passport destroys query params during the OAuth round-trip, so by the
+  // time the callback fires req.query.returnTo is gone. Storing it in the
+  // session is the standard way to survive the redirect.
+  (req, res, next) => {
+    if (req.query.returnTo) {
+      req.session.returnTo = req.query.returnTo;
+    }
+    next();
+  },
   passport.authenticate("google", { scope: ["profile", "email"] }),
 );
+
 router.get(
   "/google/callback",
   requireOAuthConfig,
@@ -100,9 +119,12 @@ router.get(
 /* ── Protected routes ───────────────────────────────────────── */
 router.get("/me", authenticate, ctrl.getMe);
 router.patch("/me", authenticate, updateRules, validate, ctrl.updateMe);
+
+// FIX: added authLimiter — change-password had no rate limiting previously.
 router.post(
   "/me/password",
   authenticate,
+  authLimiter,
   passwordRules,
   validate,
   ctrl.changePassword,

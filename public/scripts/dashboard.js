@@ -3,8 +3,18 @@
  */
 
 import api, { Auth } from "./api.js";
-import { initNav, formatCurrency, Toast, showInviteModal, t } from "./main.js";
-import { startInvitePolling } from "./main.js";
+// FIX: merged two separate imports from "./main.js" into one.
+// The original code had `startInvitePolling` on a redundant second import
+// line, which while not a runtime error in modern bundlers, is incorrect
+// style and can cause issues in strict ES module environments.
+import {
+  initNav,
+  formatCurrency,
+  Toast,
+  showInviteModal,
+  startInvitePolling,
+  t,
+} from "./main.js";
 
 Auth.requireAuth();
 

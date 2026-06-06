@@ -79,13 +79,25 @@ class Invite {
     return rowCount > 0;
   }
 
-  /** Create a shareable link invite with no specific email target. */
+  /**
+   * Create a shareable link invite with no specific email target.
+   *
+   * FIX: The previous implementation passed `role` as the third positional
+   * parameter, which mapped to the `token` column ($3) in the SQL, silently
+   * storing the role string (e.g. "editor") as the token UUID. The token
+   * column has a DEFAULT of gen_random_uuid()::TEXT so we omit it from the
+   * INSERT and let the database generate a proper UUID token.
+   *
+   * @param {string} weddingId
+   * @param {string} invitedBy  userId of the sender
+   * @param {{ role?: string }} [opts]
+   */
   static async createShareLink(weddingId, invitedBy, { role = "editor" } = {}) {
     const { rows } = await query(
       `INSERT INTO wedding_invites
-        (wedding_id, invited_by, invited_email, token, role)
-      VALUES ($1, $2, NULL, $3, $4)
-      RETURNING *`,
+         (wedding_id, invited_by, invited_email, role)
+       VALUES ($1, $2, NULL, $3)
+       RETURNING *`,
       [weddingId, invitedBy, role],
     );
     return rows[0];

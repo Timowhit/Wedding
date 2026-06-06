@@ -1,127 +1,291 @@
 /**
- * @file routes/weddings.js
- *
- * Fixes applied:
- *  1. GET /invites/:token is now PUBLIC (moved before router.use(authenticate))
- *  2. Removed broken requireOwner middleware — controllers do their own checks
- *  3. Fixed inviteId param validation: .isInt() → .isUUID()
- *  4. Removed resolveWedding from wedding routes (controllers use req.params.id directly)
+ * @file controllers/weddingController.js
+ * @description Handles wedding CRUD, member management, and invites.
  */
 
 "use strict";
 
-const { Router } = require("express");
-const { body, param } = require("express-validator");
+const Wedding = require("../models/Wedding");
+const Invite = require("../models/Invite");
+const User = require("../models/User");
+const ApiError = require("../utils/ApiError");
+const asyncHandler = require("../utils/asyncHandler");
+const { sendSuccess, sendCreated } = require("../utils/response");
 
-const ctrl = require("../controllers/weddingController");
-const { authenticate } = require("../middleware/auth");
-const validate = require("../middleware/validate");
+/* ── Weddings ────────────────────────────────────────────── */
 
-const router = Router();
+/** List all weddings the user belongs to. */
+const listWeddings = asyncHandler(async (req, res) => {
+  const weddings = await Wedding.findAllByUser(req.user.id);
+  sendSuccess(res, { weddings });
+});
 
-/* ── Validation chains ──────────────────────────────────────── */
-const weddingRules = [
-  body("name")
-    .optional()
-    .trim()
-    .isLength({ max: 100 })
-    .withMessage("Name must be 100 characters or fewer"),
-  body("weddingDate")
-    .optional({ nullable: true })
-    .isISO8601()
-    .withMessage("Wedding date must be a valid date"),
-];
+/** Create a new wedding. */
+const createWedding = asyncHandler(async (req, res) => {
+  const { name, weddingDate } = req.body;
+  const wedding = await Wedding.create(req.user.id, { name, weddingDate });
+  sendCreated(res, { wedding });
+});
 
-const memberRules = [
-  body("email").isEmail().normalizeEmail(),
-  body("role")
-    .optional()
-    .isIn(["viewer", "editor", "owner"])
-    .withMessage("Role must be viewer, editor, or owner"),
-];
+/** Get a specific wedding (user must be member). */
+const getWedding = asyncHandler(async (req, res) => {
+  const wedding = await Wedding.findById(req.params.id);
+  if (!wedding) {
+    throw ApiError.notFound("Wedding not found");
+  }
 
-const roleUpdateRules = [
-  body("role")
-    .isIn(["viewer", "editor", "owner"])
-    .withMessage("Role must be viewer, editor, or owner"),
-];
+  const membership = await Wedding.getMembership(wedding.id, req.user.id);
+  if (!membership) {
+    throw ApiError.forbidden("You are not a member of this wedding");
+  }
 
-/* ── PUBLIC routes (no auth required) ───────────────────────── */
+  sendSuccess(res, { wedding: { ...wedding, role: membership.role } });
+});
 
-// Anyone with the link can view invite details before logging in
-router.get(
-  "/invites/:token",
-  param("token").isUUID(),
-  validate,
-  ctrl.getInvite,
-);
+/** Update wedding details (owner only). */
+const updateWedding = asyncHandler(async (req, res) => {
+  const { name, weddingDate } = req.body;
+  const weddingId = req.params.id;
 
-// Accept requires auth (to know who is accepting)
-router.post(
-  "/invites/:token/accept",
-  param("token").isUUID(),
-  authenticate,
-  validate,
-  ctrl.acceptInvite,
-);
+  const membership = await Wedding.getMembership(weddingId, req.user.id);
+  if (!membership || membership.role !== "owner") {
+    throw ApiError.forbidden("Only the owner can update wedding details");
+  }
 
-/* ── All routes below require authentication ────────────────── */
-router.use(authenticate);
-router.get("/my-pending-invites", ctrl.getMyPendingInvites);
-router.post(
-  "/:id/share-link",
-  param("id").isUUID(),
-  body("role").optional().isIn(["viewer", "editor"]),
-  validate,
-  ctrl.createShareLink,
-);
-/* Wedding CRUD */
-router.get("/", ctrl.listWeddings);
-router.post("/", weddingRules, validate, ctrl.createWedding);
-router.get("/:id", param("id").isUUID(), validate, ctrl.getWedding);
-// Controller does its own owner check — no middleware needed here
-router.patch(
-  "/:id",
-  param("id").isUUID(),
-  weddingRules,
-  validate,
-  ctrl.updateWedding,
-);
+  const wedding = await Wedding.update(weddingId, { name, weddingDate });
+  if (!wedding) {
+    throw ApiError.notFound("Wedding not found");
+  }
 
-/* Members */
-router.get("/:id/members", param("id").isUUID(), validate, ctrl.listMembers);
-// Controller checks ownership internally
-router.post(
-  "/:id/members",
-  param("id").isUUID(),
-  memberRules,
-  validate,
-  ctrl.addMember,
-);
-router.patch(
-  "/:weddingId/members/:userId",
-  param("weddingId").isUUID(),
-  param("userId").isUUID(),
-  roleUpdateRules,
-  validate,
-  ctrl.updateMemberRole,
-);
-router.delete(
-  "/:weddingId/members/:userId",
-  param("weddingId").isUUID(),
-  param("userId").isUUID(),
-  validate,
-  ctrl.removeMember,
-);
+  sendSuccess(res, { wedding });
+});
 
-/* Invites management (auth required) */
-router.get("/:id/invites", param("id").isUUID(), validate, ctrl.listInvites);
-router.delete(
-  "/:weddingId/invites/:inviteId",
-  param("weddingId").isUUID(),
-  param("inviteId").isUUID(), // ← was isInt() — inviteId is a UUID
-  validate,
-  ctrl.deleteInvite,
-);
+/* ── Members ─────────────────────────────────────────────── */
 
-module.exports = router;
+/** List all members of a wedding. */
+const listMembers = asyncHandler(async (req, res) => {
+  const weddingId = req.params.id;
+
+  const membership = await Wedding.getMembership(weddingId, req.user.id);
+  if (!membership) {
+    throw ApiError.forbidden("You are not a member of this wedding");
+  }
+
+  const members = await Wedding.getMembers(weddingId);
+  sendSuccess(res, { members });
+});
+
+/** Add a member by email (send invite). */
+const addMember = asyncHandler(async (req, res) => {
+  const { email, role = "editor" } = req.body;
+  const weddingId = req.params.id;
+
+  const membership = await Wedding.getMembership(weddingId, req.user.id);
+  if (!membership || membership.role !== "owner") {
+    throw ApiError.forbidden("Only the owner can invite members");
+  }
+
+  // Check if user exists
+  const user = await User.findByEmail(email.toLowerCase().trim());
+  if (user) {
+    // Add directly if user exists
+    await Wedding.addMember(weddingId, user.id, role);
+    sendSuccess(res, { message: "Member added successfully" });
+  } else {
+    // Create invite
+    const invite = await Invite.create(weddingId, req.user.id, {
+      invitedEmail: email,
+      role,
+    });
+    sendCreated(res, { invite });
+  }
+});
+
+/** Update a member's role. */
+const updateMemberRole = asyncHandler(async (req, res) => {
+  const { role } = req.body;
+  const { weddingId, userId } = req.params;
+
+  const membership = await Wedding.getMembership(weddingId, req.user.id);
+  if (!membership || membership.role !== "owner") {
+    throw ApiError.forbidden("Only the owner can change member roles");
+  }
+
+  if (userId === req.user.id) {
+    throw ApiError.badRequest("You cannot change your own role");
+  }
+
+  const updated = await Wedding.updateMemberRole(weddingId, userId, role);
+  if (!updated) {
+    throw ApiError.notFound("Member not found");
+  }
+
+  sendSuccess(res, { member: updated });
+});
+
+/** Remove a member. */
+const removeMember = asyncHandler(async (req, res) => {
+  const { weddingId, userId } = req.params;
+
+  const membership = await Wedding.getMembership(weddingId, req.user.id);
+  if (!membership || membership.role !== "owner") {
+    throw ApiError.forbidden("Only the owner can remove members");
+  }
+
+  if (userId === req.user.id) {
+    throw ApiError.badRequest("You cannot remove yourself");
+  }
+
+  const removed = await Wedding.removeMember(weddingId, userId);
+  if (!removed) {
+    throw ApiError.notFound("Member not found");
+  }
+
+  sendSuccess(res, { message: "Member removed successfully" });
+});
+
+/* ── Invites ─────────────────────────────────────────────── */
+
+/** List invites for a wedding. */
+const listInvites = asyncHandler(async (req, res) => {
+  const weddingId = req.params.id;
+
+  const membership = await Wedding.getMembership(weddingId, req.user.id);
+  if (!membership) {
+    throw ApiError.forbidden("You are not a member of this wedding");
+  }
+
+  const invites = await Invite.findByWedding(weddingId);
+  sendSuccess(res, { invites });
+});
+
+/** Delete an invite. */
+const deleteInvite = asyncHandler(async (req, res) => {
+  const { weddingId, inviteId } = req.params;
+
+  const membership = await Wedding.getMembership(weddingId, req.user.id);
+  if (!membership) {
+    throw ApiError.forbidden("You are not a member of this wedding");
+  }
+
+  const deleted = await Invite.delete(inviteId, weddingId);
+  if (!deleted) {
+    throw ApiError.notFound("Invite not found");
+  }
+
+  sendSuccess(res, { message: "Invite deleted successfully" });
+});
+
+/* ── Invite Acceptance / Decline ───────────────────────── */
+
+/** Get invite details by token. */
+const getInvite = asyncHandler(async (req, res) => {
+  const { token } = req.params;
+  const invite = await Invite.findByToken(token);
+  if (!invite) {
+    throw ApiError.notFound("Invite not found");
+  }
+
+  if (Invite.isExpired(invite)) {
+    throw ApiError.gone("Invite has expired");
+  }
+
+  sendSuccess(res, invite);
+});
+
+/** Accept an invite. */
+const acceptInvite = asyncHandler(async (req, res) => {
+  const { token } = req.params;
+
+  const invite = await Invite.findByToken(token);
+  if (!invite) {
+    throw ApiError.notFound("Invite not found");
+  }
+  if (Invite.isExpired(invite)) {
+    throw ApiError.gone("Invite has expired");
+  }
+
+  // Email-targeted invites are single-use — mark them accepted.
+  // Shareable link invites (no email) are reusable — skip that step.
+  const isShareableLink = !invite.invited_email;
+
+  if (!isShareableLink) {
+    const accepted = await Invite.accept(token);
+    if (!accepted) {
+      throw ApiError.conflict("Invite already accepted");
+    }
+  }
+
+  // Silently succeed if they're already a member (idempotent join)
+  const existing = await Wedding.getMembership(invite.wedding_id, req.user.id);
+  if (!existing) {
+    await Wedding.addMember(invite.wedding_id, req.user.id, invite.role);
+  }
+
+  sendSuccess(res, { message: "Invite accepted successfully" });
+});
+
+/**
+ * Decline an invite.
+ * FIX: this handler was missing entirely. The frontend (_declineToken in
+ * main.js) calls POST /weddings/invites/:token/decline, which returned 404
+ * because neither this controller method nor the route existed.
+ */
+const declineInvite = asyncHandler(async (req, res) => {
+  const { token } = req.params;
+
+  const invite = await Invite.findByToken(token);
+  if (!invite) {
+    throw ApiError.notFound("Invite not found");
+  }
+  if (Invite.isExpired(invite)) {
+    throw ApiError.gone("Invite has expired");
+  }
+
+  // For email-targeted invites mark as accepted (consumed) so it can't be
+  // re-used, then simply don't add the user as a member.
+  const isShareableLink = !invite.invited_email;
+  if (!isShareableLink) {
+    await Invite.accept(token);
+  }
+
+  sendSuccess(res, { message: "Invite declined" });
+});
+
+/** POST /weddings/:id/share-link */
+const createShareLink = asyncHandler(async (req, res) => {
+  const { role = "editor" } = req.body;
+  const weddingId = req.params.id;
+
+  const membership = await Wedding.getMembership(weddingId, req.user.id);
+  if (!membership || membership.role !== "owner") {
+    throw ApiError.forbidden("Only the owner can create share links");
+  }
+
+  const invite = await Invite.createShareLink(weddingId, req.user.id, { role });
+  sendCreated(res, { invite });
+});
+
+/** GET /weddings/my-pending-invites */
+const getMyPendingInvites = asyncHandler(async (req, res) => {
+  const invites = await Invite.findPendingForEmail(req.user.email);
+  sendSuccess(res, { invites });
+});
+
+module.exports = {
+  listWeddings,
+  createWedding,
+  getWedding,
+  updateWedding,
+  listMembers,
+  addMember,
+  updateMemberRole,
+  removeMember,
+  listInvites,
+  deleteInvite,
+  getInvite,
+  acceptInvite,
+  declineInvite,
+  getMyPendingInvites,
+  createShareLink,
+};

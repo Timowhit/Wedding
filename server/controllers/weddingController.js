@@ -176,7 +176,7 @@ const deleteInvite = asyncHandler(async (req, res) => {
   sendSuccess(res, { message: "Invite deleted successfully" });
 });
 
-/* ── Invite Acceptance ─────────────────────────────────── */
+/* ── Invite Acceptance / Decline ───────────────────────── */
 
 /** Get invite details by token. */
 const getInvite = asyncHandler(async (req, res) => {
@@ -224,6 +224,34 @@ const acceptInvite = asyncHandler(async (req, res) => {
 
   sendSuccess(res, { message: "Invite accepted successfully" });
 });
+
+/**
+ * Decline an invite.
+ * FIX: this handler was missing entirely. The frontend (_declineToken in
+ * main.js) calls POST /weddings/invites/:token/decline, which returned 404
+ * because neither this controller method nor the route existed.
+ */
+const declineInvite = asyncHandler(async (req, res) => {
+  const { token } = req.params;
+
+  const invite = await Invite.findByToken(token);
+  if (!invite) {
+    throw ApiError.notFound("Invite not found");
+  }
+  if (Invite.isExpired(invite)) {
+    throw ApiError.gone("Invite has expired");
+  }
+
+  // For email-targeted invites mark as accepted (consumed) so it can't be
+  // re-used, then simply don't add the user as a member.
+  const isShareableLink = !invite.invited_email;
+  if (!isShareableLink) {
+    await Invite.accept(token);
+  }
+
+  sendSuccess(res, { message: "Invite declined" });
+});
+
 /** POST /weddings/:id/share-link */
 const createShareLink = asyncHandler(async (req, res) => {
   const { role = "editor" } = req.body;
@@ -237,6 +265,7 @@ const createShareLink = asyncHandler(async (req, res) => {
   const invite = await Invite.createShareLink(weddingId, req.user.id, { role });
   sendCreated(res, { invite });
 });
+
 /** GET /weddings/my-pending-invites */
 const getMyPendingInvites = asyncHandler(async (req, res) => {
   const invites = await Invite.findPendingForEmail(req.user.email);
@@ -256,6 +285,7 @@ module.exports = {
   deleteInvite,
   getInvite,
   acceptInvite,
+  declineInvite,
   getMyPendingInvites,
   createShareLink,
 };

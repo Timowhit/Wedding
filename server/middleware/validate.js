@@ -23,7 +23,10 @@ const validate = (req, _res, next) => {
   }
 
   const errors = result.array().map(({ path, msg }) => ({ field: path, msg }));
-  return next(new ApiError.unprocessable("Validation failed", errors));
+  // FIX: removed erroneous `new` keyword — ApiError.unprocessable is a static
+  // factory method that returns an instance; calling it with `new` would throw
+  // "ApiError.unprocessable is not a constructor".
+  return next(ApiError.unprocessable("Validation failed", errors));
 };
 
 module.exports = validate;

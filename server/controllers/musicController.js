@@ -8,6 +8,7 @@
 const Music = require("../models/Music");
 const ApiError = require("../utils/ApiError");
 const asyncHandler = require("../utils/asyncHandler");
+const logger = require("../utils/logger");
 const {
   sendSuccess,
   sendCreated,
@@ -43,8 +44,14 @@ async function getSpotifyToken() {
     });
 
     if (!resp.ok) {
-      await resp.text();
-
+      // FIX: log the status so failures are visible, then return null cleanly.
+      // Previously this called await resp.text() and discarded the result —
+      // the body was consumed with no logging and no variable assignment.
+      const errText = await resp.text();
+      logger.error("Spotify token request failed", {
+        status: resp.status,
+        body: errText,
+      });
       return null;
     }
 
@@ -55,6 +62,8 @@ async function getSpotifyToken() {
 
     return _spotifyToken;
   } catch (err) {
+    // FIX: was a silent `return null`. Now logs so network failures are visible.
+    logger.error("Spotify token fetch threw", { error: err.message });
     return null;
   }
 }
@@ -71,8 +80,7 @@ async function fetchSpotify(url, token) {
     });
 
     if (resp.status === 401) {
-      // Token expired → refresh + retry once
-
+      // Token expired — invalidate cache, refresh, retry once.
       _spotifyToken = null;
 
       const newToken = await getSpotifyToken();
@@ -113,16 +121,14 @@ const searchSpotify = asyncHandler(async (req, res) => {
 
   const parsedLimit = parseInt(limit, 10);
 
+  // FIX: removed stray console.log("Parsed limit:", parsedLimit) that was
+  // firing on every search request in production.
   const safeLimit =
     Number.isFinite(parsedLimit) && parsedLimit > 0
       ? Math.min(parsedLimit, 25)
-      : 12; // default fallback
-
-  // eslint-disable-next-line no-console
-  console.log("Parsed limit:", parsedLimit);
+      : 12;
 
   const params = new URLSearchParams();
-
   params.set("q", q.trim());
   params.set("type", "track");
   params.set("limit", String(safeLimit));
@@ -135,15 +141,12 @@ const searchSpotify = asyncHandler(async (req, res) => {
     if (resp.status === 400) {
       throw ApiError.badRequest("Invalid Spotify search query");
     }
-
     if (resp.status === 401) {
       throw ApiError.unauthorized("Spotify authentication failed");
     }
-
     if (resp.status === 429) {
       throw ApiError.tooManyRequests("Spotify rate limit hit");
     }
-
     throw ApiError.internal(`Spotify API failed (${resp.status})`);
   }
 
