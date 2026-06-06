@@ -27,7 +27,6 @@ async function getSpotifyToken() {
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
 
   if (!clientId || !clientSecret) {
-    console.error("Spotify not configured: missing client ID/secret");
     return null;
   }
 
@@ -44,11 +43,8 @@ async function getSpotifyToken() {
     });
 
     if (!resp.ok) {
-      const errText = await resp.text();
-      console.error("Spotify token error:", {
-        status: resp.status,
-        body: errText,
-      });
+      await resp.text();
+
       return null;
     }
 
@@ -59,7 +55,6 @@ async function getSpotifyToken() {
 
     return _spotifyToken;
   } catch (err) {
-    console.error("Spotify token fetch failed:", err);
     return null;
   }
 }
@@ -77,7 +72,7 @@ async function fetchSpotify(url, token) {
 
     if (resp.status === 401) {
       // Token expired → refresh + retry once
-      console.warn("Spotify token expired, refreshing...");
+
       _spotifyToken = null;
 
       const newToken = await getSpotifyToken();
@@ -112,7 +107,7 @@ const searchSpotify = asyncHandler(async (req, res) => {
   const token = await getSpotifyToken();
   if (!token) {
     throw ApiError.internal(
-      "Spotify is not configured or token could not be retrieved."
+      "Spotify is not configured or token could not be retrieved.",
     );
   }
 
@@ -123,31 +118,20 @@ const searchSpotify = asyncHandler(async (req, res) => {
       ? Math.min(parsedLimit, 25)
       : 12; // default fallback
 
-  console.log("Raw limit:", limit);
+  // eslint-disable-next-line no-console
   console.log("Parsed limit:", parsedLimit);
-  console.log("Safe limit:", safeLimit);
+
   const params = new URLSearchParams();
 
   params.set("q", q.trim());
   params.set("type", "track");
   params.set("limit", String(safeLimit));
 
-  console.log("FINAL SPOTIFY URL:");
-  console.log(`https://api.spotify.com/v1/search?${params.toString()}`);
-
   const url = `https://api.spotify.com/v1/search?${params.toString()}`;
 
   const resp = await fetchSpotify(url, token);
 
   if (!resp.ok) {
-    const errorBody = await resp.text();
-
-    console.error("Spotify API error:", {
-      status: resp.status,
-      body: errorBody,
-      query: q,
-    });
-
     if (resp.status === 400) {
       throw ApiError.badRequest("Invalid Spotify search query");
     }
@@ -169,10 +153,7 @@ const searchSpotify = asyncHandler(async (req, res) => {
     spotifyId: t.id,
     trackName: t.name,
     artistName: t.artists.map((a) => a.name).join(", "),
-    artworkUrl:
-      t.album.images?.[1]?.url ??
-      t.album.images?.[0]?.url ??
-      "",
+    artworkUrl: t.album.images?.[1]?.url ?? t.album.images?.[0]?.url ?? "",
     albumName: t.album.name,
     durationMs: t.duration_ms,
     embedUrl: `https://open.spotify.com/embed/track/${t.id}?utm_source=generator`,
@@ -193,7 +174,7 @@ const getSection = asyncHandler(async (req, res) => {
 
   if (!Music.SECTIONS.includes(section)) {
     throw ApiError.badRequest(
-      `Invalid section. Valid sections: ${Music.SECTIONS.join(", ")}`
+      `Invalid section. Valid sections: ${Music.SECTIONS.join(", ")}`,
     );
   }
 
@@ -208,7 +189,7 @@ const addTrack = asyncHandler(async (req, res) => {
 
   if (!Music.SECTIONS.includes(section)) {
     throw ApiError.badRequest(
-      `Invalid section. Valid sections: ${Music.SECTIONS.join(", ")}`
+      `Invalid section. Valid sections: ${Music.SECTIONS.join(", ")}`,
     );
   }
 

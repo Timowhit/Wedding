@@ -32,9 +32,17 @@ class MapStore extends session.Store {
     super();
     this._s = new Map();
   }
-  get(sid, cb) { cb(null, this._s.get(sid) ?? null); }
-  set(sid, sess, cb) { this._s.set(sid, sess); cb(null); }
-  destroy(sid, cb) { this._s.delete(sid); cb(null); }
+  get(sid, cb) {
+    cb(null, this._s.get(sid) ?? null);
+  }
+  set(sid, sess, cb) {
+    this._s.set(sid, sess);
+    cb(null);
+  }
+  destroy(sid, cb) {
+    this._s.delete(sid);
+    cb(null);
+  }
 }
 
 app.use(helmet({ contentSecurityPolicy: false }));
@@ -86,7 +94,9 @@ app.use("/api/v1", routes);
 app.use(express.static(path.join(__dirname, "..", "public")));
 
 app.use((_req, res) => {
-  res.status(404).json({ success: false, message: "Route not found", errors: [] });
+  res
+    .status(404)
+    .json({ success: false, message: "Route not found", errors: [] });
 });
 
 app.use(errorHandler);

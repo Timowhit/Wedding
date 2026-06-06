@@ -29,7 +29,9 @@ class MusicManager {
   _bindEvents() {
     this._searchBtn.addEventListener("click", () => this._search());
     this._searchInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {this._search();}
+      if (e.key === "Enter") {
+        this._search();
+      }
     });
   }
 
@@ -37,7 +39,9 @@ class MusicManager {
 
   async _search() {
     const q = this._searchInput.value.trim();
-    if (!q) {return Toast.show(t("err.searchRequired"), "error");}
+    if (!q) {
+      return Toast.show(t("err.searchRequired"), "error");
+    }
 
     this._resultsEl.innerHTML = `
       <div class="loading-state">
@@ -95,7 +99,9 @@ class MusicManager {
   _searchCard(track, section) {
     const art = track.artworkUrl || "";
     const mins = Math.floor((track.durationMs ?? 0) / 60000);
-    const secs = String(Math.floor(((track.durationMs ?? 0) % 60000) / 1000)).padStart(2, "0");
+    const secs = String(
+      Math.floor(((track.durationMs ?? 0) % 60000) / 1000),
+    ).padStart(2, "0");
     const dur = track.durationMs ? `${mins}:${secs}` : "";
 
     return `
@@ -135,7 +141,9 @@ class MusicManager {
 
   _toggleEmbed(card, spotifyId, btn) {
     const slot = card.querySelector(".spotify-embed-slot");
-    if (!slot) {return;}
+    if (!slot) {
+      return;
+    }
 
     const isOpen = slot.style.display !== "none";
 
@@ -166,7 +174,10 @@ class MusicManager {
   async _addTrack(payload) {
     try {
       await api.post("/music/tracks", payload);
-      Toast.show(t("toast.trackAdded", { section: payload.section }), "success");
+      Toast.show(
+        t("toast.trackAdded", { section: payload.section }),
+        "success",
+      );
       await this._loadPlaylists();
     } catch (err) {
       if (err.status === 409) {
@@ -204,7 +215,9 @@ class MusicManager {
     this._playlistEl.innerHTML = sections
       .map((section) => {
         const tracks = playlists[section] ?? [];
-        if (!tracks.length) {return "";}
+        if (!tracks.length) {
+          return "";
+        }
 
         const slug = section
           .toLowerCase()
@@ -255,7 +268,8 @@ class MusicManager {
     const embedUrl = tr.preview_url ?? "";
     const spotifyId = embedUrl.match(/track\/([A-Za-z0-9]{22})/)?.[1] ?? "";
     const canEmbed = Boolean(spotifyId) || isSpotifyId(tr.track_id);
-    const resolvedId = spotifyId || (isSpotifyId(tr.track_id) ? tr.track_id : "");
+    const resolvedId =
+      spotifyId || (isSpotifyId(tr.track_id) ? tr.track_id : "");
 
     return `
       <li class="item-card music-result-card" data-id="${escapeHtml(tr.id)}"
