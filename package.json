@@ -33,6 +33,7 @@
     "winston": "^3.13.0"
   },
   "devDependencies": {
+    "esbuild": "^0.28.1",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-node": "^11.1.0",

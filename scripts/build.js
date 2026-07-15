@@ -22,12 +22,47 @@
 
 const fs = require("fs");
 const path = require("path");
+const esbuild = require("esbuild");
 
 /* ── Config ──────────────────────────────────────────────────── */
-const ROOT = path.join(__dirname, "../..");
+const ROOT = path.join(__dirname, "..");
 const SRC = path.join(ROOT, "public");
 const DIST = path.join(ROOT, "dist");
 const WATCH = process.argv.includes("--watch");
+
+/* ── esbuild option builders ────────────────────────────────── */
+
+/** One entry point per file in public/scripts/, output as *.bundle.js */
+function jsBuildOptions() {
+  const entryPoints = fs
+    .readdirSync(path.join(SRC, "scripts"))
+    .filter((f) => f.endsWith(".js"))
+    .map((f) => path.join(SRC, "scripts", f));
+
+  return {
+    entryPoints,
+    bundle: true,
+    minify: true,
+    metafile: true,
+    sourcemap: true,
+    target: ["es2019"],
+    entryNames: "[name].bundle",
+    outdir: path.join(DIST, "scripts"),
+    logLevel: "silent",
+  };
+}
+
+/** Single CSS entry point: public/styles/main.css */
+function cssBuildOptions() {
+  return {
+    entryPoints: [path.join(SRC, "styles", "main.css")],
+    bundle: true,
+    minify: true,
+    sourcemap: true,
+    outdir: path.join(DIST, "styles"),
+    logLevel: "silent",
+  };
+}
 
 /* ── Helpers ─────────────────────────────────────────────────── */
 
@@ -92,15 +127,18 @@ function reportSizes(meta) {
     // ── Watch mode (development) ──────────────────────────
     console.log("👀  Watch mode — rebuilding on changes…\n");
 
-    const [jsCtx, cssCtx] = await Promise.all([]);
-
-    // Initial build
     clean();
     copyHtml();
     rewriteHtmlScriptTags();
-    await Promise.all([jsCtx.rebuild(), cssCtx.rebuild()]);
 
+    const [jsCtx, cssCtx] = await Promise.all([
+      esbuild.context(jsBuildOptions()),
+      esbuild.context(cssBuildOptions()),
+    ]);
+
+    await Promise.all([jsCtx.rebuild(), cssCtx.rebuild()]);
     await Promise.all([jsCtx.watch(), cssCtx.watch()]);
+
     console.log("\n✅  Watching for changes. Ctrl-C to stop.");
   } else {
     // ── Production build ──────────────────────────────────
@@ -110,7 +148,10 @@ function reportSizes(meta) {
     clean();
     copyHtml();
 
-    const [jsResult] = await Promise.all([]);
+    const [jsResult] = await Promise.all([
+      esbuild.build(jsBuildOptions()),
+      esbuild.build(cssBuildOptions()),
+    ]);
 
     rewriteHtmlScriptTags();
 
