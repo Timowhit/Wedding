@@ -134,6 +134,10 @@ export default {
     'role.owner': 'Propietario',
     'role.editor': 'Editor',
     'role.viewer': 'Lector',
+    'role.client': 'Cliente',
+    'role.planner.client': 'Cliente (la pareja): ve y edita su boda y responde decisiones',
+    'role.planner.editor': 'Editor (asistente): puede agregar y cambiar todo',
+    'role.planner.viewer': 'Lector: puede ver pero no cambiar',
     'role.editorDescription': 'Editor: puede agregar y cambiar todo',
     'role.viewerDescription': 'Lector: puede ver pero no cambiar',
 
@@ -488,5 +492,7 @@ export default {
     'onboarding.invitePartner': 'Invita a tu pareja a planificar contigo',
     'invite.role.editor': 'Como editor puedes agregar y cambiar todo.',
     'invite.role.viewer': 'Como lector puedes ver los planes, pero no cambiarlos.',
+    'invite.role.client':
+        'Como cliente puedes ver y cambiar los planes de tu boda y responder las decisiones de tu organizador.',
     'auth.accountCreatedForInvite': '¡Bienvenido, {name}! Acepta la invitación de abajo para empezar a planificar.'
 };

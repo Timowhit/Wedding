@@ -46,8 +46,10 @@ const dynamicKeys = () => [
     ...RSVP_STATUSES.flatMap((v) => [`rsvp.${v}`, `rsvpPlural.${v}`]),
     ...MUSIC_SECTIONS.map((s) => `music.section.${s.slug}`),
     ...EXAMPLE_TASKS.map((task) => task.key),
-    ...['owner', 'editor', 'viewer'].map((r) => `role.${r}`),
-    ...['editor', 'viewer'].flatMap((r) => [`role.${r}Description`, `invite.role.${r}`]),
+    ...['owner', 'editor', 'client', 'viewer'].map((r) => `role.${r}`),
+    ...['editor', 'viewer'].map((r) => `role.${r}Description`),
+    ...['client', 'editor', 'viewer'].map((r) => `invite.role.${r}`),
+    ...['client', 'editor', 'viewer'].map((r) => `role.planner.${r}`),
     ...['pending', 'accepted', 'expired'].map((s) => `inviteStatus.${s}`),
     ...Object.keys(DICTIONARIES).map((code) => `language.${code}`)
 ];

@@ -65,7 +65,7 @@
                                 <%- include('partials/csrf-field') %>
                                 <label class="visually-hidden" for="role-<%= member.user_id %>"><%= t('settings.roleFor', { name: label }) %></label>
                                 <select id="role-<%= member.user_id %>" name="role">
-                                    <% ['editor', 'viewer'].forEach((role) => { %>
+                                    <% inviteRoles.forEach((role) => { %>
                                         <option value="<%= role %>" <%= role === member.role ? 'selected' : '' %>><%= t(`role.${role}`) %></option>
                                     <% }); %>
                                 </select>
@@ -97,8 +97,8 @@
                 <div class="field field--wide">
                     <label for="invite-role"><%= t('field.role') %></label>
                     <select id="invite-role" name="role" <%- fieldState(inviteForm.errors, 'role', 'invite-errors') %>>
-                        <% ['editor', 'viewer'].forEach((role) => { %>
-                            <option value="<%= role %>" <%= role === inviteForm.values.role ? 'selected' : '' %>><%= t(`role.${role}Description`) %></option>
+                        <% inviteRoles.forEach((role) => { %>
+                            <option value="<%= role %>" <%= role === inviteForm.values.role ? 'selected' : '' %>><%= t(isPlannerWedding ? `role.planner.${role}` : `role.${role}Description`) %></option>
                         <% }); %>
                     </select>
                 </div>

@@ -1,6 +1,6 @@
 import { createInvite, deleteInvite, findInvitesForWedding } from '../models/invites.js';
 import { findPasswordHash, updatePasswordHash, updateProfile } from '../models/users.js';
-import { findMembers, removeMember, updateMemberRole, updateWedding } from '../models/weddings.js';
+import { assignableRoles, findMembers, removeMember, updateMemberRole, updateWedding } from '../models/weddings.js';
 import { toSessionUser } from '../middleware/auth.js';
 import { isEmailConfigured, sendInviteEmail } from '../services/email.js';
 import { setFlash } from '../utils/flash.js';
@@ -57,6 +57,7 @@ const renderSettings = async (req, res, { status = 200, forms = {} } = {}) => {
         },
         passwordForm: forms.password ?? { errors: [] },
         inviteForm: forms.invite ?? { values: { email: '', role: 'editor' }, errors: [] },
+        inviteRoles: assignableRoles(wedding),
         createdInviteUrl: takeCreatedInviteUrl(req)
     });
 };
@@ -104,7 +105,7 @@ const processPassword = async (req, res) => {
 
 /** Owner only. With an email: an email invite (sent if SMTP is set up). Without: a share link. */
 const processInvite = async (req, res) => {
-    const { values, data, errors } = validateInvite(req.body);
+    const { values, data, errors } = validateInvite(req.body, req.wedding);
     if (data.email && data.email === req.session.user.email.toLowerCase()) {
         errors.push({ field: 'email', key: 'settings.inviteSelf' });
     }
@@ -150,7 +151,7 @@ const processRevokeInvite = async (req, res) => {
 };
 
 const processMemberRole = async (req, res) => {
-    const role = readAssignableRole(req.body);
+    const role = readAssignableRole(req.body, req.wedding);
     const changed =
         role !== null && isUuid(req.params.userId) && (await updateMemberRole(req.wedding.id, req.params.userId, role));
     setFlash(req, changed ? 'success' : 'error', changed ? 'settings.roleSaved' : 'settings.memberMissing');

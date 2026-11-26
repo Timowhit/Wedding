@@ -136,6 +136,10 @@ export default {
     'role.owner': 'Owner',
     'role.editor': 'Editor',
     'role.viewer': 'Viewer',
+    'role.client': 'Client',
+    'role.planner.client': 'Client (the couple): sees and edits their wedding and answers decisions',
+    'role.planner.editor': 'Editor (assistant): can add and change everything',
+    'role.planner.viewer': 'Viewer: can look but not change',
     'role.editorDescription': 'Editor: can add and change everything',
     'role.viewerDescription': 'Viewer: can look but not change',
 
@@ -487,5 +491,6 @@ export default {
     'onboarding.invitePartner': 'Invite your partner to plan with you',
     'invite.role.editor': 'As an editor you can add and change everything.',
     'invite.role.viewer': 'As a viewer you can see the plans but not change them.',
+    'invite.role.client': "As a client you can see and change your wedding plans and answer your planner's decisions.",
     'auth.accountCreatedForInvite': 'Welcome, {name}! Accept the invite below to start planning.'
 };

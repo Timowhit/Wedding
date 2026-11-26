@@ -1,4 +1,4 @@
-import { ASSIGNABLE_ROLES } from '../models/weddings.js';
+import { assignableRoles } from '../models/weddings.js';
 import { EMAIL_MAX, checkText, collectErrors, isEmail, isUuid, isValidDate, readChoice, readText } from './common.js';
 
 const WEDDING_NAME_MAX = 200;
@@ -44,16 +44,17 @@ const validateWeddingDate = (body = {}) => {
 /**
  * Email invite form. An empty email means "create a share link".
  * @param {object} [body] - req.body
+ * @param {{planner_managed?: boolean}} [wedding] - Decides which roles may be given (see assignableRoles).
  * @returns {{values: {email: string, role: string}, data: {email: string|null, role: string}, errors: Array}}
  */
-const validateInvite = (body = {}) => {
+const validateInvite = (body = {}, wedding = {}) => {
     const values = { email: readText(body.email).toLowerCase(), role: readText(body.role) };
     const { errors, fail } = collectErrors();
 
     if (values.email.length > 0 && (values.email.length > EMAIL_MAX || !isEmail(values.email))) {
         fail('email', 'validation.email');
     }
-    const role = readChoice(values.role, ASSIGNABLE_ROLES);
+    const role = readChoice(values.role, assignableRoles(wedding));
     if (!role) fail('role', 'validation.choice');
 
     return { values, data: { email: values.email || null, role }, errors };
@@ -61,9 +62,10 @@ const validateInvite = (body = {}) => {
 
 /**
  * @param {object} [body] - req.body
- * @returns {'editor'|'viewer'|null}
+ * @param {{planner_managed?: boolean}} [wedding]
+ * @returns {'client'|'editor'|'viewer'|null}
  */
-const readAssignableRole = (body = {}) => readChoice(readText(body.role), ASSIGNABLE_ROLES);
+const readAssignableRole = (body = {}, wedding = {}) => readChoice(readText(body.role), assignableRoles(wedding));
 
 /**
  * Pulls an invite token out of a pasted link (".../invite/<token>" or "?token=<token>") or a bare token.

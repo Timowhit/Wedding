@@ -1,11 +1,28 @@
 import { findWeddingForMember, findWeddingsForUser } from '../models/weddings.js';
 import { setFlash } from '../utils/flash.js';
 
-const ROLE_RANK = { viewer: 1, editor: 2, owner: 3 };
+// Clients (couples in a planner wedding) can change plans like editors; only the owner manages
+// members and settings.
+const ROLE_RANK = { viewer: 1, client: 2, editor: 2, owner: 3 };
 
 /**
- * Loads the wedding the user is working on into `req.wedding` and the views
- * (`wedding`, `weddings`, `canEdit`, `isOwner`). Must run after requireLogin.
+ * Who asks and who answers decisions. In a planner wedding the planner side asks and the couple
+ * (clients) answer; in a couple's own wedding both partners (owner and editors) may do either.
+ * @param {{role: string, planner_managed: boolean}} wedding - With the current member's role.
+ * @returns {{canAsk: boolean, canAnswer: boolean}}
+ */
+const decisionPermissions = (wedding) => {
+    const rank = ROLE_RANK[wedding.role] ?? 0;
+    if (wedding.planner_managed) {
+        return { canAsk: rank >= ROLE_RANK.editor && wedding.role !== 'client', canAnswer: wedding.role === 'client' };
+    }
+    return { canAsk: rank >= ROLE_RANK.editor, canAnswer: rank >= ROLE_RANK.editor };
+};
+
+/**
+ * Loads the wedding the user is working on into `req.wedding` and the views (`wedding`,
+ * `weddings`, `canEdit`, `isOwner`, `isPlannerWedding`, `canAskDecisions`, `canAnswerDecisions`).
+ * Must run after requireLogin.
  *
  * The active wedding id lives in the session and is re-checked against wedding_members on
  * every request, so removing someone from a wedding takes effect immediately. A user with
@@ -30,6 +47,10 @@ const loadActiveWedding = async (req, res, next) => {
     res.locals.weddings = weddings;
     res.locals.canEdit = ROLE_RANK[wedding.role] >= ROLE_RANK.editor;
     res.locals.isOwner = wedding.role === 'owner';
+    res.locals.isPlannerWedding = wedding.planner_managed === true;
+    const decisions = decisionPermissions(wedding);
+    res.locals.canAskDecisions = decisions.canAsk;
+    res.locals.canAnswerDecisions = decisions.canAnswer;
     next();
 };
 
@@ -68,4 +89,12 @@ const switchActiveWedding = async (req, weddingId) => {
 const requireEditor = requireWeddingRole('editor');
 const requireOwner = requireWeddingRole('owner');
 
-export { loadActiveWedding, requireWeddingRole, requireEditor, requireOwner, switchActiveWedding };
+export {
+    ROLE_RANK,
+    decisionPermissions,
+    loadActiveWedding,
+    requireWeddingRole,
+    requireEditor,
+    requireOwner,
+    switchActiveWedding
+};

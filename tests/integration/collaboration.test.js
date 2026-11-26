@@ -184,6 +184,22 @@ describe('weddings, invites and roles', { skip: skipWithoutDb }, () => {
         assert.match(settings.body, /Olivia’s Wedding/);
     });
 
+    it('a planner wedding offers the client role; a couple wedding does not', async () => {
+        const petra = await registeredClient(app.baseUrl, 'Petra', 'petra@example.com');
+        await petra.get('/settings');
+        const refused = await petra.post('/settings/invites', { email: '', role: 'client' });
+        assert.equal(refused.status, 400);
+        assert.doesNotMatch(refused.body, /<option value="client"/);
+
+        await app.pool.query(
+            `UPDATE weddings SET planner_managed = true
+             WHERE id IN (SELECT wedding_id FROM wedding_members wm JOIN users u ON u.id = wm.user_id WHERE u.email = 'petra@example.com');`
+        );
+        const settings = await petra.get('/settings');
+        assert.match(settings.body, /<option value="client"[^>]*>Client/);
+        assert.equal((await petra.post('/settings/invites', { email: '', role: 'client' })).status, 302);
+    });
+
     it('revoked invites stop working', async () => {
         const settings = await owner.get('/settings');
         const inviteId = settings.body.match(/\/settings\/invites\/([0-9a-f-]{36})\/delete/)[1];
