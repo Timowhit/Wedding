@@ -580,5 +580,32 @@ export default {
     'planner.kind.task': 'Task',
     'planner.kind.decision': 'Decision',
     'planner.open': 'Open',
-    'planner.openNamed': 'Open {name}'
+    'planner.openNamed': 'Open {name}',
+
+    // Handover to a planner
+    'role.planner': 'Planner (takes over)',
+    'invite.role.planner':
+        'As the planner you become the owner of this wedding; the couple stay on as clients and keep everything they entered.',
+    'invite.handoverBody': '{name} would like you to plan their wedding with Forever Planner.',
+    'invite.handoverSignIn':
+        'This invite is for a wedding planner. Start a planner account (or sign in) to take it over.',
+    'invite.handoverNeedsPlanner':
+        'Only a planner account can take over a wedding. Switch to a planner account to accept.',
+    'invite.ownHandover': 'You sent this invite. Share the link with your planner so they can accept it.',
+    'invite.takeOver': 'Take over this wedding',
+    'invite.handedOver': 'You now run “{name}”. The couple are your clients.',
+    'field.confirm': 'Confirmation',
+    'settings.handover': 'Bring in your planner',
+    'settings.handoverHelp':
+        'Hiring a wedding planner? Send them this invite. When they accept, they become the owner of this wedding and run it from their dashboard. You both stay on as clients: you keep everything you entered, can still edit the plans, and answer their decisions.',
+    'settings.plannerEmail': "Your planner's email",
+    'settings.handoverConfirm': 'I understand the planner will become the owner of this wedding.',
+    'settings.handoverConfirmRequired': 'Tick the box to confirm the handover.',
+    'settings.handoverSubmit': 'Create planner invite',
+    'settings.handoverCreated': 'Planner invite created. Copy the link below and send it to your planner.',
+    'settings.handoverSent': 'Planner invite emailed to {email}.',
+    'settings.handoverAlreadyPlanner': 'A planner already runs this wedding.',
+    'email.handoverSubject': '{inviter} would like you to plan “{wedding}”',
+    'email.handoverIntro':
+        '{inviter} would like you to plan “{wedding}” on Forever Planner. Accepting makes you the owner of the wedding; the couple stay on as your clients.'
 };

@@ -1,14 +1,17 @@
 import db, { withTransaction } from './db.js';
+import { claimFoundingNumber } from './founding.js';
 import { addMember } from './weddings.js';
 
 /**
  * Two kinds of invite share the wedding_invites table:
  * - email invites (invited_email set): single use, only for the account with that email
  * - share links (invited_email NULL): reusable by anyone with the link until they expire
+ * Role 'planner' is a handover: the couple bring in a planner, who becomes the owner. Handover
+ * invites are always single use, whether or not they carry an email.
  * Tokens and expiry (7 days) come from column defaults in the migrations.
  */
 
-const INVITE_COLUMNS = `wi.id, wi.wedding_id, wi.invited_email, wi.token, wi.role,
+const INVITE_COLUMNS = `wi.id, wi.wedding_id, wi.invited_by, wi.invited_email, wi.token, wi.role,
                         wi.expires_at, wi.accepted_at, wi.created_at`;
 
 /**
@@ -108,6 +111,67 @@ const acceptInvite = async (invite, userId) =>
     });
 
 /**
+ * Creates a handover invite, replacing any unused one, so a wedding has at most one at a time.
+ * @param {string} weddingId
+ * @param {string} invitedBy - The couple's owner.
+ * @param {string|null} email - Optional address of the planner.
+ * @returns {Promise<{id: string, token: string, invited_email: string|null, role: 'planner', expires_at: Date}>}
+ */
+const createHandoverInvite = async (weddingId, invitedBy, email) =>
+    withTransaction(async (client) => {
+        await client.query(
+            `DELETE FROM wedding_invites WHERE wedding_id = $1 AND role = 'planner' AND accepted_at IS NULL;`,
+            [weddingId]
+        );
+        const result = await client.query(
+            `INSERT INTO wedding_invites (wedding_id, invited_by, invited_email, role)
+             VALUES ($1, $2, $3, 'planner')
+             RETURNING id, token, invited_email, role, expires_at;`,
+            [weddingId, invitedBy, email]
+        );
+        return result.rows[0];
+    });
+
+/**
+ * A planner accepts a handover. In one transaction: the invite is used up, the planner becomes
+ * the owner (added if needed), the previous owner and every editor become clients (viewers stay
+ * viewers), the wedding becomes a planner wedding, and the planner's founding number is claimed if
+ * this is their first planner wedding. There is exactly one owner before and after.
+ * @param {Object} invite - A row from findInviteByToken with role 'planner'.
+ * @param {string} plannerId
+ * @returns {Promise<{outcome: 'handed-over'|'unavailable', foundingNumber: number|null}>}
+ */
+const acceptHandover = async (invite, plannerId) =>
+    withTransaction(async (client) => {
+        const used = await client.query(
+            `UPDATE wedding_invites SET accepted_at = NOW()
+             WHERE id = $1 AND role = 'planner' AND accepted_at IS NULL AND expires_at > NOW();`,
+            [invite.id]
+        );
+        const wedding = await client.query('SELECT planner_managed FROM weddings WHERE id = $1 FOR UPDATE;', [
+            invite.wedding_id
+        ]);
+        if (used.rowCount === 0 || !wedding.rows[0] || wedding.rows[0].planner_managed) {
+            return { outcome: 'unavailable', foundingNumber: null };
+        }
+
+        await client.query(
+            `UPDATE wedding_members SET role = 'client'
+             WHERE wedding_id = $1 AND role IN ('owner', 'editor') AND user_id <> $2;`,
+            [invite.wedding_id, plannerId]
+        );
+        await client.query(
+            `INSERT INTO wedding_members (wedding_id, user_id, role)
+             VALUES ($1, $2, 'owner')
+             ON CONFLICT (wedding_id, user_id) DO UPDATE SET role = 'owner';`,
+            [invite.wedding_id, plannerId]
+        );
+        await client.query('UPDATE weddings SET planner_managed = TRUE WHERE id = $1;', [invite.wedding_id]);
+        const foundingNumber = await claimFoundingNumber(client, plannerId);
+        return { outcome: 'handed-over', foundingNumber };
+    });
+
+/**
  * Deletes an invite of a wedding (the owner revoking it).
  * @param {string} id
  * @param {string} weddingId
@@ -134,6 +198,8 @@ const declineInvite = async (token, email) => {
 };
 
 export {
+    createHandoverInvite,
+    acceptHandover,
     createInvite,
     findInviteByToken,
     findInvitesForWedding,

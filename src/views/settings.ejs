@@ -108,6 +108,27 @@
                 </div>
             </form>
 
+            <% if (!isPlannerWedding) { %>
+                <details class="disclosure" id="handover" <%= handoverForm.errors.length > 0 ? 'open' : '' %>>
+                    <summary><%= t('settings.handover') %></summary>
+                    <p><%= t('settings.handoverHelp') %></p>
+                    <%- include('partials/form-errors', { errors: handoverForm.errors, id: 'handover-errors' }) %>
+                    <form method="post" action="/settings/handover" class="form-stack">
+                        <%- include('partials/csrf-field') %>
+                        <div class="field">
+                            <label for="handover-email"><%= t('settings.plannerEmail') %> <span class="optional"><%= t('form.optional') %></span></label>
+                            <input type="email" id="handover-email" name="email" maxlength="255" value="<%= handoverForm.values.email %>"
+                                   <%- fieldState(handoverForm.errors, 'email', 'handover-errors') %>>
+                        </div>
+                        <label class="choice">
+                            <input type="checkbox" name="confirm" value="yes" required <%- fieldState(handoverForm.errors, 'confirm', 'handover-errors') %>>
+                            <%= t('settings.handoverConfirm') %>
+                        </label>
+                        <button type="submit" class="btn btn-secondary"><%= t('settings.handoverSubmit') %></button>
+                    </form>
+                </details>
+            <% } %>
+
             <h3 class="subheading"><%= t('settings.invites') %></h3>
             <% if (invites.length === 0) { %>
                 <p class="empty-state"><%= t('settings.noInvites') %></p>

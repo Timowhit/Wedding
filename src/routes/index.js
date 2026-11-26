@@ -45,6 +45,7 @@ import {
 import { processAcceptInvite, processDeclineInvite, showInvite } from '../controllers/invites.js';
 import { processAddTrack, processClearSection, processDeleteTrack, showMusic } from '../controllers/music.js';
 import {
+    processHandover,
     processBecomePlanner,
     processAppearance,
     processBusiness,
@@ -169,6 +170,7 @@ router.post('/settings/password', account, passwordLimiter, processPassword);
 router.post('/settings/leave', member, processLeaveWedding);
 router.post('/settings/wedding', owner, processWeddingDetails);
 router.post('/settings/invites', owner, inviteLimiter, processInvite);
+router.post('/settings/handover', owner, inviteLimiter, processHandover);
 router.post('/settings/invites/:id/delete', owner, processRevokeInvite);
 router.post('/settings/members/:userId/role', owner, processMemberRole);
 router.post('/settings/members/:userId/delete', owner, processRemoveMember);

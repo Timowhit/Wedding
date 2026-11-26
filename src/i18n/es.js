@@ -586,5 +586,32 @@ export default {
     'planner.kind.task': 'Tarea',
     'planner.kind.decision': 'Decisión',
     'planner.open': 'Abrir',
-    'planner.openNamed': 'Abrir {name}'
+    'planner.openNamed': 'Abrir {name}',
+
+    // Handover to a planner
+    'role.planner': 'Organizador (asume la boda)',
+    'invite.role.planner':
+        'Como organizador pasas a ser el propietario de esta boda; la pareja sigue como cliente y conserva todo lo que agregó.',
+    'invite.handoverBody': '{name} quiere que organices su boda con Forever Planner.',
+    'invite.handoverSignIn':
+        'Esta invitación es para un organizador de bodas. Crea una cuenta de organizador (o inicia sesión) para asumirla.',
+    'invite.handoverNeedsPlanner':
+        'Solo una cuenta de organizador puede asumir una boda. Cambia a una cuenta de organizador para aceptar.',
+    'invite.ownHandover': 'Tú enviaste esta invitación. Comparte el enlace con tu organizador para que la acepte.',
+    'invite.takeOver': 'Asumir esta boda',
+    'invite.handedOver': 'Ahora organizas «{name}». La pareja es tu cliente.',
+    'field.confirm': 'Confirmación',
+    'settings.handover': 'Trae a tu organizador',
+    'settings.handoverHelp':
+        '¿Contrataste a un organizador de bodas? Envíale esta invitación. Cuando la acepte, pasará a ser el propietario de esta boda y la gestionará desde su panel. Ustedes siguen como clientes: conservan todo lo que agregaron, pueden editar los planes y responder sus decisiones.',
+    'settings.plannerEmail': 'Correo de tu organizador',
+    'settings.handoverConfirm': 'Entiendo que el organizador pasará a ser el propietario de esta boda.',
+    'settings.handoverConfirmRequired': 'Marca la casilla para confirmar el traspaso.',
+    'settings.handoverSubmit': 'Crear invitación para el organizador',
+    'settings.handoverCreated': 'Invitación para el organizador creada. Copia el enlace de abajo y envíaselo.',
+    'settings.handoverSent': 'Invitación enviada a {email}.',
+    'settings.handoverAlreadyPlanner': 'Un organizador ya gestiona esta boda.',
+    'email.handoverSubject': '{inviter} quiere que organices «{wedding}»',
+    'email.handoverIntro':
+        '{inviter} quiere que organices «{wedding}» en Forever Planner. Al aceptar pasas a ser el propietario de la boda; la pareja sigue como tu cliente.'
 };

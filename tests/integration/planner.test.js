@@ -180,6 +180,122 @@ describe('planner accounts and founding spots', { skip: skipWithoutDb }, () => {
         assert.match((await planner.get('/')).body, /<option value="[^"]+" selected>Ana &amp; Luis/);
     });
 
+    describe('handover', () => {
+        const tokenIn = (body) => body.match(/\/invite\/([0-9a-f-]{36})/)?.[1];
+        const idOf = async (email) =>
+            (await app.pool.query('SELECT id FROM users WHERE email = $1;', [email])).rows[0].id;
+        const rolesIn = async (weddingId) =>
+            Object.fromEntries(
+                (
+                    await app.pool.query(
+                        `SELECT u.email, wm.role FROM wedding_members wm JOIN users u ON u.id = wm.user_id WHERE wm.wedding_id = $1;`,
+                        [weddingId]
+                    )
+                ).rows.map((row) => [row.email, row.role])
+            );
+        let celia;
+        let weddingId;
+        let token;
+
+        it('a couple hands their wedding to a planner', async () => {
+            celia = await registeredClient(app.baseUrl, 'Celia', 'celia@example.com');
+            weddingId = (
+                await app.pool.query(`SELECT wedding_id FROM wedding_members WHERE user_id = $1;`, [
+                    await idOf('celia@example.com')
+                ])
+            ).rows[0].wedding_id;
+            await registeredClient(app.baseUrl, 'Dan', 'dan@example.com');
+            await registeredClient(app.baseUrl, 'Vee', 'vee@example.com');
+            await app.pool.query(
+                `INSERT INTO wedding_members (wedding_id, user_id, role) VALUES ($1, $2, 'editor'), ($1, $3, 'viewer');`,
+                [weddingId, await idOf('dan@example.com'), await idOf('vee@example.com')]
+            );
+
+            const settings = await celia.get('/settings');
+            assert.match(settings.body, /action="\/settings\/handover"/);
+            const unconfirmed = await celia.post('/settings/handover', { email: '' });
+            assert.equal(unconfirmed.status, 400);
+            assert.equal(
+                await app.pool.query(`SELECT 1 FROM wedding_invites WHERE role = 'planner';`).then((r) => r.rowCount),
+                0
+            );
+
+            assert.equal((await celia.post('/settings/handover', { email: '', confirm: 'yes' })).location, '/settings');
+            token = tokenIn((await celia.get('/settings')).body);
+            assert.ok(token);
+
+            const { client: hugo } = await registerPlanner(app.baseUrl, 'Hugo', 'hugo@example.com');
+            const invitePage = await hugo.get(`/invite/${token}`);
+            assert.match(invitePage.body, /As the planner you become the owner/);
+            const accepted = await hugo.post(`/invite/${token}/accept`);
+            assert.equal(accepted.location, '/');
+            assert.match((await hugo.get('/')).body, /You’re founding planner #2/);
+
+            assert.deepEqual(await rolesIn(weddingId), {
+                'hugo@example.com': 'owner',
+                'celia@example.com': 'client',
+                'dan@example.com': 'client',
+                'vee@example.com': 'viewer'
+            });
+            const wedding = await app.pool.query('SELECT planner_managed FROM weddings WHERE id = $1;', [weddingId]);
+            assert.equal(wedding.rows[0].planner_managed, true);
+            const used = await hugo.post(`/invite/${token}/accept`);
+            assert.equal(used.location, `/invite/${token}`, 'a handover invite is single use');
+        });
+
+        it('couple accounts and visitors are offered the planner path', async () => {
+            const gia = await registeredClient(app.baseUrl, 'Gia', 'gia@example.com');
+            await gia.get('/settings');
+            await gia.post('/settings/handover', { email: '', confirm: 'yes' });
+            const giaToken = tokenIn((await gia.get('/settings')).body);
+
+            const visitor = await new TestClient(app.baseUrl).get(`/invite/${giaToken}`);
+            assert.match(visitor.body, /href="\/register\?as=planner"/);
+
+            const kim = await registeredClient(app.baseUrl, 'Kim', 'kim@example.com');
+            const kimView = await kim.get(`/invite/${giaToken}`);
+            assert.match(kimView.body, /action="\/settings\/become-planner"/);
+            assert.equal((await kim.post(`/invite/${giaToken}/accept`)).location, `/invite/${giaToken}`);
+            const giaWedding = await app.pool.query(
+                `SELECT w.planner_managed, wm.role FROM weddings w JOIN wedding_members wm ON wm.wedding_id = w.id
+                 WHERE wm.user_id = $1;`,
+                [await idOf('gia@example.com')]
+            );
+            assert.deepEqual(giaWedding.rows, [{ planner_managed: false, role: 'owner' }]);
+        });
+
+        it('planner weddings cannot be handed over, and only owners can start a handover', async () => {
+            const hugo = new TestClient(app.baseUrl);
+            await hugo.get('/login');
+            await hugo.post('/login', { email: 'hugo@example.com', password: PASSWORD });
+            await hugo.post(`/planner/weddings/${weddingId}/open`);
+            assert.doesNotMatch((await hugo.get('/settings')).body, /action="\/settings\/handover"/);
+            assert.equal((await hugo.post('/settings/handover', { email: '', confirm: 'yes' })).location, '/settings');
+
+            await celia.get('/');
+            assert.equal((await celia.post('/settings/handover', { email: '', confirm: 'yes' })).location, '/settings');
+            const pending = await app.pool.query(
+                `SELECT COUNT(*)::int AS n FROM wedding_invites WHERE wedding_id = $1 AND accepted_at IS NULL AND role = 'planner';`,
+                [weddingId]
+            );
+            assert.equal(pending.rows[0].n, 0);
+        });
+
+        it('clients cannot use owner routes', async () => {
+            await celia.get('/settings');
+            assert.equal((await celia.post('/settings/invites', { email: '', role: 'client' })).location, '/settings');
+            const dan = await idOf('dan@example.com');
+            assert.equal((await celia.post(`/settings/members/${dan}/delete`)).location, '/settings');
+            assert.equal((await celia.post(`/settings/members/${dan}/role`, { role: 'viewer' })).location, '/settings');
+            assert.equal((await rolesIn(weddingId))['dan@example.com'], 'client');
+            const invites = await app.pool.query(
+                `SELECT COUNT(*)::int AS n FROM wedding_invites WHERE wedding_id = $1 AND accepted_at IS NULL;`,
+                [weddingId]
+            );
+            assert.equal(invites.rows[0].n, 0);
+        });
+    });
+
     it('claimFoundingNumber never exceeds 300 under concurrency', async () => {
         const { claimFoundingNumber, countFoundingSpotsLeft } = await import('../../src/models/founding.js');
         const { withTransaction } = await import('../../src/models/db.js');

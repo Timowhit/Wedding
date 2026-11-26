@@ -1,4 +1,4 @@
-import { createInvite, deleteInvite, findInvitesForWedding } from '../models/invites.js';
+import { createHandoverInvite, createInvite, deleteInvite, findInvitesForWedding } from '../models/invites.js';
 import {
     findPasswordHash,
     updateAppearance,
@@ -15,8 +15,9 @@ import { setFlash } from '../utils/flash.js';
 import { toIsoDate } from '../utils/format.js';
 import { hashPassword, verifyPassword } from '../utils/password.js';
 import { validateAppearance, validateBusiness, validatePasswordChange, validateProfile } from '../validators/auth.js';
-import { isUuid } from '../validators/common.js';
-import { readAssignableRole, validateInvite, validateWedding } from '../validators/weddings.js';
+import { isUuid, readText } from '../validators/common.js';
+import { isLocalPath } from '../utils/session.js';
+import { readAssignableRole, validateHandover, validateInvite, validateWedding } from '../validators/weddings.js';
 
 /**
  * Public base URL used in invite links. server.js requires APP_URL in production, so links
@@ -79,6 +80,7 @@ const renderSettings = async (req, res, { status = 200, forms = {} } = {}) => {
             errors: []
         },
         inviteForm: forms.invite ?? { values: { email: '', role: 'editor' }, errors: [] },
+        handoverForm: forms.handover ?? { values: { email: '' }, errors: [] },
         inviteRoles: wedding ? assignableRoles(wedding) : [],
         createdInviteUrl: takeCreatedInviteUrl(req)
     });
@@ -143,7 +145,9 @@ const processBecomePlanner = async (req, res) => {
     if (!updated) throw new Error('Current user disappeared during update');
     req.session.user = toSessionUser(updated);
     setFlash(req, 'success', 'settings.becamePlanner');
-    res.redirect('/planner');
+    // From a handover invite, go back to it so the new planner can accept.
+    const returnTo = readText(req.body?.return_to);
+    res.redirect(isLocalPath(returnTo) && returnTo.startsWith('/invite/') ? returnTo : '/planner');
 };
 
 /** Planner accounts only; anyone else gets a 404, as if the page did not exist. */
@@ -200,6 +204,47 @@ const processInvite = async (req, res) => {
     res.redirect('/settings');
 };
 
+/**
+ * Owner of a couple's own wedding: "Bring in your planner". Creates a single-use handover invite;
+ * the planner who accepts it becomes the owner and the couple become clients.
+ */
+const processHandover = async (req, res) => {
+    if (req.wedding.planner_managed) {
+        setFlash(req, 'error', 'settings.handoverAlreadyPlanner');
+        return res.redirect('/settings');
+    }
+    const { values, data, errors } = validateHandover(req.body);
+    if (data.email && data.email === req.session.user.email.toLowerCase()) {
+        errors.push({ field: 'email', key: 'settings.inviteSelf' });
+    }
+    if (errors.length > 0) return renderSettings(req, res, { status: 400, forms: { handover: { values, errors } } });
+
+    const invite = await createHandoverInvite(req.wedding.id, req.session.user.id, data.email);
+    const url = inviteUrlFor(req, invite.token);
+    let sent = false;
+    if (invite.invited_email) {
+        try {
+            sent = await sendInviteEmail({
+                to: invite.invited_email,
+                inviteUrl: url,
+                subject: req.t('email.handoverSubject', { inviter: req.session.user.name, wedding: req.wedding.name }),
+                lines: [
+                    req.t('email.handoverIntro', { inviter: req.session.user.name, wedding: req.wedding.name }),
+                    req.t('email.inviteExpiry')
+                ],
+                buttonLabel: req.t('email.inviteButton')
+            });
+        } catch (err) {
+            console.error('Handover email failed:', err.message);
+        }
+    }
+    if (!sent) req.session.createdInviteUrl = url;
+    setFlash(req, 'success', sent ? 'settings.handoverSent' : 'settings.handoverCreated', {
+        email: invite.invited_email ?? ''
+    });
+    res.redirect('/settings');
+};
+
 const processRevokeInvite = async (req, res) => {
     const deleted = isUuid(req.params.id) && (await deleteInvite(req.params.id, req.wedding.id));
     setFlash(req, deleted ? 'success' : 'error', deleted ? 'settings.inviteRevoked' : 'settings.inviteMissing');
@@ -233,6 +278,7 @@ const processLeaveWedding = async (req, res) => {
 };
 
 export {
+    processHandover,
     processBecomePlanner,
     processAppearance,
     processBusiness,

@@ -61,6 +61,21 @@ const validateInvite = (body = {}, wedding = {}) => {
 };
 
 /**
+ * "Bring in your planner": an optional planner email and the owner's explicit confirmation.
+ * @param {object} [body] - req.body
+ * @returns {{values: {email: string}, data: {email: string|null}, errors: Array}}
+ */
+const validateHandover = (body = {}) => {
+    const values = { email: readText(body.email).toLowerCase() };
+    const { errors, fail } = collectErrors();
+    if (values.email.length > 0 && (values.email.length > EMAIL_MAX || !isEmail(values.email))) {
+        fail('email', 'validation.email');
+    }
+    if (body.confirm !== 'yes') fail('confirm', 'settings.handoverConfirmRequired');
+    return { values, data: { email: values.email || null }, errors };
+};
+
+/**
  * @param {object} [body] - req.body
  * @param {{planner_managed?: boolean}} [wedding]
  * @returns {'client'|'editor'|'viewer'|null}
@@ -80,6 +95,7 @@ const extractInviteToken = (value) => {
 };
 
 export {
+    validateHandover,
     WEDDING_NAME_MAX,
     validateWedding,
     validateWeddingDate,
