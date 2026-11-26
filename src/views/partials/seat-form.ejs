@@ -1,0 +1,19 @@
+<%# One guest on the seating page: a table picker that saves on change. Expects guest, tables. %>
+<li class="seat-guest" data-guest="<%= guest.name %>" <% if (canEdit) { %>data-guest-id="<%= guest.id %>" draggable="true"<% } %>>
+    <span class="seat-guest__name"><%= guest.name %><% if (guest.plus_one) { %> <span class="hint">+ <%= guest.plus_one %></span><% } %></span>
+    <% if (guest.group_name) { %><span class="tag"><%= guest.group_name %></span><% } %>
+    <% if (canEdit) { %>
+        <form method="post" action="/seating/guests/<%= guest.id %>" class="status-form seat-guest__form">
+            <%- include('csrf-field') %>
+            <%- include('return-to') %>
+            <label class="visually-hidden" for="seat-<%= guest.id %>"><%= t('seating.tableFor', { name: guest.name }) %></label>
+            <select id="seat-<%= guest.id %>" name="table_id" data-autosubmit>
+                <option value="" <%= guest.table_id ? '' : 'selected' %>><%= t('seating.notSeated') %></option>
+                <% tables.forEach((table) => { %>
+                    <option value="<%= table.id %>" <%= table.id === guest.table_id ? 'selected' : '' %>><%= table.name %></option>
+                <% }); %>
+            </select>
+            <button type="submit" class="btn btn-ghost btn-small" data-hide-with-js><%= t('action.saveShort') %></button>
+        </form>
+    <% } %>
+</li>

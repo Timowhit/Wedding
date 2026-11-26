@@ -13,7 +13,7 @@ import { backTo } from '../utils/redirect.js';
 import { isUuid, readChoice } from '../validators/common.js';
 import { validateGuest } from '../validators/planning.js';
 
-const EMPTY_GUEST = { name: '', rsvp: 'Pending', diet: '', plus_one: '' };
+const EMPTY_GUEST = { name: '', rsvp: 'Pending', diet: '', plus_one: '', group_name: '' };
 
 const renderGuests = async (req, res, { status = 200, guestForm } = {}) => {
     const rsvp = readChoice(req.query.rsvp, RSVP_STATUSES);
@@ -54,7 +54,13 @@ const showEditGuest = async (req, res, next) => {
     if (!guest) return next();
     renderEditGuest(req, res, {
         id: guest.id,
-        values: { name: guest.name, rsvp: guest.rsvp, diet: guest.diet ?? '', plus_one: guest.plus_one ?? '' }
+        values: {
+            name: guest.name,
+            rsvp: guest.rsvp,
+            diet: guest.diet ?? '',
+            plus_one: guest.plus_one ?? '',
+            group_name: guest.group_name ?? ''
+        }
     });
 };
 

@@ -84,6 +84,13 @@ import {
     requireOwner
 } from '../middleware/wedding.js';
 import {
+    processAssignGuest,
+    processDeleteTable,
+    processEditTable,
+    processNewTable,
+    showSeating
+} from '../controllers/seating.js';
+import {
     processDeleteItem,
     processEditItem,
     processNewItem,
@@ -156,6 +163,13 @@ router.post('/schedule', editor, processNewItem);
 router.get('/schedule/:id/edit', editor, showEditItem);
 router.post('/schedule/:id/edit', editor, processEditItem);
 router.post('/schedule/:id/delete', editor, processDeleteItem);
+
+/* Seating chart ------------------------------------------------------------------------------- */
+router.get('/seating', member, showSeating);
+router.post('/seating/tables', editor, processNewTable);
+router.post('/seating/tables/:id/edit', editor, processEditTable);
+router.post('/seating/tables/:id/delete', editor, processDeleteTable);
+router.post('/seating/guests/:id', editor, processAssignGuest);
 
 /* Budget -------------------------------------------------------------------------------------- */
 router.get('/budget', member, showBudget);

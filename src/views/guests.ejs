@@ -47,7 +47,7 @@
                 <% guests.forEach((guest) => { %>
                     <li class="item-card">
                         <div class="item-info">
-                            <p class="item-name"><%= guest.name %></p>
+                            <p class="item-name"><%= guest.name %><% if (guest.group_name) { %> <span class="tag"><%= guest.group_name %></span><% } %></p>
                             <% if (guest.diet || guest.plus_one) { %>
                                 <p class="item-meta">
                                     <% if (guest.diet) { %><span><%= t('guests.dietLabel', { diet: guest.diet }) %></span><% } %>

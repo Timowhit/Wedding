@@ -1593,6 +1593,90 @@ select.status-select {
     }
 }
 
+/* ---------- Seating chart ---------- */
+.seating {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr);
+    gap: var(--space-5);
+    align-items: start;
+}
+
+@media (max-width: 52rem) {
+    .seating {
+        grid-template-columns: 1fr;
+    }
+}
+
+.table-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+    gap: var(--space-4);
+}
+
+.table-card .card-title {
+    margin-bottom: 0;
+}
+
+.table-card__seats {
+    margin-bottom: var(--space-3);
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    font-variant-numeric: lining-nums tabular-nums;
+}
+
+.table-card__seats--over {
+    color: var(--danger);
+    font-weight: 600;
+}
+
+.seat-list {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.seat-guest {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-2);
+    padding: var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+}
+
+.seat-guest[draggable='true'] {
+    cursor: grab;
+}
+
+.seat-guest__name {
+    flex: 1 1 8rem;
+    font-weight: 500;
+}
+
+.seat-guest__form select {
+    width: auto;
+    max-width: 10rem;
+    min-height: 2.25rem;
+    font-size: 0.875rem;
+}
+
+.is-dragging {
+    opacity: 0.5;
+}
+
+.is-drop-target {
+    outline: 3px dashed var(--primary);
+    outline-offset: 2px;
+}
+
+.seating-hint {
+    margin-top: calc(var(--space-3) * -1);
+}
+
 /* ---------- Add panels (collapsed "+ Add …" forms) ---------- */
 .add-panel {
     padding: 0;

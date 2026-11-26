@@ -1,0 +1,106 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content">
+    <%- include('partials/page-header', { heading: 'seating.heading', subtitle: 'seating.subtitle' }) %>
+    <%- include('partials/flash') %>
+    <%- include('partials/read-only-notice') %>
+
+    <% if (canEdit) { %>
+        <%- include('partials/add-panel-start', { id: 'add-table', labelKey: 'seating.addTable', open: tables.length === 0 || tableForm.errors.length > 0 }) %>
+            <%- include('partials/form-errors', { errors: tableForm.errors, id: 'table-errors' }) %>
+            <form method="post" action="/seating/tables" class="form-grid">
+                <%- include('partials/csrf-field') %>
+                <div class="field">
+                    <label for="table-name"><%= t('field.tableName') %></label>
+                    <input type="text" id="table-name" name="name" required maxlength="80" value="<%= tableForm.values.name %>"
+                           placeholder="<%= t('seating.tableNamePlaceholder') %>" <%- fieldState(tableForm.errors, 'name', 'table-errors') %>>
+                </div>
+                <div class="field">
+                    <label for="table-seats"><%= t('field.seats') %></label>
+                    <input type="number" id="table-seats" name="seats" required min="1" max="30" value="<%= tableForm.values.seats %>"
+                           <%- fieldState(tableForm.errors, 'seats', 'table-errors') %>>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary"><%= t('seating.addTableSubmit') %></button>
+                </div>
+            </form>
+        <%- include('partials/add-panel-end') %>
+        <% if (tables.length > 0) { %><p class="hint seating-hint"><%= t('seating.dragHint') %></p><% } %>
+    <% } %>
+
+    <div class="seating">
+        <section class="seating__tables" aria-labelledby="tables-heading">
+            <h2 class="section-heading" id="tables-heading"><%= t('seating.tables') %></h2>
+            <% if (tables.length === 0) { %>
+                <p class="empty-state"><span aria-hidden="true">🪑</span> <%= t('seating.noTables') %></p>
+            <% } else { %>
+                <ul class="table-cards">
+                    <% tables.forEach((table) => { %>
+                        <% const over = table.used > table.seats; %>
+                        <li class="card table-card" data-drop-table="<%= table.id %>">
+                            <h3 class="card-title"><%= table.name %></h3>
+                            <p class="table-card__seats<%= over ? ' table-card__seats--over' : '' %>"><%= t('seating.seatsUsed', { used: table.used, total: table.seats }) %></p>
+                            <% if (over) { %><p class="notice notice--error"><%= t('seating.overCapacity') %></p><% } %>
+                            <% if (table.guests.length === 0) { %>
+                                <p class="hint"><%= t('seating.emptyTable') %></p>
+                            <% } else { %>
+                                <ul class="seat-list">
+                                    <% table.guests.forEach((guest) => { %>
+                                        <%- include('partials/seat-form', { guest, tables }) %>
+                                    <% }); %>
+                                </ul>
+                            <% } %>
+                            <% if (canEdit) { %>
+                                <details class="disclosure">
+                                    <summary><%= t('seating.editTable') %></summary>
+                                    <form method="post" action="/seating/tables/<%= table.id %>/edit" class="inline-form inline-form--start">
+                                        <%- include('partials/csrf-field') %>
+                                        <label for="name-<%= table.id %>"><%= t('field.tableName') %></label>
+                                        <input type="text" id="name-<%= table.id %>" name="name" required maxlength="80" value="<%= table.name %>">
+                                        <label for="seats-<%= table.id %>"><%= t('field.seats') %></label>
+                                        <input type="number" id="seats-<%= table.id %>" name="seats" required min="1" max="30" value="<%= table.seats %>">
+                                        <button type="submit" class="btn btn-ghost btn-small"><%= t('action.saveShort') %></button>
+                                    </form>
+                                    <div class="row-actions">
+                                        <form method="post" action="/seating/tables/<%= table.id %>/delete" data-confirm="<%= t('confirm.deleteTable', { name: table.name }) %>">
+                                            <%- include('partials/csrf-field') %>
+                                            <button type="submit" class="link-action link-action--danger"><%= t('seating.deleteTable') %></button>
+                                        </form>
+                                    </div>
+                                </details>
+                            <% } %>
+                        </li>
+                    <% }); %>
+                </ul>
+            <% } %>
+        </section>
+
+        <section class="card seating__unseated" aria-labelledby="unseated-heading" data-drop-table="">
+            <h2 class="card-title" id="unseated-heading"><%= t('seating.unseated') %> <span class="count">(<%= unseated.length %>)</span></h2>
+            <% if (groups.length > 0) { %>
+                <form method="get" action="/seating" class="filter-select">
+                    <label for="group-filter"><%= t('field.group_name') %></label>
+                    <select id="group-filter" name="group" data-autosubmit>
+                        <option value=""><%= t('seating.allGroups') %></option>
+                        <% groups.forEach((group) => { %>
+                            <option value="<%= group %>" <%= group === activeGroup ? 'selected' : '' %>><%= group %></option>
+                        <% }); %>
+                    </select>
+                    <button type="submit" class="btn btn-ghost btn-small" data-hide-with-js><%= t('filter.apply') %></button>
+                </form>
+            <% } %>
+            <% if (unseated.length === 0) { %>
+                <p class="hint"><%= t(activeGroup ? 'filter.noMatches' : 'seating.everyoneSeated') %></p>
+            <% } else { %>
+                <ul class="seat-list">
+                    <% unseated.forEach((guest) => { %>
+                        <%- include('partials/seat-form', { guest: { ...guest, table_id: null }, tables }) %>
+                    <% }); %>
+                </ul>
+            <% } %>
+        </section>
+    </div>
+</main>
+
+<%- include('partials/footer') %>
