@@ -41,10 +41,11 @@ const takeCreatedInviteUrl = (req) => {
  * `forms` holds the values/errors for each one.
  */
 const renderSettings = async (req, res, { status = 200, forms = {} } = {}) => {
+    // A planner may have no wedding yet; then only the account sections are shown.
     const wedding = req.wedding;
-    const isOwner = wedding.role === 'owner';
+    const isOwner = wedding?.role === 'owner';
     const [members, invites, passwordHash] = await Promise.all([
-        findMembers(wedding.id),
+        wedding ? findMembers(wedding.id) : [],
         isOwner ? findInvitesForWedding(wedding.id) : [],
         findPasswordHash(req.session.user.id)
     ]);
@@ -56,7 +57,7 @@ const renderSettings = async (req, res, { status = 200, forms = {} } = {}) => {
         hasPassword: Boolean(passwordHash),
         emailEnabled: isEmailConfigured(),
         weddingForm: forms.wedding ?? {
-            values: { name: wedding.name, wedding_date: toIsoDate(wedding.wedding_date) },
+            values: { name: wedding?.name ?? '', wedding_date: toIsoDate(wedding?.wedding_date) },
             errors: []
         },
         profileForm: forms.profile ?? {
@@ -78,7 +79,7 @@ const renderSettings = async (req, res, { status = 200, forms = {} } = {}) => {
             errors: []
         },
         inviteForm: forms.invite ?? { values: { email: '', role: 'editor' }, errors: [] },
-        inviteRoles: assignableRoles(wedding),
+        inviteRoles: wedding ? assignableRoles(wedding) : [],
         createdInviteUrl: takeCreatedInviteUrl(req)
     });
 };

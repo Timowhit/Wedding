@@ -1,0 +1,109 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content">
+    <%- include('partials/page-header', { heading: 'planner.heading', subtitle: 'planner.subtitle' }) %>
+    <%- include('partials/flash') %>
+
+    <% if (!user.foundingNumber && spotsLeft > 0) { %>
+        <p class="founding-note founding-note--banner"><%= t('planner.claimFounding', { left: spotsLeft }) %></p>
+    <% } else if (user.foundingNumber) { %>
+        <p class="founding-note founding-note--banner"><%= t('planner.foundingBadge', { number: user.foundingNumber }) %></p>
+    <% } %>
+
+    <section aria-labelledby="workload-heading">
+        <h2 class="visually-hidden" id="workload-heading"><%= t('planner.workload') %></h2>
+        <ul class="stats-grid stats-grid--compact">
+            <li class="stat-card"><span class="stat-value"><%= workload.weddingsThisMonth %></span><span class="stat-label"><%= t('planner.weddingsThisMonth') %></span></li>
+            <li class="stat-card"><span class="stat-value"><%= workload.openDecisions %></span><span class="stat-label"><%= t('planner.openDecisionsAll') %></span></li>
+            <li class="stat-card"><span class="stat-value"><%= workload.overdueTasks %></span><span class="stat-label"><%= t('planner.overdueTasksAll') %></span></li>
+        </ul>
+    </section>
+
+    <%- include('partials/add-panel-start', { id: 'add-client-wedding', labelKey: 'planner.addWedding', open: weddings.length === 0 && !filters.q && filters.when === 'upcoming' || weddingForm.errors.length > 0 }) %>
+        <%- include('partials/form-errors', { errors: weddingForm.errors, id: 'wedding-errors' }) %>
+        <form method="post" action="/planner/weddings" class="form-grid">
+            <%- include('partials/csrf-field') %>
+            <div class="field field--wide">
+                <label for="name"><%= t('planner.coupleNames') %></label>
+                <input type="text" id="name" name="name" required maxlength="200" value="<%= weddingForm.values.name %>"
+                       placeholder="<%= t('planner.coupleNamesPlaceholder') %>" <%- fieldState(weddingForm.errors, 'name', 'wedding-errors') %>>
+            </div>
+            <div class="field">
+                <label for="wedding_date"><%= t('field.wedding_date') %> <span class="optional"><%= t('form.optional') %></span></label>
+                <input type="date" id="wedding_date" name="wedding_date" min="1900-01-01" max="2100-12-31" value="<%= weddingForm.values.wedding_date %>"
+                       <%- fieldState(weddingForm.errors, 'wedding_date', 'wedding-errors') %>>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"><%= t('planner.addWeddingSubmit') %></button>
+            </div>
+        </form>
+    <%- include('partials/add-panel-end') %>
+
+    <section aria-labelledby="weddings-heading">
+        <h2 class="section-heading" id="weddings-heading"><%= t('planner.weddings') %></h2>
+        <form method="get" action="/planner" class="filter-bar" role="search">
+            <div class="filter-select">
+                <label for="planner-q"><%= t('field.q') %></label>
+                <input type="search" id="planner-q" name="q" maxlength="100" value="<%= filters.q %>" placeholder="<%= t('planner.searchPlaceholder') %>">
+            </div>
+            <div class="filter-select">
+                <label for="planner-when"><%= t('planner.show') %></label>
+                <select id="planner-when" name="when" data-autosubmit>
+                    <% whenOptions.forEach((option) => { %>
+                        <option value="<%= option %>" <%= option === filters.when ? 'selected' : '' %>><%= t(`planner.when.${option}`) %></option>
+                    <% }); %>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-ghost btn-small"><%= t('action.search') %></button>
+        </form>
+
+        <% if (weddings.length === 0) { %>
+            <p class="empty-state"><span aria-hidden="true">💍</span> <%= t(filters.q || filters.when !== 'upcoming' ? 'filter.noMatches' : 'planner.empty') %></p>
+        <% } else { %>
+            <ul class="wedding-cards">
+                <% weddings.forEach((w) => { %>
+                    <% const overBudget = w.budget_limit > 0 && w.spent > w.budget_limit; %>
+                    <li class="card wedding-card">
+                        <div class="wedding-card__header">
+                            <h3 class="card-title"><%= w.name %></h3>
+                            <p class="item-meta">
+                                <% if (w.wedding_date) { %><span><%= formatDate(w.wedding_date) %></span><% } else { %><span><%= t('settings.noDate') %></span><% } %>
+                                <% if (w.role !== 'owner') { %><span class="tag"><%= t('planner.sharedWithYou') %></span><% } %>
+                            </p>
+                        </div>
+                        <dl class="wedding-card__facts">
+                            <div><dt><%= t('nav.budget') %></dt><dd class="<%= overBudget ? 'text-danger' : '' %>">
+                                <% if (w.budget_limit > 0) { %><%= t('planner.spentOf', { spent: formatCurrency(w.spent), total: formatCurrency(w.budget_limit) }) %><% if (overBudget) { %> · <%= t('planner.overBudget') %><% } %><% } else { %><%= t('planner.spent', { spent: formatCurrency(w.spent) }) %><% } %>
+                            </dd></div>
+                            <div><dt><%= t('nav.guests') %></dt><dd><%= t('planner.guestsConfirmed', { confirmed: w.guests_confirmed, total: w.guests_total }) %></dd></div>
+                            <div><dt><%= t('nav.decisions') %></dt><dd>
+                                <%= t(w.open_decisions === 1 ? 'planner.openDecision' : 'planner.openDecisions', { count: w.open_decisions }) %><% if (w.changes_requested > 0) { %> · <%= t('planner.changesRequested', { count: w.changes_requested }) %><% } %>
+                            </dd></div>
+                            <% if (w.overdue_tasks > 0) { %>
+                                <div><dt><%= t('nav.checklist') %></dt><dd class="text-danger"><%= t(w.overdue_tasks === 1 ? 'planner.overdueTask' : 'planner.overdueTasks', { count: w.overdue_tasks }) %></dd></div>
+                            <% } %>
+                        </dl>
+                        <% if (w.deadlines.length > 0) { %>
+                            <h4 class="subheading"><%= t('planner.nextDeadlines') %></h4>
+                            <ul class="deadline-list">
+                                <% w.deadlines.forEach((d) => { %>
+                                    <li class="<%= d.overdue ? 'text-danger' : '' %>">
+                                        <span class="tag"><%= t(`planner.kind.${d.kind}`) %></span>
+                                        <%= d.title %> · <%= t(d.overdue ? 'checklist.overdue' : 'checklist.due', { date: formatDate(d.due_date) }) %>
+                                    </li>
+                                <% }); %>
+                            </ul>
+                        <% } %>
+                        <form method="post" action="/planner/weddings/<%= w.id %>/open" class="wedding-card__open">
+                            <%- include('partials/csrf-field') %>
+                            <button type="submit" class="btn btn-secondary btn-small" aria-label="<%= t('planner.openNamed', { name: w.name }) %>"><%= t('planner.open') %></button>
+                        </form>
+                    </li>
+                <% }); %>
+            </ul>
+        <% } %>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

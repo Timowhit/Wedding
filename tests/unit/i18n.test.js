@@ -49,6 +49,8 @@ const dynamicKeys = () => [
     ...MUSIC_SECTIONS.map((s) => `music.section.${s.slug}`),
     ...EXAMPLE_TASKS.map((task) => task.key),
     ...['owner', 'editor', 'client', 'viewer'].map((r) => `role.${r}`),
+    ...['upcoming', 'past', 'all'].map((w) => `planner.when.${w}`),
+    ...['task', 'decision'].map((k) => `planner.kind.${k}`),
     ...['editor', 'viewer'].map((r) => `role.${r}Description`),
     ...['client', 'editor', 'viewer'].map((r) => `invite.role.${r}`),
     ...['client', 'editor', 'viewer'].map((r) => `role.planner.${r}`),

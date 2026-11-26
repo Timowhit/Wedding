@@ -544,5 +544,47 @@ export default {
     'settings.becomePlanner': 'Soy organizador de bodas',
     'settings.becamePlanner':
         'Ahora tienes una cuenta de organizador. Agrega la boda de tu primer cliente para conseguir una plaza fundadora.',
-    'confirm.becomePlanner': '¿Cambiar a una cuenta de organizador? Por ahora no se puede deshacer.'
+    'confirm.becomePlanner': '¿Cambiar a una cuenta de organizador? Por ahora no se puede deshacer.',
+
+    // Planner dashboard
+    'nav.allWeddings': 'Todas las bodas',
+    'nav.decisions': 'Decisiones',
+    'planner.title': 'Todas las bodas',
+    'planner.heading': 'Tus *bodas*',
+    'planner.subtitle': 'La boda de cada cliente y lo que necesita de ti.',
+    'planner.claimFounding':
+        'Agrega la boda de tu primer cliente para conseguir tu plaza fundadora (40% de descuento de por vida). Quedan {left} de 300 plazas.',
+    'planner.foundingClaimed':
+        'Eres el organizador fundador n.º {number}: 40% de descuento de por vida. «{name}» está lista para planificar.',
+    'planner.weddingCreated': '«{name}» está lista para planificar.',
+    'planner.workload': 'Carga de trabajo',
+    'planner.weddingsThisMonth': 'bodas este mes',
+    'planner.openDecisionsAll': 'decisiones esperando a las parejas',
+    'planner.overdueTasksAll': 'tareas vencidas',
+    'planner.addWedding': 'Agregar la boda de un cliente',
+    'planner.addWeddingSubmit': 'Agregar boda',
+    'planner.coupleNames': 'Nombres de la pareja',
+    'planner.coupleNamesPlaceholder': 'ej. Ana y Luis',
+    'planner.weddings': 'Bodas',
+    'planner.searchPlaceholder': 'Buscar por nombre',
+    'planner.show': 'Mostrar',
+    'planner.when.upcoming': 'Próximas',
+    'planner.when.past': 'Pasadas',
+    'planner.when.all': 'Todas',
+    'planner.empty': 'Aún no hay bodas de clientes. Agrega la primera arriba.',
+    'planner.sharedWithYou': 'Compartida contigo',
+    'planner.spentOf': '{spent} de {total}',
+    'planner.spent': '{spent} gastado, sin total definido',
+    'planner.overBudget': 'Presupuesto superado',
+    'planner.guestsConfirmed': '{confirmed} de {total} invitados confirmados',
+    'planner.openDecision': '{count} decisión abierta',
+    'planner.openDecisions': '{count} decisiones abiertas',
+    'planner.changesRequested': '{count} devueltas',
+    'planner.overdueTask': '{count} tarea vencida',
+    'planner.overdueTasks': '{count} tareas vencidas',
+    'planner.nextDeadlines': 'Próximos plazos',
+    'planner.kind.task': 'Tarea',
+    'planner.kind.decision': 'Decisión',
+    'planner.open': 'Abrir',
+    'planner.openNamed': 'Abrir {name}'
 };

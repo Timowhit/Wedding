@@ -16,6 +16,7 @@
         </section>
     <% } %>
 
+    <% if (wedding) { %>
     <section class="card" aria-labelledby="details-heading">
         <h2 class="card-title" id="details-heading"><%= t('settings.weddingDetails') %></h2>
         <% if (isOwner) { %>
@@ -139,6 +140,7 @@
             <% } %>
         </section>
     <% } %>
+    <% } %>
 
     <div class="card-row">
         <section class="card" aria-labelledby="profile-heading">
@@ -251,6 +253,7 @@
         <% } %>
     </div>
 
+    <% if (weddings.length > 0) { %>
     <section class="card" aria-labelledby="weddings-heading">
         <h2 class="card-title" id="weddings-heading"><%= t('settings.yourWeddings') %></h2>
         <ul class="item-list">
@@ -295,6 +298,7 @@
             <%- include('partials/join-form') %>
         </details>
     </section>
+    <% } %>
 
     <% if (!user.isPlanner) { %>
         <section class="card" aria-labelledby="become-planner-heading">
@@ -307,7 +311,7 @@
         </section>
     <% } %>
 
-    <% if (!isOwner) { %>
+    <% if (wedding && !isOwner) { %>
         <section class="card danger-zone" aria-labelledby="leave-heading">
             <h2 class="card-title" id="leave-heading"><%= t('settings.leave') %></h2>
             <p><%= t('settings.leaveHelp', { name: wedding.name }) %></p>

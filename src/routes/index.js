@@ -66,7 +66,8 @@ import {
     showEditVendor,
     showVendors
 } from '../controllers/vendors.js';
-import { redirectIfLoggedIn, requireLogin } from '../middleware/auth.js';
+import { redirectIfLoggedIn, requireLogin, requirePlanner } from '../middleware/auth.js';
+import { processNewClientWedding, processOpenWedding, showPlannerDashboard } from '../controllers/planner.js';
 import {
     inviteLimiter,
     loginLimiter,
@@ -74,7 +75,7 @@ import {
     registerLimiter,
     searchLimiter
 } from '../middleware/rateLimit.js';
-import { loadActiveWedding, requireEditor, requireOwner } from '../middleware/wedding.js';
+import { loadActiveWedding, loadOptionalWedding, requireEditor, requireOwner } from '../middleware/wedding.js';
 
 const router = Router();
 
@@ -82,6 +83,9 @@ const router = Router();
 const member = [requireLogin, loadActiveWedding];
 const editor = [...member, requireEditor];
 const owner = [...member, requireOwner];
+// Account pages work with or without an active wedding (a new planner has none yet).
+const account = [requireLogin, loadOptionalWedding];
+const planner = [requireLogin, requirePlanner, loadOptionalWedding];
 
 /* Public ------------------------------------------------------------------------------------- */
 router.get('/login', redirectIfLoggedIn, showLoginForm);
@@ -102,6 +106,11 @@ router.post('/wedding/switch', requireLogin, processSwitchWedding);
 router.post('/invites/join', requireLogin, processJoinByLink);
 router.post('/invite/:token/accept', requireLogin, processAcceptInvite);
 router.post('/invite/:token/decline', requireLogin, processDeclineInvite);
+
+/* Planner dashboard ---------------------------------------------------------------------------- */
+router.get('/planner', planner, showPlannerDashboard);
+router.post('/planner/weddings', planner, processNewClientWedding);
+router.post('/planner/weddings/:id/open', planner, processOpenWedding);
 
 /* Dashboard ----------------------------------------------------------------------------------- */
 router.get('/', member, showDashboard);
@@ -151,12 +160,12 @@ router.post('/inspiration/clear', editor, processClearBoard);
 router.post('/inspiration/:id/delete', editor, processDeletePhoto);
 
 /* Settings ------------------------------------------------------------------------------------ */
-router.get('/settings', member, showSettings);
-router.post('/settings/profile', member, processProfile);
-router.post('/settings/appearance', member, processAppearance);
-router.post('/settings/business', member, processBusiness);
-router.post('/settings/become-planner', member, processBecomePlanner);
-router.post('/settings/password', member, passwordLimiter, processPassword);
+router.get('/settings', account, showSettings);
+router.post('/settings/profile', account, processProfile);
+router.post('/settings/appearance', account, processAppearance);
+router.post('/settings/business', account, processBusiness);
+router.post('/settings/become-planner', account, processBecomePlanner);
+router.post('/settings/password', account, passwordLimiter, processPassword);
 router.post('/settings/leave', member, processLeaveWedding);
 router.post('/settings/wedding', owner, processWeddingDetails);
 router.post('/settings/invites', owner, inviteLimiter, processInvite);

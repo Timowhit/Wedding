@@ -76,4 +76,14 @@ const redirectIfLoggedIn = (req, res, next) => {
     next();
 };
 
-export { toSessionUser, refreshSessionUser, setCurrentUser, requireLogin, redirectIfLoggedIn };
+/**
+ * Planner accounts only. Anyone else gets the 404 page, as if the page did not exist.
+ * Must run after requireLogin.
+ * @type {import('express').RequestHandler}
+ */
+const requirePlanner = (req, res, next) => {
+    if (req.session.user?.isPlanner) return next();
+    next('router');
+};
+
+export { requirePlanner, toSessionUser, refreshSessionUser, setCurrentUser, requireLogin, redirectIfLoggedIn };

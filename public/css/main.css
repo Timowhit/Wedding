@@ -1450,6 +1450,60 @@ select.status-select {
     font-weight: 500;
 }
 
+/* ---------- Planner dashboard ---------- */
+.founding-note--banner {
+    text-align: center;
+}
+
+.wedding-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+    gap: var(--space-4);
+}
+
+.wedding-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.wedding-card .card-title {
+    margin-bottom: var(--space-1);
+}
+
+.wedding-card__facts {
+    display: grid;
+    gap: var(--space-1);
+    font-size: 0.875rem;
+}
+
+.wedding-card__facts div {
+    display: flex;
+    gap: var(--space-3);
+}
+
+.wedding-card__facts dt {
+    min-width: 5.5rem;
+    color: var(--text-muted);
+}
+
+.deadline-list {
+    display: grid;
+    gap: var(--space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.875rem;
+}
+
+.wedding-card .subheading {
+    margin: 0;
+}
+
+.wedding-card__open {
+    margin-top: auto;
+}
+
 /* ---------- Add panels (collapsed "+ Add …" forms) ---------- */
 .add-panel {
     padding: 0;
