@@ -1,0 +1,95 @@
+/**
+ * Fixed option lists. Values are stored in the database exactly as written here (several are
+ * also enforced by CHECK constraints), so never rename a value without a migration. Views show
+ * them translated via the i18n keys built from these values (see src/i18n/en.js).
+ */
+
+const BUDGET_CATEGORIES = Object.freeze([
+    'Venue',
+    'Catering',
+    'Photography',
+    'Flowers',
+    'Music',
+    'Attire',
+    'Invitations',
+    'Transportation',
+    'Honeymoon',
+    'Other'
+]);
+
+const TASK_CATEGORIES = Object.freeze([
+    'Venue',
+    'Catering',
+    'Attire',
+    'Flowers',
+    'Photography',
+    'Invitations',
+    'Honeymoon',
+    'Beauty',
+    'Other'
+]);
+
+const TASK_STATUSES = Object.freeze(['active', 'done']);
+
+const RSVP_STATUSES = Object.freeze(['Pending', 'Confirmed', 'Declined']);
+
+const VENDOR_CATEGORIES = Object.freeze([
+    'Photographer',
+    'Videographer',
+    'Florist',
+    'Caterer',
+    'Venue',
+    'DJ / Band',
+    'Hair & Makeup',
+    'Cake',
+    'Officiant',
+    'Transportation',
+    'Other'
+]);
+
+const VENDOR_STATUSES = Object.freeze(['Researching', 'Contacted', 'Booked', 'Declined']);
+
+/** Playlist sections, in ceremony order. `slug` is used in URLs. */
+const MUSIC_SECTIONS = Object.freeze([
+    { name: 'Processional', slug: 'processional' },
+    { name: 'Ceremony', slug: 'ceremony' },
+    { name: 'Cocktail Hour', slug: 'cocktail-hour' },
+    { name: 'First Dance', slug: 'first-dance' },
+    { name: 'Reception', slug: 'reception' },
+    { name: 'Last Dance', slug: 'last-dance' }
+]);
+
+/** Example tasks offered on an empty checklist. `key` is the i18n key of the task text. */
+const EXAMPLE_TASKS = Object.freeze([
+    { key: 'examples.bookVenue', category: 'Venue' },
+    { key: 'examples.chooseCaterer', category: 'Catering' },
+    { key: 'examples.orderAttire', category: 'Attire' },
+    { key: 'examples.bookPhotographer', category: 'Photography' },
+    { key: 'examples.sendSaveTheDates', category: 'Invitations' },
+    { key: 'examples.bookHairMakeup', category: 'Beauty' },
+    { key: 'examples.chooseFlowers', category: 'Flowers' },
+    { key: 'examples.bookHoneymoon', category: 'Honeymoon' },
+    { key: 'examples.finaliseGuestList', category: 'Other' },
+    { key: 'examples.arrangeTransport', category: 'Other' }
+]);
+
+/**
+ * Returns the next value in a list, wrapping around (used by the one-click status buttons).
+ * @template T
+ * @param {readonly T[]} list
+ * @param {T} current
+ * @returns {T}
+ */
+const nextInCycle = (list, current) => list[(list.indexOf(current) + 1) % list.length];
+
+export {
+    BUDGET_CATEGORIES,
+    TASK_CATEGORIES,
+    TASK_STATUSES,
+    RSVP_STATUSES,
+    VENDOR_CATEGORIES,
+    VENDOR_STATUSES,
+    MUSIC_SECTIONS,
+    EXAMPLE_TASKS,
+    nextInCycle
+};

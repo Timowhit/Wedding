@@ -1,0 +1,22 @@
+<%# Fields shared by the add and edit guest forms. Expects values, errors, errorsId, statuses. %>
+<div class="field field--wide">
+    <label for="name"><%= t('field.guestName') %></label>
+    <input type="text" id="name" name="name" required maxlength="200" value="<%= values.name %>"
+           placeholder="<%= t('guests.namePlaceholder') %>" <%- fieldState(errors, 'name', errorsId) %>>
+</div>
+<div class="field">
+    <label for="rsvp"><%= t('field.rsvp') %></label>
+    <select id="rsvp" name="rsvp" <%- fieldState(errors, 'rsvp', errorsId) %>>
+        <%- include('options', { options: statuses, selected: values.rsvp, prefix: 'rsvp' }) %>
+    </select>
+</div>
+<div class="field">
+    <label for="diet"><%= t('field.diet') %> <span class="optional"><%= t('form.optional') %></span></label>
+    <input type="text" id="diet" name="diet" maxlength="300" value="<%= values.diet %>"
+           placeholder="<%= t('guests.dietPlaceholder') %>" <%- fieldState(errors, 'diet', errorsId) %>>
+</div>
+<div class="field">
+    <label for="plus_one"><%= t('field.plus_one') %> <span class="optional"><%= t('form.optional') %></span></label>
+    <input type="text" id="plus_one" name="plus_one" maxlength="200" value="<%= values.plus_one %>"
+           placeholder="<%= t('guests.plusOnePlaceholder') %>" <%- fieldState(errors, 'plus_one', errorsId) %>>
+</div>

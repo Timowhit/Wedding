@@ -1,0 +1,74 @@
+<%
+    const navItems = [
+        { href: '/', key: 'nav.dashboard' },
+        { href: '/budget', key: 'nav.budget' },
+        { href: '/guests', key: 'nav.guests' },
+        { href: '/vendors', key: 'nav.vendors' },
+        { href: '/checklist', key: 'nav.checklist' },
+        { href: '/music', key: 'nav.music' },
+        { href: '/inspiration', key: 'nav.inspiration' },
+        { href: '/settings', key: 'nav.settings' }
+    ];
+    const isCurrent = (href) => (href === '/' ? currentPath === '/' : currentPath === href || currentPath.startsWith(`${href}/`));
+%>
+<header class="site-header">
+    <div class="site-header__bar">
+        <a class="brand" href="/"><span aria-hidden="true">💍</span> Forever Planner</a>
+
+        <% if (locals.user && locals.wedding) { %>
+            <form class="wedding-switcher" method="post" action="/wedding/switch">
+                <%- include('csrf-field') %>
+                <input type="hidden" name="return_to" value="<%= currentUrl %>">
+                <label class="visually-hidden" for="wedding-switcher"><%= t('nav.activeWedding') %></label>
+                <select id="wedding-switcher" name="wedding_id" data-autosubmit>
+                    <% weddings.forEach((w) => { %>
+                        <option value="<%= w.id %>" <%= w.id === wedding.id ? 'selected' : '' %>><%= w.name %></option>
+                    <% }); %>
+                </select>
+                <button type="submit" class="btn btn-ghost btn-small" data-hide-with-js><%= t('nav.switch') %></button>
+            </form>
+        <% } %>
+
+        <% if (locals.user && locals.wedding) { %>
+            <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav" hidden>
+                <span class="visually-hidden"><%= t('nav.menu') %></span>
+                <span class="nav-toggle__bar" aria-hidden="true"></span>
+            </button>
+        <% } %>
+    </div>
+
+    <% if (locals.user && locals.wedding) { %>
+        <nav id="site-nav" class="site-nav" aria-label="<%= t('nav.label') %>">
+            <ul>
+                <% navItems.forEach((item) => { %>
+                    <li><a href="<%= item.href %>" <%- isCurrent(item.href) ? 'aria-current="page"' : '' %>><%= t(item.key) %></a></li>
+                <% }); %>
+            </ul>
+        </nav>
+    <% } %>
+
+    <div class="site-header__account">
+        <form class="language-form" method="post" action="/language">
+            <%- include('csrf-field') %>
+            <input type="hidden" name="return_to" value="<%= currentUrl %>">
+            <label class="visually-hidden" for="language-select"><%= t('nav.language') %></label>
+            <select id="language-select" name="language" data-autosubmit>
+                <% languages.forEach((code) => { %>
+                    <option value="<%= code %>" <%= code === lang ? 'selected' : '' %>><%= t(`language.${code}`) %></option>
+                <% }); %>
+            </select>
+            <button type="submit" class="btn btn-ghost btn-small" data-hide-with-js><%= t('nav.changeLanguage') %></button>
+        </form>
+
+        <% if (locals.user) { %>
+            <span class="account-name"><%= user.name %></span>
+            <form method="post" action="/logout">
+                <%- include('csrf-field') %>
+                <button type="submit" class="btn btn-ghost btn-small"><%= t('nav.signOut') %></button>
+            </form>
+        <% } else { %>
+            <a class="btn btn-ghost btn-small" href="/login" <%- currentPath === '/login' ? 'aria-current="page"' : '' %>><%= t('auth.signIn') %></a>
+            <a class="btn btn-ghost btn-small" href="/register" <%- currentPath === '/register' ? 'aria-current="page"' : '' %>><%= t('auth.createAccount') %></a>
+        <% } %>
+    </div>
+</header>

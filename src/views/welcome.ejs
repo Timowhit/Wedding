@@ -1,0 +1,55 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content">
+    <%- include('partials/page-header', { heading: 'welcome.heading', subtitle: 'welcome.subtitle' }) %>
+    <%- include('partials/flash') %>
+
+    <% if (pendingInvites.length > 0) { %>
+        <section class="card card--highlight" aria-labelledby="pending-heading">
+            <h2 class="card-title" id="pending-heading"><%= t('dashboard.pendingInvites') %></h2>
+            <ul class="item-list">
+                <% pendingInvites.forEach((invite) => { %>
+                    <li class="item-card">
+                        <div class="item-info">
+                            <p class="item-name"><%= invite.wedding_name %></p>
+                            <p class="item-meta"><%= t('invite.from', { name: invite.invited_by_name }) %> · <%= t(`role.${invite.role}`) %></p>
+                        </div>
+                        <form method="post" action="/invite/<%= invite.token %>/accept">
+                            <%- include('partials/csrf-field') %>
+                            <button type="submit" class="btn btn-primary btn-small"><%= t('invite.accept') %></button>
+                        </form>
+                    </li>
+                <% }); %>
+            </ul>
+        </section>
+    <% } %>
+
+    <section class="card" aria-labelledby="create-heading">
+        <h2 class="card-title" id="create-heading"><%= t('welcome.create') %></h2>
+        <%- include('partials/form-errors', { errors, id: 'wedding-errors' }) %>
+        <form method="post" action="/weddings" class="form-grid">
+            <%- include('partials/csrf-field') %>
+            <div class="field">
+                <label for="name"><%= t('field.name') %></label>
+                <input type="text" id="name" name="name" required maxlength="200" value="<%= values.name %>"
+                       <%- fieldState(errors, 'name', 'wedding-errors') %>>
+            </div>
+            <div class="field">
+                <label for="wedding_date"><%= t('field.wedding_date') %> <span class="optional"><%= t('form.optional') %></span></label>
+                <input type="date" id="wedding_date" name="wedding_date" min="1900-01-01" max="2100-12-31" value="<%= values.wedding_date %>"
+                       <%- fieldState(errors, 'wedding_date', 'wedding-errors') %>>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"><%= t('welcome.createSubmit') %></button>
+            </div>
+        </form>
+    </section>
+
+    <section class="card" aria-labelledby="join-heading">
+        <h2 class="card-title" id="join-heading"><%= t('join.heading') %></h2>
+        <%- include('partials/join-form') %>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,82 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content">
+    <%- include('partials/page-header', { heading: 'guests.heading', subtitle: 'guests.subtitle' }) %>
+    <%- include('partials/flash') %>
+    <%- include('partials/read-only-notice') %>
+
+    <section aria-labelledby="guest-stats-heading">
+        <h2 class="visually-hidden" id="guest-stats-heading"><%= t('guests.summary') %></h2>
+        <ul class="stats-grid stats-grid--compact">
+            <li class="stat-card"><span class="stat-value"><%= stats.total %></span><span class="stat-label"><%= t('guests.total') %></span></li>
+            <li class="stat-card"><span class="stat-value"><%= stats.confirmed %></span><span class="stat-label"><%= t('rsvpPlural.Confirmed') %></span></li>
+            <li class="stat-card"><span class="stat-value"><%= stats.pending %></span><span class="stat-label"><%= t('rsvpPlural.Pending') %></span></li>
+            <li class="stat-card"><span class="stat-value"><%= stats.declined %></span><span class="stat-label"><%= t('rsvpPlural.Declined') %></span></li>
+            <li class="stat-card"><span class="stat-value"><%= stats.plusOnes %></span><span class="stat-label"><%= t('guests.plusOnes') %></span></li>
+        </ul>
+    </section>
+
+    <% if (canEdit) { %>
+        <section class="card" aria-labelledby="add-guest-heading">
+            <h2 class="card-title" id="add-guest-heading"><%= t('guests.add') %></h2>
+            <%- include('partials/form-errors', { errors: guestForm.errors, id: 'guest-errors' }) %>
+            <form method="post" action="/guests" class="form-grid">
+                <%- include('partials/csrf-field') %>
+                <%- include('partials/return-to') %>
+                <%- include('partials/guest-fields', { values: guestForm.values, errors: guestForm.errors, errorsId: 'guest-errors' }) %>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary"><%= t('guests.addSubmit') %></button>
+                </div>
+            </form>
+        </section>
+    <% } %>
+
+    <section aria-labelledby="guest-list-heading">
+        <h2 class="section-heading" id="guest-list-heading"><%= t('guests.list') %></h2>
+        <nav class="filter-tabs" aria-label="<%= t('filter.byRsvp') %>">
+            <a class="filter-tab" href="/guests" <%- activeRsvp === null ? 'aria-current="page"' : '' %>><%= t('filter.all') %></a>
+            <% statuses.forEach((status) => { %>
+                <a class="filter-tab" href="/guests?rsvp=<%= status %>" <%- activeRsvp === status ? 'aria-current="page"' : '' %>><%= t(`rsvp.${status}`) %></a>
+            <% }); %>
+        </nav>
+
+        <% if (guests.length === 0) { %>
+            <p class="empty-state"><span aria-hidden="true">👥</span> <%= t(activeRsvp ? 'filter.noMatches' : 'guests.empty') %></p>
+        <% } else { %>
+            <ul class="item-list">
+                <% guests.forEach((guest) => { %>
+                    <li class="item-card">
+                        <div class="item-info">
+                            <p class="item-name"><%= guest.name %></p>
+                            <p class="item-meta">
+                                <% if (guest.diet) { %><span><%= t('guests.dietLabel', { diet: guest.diet }) %></span><% } %>
+                                <% if (guest.plus_one) { %><span><%= t('guests.plusOneLabel', { name: guest.plus_one }) %></span><% } %>
+                            </p>
+                        </div>
+                        <% if (canEdit) { %>
+                            <div class="item-actions">
+                                <form method="post" action="/guests/<%= guest.id %>/rsvp">
+                                    <%- include('partials/csrf-field') %>
+                                    <%- include('partials/return-to') %>
+                                    <button type="submit" class="badge badge--<%= guest.rsvp.toLowerCase() %> badge--button"
+                                            aria-label="<%= t('guests.cycleRsvp', { name: guest.name, status: t(`rsvp.${guest.rsvp}`) }) %>"><%= t(`rsvp.${guest.rsvp}`) %></button>
+                                </form>
+                                <a class="btn btn-ghost btn-small" href="/guests/<%= guest.id %>/edit" aria-label="<%= t('action.editNamed', { name: guest.name }) %>"><%= t('action.edit') %></a>
+                                <form method="post" action="/guests/<%= guest.id %>/delete" data-confirm="<%= t('confirm.deleteGuest', { name: guest.name }) %>">
+                                    <%- include('partials/csrf-field') %>
+                                    <%- include('partials/return-to') %>
+                                    <button type="submit" class="btn btn-danger btn-small" aria-label="<%= t('action.deleteNamed', { name: guest.name }) %>"><%= t('action.delete') %></button>
+                                </form>
+                            </div>
+                        <% } else { %>
+                            <span class="badge badge--<%= guest.rsvp.toLowerCase() %>"><%= t(`rsvp.${guest.rsvp}`) %></span>
+                        <% } %>
+                    </li>
+                <% }); %>
+            </ul>
+        <% } %>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

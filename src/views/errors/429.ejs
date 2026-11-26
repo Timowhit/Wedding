@@ -1,0 +1,13 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+
+<main id="main-content" class="narrow">
+    <section class="card error-state">
+        <p class="error-state__code">429</p>
+        <h1><%= title %></h1>
+        <p><%= message %></p>
+        <p><a class="btn btn-primary" href="/"><%= t('errors.backHome') %></a></p>
+    </section>
+</main>
+
+<%- include('../partials/footer') %>

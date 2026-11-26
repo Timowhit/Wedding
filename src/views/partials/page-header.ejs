@@ -1,0 +1,5 @@
+<%# Usage: include('partials/page-header', { heading: 'budget.heading', subtitle: 'budget.subtitle' }) %>
+<header class="page-header">
+    <h1><%- emphasize(t(heading)) %></h1>
+    <% if (locals.subtitle) { %><p class="subtitle"><%= t(subtitle) %></p><% } %>
+</header>

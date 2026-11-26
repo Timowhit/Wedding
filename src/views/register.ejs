@@ -1,0 +1,45 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content" class="narrow">
+    <%- include('partials/page-header', { heading: 'auth.registerHeading', subtitle: 'auth.registerSubtitle' }) %>
+    <%- include('partials/flash') %>
+
+    <section class="card" aria-labelledby="register-heading">
+        <h2 class="card-title" id="register-heading"><%= t('auth.createAccount') %></h2>
+        <% if (googleEnabled) { %>
+            <a class="btn btn-google btn-full" href="/auth/google"><%= t('auth.signUpWithGoogle') %></a>
+            <p class="divider"><span><%= t('auth.or') %></span></p>
+        <% } %>
+
+        <%- include('partials/form-errors', { errors }) %>
+        <form method="post" action="/register" class="form-stack">
+            <%- include('partials/csrf-field') %>
+            <div class="field">
+                <label for="name"><%= t('field.name') %></label>
+                <input type="text" id="name" name="name" value="<%= values.name %>" required maxlength="80"
+                       autocomplete="name" <%- fieldState(errors, 'name') %>>
+            </div>
+            <div class="field">
+                <label for="email"><%= t('field.email') %></label>
+                <input type="email" id="email" name="email" value="<%= values.email %>" required maxlength="255"
+                       autocomplete="email" <%- fieldState(errors, 'email') %>>
+            </div>
+            <div class="field">
+                <label for="password"><%= t('field.password') %></label>
+                <input type="password" id="password" name="password" required minlength="8" maxlength="200"
+                       autocomplete="new-password" <%- fieldState(errors, 'password', 'form-errors', 'password-hint') %>>
+                <p class="hint" id="password-hint"><%= t('auth.passwordHint', { min: 8 }) %></p>
+            </div>
+            <div class="field">
+                <label for="confirm_password"><%= t('field.confirm_password') %></label>
+                <input type="password" id="confirm_password" name="confirm_password" required minlength="8" maxlength="200"
+                       autocomplete="new-password" <%- fieldState(errors, 'confirm_password') %>>
+            </div>
+            <button type="submit" class="btn btn-primary btn-full"><%= t('auth.createAccount') %></button>
+        </form>
+        <p class="form-footnote"><%= t('auth.haveAccount') %> <a href="/login"><%= t('auth.signIn') %></a></p>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

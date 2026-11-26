@@ -1,0 +1,38 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content" class="narrow">
+    <%- include('partials/page-header', { heading: 'invite.heading' }) %>
+    <%- include('partials/flash') %>
+
+    <section class="card invite-card" aria-labelledby="invite-wedding">
+        <p class="invite-card__icon" aria-hidden="true">💌</p>
+        <h2 class="card-title" id="invite-wedding"><%= invite.wedding_name %></h2>
+        <p><%= t('invite.body', { name: invite.invited_by_name, role: t(`role.${invite.role}`) }) %></p>
+
+        <% if (!invite.is_usable) { %>
+            <p class="notice notice--error"><%= t('invite.unavailable') %></p>
+        <% } else if (!locals.user) { %>
+            <p><%= invite.invited_email ? t('invite.signInAs', { email: invite.invited_email }) : t('invite.signInToJoin') %></p>
+            <div class="form-actions">
+                <a class="btn btn-primary" href="/login"><%= t('auth.signIn') %></a>
+                <a class="btn btn-secondary" href="/register"><%= t('auth.createAccount') %></a>
+            </div>
+        <% } else if (wrongAccount) { %>
+            <p class="notice notice--error"><%= t('invite.wrongAccount', { email: invite.invited_email }) %></p>
+        <% } else { %>
+            <div class="form-actions">
+                <form method="post" action="/invite/<%= invite.token %>/accept">
+                    <%- include('partials/csrf-field') %>
+                    <button type="submit" class="btn btn-primary"><%= t('invite.accept') %></button>
+                </form>
+                <form method="post" action="/invite/<%= invite.token %>/decline">
+                    <%- include('partials/csrf-field') %>
+                    <button type="submit" class="btn btn-ghost"><%= t(invite.invited_email ? 'invite.decline' : 'invite.notNow') %></button>
+                </form>
+            </div>
+        <% } %>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

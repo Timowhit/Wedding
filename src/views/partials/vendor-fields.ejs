@@ -1,0 +1,38 @@
+<%# Fields shared by the add and edit vendor forms. Expects values, errors, errorsId, categories, statuses. %>
+<div class="field field--wide">
+    <label for="name"><%= t('field.vendorName') %></label>
+    <input type="text" id="name" name="name" required maxlength="200" value="<%= values.name %>"
+           placeholder="<%= t('vendors.namePlaceholder') %>" <%- fieldState(errors, 'name', errorsId) %>>
+</div>
+<div class="field">
+    <label for="category"><%= t('field.category') %></label>
+    <select id="category" name="category" <%- fieldState(errors, 'category', errorsId) %>>
+        <%- include('options', { options: categories, selected: values.category, prefix: 'vendorCategory' }) %>
+    </select>
+</div>
+<div class="field">
+    <label for="status"><%= t('field.status') %></label>
+    <select id="status" name="status" <%- fieldState(errors, 'status', errorsId) %>>
+        <%- include('options', { options: statuses, selected: values.status, prefix: 'vendorStatus' }) %>
+    </select>
+</div>
+<div class="field">
+    <label for="phone"><%= t('field.phone') %> <span class="optional"><%= t('form.optional') %></span></label>
+    <input type="tel" id="phone" name="phone" maxlength="50" value="<%= values.phone %>" autocomplete="off"
+           <%- fieldState(errors, 'phone', errorsId) %>>
+</div>
+<div class="field">
+    <label for="email"><%= t('field.email') %> <span class="optional"><%= t('form.optional') %></span></label>
+    <input type="email" id="email" name="email" maxlength="255" value="<%= values.email %>" autocomplete="off"
+           <%- fieldState(errors, 'email', errorsId) %>>
+</div>
+<div class="field field--wide">
+    <label for="website"><%= t('field.website') %> <span class="optional"><%= t('form.optional') %></span></label>
+    <input type="url" id="website" name="website" maxlength="500" value="<%= values.website %>" placeholder="https://"
+           <%- fieldState(errors, 'website', errorsId) %>>
+</div>
+<div class="field field--wide">
+    <label for="notes"><%= t('field.notes') %> <span class="optional"><%= t('form.optional') %></span></label>
+    <textarea id="notes" name="notes" rows="3" maxlength="2000" placeholder="<%= t('vendors.notesPlaceholder') %>"
+              <%- fieldState(errors, 'notes', errorsId) %>><%= values.notes %></textarea>
+</div>
