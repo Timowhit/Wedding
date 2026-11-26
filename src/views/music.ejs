@@ -1,0 +1,107 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content">
+    <%- include('partials/page-header', { heading: 'music.heading', subtitle: 'music.subtitle' }) %>
+    <%- include('partials/flash') %>
+    <%- include('partials/read-only-notice') %>
+
+    <section class="card" aria-labelledby="search-heading">
+        <h2 class="card-title" id="search-heading"><%= t('music.search') %></h2>
+        <% if (!searchEnabled) { %>
+            <p class="notice"><%= t('music.notConfigured') %></p>
+        <% } else { %>
+            <%- include('partials/form-errors', { errors, id: 'search-errors' }) %>
+            <form method="get" action="/music" class="search-row" role="search">
+                <label class="visually-hidden" for="q"><%= t('music.search') %></label>
+                <input type="search" id="q" name="q" maxlength="100" value="<%= query %>"
+                       placeholder="<%= t('music.searchPlaceholder') %>" <%- fieldState(errors, 'q', 'search-errors') %>>
+                <button type="submit" class="btn btn-primary"><%= t('action.search') %></button>
+            </form>
+
+            <% if (searchError) { %>
+                <p class="notice notice--error" role="alert"><%= t(searchError) %></p>
+            <% } else if (query && results.length === 0) { %>
+                <p class="empty-state"><%= t('search.noResults', { q: query }) %></p>
+            <% } else if (results.length > 0) { %>
+                <h3 class="visually-hidden"><%= t('search.results', { q: query }) %></h3>
+                <ul class="music-results">
+                    <% results.forEach((track) => { %>
+                        <li class="music-card">
+                            <% if (track.artworkUrl) { %>
+                                <img class="music-artwork" src="<%= track.artworkUrl %>" alt="" width="64" height="64" loading="lazy">
+                            <% } else { %>
+                                <span class="music-artwork music-artwork--empty" aria-hidden="true">🎵</span>
+                            <% } %>
+                            <div class="music-info">
+                                <p class="music-title"><%= track.trackName %></p>
+                                <p class="music-artist"><%= track.artistName %><% if (track.albumName) { %> · <%= track.albumName %><% } %></p>
+                                <a class="music-link" href="https://open.spotify.com/track/<%= track.trackId %>" rel="noopener noreferrer" target="_blank"><%= t('music.openInSpotify') %></a>
+                            </div>
+                            <% if (canEdit) { %>
+                                <form method="post" action="/music/tracks" class="music-add">
+                                    <%- include('partials/csrf-field') %>
+                                    <%- include('partials/return-to') %>
+                                    <input type="hidden" name="track_id" value="<%= track.trackId %>">
+                                    <label class="visually-hidden" for="section-<%= track.trackId %>"><%= t('music.addTo', { name: track.trackName }) %></label>
+                                    <select id="section-<%= track.trackId %>" name="section">
+                                        <% sections.forEach((section) => { %>
+                                            <option value="<%= section.slug %>"><%= t(`music.section.${section.slug}`) %></option>
+                                        <% }); %>
+                                    </select>
+                                    <button type="submit" class="btn btn-secondary btn-small"><%= t('action.add') %></button>
+                                </form>
+                            <% } %>
+                        </li>
+                    <% }); %>
+                </ul>
+            <% } %>
+        <% } %>
+    </section>
+
+    <section aria-labelledby="playlists-heading">
+        <h2 class="section-heading" id="playlists-heading"><%= t('music.playlists') %></h2>
+        <% if (trackCount === 0) { %>
+            <p class="empty-state"><span aria-hidden="true">🎶</span> <%= t('music.empty') %></p>
+        <% } %>
+        <% playlists.filter((p) => p.tracks.length > 0).forEach((playlist) => { %>
+            <section class="card playlist" aria-labelledby="playlist-<%= playlist.slug %>">
+                <div class="playlist__header">
+                    <h3 class="card-title" id="playlist-<%= playlist.slug %>"><%= t(`music.section.${playlist.slug}`) %> <span class="count">(<%= playlist.tracks.length %>)</span></h3>
+                    <% if (canEdit) { %>
+                        <form method="post" action="/music/sections/<%= playlist.slug %>/clear" data-confirm="<%= t('confirm.clearSection', { section: t(`music.section.${playlist.slug}`) }) %>">
+                            <%- include('partials/csrf-field') %>
+                            <%- include('partials/return-to') %>
+                            <button type="submit" class="btn btn-ghost btn-small"><%= t('music.clearSection') %></button>
+                        </form>
+                    <% } %>
+                </div>
+                <ol class="track-list">
+                    <% playlist.tracks.forEach((track) => { %>
+                        <li class="track">
+                            <% if (track.artwork_url) { %><img class="music-artwork music-artwork--small" src="<%= track.artwork_url %>" alt="" width="40" height="40" loading="lazy"><% } %>
+                            <div class="music-info">
+                                <p class="music-title"><%= track.track_name %></p>
+                                <% if (track.artist_name) { %><p class="music-artist"><%= track.artist_name %></p><% } %>
+                            </div>
+                            <details class="track__preview">
+                                <summary><%= t('music.preview') %></summary>
+                                <iframe src="https://open.spotify.com/embed/track/<%= encodeURIComponent(track.track_id) %>" width="100%" height="80"
+                                        loading="lazy" allow="encrypted-media" title="<%= t('music.previewOf', { name: track.track_name }) %>"></iframe>
+                            </details>
+                            <% if (canEdit) { %>
+                                <form method="post" action="/music/tracks/<%= track.id %>/delete">
+                                    <%- include('partials/csrf-field') %>
+                                    <%- include('partials/return-to') %>
+                                    <button type="submit" class="btn btn-danger btn-small" aria-label="<%= t('action.removeNamed', { name: track.track_name }) %>"><%= t('action.remove') %></button>
+                                </form>
+                            <% } %>
+                        </li>
+                    <% }); %>
+                </ol>
+            </section>
+        <% }); %>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

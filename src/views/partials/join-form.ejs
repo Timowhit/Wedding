@@ -1,0 +1,8 @@
+<form class="inline-form" method="post" action="/invites/join">
+    <%- include('csrf-field') %>
+    <%- include('return-to') %>
+    <label for="invite_link"><%= t('join.label') %></label>
+    <input type="text" id="invite_link" name="invite_link" required maxlength="500" autocomplete="off"
+           placeholder="<%= t('join.placeholder') %>">
+    <button type="submit" class="btn btn-secondary"><%= t('join.submit') %></button>
+</form>

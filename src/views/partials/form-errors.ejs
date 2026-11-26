@@ -1,0 +1,11 @@
+<%# Usage: include('partials/form-errors', { errors, id: 'expense-errors' }) %>
+<% if (errors.length > 0) { %>
+    <div class="form-errors" role="alert" id="<%= locals.id || 'form-errors' %>">
+        <p><strong><%= t('validation.fix') %></strong></p>
+        <ul>
+            <% errors.forEach((error) => { %>
+                <li><%= t(`field.${error.field}`) %>: <%= t(error.key, error.vars) %></li>
+            <% }); %>
+        </ul>
+    </div>
+<% } %>

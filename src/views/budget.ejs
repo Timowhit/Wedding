@@ -1,0 +1,106 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content">
+    <%- include('partials/page-header', { heading: 'budget.heading', subtitle: 'budget.subtitle' }) %>
+    <%- include('partials/flash') %>
+    <%- include('partials/read-only-notice') %>
+
+    <section class="card" aria-labelledby="summary-heading">
+        <h2 class="visually-hidden" id="summary-heading"><%= t('budget.summary') %></h2>
+        <dl class="budget-summary">
+            <div class="budget-box"><dt><%= t('budget.total') %></dt><dd><%= formatCurrency(summary.limit) %></dd></div>
+            <div class="budget-box"><dt><%= t('budget.spent') %></dt><dd><%= formatCurrency(summary.spent) %></dd></div>
+            <div class="budget-box <%= summary.remaining < 0 ? 'budget-box--over' : '' %>">
+                <dt><%= t('budget.remaining') %></dt><dd><%= formatCurrency(summary.remaining) %></dd>
+            </div>
+        </dl>
+        <% if (summary.limit > 0) { %>
+            <label class="progress-label" for="budget-progress"><%= t('budget.used', { pct: summary.pct }) %></label>
+            <progress id="budget-progress" class="progress <%= summary.over ? 'progress--over' : '' %>" max="100" value="<%= summary.pct %>"><%= summary.pct %>%</progress>
+            <% if (summary.over) { %><p class="notice notice--error"><%= t('budget.overBudget') %></p><% } %>
+        <% } %>
+    </section>
+
+    <% if (canEdit) { %>
+        <div class="card-row">
+            <section class="card" aria-labelledby="limit-heading">
+                <h2 class="card-title" id="limit-heading"><%= t('budget.setLimit') %></h2>
+                <%- include('partials/form-errors', { errors: limitForm.errors, id: 'limit-errors' }) %>
+                <form method="post" action="/budget/limit" class="form-stack">
+                    <%- include('partials/csrf-field') %>
+                    <div class="field">
+                        <label for="total"><%= t('field.total') %></label>
+                        <input type="text" inputmode="decimal" id="total" name="total" required maxlength="16"
+                               value="<%= limitForm.values.total %>" placeholder="25000"
+                               <%- fieldState(limitForm.errors, 'total', 'limit-errors') %>>
+                    </div>
+                    <button type="submit" class="btn btn-secondary"><%= t('budget.saveLimit') %></button>
+                </form>
+            </section>
+
+            <section class="card" aria-labelledby="expense-heading">
+                <h2 class="card-title" id="expense-heading"><%= t('budget.addExpense') %></h2>
+                <%- include('partials/form-errors', { errors: expenseForm.errors, id: 'expense-errors' }) %>
+                <form method="post" action="/budget/expenses" class="form-grid">
+                    <%- include('partials/csrf-field') %>
+                    <%- include('partials/return-to') %>
+                    <div class="field field--wide">
+                        <label for="name"><%= t('field.description') %></label>
+                        <input type="text" id="name" name="name" required maxlength="200" value="<%= expenseForm.values.name %>"
+                               placeholder="<%= t('budget.descriptionPlaceholder') %>" <%- fieldState(expenseForm.errors, 'name', 'expense-errors') %>>
+                    </div>
+                    <div class="field">
+                        <label for="category"><%= t('field.category') %></label>
+                        <select id="category" name="category" <%- fieldState(expenseForm.errors, 'category', 'expense-errors') %>>
+                            <%- include('partials/options', { options: categories, selected: expenseForm.values.category, prefix: 'budgetCategory' }) %>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="amount"><%= t('field.amount') %></label>
+                        <input type="text" inputmode="decimal" id="amount" name="amount" required maxlength="16"
+                               value="<%= expenseForm.values.amount %>" placeholder="0.00" <%- fieldState(expenseForm.errors, 'amount', 'expense-errors') %>>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary"><%= t('budget.addExpenseSubmit') %></button>
+                    </div>
+                </form>
+            </section>
+        </div>
+    <% } %>
+
+    <section aria-labelledby="expenses-heading">
+        <h2 class="section-heading" id="expenses-heading"><%= t('budget.expenses') %></h2>
+        <nav class="filter-tabs" aria-label="<%= t('filter.byCategory') %>">
+            <a class="filter-tab" href="/budget" <%- activeCategory === null ? 'aria-current="page"' : '' %>><%= t('filter.all') %></a>
+            <% categories.forEach((category) => { %>
+                <a class="filter-tab" href="/budget?category=<%= encodeURIComponent(category) %>" <%- activeCategory === category ? 'aria-current="page"' : '' %>><%= t(`budgetCategory.${category}`) %></a>
+            <% }); %>
+        </nav>
+
+        <% if (expenses.length === 0) { %>
+            <p class="empty-state"><span aria-hidden="true">💸</span> <%= t(activeCategory ? 'filter.noMatches' : 'budget.empty') %></p>
+        <% } else { %>
+            <ul class="item-list">
+                <% expenses.forEach((expense) => { %>
+                    <li class="item-card">
+                        <div class="item-info">
+                            <p class="item-name"><%= expense.name %></p>
+                            <p class="item-meta"><span class="badge"><%= t(`budgetCategory.${expense.category}`) %></span></p>
+                        </div>
+                        <p class="item-amount"><%= formatCurrency(expense.amount) %></p>
+                        <% if (canEdit) { %>
+                            <form method="post" action="/budget/expenses/<%= expense.id %>/delete" data-confirm="<%= t('confirm.deleteExpense', { name: expense.name }) %>">
+                                <%- include('partials/csrf-field') %>
+                                <%- include('partials/return-to') %>
+                                <button type="submit" class="btn btn-danger btn-small" aria-label="<%= t('action.deleteNamed', { name: expense.name }) %>"><%= t('action.delete') %></button>
+                            </form>
+                        <% } %>
+                    </li>
+                <% }); %>
+            </ul>
+        <% } %>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

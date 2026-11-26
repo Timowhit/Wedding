@@ -1,0 +1,20 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content" class="narrow">
+    <%- include('partials/page-header', { heading: 'guests.editHeading' }) %>
+    <section class="card" aria-labelledby="edit-heading">
+        <h2 class="card-title" id="edit-heading"><%= values.name || t('guests.editHeading') %></h2>
+        <%- include('partials/form-errors', { errors }) %>
+        <form method="post" action="<%= formAction %>" class="form-grid">
+            <%- include('partials/csrf-field') %>
+            <%- include('partials/guest-fields', { values, errors, errorsId: 'form-errors' }) %>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"><%= t('action.save') %></button>
+                <a class="btn btn-ghost" href="/guests"><%= t('action.cancel') %></a>
+            </div>
+        </form>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

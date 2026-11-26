@@ -1,0 +1,71 @@
+import { findWeddingForMember, findWeddingsForUser } from '../models/weddings.js';
+import { setFlash } from '../utils/flash.js';
+
+const ROLE_RANK = { viewer: 1, editor: 2, owner: 3 };
+
+/**
+ * Loads the wedding the user is working on into `req.wedding` and the views
+ * (`wedding`, `weddings`, `canEdit`, `isOwner`). Must run after requireLogin.
+ *
+ * The active wedding id lives in the session and is re-checked against wedding_members on
+ * every request, so removing someone from a wedding takes effect immediately. A user with
+ * no wedding at all is sent to /welcome to create or join one.
+ * @type {import('express').RequestHandler}
+ */
+const loadActiveWedding = async (req, res, next) => {
+    const userId = req.session.user.id;
+    const weddings = await findWeddingsForUser(userId);
+
+    const activeId = req.session.activeWeddingId;
+    const wedding = (activeId && weddings.find((w) => w.id === activeId)) || weddings[0];
+
+    if (!wedding) {
+        delete req.session.activeWeddingId;
+        return res.redirect('/welcome');
+    }
+
+    req.session.activeWeddingId = wedding.id;
+    req.wedding = wedding;
+    res.locals.wedding = wedding;
+    res.locals.weddings = weddings;
+    res.locals.canEdit = ROLE_RANK[wedding.role] >= ROLE_RANK.editor;
+    res.locals.isOwner = wedding.role === 'owner';
+    next();
+};
+
+/**
+ * Builds middleware that only lets members with at least `minimumRole` through. Others get a
+ * flash message and are sent back to the section's main page (a GET they can always open).
+ * @param {'editor'|'owner'} minimumRole
+ * @returns {import('express').RequestHandler}
+ */
+const requireWeddingRole = (minimumRole) => {
+    if (!(minimumRole in ROLE_RANK) || minimumRole === 'viewer') {
+        throw new Error('requireWeddingRole needs "editor" or "owner"');
+    }
+    const messageKey = minimumRole === 'owner' ? 'wedding.ownerOnly' : 'wedding.viewOnly';
+
+    return (req, res, next) => {
+        if (ROLE_RANK[req.wedding?.role] >= ROLE_RANK[minimumRole]) return next();
+        setFlash(req, 'error', messageKey);
+        const section = req.baseUrl || `/${req.path.split('/')[1] ?? ''}`;
+        res.redirect(section || '/');
+    };
+};
+
+/**
+ * Switches the active wedding after confirming membership.
+ * @param {import('express').Request} req
+ * @param {string} weddingId - Already validated as a UUID.
+ * @returns {Promise<Object|null>} The wedding, or null when the user is not a member.
+ */
+const switchActiveWedding = async (req, weddingId) => {
+    const wedding = await findWeddingForMember(weddingId, req.session.user.id);
+    if (wedding) req.session.activeWeddingId = wedding.id;
+    return wedding;
+};
+
+const requireEditor = requireWeddingRole('editor');
+const requireOwner = requireWeddingRole('owner');
+
+export { loadActiveWedding, requireWeddingRole, requireEditor, requireOwner, switchActiveWedding };

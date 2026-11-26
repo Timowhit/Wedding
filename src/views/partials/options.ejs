@@ -1,0 +1,4 @@
+<%# Usage: include('partials/options', { options: CATEGORIES, selected: values.category, prefix: 'budgetCategory' }) %>
+<% options.forEach((option) => { %>
+    <option value="<%= option %>" <%= option === selected ? 'selected' : '' %>><%= t(`${prefix}.${option}`) %></option>
+<% }); %>

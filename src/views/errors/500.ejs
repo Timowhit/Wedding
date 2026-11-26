@@ -1,0 +1,13 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+
+<main id="main-content" class="narrow">
+    <section class="card error-state">
+        <p class="error-state__code"><%= locals.status || 500 %></p>
+        <h1><%= title %></h1>
+        <p><%= t(locals.status === 413 ? 'errors.tooLarge' : 'errors.serverError') %></p>
+        <p><a class="btn btn-primary" href="/"><%= t('errors.backHome') %></a></p>
+    </section>
+</main>
+
+<%- include('../partials/footer') %>

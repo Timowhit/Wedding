@@ -1,0 +1,103 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content">
+    <%- include('partials/page-header', { heading: 'dashboard.heading', subtitle: 'dashboard.subtitle' }) %>
+    <%- include('partials/flash') %>
+    <%- include('partials/read-only-notice') %>
+
+    <% if (pendingInvites.length > 0) { %>
+        <section class="card card--highlight" aria-labelledby="pending-heading">
+            <h2 class="card-title" id="pending-heading"><%= t('dashboard.pendingInvites') %></h2>
+            <ul class="item-list">
+                <% pendingInvites.forEach((invite) => { %>
+                    <li class="item-card">
+                        <div class="item-info">
+                            <p class="item-name"><%= invite.wedding_name %></p>
+                            <p class="item-meta"><%= t('invite.from', { name: invite.invited_by_name }) %> · <%= t(`role.${invite.role}`) %></p>
+                        </div>
+                        <div class="item-actions">
+                            <form method="post" action="/invite/<%= invite.token %>/accept">
+                                <%- include('partials/csrf-field') %>
+                                <button type="submit" class="btn btn-primary btn-small"><%= t('invite.accept') %></button>
+                            </form>
+                            <form method="post" action="/invite/<%= invite.token %>/decline">
+                                <%- include('partials/csrf-field') %>
+                                <button type="submit" class="btn btn-ghost btn-small"><%= t('invite.decline') %></button>
+                            </form>
+                        </div>
+                    </li>
+                <% }); %>
+            </ul>
+        </section>
+    <% } %>
+
+    <section class="card countdown" aria-labelledby="countdown-heading">
+        <h2 class="visually-hidden" id="countdown-heading"><%= t('dashboard.countdown') %></h2>
+        <% if (daysLeft === null) { %>
+            <p class="countdown__label"><%= t('dashboard.noDate') %></p>
+        <% } else if (daysLeft > 0) { %>
+            <p class="countdown__number"><%= daysLeft %></p>
+            <p class="countdown__label"><%= t(daysLeft === 1 ? 'dashboard.dayLeft' : 'dashboard.daysLeft') %></p>
+            <p class="countdown__date"><%= formatDate(wedding.wedding_date) %></p>
+        <% } else if (daysLeft === 0) { %>
+            <p class="countdown__number" aria-hidden="true">🎉</p>
+            <p class="countdown__label"><%= t('dashboard.today') %></p>
+        <% } else { %>
+            <p class="countdown__label"><%= t('dashboard.married', { date: formatDate(wedding.wedding_date) }) %></p>
+        <% } %>
+
+        <% if (isOwner) { %>
+            <form class="inline-form" method="post" action="/wedding/date">
+                <%- include('partials/csrf-field') %>
+                <label for="wedding_date"><%= t('dashboard.setDate') %></label>
+                <input type="date" id="wedding_date" name="wedding_date" min="1900-01-01" max="2100-12-31"
+                       value="<%= toIsoDate(wedding.wedding_date) %>">
+                <button type="submit" class="btn btn-primary"><%= t('dashboard.saveDate') %></button>
+            </form>
+        <% } %>
+    </section>
+
+    <section aria-labelledby="overview-heading">
+        <h2 class="section-heading" id="overview-heading"><%= t('dashboard.overview') %></h2>
+        <ul class="stats-grid">
+            <li><a class="stat-card stat-card--link" href="/budget">
+                <span class="stat-icon" aria-hidden="true">💰</span>
+                <span class="stat-value"><%= formatCurrency(stats.spent) %></span>
+                <span class="stat-label"><%= stats.budgetLimit > 0 ? t('dashboard.spentOf', { total: formatCurrency(stats.budgetLimit) }) : t('dashboard.spent') %></span>
+            </a></li>
+            <li><a class="stat-card stat-card--link" href="/guests">
+                <span class="stat-icon" aria-hidden="true">👥</span>
+                <span class="stat-value"><%= stats.guests.total %></span>
+                <span class="stat-label"><%= t('dashboard.guestsConfirmed', { count: stats.guests.confirmed }) %></span>
+            </a></li>
+            <li><a class="stat-card stat-card--link" href="/checklist">
+                <span class="stat-icon" aria-hidden="true">✅</span>
+                <span class="stat-value"><%= stats.tasks.pct %>%</span>
+                <span class="stat-label"><%= t('dashboard.tasksDone', { done: stats.tasks.done, total: stats.tasks.total }) %></span>
+            </a></li>
+            <li><a class="stat-card stat-card--link" href="/vendors">
+                <span class="stat-icon" aria-hidden="true">🤝</span>
+                <span class="stat-value"><%= stats.vendors.total %></span>
+                <span class="stat-label"><%= t('dashboard.vendorsBooked', { count: stats.vendors.booked }) %></span>
+            </a></li>
+            <li><a class="stat-card stat-card--link" href="/music">
+                <span class="stat-icon" aria-hidden="true">🎵</span>
+                <span class="stat-value"><%= stats.tracks %></span>
+                <span class="stat-label"><%= t('dashboard.songs') %></span>
+            </a></li>
+            <li><a class="stat-card stat-card--link" href="/inspiration">
+                <span class="stat-icon" aria-hidden="true">🌸</span>
+                <span class="stat-value"><%= stats.photos %></span>
+                <span class="stat-label"><%= t('dashboard.photos') %></span>
+            </a></li>
+        </ul>
+    </section>
+
+    <section class="card" aria-labelledby="join-heading">
+        <h2 class="card-title" id="join-heading"><%= t('join.heading') %></h2>
+        <%- include('partials/join-form') %>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

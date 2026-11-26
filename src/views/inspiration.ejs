@@ -1,0 +1,90 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content">
+    <%- include('partials/page-header', { heading: 'inspiration.heading', subtitle: 'inspiration.subtitle' }) %>
+    <%- include('partials/flash') %>
+    <%- include('partials/read-only-notice') %>
+
+    <section class="card" aria-labelledby="search-heading">
+        <h2 class="card-title" id="search-heading"><%= t('inspiration.search') %></h2>
+        <% if (!searchEnabled) { %>
+            <p class="notice"><%= t('inspiration.notConfigured') %></p>
+        <% } else { %>
+            <%- include('partials/form-errors', { errors, id: 'search-errors' }) %>
+            <form method="get" action="/inspiration" class="search-row" role="search">
+                <label class="visually-hidden" for="q"><%= t('inspiration.search') %></label>
+                <input type="search" id="q" name="q" maxlength="100" value="<%= query %>"
+                       placeholder="<%= t('inspiration.searchPlaceholder') %>" <%- fieldState(errors, 'q', 'search-errors') %>>
+                <button type="submit" class="btn btn-primary"><%= t('action.search') %></button>
+            </form>
+
+            <% if (searchError) { %>
+                <p class="notice notice--error" role="alert"><%= t(searchError) %></p>
+            <% } else if (query && results.length === 0) { %>
+                <p class="empty-state"><%= t('search.noResults', { q: query }) %></p>
+            <% } else if (results.length > 0) { %>
+                <h3 class="visually-hidden"><%= t('search.results', { q: query }) %></h3>
+                <ul class="photo-grid">
+                    <% results.forEach((photo) => { %>
+                        <li class="photo-card">
+                            <img src="<%= photo.thumbUrl %>" alt="<%= photo.altDesc || '' %>" loading="lazy">
+                            <div class="photo-card__footer">
+                                <% if (photo.photographer && photo.sourceLink) { %>
+                                    <a class="photo-credit" href="<%= photo.sourceLink %>?utm_source=forever_planner&utm_medium=referral" rel="noopener noreferrer" target="_blank"><%= t('inspiration.credit', { name: photo.photographer }) %></a>
+                                <% } %>
+                                <% if (photo.saved) { %>
+                                    <span class="badge badge--confirmed"><%= t('inspiration.saved') %></span>
+                                <% } else if (canEdit) { %>
+                                    <form method="post" action="/inspiration">
+                                        <%- include('partials/csrf-field') %>
+                                        <%- include('partials/return-to') %>
+                                        <input type="hidden" name="photo_id" value="<%= photo.photoId %>">
+                                        <button type="submit" class="btn btn-secondary btn-small"><%= t('inspiration.save') %></button>
+                                    </form>
+                                <% } %>
+                            </div>
+                        </li>
+                    <% }); %>
+                </ul>
+            <% } %>
+        <% } %>
+    </section>
+
+    <section aria-labelledby="board-heading">
+        <div class="section-heading-row">
+            <h2 class="section-heading" id="board-heading"><%= t('inspiration.board') %> <span class="count">(<%= photos.length %>)</span></h2>
+            <% if (canEdit && photos.length > 0) { %>
+                <form method="post" action="/inspiration/clear" data-confirm="<%= t('confirm.clearBoard') %>">
+                    <%- include('partials/csrf-field') %>
+                    <%- include('partials/return-to') %>
+                    <button type="submit" class="btn btn-ghost btn-small"><%= t('inspiration.clearBoard') %></button>
+                </form>
+            <% } %>
+        </div>
+        <% if (photos.length === 0) { %>
+            <p class="empty-state"><span aria-hidden="true">🌸</span> <%= t('inspiration.empty') %></p>
+        <% } else { %>
+            <ul class="photo-grid">
+                <% photos.forEach((photo) => { %>
+                    <li class="photo-card">
+                        <a href="<%= /^https:\/\//.test(photo.full_url) ? photo.full_url : '#' %>" rel="noopener noreferrer" target="_blank">
+                            <img src="<%= photo.thumb_url %>" alt="<%= photo.alt_desc || t('inspiration.untitled') %>" loading="lazy">
+                        </a>
+                        <% if (canEdit) { %>
+                            <div class="photo-card__footer">
+                                <form method="post" action="/inspiration/<%= photo.id %>/delete">
+                                    <%- include('partials/csrf-field') %>
+                                    <%- include('partials/return-to') %>
+                                    <button type="submit" class="btn btn-danger btn-small" aria-label="<%= t('inspiration.removeLabel', { name: photo.alt_desc || t('inspiration.untitled') }) %>"><%= t('action.remove') %></button>
+                                </form>
+                            </div>
+                        <% } %>
+                    </li>
+                <% }); %>
+            </ul>
+        <% } %>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

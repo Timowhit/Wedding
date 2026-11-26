@@ -1,0 +1,253 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content">
+    <%- include('partials/page-header', { heading: 'settings.heading', subtitle: 'settings.subtitle' }) %>
+    <%- include('partials/flash') %>
+
+    <% if (createdInviteUrl) { %>
+        <section class="card card--highlight" aria-labelledby="new-link-heading">
+            <h2 class="card-title" id="new-link-heading"><%= t('settings.newLink') %></h2>
+            <div class="copy-row">
+                <label class="visually-hidden" for="created-invite-url"><%= t('settings.inviteLink') %></label>
+                <input type="text" id="created-invite-url" value="<%= createdInviteUrl %>" readonly>
+                <button type="button" class="btn btn-secondary btn-small" data-copy="created-invite-url" data-copied-label="<%= t('action.copied') %>" hidden><%= t('action.copy') %></button>
+            </div>
+        </section>
+    <% } %>
+
+    <section class="card" aria-labelledby="details-heading">
+        <h2 class="card-title" id="details-heading"><%= t('settings.weddingDetails') %></h2>
+        <% if (isOwner) { %>
+            <%- include('partials/form-errors', { errors: weddingForm.errors, id: 'wedding-errors' }) %>
+            <form method="post" action="/settings/wedding" class="form-grid">
+                <%- include('partials/csrf-field') %>
+                <div class="field field--wide">
+                    <label for="wedding-name"><%= t('field.name') %></label>
+                    <input type="text" id="wedding-name" name="name" required maxlength="200" value="<%= weddingForm.values.name %>"
+                           <%- fieldState(weddingForm.errors, 'name', 'wedding-errors') %>>
+                </div>
+                <div class="field">
+                    <label for="wedding-date"><%= t('field.wedding_date') %> <span class="optional"><%= t('form.optional') %></span></label>
+                    <input type="date" id="wedding-date" name="wedding_date" min="1900-01-01" max="2100-12-31" value="<%= weddingForm.values.wedding_date %>"
+                           <%- fieldState(weddingForm.errors, 'wedding_date', 'wedding-errors') %>>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary"><%= t('action.save') %></button>
+                </div>
+            </form>
+        <% } else { %>
+            <dl class="details-list">
+                <div><dt><%= t('field.name') %></dt><dd><%= wedding.name %></dd></div>
+                <div><dt><%= t('field.wedding_date') %></dt><dd><%= formatDate(wedding.wedding_date) || t('settings.noDate') %></dd></div>
+                <div><dt><%= t('settings.yourRole') %></dt><dd><%= t(`role.${wedding.role}`) %></dd></div>
+            </dl>
+            <p class="notice"><%= t('settings.ownerEditsDetails') %></p>
+        <% } %>
+    </section>
+
+    <section class="card" aria-labelledby="members-heading">
+        <h2 class="card-title" id="members-heading"><%= t('settings.members') %> <span class="count">(<%= members.length %>)</span></h2>
+        <ul class="item-list">
+            <% members.forEach((member) => { %>
+                <% const isMe = member.user_id === user.id; const label = member.display_name || member.email; %>
+                <li class="item-card">
+                    <span class="avatar" aria-hidden="true"><%= label.charAt(0).toUpperCase() %></span>
+                    <div class="item-info">
+                        <p class="item-name"><%= label %><% if (isMe) { %> <span class="badge"><%= t('settings.you') %></span><% } %></p>
+                        <p class="item-meta"><%= member.email %></p>
+                    </div>
+                    <% if (member.role === 'owner' || !isOwner) { %>
+                        <span class="badge badge--<%= member.role %>"><%= t(`role.${member.role}`) %></span>
+                    <% } else { %>
+                        <div class="item-actions">
+                            <form method="post" action="/settings/members/<%= member.user_id %>/role" class="inline-form">
+                                <%- include('partials/csrf-field') %>
+                                <label class="visually-hidden" for="role-<%= member.user_id %>"><%= t('settings.roleFor', { name: label }) %></label>
+                                <select id="role-<%= member.user_id %>" name="role">
+                                    <% ['editor', 'viewer'].forEach((role) => { %>
+                                        <option value="<%= role %>" <%= role === member.role ? 'selected' : '' %>><%= t(`role.${role}`) %></option>
+                                    <% }); %>
+                                </select>
+                                <button type="submit" class="btn btn-ghost btn-small"><%= t('settings.changeRole') %></button>
+                            </form>
+                            <form method="post" action="/settings/members/<%= member.user_id %>/delete" data-confirm="<%= t('confirm.removeMember', { name: label }) %>">
+                                <%- include('partials/csrf-field') %>
+                                <button type="submit" class="btn btn-danger btn-small" aria-label="<%= t('action.removeNamed', { name: label }) %>"><%= t('action.remove') %></button>
+                            </form>
+                        </div>
+                    <% } %>
+                </li>
+            <% }); %>
+        </ul>
+    </section>
+
+    <% if (isOwner) { %>
+        <section class="card" aria-labelledby="invite-heading">
+            <h2 class="card-title" id="invite-heading"><%= t('settings.invite') %></h2>
+            <p class="hint"><%= t(emailEnabled ? 'settings.inviteHelp' : 'settings.inviteHelpNoEmail') %></p>
+            <%- include('partials/form-errors', { errors: inviteForm.errors, id: 'invite-errors' }) %>
+            <form method="post" action="/settings/invites" class="form-grid">
+                <%- include('partials/csrf-field') %>
+                <div class="field field--wide">
+                    <label for="invite-email"><%= t('field.email') %> <span class="optional"><%= t('settings.emailOptional') %></span></label>
+                    <input type="email" id="invite-email" name="email" maxlength="255" value="<%= inviteForm.values.email %>"
+                           placeholder="<%= t('settings.emailPlaceholder') %>" <%- fieldState(inviteForm.errors, 'email', 'invite-errors') %>>
+                </div>
+                <div class="field field--wide">
+                    <label for="invite-role"><%= t('field.role') %></label>
+                    <select id="invite-role" name="role" <%- fieldState(inviteForm.errors, 'role', 'invite-errors') %>>
+                        <% ['editor', 'viewer'].forEach((role) => { %>
+                            <option value="<%= role %>" <%= role === inviteForm.values.role ? 'selected' : '' %>><%= t(`role.${role}Description`) %></option>
+                        <% }); %>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary"><%= t('settings.createInvite') %></button>
+                </div>
+            </form>
+
+            <h3 class="subheading"><%= t('settings.invites') %></h3>
+            <% if (invites.length === 0) { %>
+                <p class="empty-state"><%= t('settings.noInvites') %></p>
+            <% } else { %>
+                <ul class="item-list">
+                    <% invites.forEach((invite) => { %>
+                        <li class="item-card item-card--stacked">
+                            <div class="item-info">
+                                <p class="item-name"><%= invite.invited_email || t('settings.shareLink') %></p>
+                                <p class="item-meta">
+                                    <span class="badge badge--<%= invite.status %>"><%= t(`inviteStatus.${invite.status}`) %></span>
+                                    <span><%= t(`role.${invite.role}`) %></span>
+                                    <% if (invite.status === 'pending') { %><span><%= t('settings.expires', { date: formatDate(invite.expires_at) }) %></span><% } %>
+                                </p>
+                                <% if (invite.status === 'pending') { %>
+                                    <div class="copy-row">
+                                        <label class="visually-hidden" for="invite-<%= invite.id %>"><%= t('settings.inviteLink') %></label>
+                                        <input type="text" id="invite-<%= invite.id %>" value="<%= invite.url %>" readonly>
+                                        <button type="button" class="btn btn-ghost btn-small" data-copy="invite-<%= invite.id %>" data-copied-label="<%= t('action.copied') %>" hidden><%= t('action.copy') %></button>
+                                    </div>
+                                <% } %>
+                            </div>
+                            <form method="post" action="/settings/invites/<%= invite.id %>/delete">
+                                <%- include('partials/csrf-field') %>
+                                <button type="submit" class="btn btn-danger btn-small"><%= t(invite.status === 'pending' ? 'settings.revoke' : 'action.remove') %></button>
+                            </form>
+                        </li>
+                    <% }); %>
+                </ul>
+            <% } %>
+        </section>
+    <% } %>
+
+    <div class="card-row">
+        <section class="card" aria-labelledby="profile-heading">
+            <h2 class="card-title" id="profile-heading"><%= t('settings.profile') %></h2>
+            <%- include('partials/form-errors', { errors: profileForm.errors, id: 'profile-errors' }) %>
+            <form method="post" action="/settings/profile" class="form-stack">
+                <%- include('partials/csrf-field') %>
+                <div class="field">
+                    <label for="display_name"><%= t('field.display_name') %></label>
+                    <input type="text" id="display_name" name="display_name" required maxlength="80" autocomplete="name"
+                           value="<%= profileForm.values.display_name %>" <%- fieldState(profileForm.errors, 'display_name', 'profile-errors') %>>
+                </div>
+                <div class="field">
+                    <label for="profile-language"><%= t('field.language') %></label>
+                    <select id="profile-language" name="language" <%- fieldState(profileForm.errors, 'language', 'profile-errors') %>>
+                        <% languages.forEach((code) => { %>
+                            <option value="<%= code %>" <%= code === profileForm.values.language ? 'selected' : '' %>><%= t(`language.${code}`) %></option>
+                        <% }); %>
+                    </select>
+                </div>
+                <p class="hint"><%= t('settings.signedInAs', { email: user.email }) %></p>
+                <button type="submit" class="btn btn-primary"><%= t('action.save') %></button>
+            </form>
+        </section>
+
+        <section class="card" aria-labelledby="password-heading">
+            <h2 class="card-title" id="password-heading"><%= t(hasPassword ? 'settings.changePassword' : 'settings.setPassword') %></h2>
+            <% if (!hasPassword) { %><p class="hint"><%= t('settings.setPasswordHelp') %></p><% } %>
+            <%- include('partials/form-errors', { errors: passwordForm.errors, id: 'password-errors' }) %>
+            <form method="post" action="/settings/password" class="form-stack">
+                <%- include('partials/csrf-field') %>
+                <input type="text" name="username" value="<%= user.email %>" autocomplete="username" hidden>
+                <% if (hasPassword) { %>
+                    <div class="field">
+                        <label for="current_password"><%= t('field.current_password') %></label>
+                        <input type="password" id="current_password" name="current_password" required maxlength="200" autocomplete="current-password"
+                               <%- fieldState(passwordForm.errors, 'current_password', 'password-errors') %>>
+                    </div>
+                <% } %>
+                <div class="field">
+                    <label for="new_password"><%= t('field.new_password') %></label>
+                    <input type="password" id="new_password" name="new_password" required minlength="8" maxlength="200" autocomplete="new-password"
+                           <%- fieldState(passwordForm.errors, 'new_password', 'password-errors') %>>
+                </div>
+                <div class="field">
+                    <label for="settings-confirm-password"><%= t('field.confirm_password') %></label>
+                    <input type="password" id="settings-confirm-password" name="confirm_password" required minlength="8" maxlength="200" autocomplete="new-password"
+                           <%- fieldState(passwordForm.errors, 'confirm_password', 'password-errors') %>>
+                </div>
+                <button type="submit" class="btn btn-primary"><%= t(hasPassword ? 'settings.changePassword' : 'settings.setPassword') %></button>
+            </form>
+        </section>
+    </div>
+
+    <section class="card" aria-labelledby="weddings-heading">
+        <h2 class="card-title" id="weddings-heading"><%= t('settings.yourWeddings') %></h2>
+        <ul class="item-list">
+            <% weddings.forEach((w) => { %>
+                <li class="item-card">
+                    <div class="item-info">
+                        <p class="item-name"><%= w.name %><% if (w.id === wedding.id) { %> <span class="badge"><%= t('settings.current') %></span><% } %></p>
+                        <p class="item-meta"><%= t(`role.${w.role}`) %><% if (w.wedding_date) { %> · <%= formatDate(w.wedding_date) %><% } %></p>
+                    </div>
+                    <% if (w.id !== wedding.id) { %>
+                        <form method="post" action="/wedding/switch">
+                            <%- include('partials/csrf-field') %>
+                            <input type="hidden" name="wedding_id" value="<%= w.id %>">
+                            <input type="hidden" name="return_to" value="/settings">
+                            <button type="submit" class="btn btn-ghost btn-small"><%= t('settings.switchTo') %></button>
+                        </form>
+                    <% } %>
+                </li>
+            <% }); %>
+        </ul>
+
+        <details class="disclosure">
+            <summary><%= t('settings.newWedding') %></summary>
+            <form method="post" action="/weddings" class="form-grid">
+                <%- include('partials/csrf-field') %>
+                <div class="field field--wide">
+                    <label for="new-wedding-name"><%= t('field.name') %></label>
+                    <input type="text" id="new-wedding-name" name="name" required maxlength="200">
+                </div>
+                <div class="field">
+                    <label for="new-wedding-date"><%= t('field.wedding_date') %> <span class="optional"><%= t('form.optional') %></span></label>
+                    <input type="date" id="new-wedding-date" name="wedding_date" min="1900-01-01" max="2100-12-31">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-secondary"><%= t('welcome.createSubmit') %></button>
+                </div>
+            </form>
+        </details>
+
+        <details class="disclosure">
+            <summary><%= t('join.heading') %></summary>
+            <%- include('partials/join-form') %>
+        </details>
+    </section>
+
+    <% if (!isOwner) { %>
+        <section class="card danger-zone" aria-labelledby="leave-heading">
+            <h2 class="card-title" id="leave-heading"><%= t('settings.leave') %></h2>
+            <p><%= t('settings.leaveHelp', { name: wedding.name }) %></p>
+            <form method="post" action="/settings/leave" data-confirm="<%= t('confirm.leave', { name: wedding.name }) %>">
+                <%- include('partials/csrf-field') %>
+                <button type="submit" class="btn btn-danger"><%= t('settings.leaveSubmit') %></button>
+            </form>
+        </section>
+    <% } %>
+</main>
+
+<%- include('partials/footer') %>
