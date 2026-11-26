@@ -343,6 +343,11 @@ button {
         max-width: 9.5rem;
     }
 
+    /* Without JS the "Switch" button is visible too, so the bar may wrap onto a second line. */
+    html:not(.js) .site-header__bar {
+        flex-wrap: wrap;
+    }
+
     .js .nav-toggle {
         display: block;
     }
@@ -598,6 +603,8 @@ input[type='search'],
 input[type='url'],
 input[type='tel'],
 input[type='date'],
+input[type='time'],
+input[type='number'],
 select,
 textarea {
     width: 100%;
@@ -1162,6 +1169,17 @@ select.status-select {
 
 .filter-select select {
     width: auto;
+}
+
+/* Without JS the search button shows too; the search box shrinks so the bar never overflows a phone. */
+.filter-select input[type='search'] {
+    flex: 1 1 10rem;
+    min-width: 0;
+}
+
+.filter-select:has(input[type='search']) {
+    flex: 1 1 14rem;
+    min-width: 0;
 }
 
 .filter-note {
