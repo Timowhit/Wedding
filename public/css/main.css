@@ -1504,6 +1504,24 @@ select.status-select {
     margin-top: auto;
 }
 
+/* ---------- Decisions ---------- */
+.decision__answer {
+    margin-top: var(--space-2);
+    font-size: 0.875rem;
+}
+
+.decision__answer-form {
+    display: grid;
+    flex: 1 1 100%;
+    gap: var(--space-2);
+}
+
+.notice--action {
+    border-color: var(--primary);
+    background: var(--primary-soft);
+    font-weight: 500;
+}
+
 /* ---------- Add panels (collapsed "+ Add …" forms) ---------- */
 .add-panel {
     padding: 0;

@@ -105,6 +105,22 @@ const switchActiveWedding = async (req, weddingId) => {
     return wedding;
 };
 
+/**
+ * Builds middleware for decisions: 'ask' lets the asking side through (see decisionPermissions),
+ * 'answer' the answering side. Others are sent back to /decisions with a message.
+ * @param {'ask'|'answer'} action
+ * @returns {import('express').RequestHandler}
+ */
+const requireDecisionRight = (action) => {
+    if (action !== 'ask' && action !== 'answer') throw new Error('requireDecisionRight needs "ask" or "answer"');
+    return (req, res, next) => {
+        const rights = decisionPermissions(req.wedding);
+        if (action === 'ask' ? rights.canAsk : rights.canAnswer) return next();
+        setFlash(req, 'error', action === 'ask' ? 'decisions.cannotAsk' : 'decisions.cannotAnswer');
+        res.redirect('/decisions');
+    };
+};
+
 const requireEditor = requireWeddingRole('editor');
 const requireOwner = requireWeddingRole('owner');
 
@@ -114,6 +130,7 @@ export {
     loadActiveWedding,
     loadOptionalWedding,
     requireWeddingRole,
+    requireDecisionRight,
     requireEditor,
     requireOwner,
     switchActiveWedding

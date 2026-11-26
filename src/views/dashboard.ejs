@@ -6,6 +6,12 @@
     <%- include('partials/flash') %>
     <%- include('partials/read-only-notice') %>
 
+    <% if (canAnswerDecisions && openDecisions > 0) { %>
+        <p class="notice notice--action">
+            <a href="/decisions"><%= t(openDecisions === 1 ? 'decisions.waitingOne' : 'decisions.waitingMany', { count: openDecisions }) %></a>
+        </p>
+    <% } %>
+
     <% if (pendingInvites.length > 0) { %>
         <section class="card card--highlight" aria-labelledby="pending-heading">
             <h2 class="card-title" id="pending-heading"><%= t('dashboard.pendingInvites') %></h2>

@@ -76,7 +76,22 @@ import {
     registerLimiter,
     searchLimiter
 } from '../middleware/rateLimit.js';
-import { loadActiveWedding, loadOptionalWedding, requireEditor, requireOwner } from '../middleware/wedding.js';
+import {
+    loadActiveWedding,
+    loadOptionalWedding,
+    requireDecisionRight,
+    requireEditor,
+    requireOwner
+} from '../middleware/wedding.js';
+import {
+    processAnswer,
+    processDeleteDecision,
+    processEditDecision,
+    processNewDecision,
+    processReopen,
+    showDecisions,
+    showEditDecision
+} from '../controllers/decisions.js';
 
 const router = Router();
 
@@ -116,6 +131,17 @@ router.post('/planner/weddings/:id/open', planner, processOpenWedding);
 /* Dashboard ----------------------------------------------------------------------------------- */
 router.get('/', member, showDashboard);
 router.post('/wedding/date', owner, processWeddingDate);
+
+/* Decisions ----------------------------------------------------------------------------------- */
+const asker = [...member, requireDecisionRight('ask')];
+const answerer = [...member, requireDecisionRight('answer')];
+router.get('/decisions', member, showDecisions);
+router.post('/decisions', asker, processNewDecision);
+router.get('/decisions/:id/edit', asker, showEditDecision);
+router.post('/decisions/:id/edit', asker, processEditDecision);
+router.post('/decisions/:id/reopen', asker, processReopen);
+router.post('/decisions/:id/delete', asker, processDeleteDecision);
+router.post('/decisions/:id/answer', answerer, processAnswer);
 
 /* Budget -------------------------------------------------------------------------------------- */
 router.get('/budget', member, showBudget);

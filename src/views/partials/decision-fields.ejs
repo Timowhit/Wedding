@@ -1,0 +1,15 @@
+<%# Fields shared by the ask and edit decision forms. Expects values, errors, errorsId. %>
+<div class="field field--wide">
+    <label for="title"><%= t('field.decisionTitle') %></label>
+    <input type="text" id="title" name="title" required maxlength="200" value="<%= values.title %>"
+           placeholder="<%= t('decisions.titlePlaceholder') %>" <%- fieldState(errors, 'title', errorsId) %>>
+</div>
+<div class="field field--wide">
+    <label for="details"><%= t('field.details') %> <span class="optional"><%= t('form.optional') %></span></label>
+    <textarea id="details" name="details" rows="3" maxlength="2000" <%- fieldState(errors, 'details', errorsId) %>><%= values.details %></textarea>
+</div>
+<div class="field">
+    <label for="due_date"><%= t('field.answer_by') %> <span class="optional"><%= t('form.optional') %></span></label>
+    <input type="date" id="due_date" name="due_date" min="1900-01-01" max="2100-12-31" value="<%= values.due_date %>"
+           <%- fieldState(errors, 'due_date', errorsId) %>>
+</div>

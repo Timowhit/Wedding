@@ -1,0 +1,81 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content">
+    <%- include('partials/page-header', { heading: 'decisions.heading', subtitle: canAnswerDecisions && isPlannerWedding ? 'decisions.subtitleClient' : 'decisions.subtitle' }) %>
+    <%- include('partials/flash') %>
+    <%- include('partials/read-only-notice') %>
+
+    <% if (canAskDecisions) { %>
+        <%- include('partials/add-panel-start', { id: 'ask-decision', labelKey: 'decisions.ask', open: decisions.length === 0 || decisionForm.errors.length > 0 }) %>
+            <%- include('partials/form-errors', { errors: decisionForm.errors, id: 'decision-errors' }) %>
+            <form method="post" action="/decisions" class="form-grid">
+                <%- include('partials/csrf-field') %>
+                <%- include('partials/decision-fields', { values: decisionForm.values, errors: decisionForm.errors, errorsId: 'decision-errors' }) %>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary"><%= t('decisions.askSubmit') %></button>
+                </div>
+            </form>
+        <%- include('partials/add-panel-end') %>
+    <% } %>
+
+    <section aria-labelledby="decisions-heading">
+        <h2 class="section-heading" id="decisions-heading"><%= t('decisions.list') %></h2>
+        <% if (decisions.length === 0) { %>
+            <p class="empty-state"><span aria-hidden="true">🗳️</span> <%= t(canAskDecisions ? 'decisions.emptyAsker' : 'decisions.empty') %></p>
+        <% } else { %>
+            <ul class="item-list">
+                <% decisions.forEach((d) => { %>
+                    <% const due = toIsoDate(d.due_date); const late = d.status !== 'approved' && due && due < today; %>
+                    <% const answerErrors = answerForm.id === d.id ? answerForm.errors : []; %>
+                    <li class="item-card item-card--stacked decision">
+                        <div class="item-info">
+                            <p class="item-name"><%= d.title %></p>
+                            <p class="item-meta">
+                                <span class="status status--<%= d.status === 'changes_requested' ? 'declined' : d.status === 'approved' ? 'confirmed' : 'pending' %>"><%= t(`decisionStatus.${d.status}`) %></span>
+                                <% if (due) { %><span class="<%= late ? 'text-danger' : '' %>"><%= t('decisions.answerBy', { date: formatDate(d.due_date) }) %></span><% } %>
+                            </p>
+                            <% if (d.details) { %><p class="item-notes"><%= d.details %></p><% } %>
+                            <% if (d.status !== 'open' && d.answered_by_name) { %>
+                                <p class="decision__answer"><%= t(d.status === 'approved' ? 'decisions.approvedBy' : 'decisions.sentBackBy', { name: d.answered_by_name }) %><% if (d.comment) { %>: “<%= d.comment %>”<% } %></p>
+                            <% } %>
+                        </div>
+
+                        <% if (canAnswerDecisions && d.status !== 'approved') { %>
+                            <form method="post" action="/decisions/<%= d.id %>/answer" class="decision__answer-form">
+                                <%- include('partials/csrf-field') %>
+                                <%- include('partials/form-errors', { errors: answerErrors, id: `answer-errors-${d.id}` }) %>
+                                <div class="field">
+                                    <label for="comment-<%= d.id %>"><%= t('field.comment') %> <span class="optional"><%= t('decisions.commentHint') %></span></label>
+                                    <textarea id="comment-<%= d.id %>" name="comment" rows="2" maxlength="1000" <%- fieldState(answerErrors, 'comment', `answer-errors-${d.id}`) %>><%= answerForm.id === d.id ? answerForm.values.comment : '' %></textarea>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" name="status" value="approved" class="btn btn-primary btn-small"><%= t('decisions.approve') %></button>
+                                    <button type="submit" name="status" value="changes_requested" class="btn btn-ghost btn-small"><%= t('decisions.requestChanges') %></button>
+                                </div>
+                            </form>
+                        <% } %>
+
+                        <% if (canAskDecisions) { %>
+                            <div class="row-actions">
+                                <a class="link-action" href="/decisions/<%= d.id %>/edit" aria-label="<%= t('action.editNamed', { name: d.title }) %>"><%= t('action.edit') %></a>
+                                <% if (d.status !== 'open') { %>
+                                    <form method="post" action="/decisions/<%= d.id %>/reopen">
+                                        <%- include('partials/csrf-field') %>
+                                        <button type="submit" class="link-action"><%= t('decisions.reopen') %></button>
+                                    </form>
+                                <% } %>
+                                <form method="post" action="/decisions/<%= d.id %>/delete" data-confirm="<%= t('confirm.deleteDecision', { name: d.title }) %>">
+                                    <%- include('partials/csrf-field') %>
+                                    <button type="submit" class="link-action link-action--danger" aria-label="<%= t('action.deleteNamed', { name: d.title }) %>"><%= t('action.delete') %></button>
+                                </form>
+                            </div>
+                        <% } %>
+                    </li>
+                <% }); %>
+            </ul>
+        <% } %>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

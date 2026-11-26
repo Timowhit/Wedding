@@ -51,6 +51,7 @@ const dynamicKeys = () => [
     ...['owner', 'editor', 'client', 'viewer'].map((r) => `role.${r}`),
     ...['upcoming', 'past', 'all'].map((w) => `planner.when.${w}`),
     ...['task', 'decision'].map((k) => `planner.kind.${k}`),
+    ...['open', 'approved', 'changes_requested'].map((s) => `decisionStatus.${s}`),
     ...['editor', 'viewer'].map((r) => `role.${r}Description`),
     ...['client', 'editor', 'viewer', 'planner'].map((r) => `invite.role.${r}`),
     'role.planner',
