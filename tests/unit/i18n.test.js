@@ -47,7 +47,7 @@ const dynamicKeys = () => [
     ...MUSIC_SECTIONS.map((s) => `music.section.${s.slug}`),
     ...EXAMPLE_TASKS.map((task) => task.key),
     ...['owner', 'editor', 'viewer'].map((r) => `role.${r}`),
-    ...['editor', 'viewer'].map((r) => `role.${r}Description`),
+    ...['editor', 'viewer'].flatMap((r) => [`role.${r}Description`, `invite.role.${r}`]),
     ...['pending', 'accepted', 'expired'].map((s) => `inviteStatus.${s}`),
     ...Object.keys(DICTIONARIES).map((code) => `language.${code}`)
 ];

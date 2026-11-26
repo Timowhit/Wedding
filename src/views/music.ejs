@@ -72,7 +72,7 @@
                         <form method="post" action="/music/sections/<%= playlist.slug %>/clear" data-confirm="<%= t('confirm.clearSection', { section: t(`music.section.${playlist.slug}`) }) %>">
                             <%- include('partials/csrf-field') %>
                             <%- include('partials/return-to') %>
-                            <button type="submit" class="btn btn-ghost btn-small"><%= t('music.clearSection') %></button>
+                            <button type="submit" class="link-action link-action--danger"><%= t('music.clearSection') %></button>
                         </form>
                     <% } %>
                 </div>
@@ -93,7 +93,7 @@
                                 <form method="post" action="/music/tracks/<%= track.id %>/delete">
                                     <%- include('partials/csrf-field') %>
                                     <%- include('partials/return-to') %>
-                                    <button type="submit" class="btn btn-danger btn-small" aria-label="<%= t('action.removeNamed', { name: track.track_name }) %>"><%= t('action.remove') %></button>
+                                    <button type="submit" class="link-action link-action--danger" aria-label="<%= t('action.removeNamed', { name: track.track_name }) %>"><%= t('action.remove') %></button>
                                 </form>
                             <% } %>
                         </li>

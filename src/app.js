@@ -10,7 +10,8 @@ import { refreshSessionUser, setCurrentUser } from './middleware/auth.js';
 import { csrfProtection } from './middleware/csrf.js';
 import { setLanguage } from './middleware/i18n.js';
 import { configureGoogle } from './services/google.js';
-import { UNSPLASH_IMAGE_HOSTS } from './services/unsplash.js';
+import { UNSPLASH_IMAGE_HOSTS, isUnsplashConfigured } from './services/unsplash.js';
+import { isSpotifyConfigured } from './services/spotify.js';
 import { takeFlash } from './utils/flash.js';
 import { emphasize, fieldState } from './utils/view-helpers.js';
 import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES, translate } from './i18n/index.js';
@@ -108,6 +109,8 @@ const createApp = (env = process.env) => {
         res.locals.errors = [];
         res.locals.emphasize = emphasize;
         res.locals.fieldState = fieldState;
+        // Optional features without API keys are left out of the navigation and dashboard.
+        res.locals.features = { music: isSpotifyConfigured(), inspiration: isUnsplashConfigured() };
         next();
     });
     app.use(setCurrentUser);
@@ -134,6 +137,7 @@ const createApp = (env = process.env) => {
             res.locals.currentPath = req.path;
             res.locals.csrfToken = () => '';
             res.locals.emphasize = emphasize;
+            res.locals.features = { music: false, inspiration: false };
         }
         res.status(status).render('errors/500', { title: res.locals.t('errors.serverErrorTitle'), status });
     });

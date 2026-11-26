@@ -5,7 +5,7 @@ import { findPendingInvitesForEmail } from '../models/invites.js';
 import { countTracks } from '../models/music.js';
 import { countPhotos } from '../models/inspiration.js';
 import { findVendorStats } from '../models/vendors.js';
-import { createWedding, updateWeddingDate } from '../models/weddings.js';
+import { countMembers, createWedding, updateWeddingDate } from '../models/weddings.js';
 import { switchActiveWedding } from '../middleware/wedding.js';
 import { daysUntil } from '../utils/format.js';
 import { setFlash } from '../utils/flash.js';
@@ -15,22 +15,47 @@ import { extractInviteToken, validateWedding, validateWeddingDate } from '../val
 
 const EMPTY_WEDDING = { name: '', wedding_date: '' };
 
+/**
+ * First steps for a new wedding, shown until they are all done. Only steps the member's role
+ * can do are listed (viewers see none; inviting is for the owner).
+ * @returns {Array<{key: string, href: string, done: boolean}>}
+ */
+const gettingStartedSteps = (wedding, stats, memberCount) => {
+    if (wedding.role === 'viewer') return [];
+    const steps = [
+        { key: 'onboarding.setDate', href: '#wedding-date-form', done: Boolean(wedding.wedding_date), ownerOnly: true },
+        { key: 'onboarding.setBudget', href: '/budget', done: stats.budgetLimit > 0 },
+        { key: 'onboarding.addGuests', href: '/guests', done: stats.guests.total > 0 },
+        { key: 'onboarding.addTasks', href: '/checklist', done: stats.tasks.total > 0 },
+        { key: 'onboarding.invitePartner', href: '/settings#invite-heading', done: memberCount > 1, ownerOnly: true }
+    ];
+    return steps
+        .filter((step) => !step.ownerOnly || wedding.role === 'owner')
+        .map(({ ownerOnly: _owner, ...step }) => step);
+};
+
 const showDashboard = async (req, res) => {
     const weddingId = req.wedding.id;
-    const [budgetLimit, spent, guests, tasks, vendors, tracks, photos, pendingInvites] = await Promise.all([
-        findBudgetLimit(weddingId),
-        findTotalSpent(weddingId),
-        findGuestStats(weddingId),
-        findTaskProgress(weddingId),
-        findVendorStats(weddingId),
-        countTracks(weddingId),
-        countPhotos(weddingId),
-        findPendingInvitesForEmail(req.session.user.email)
-    ]);
+    const [budgetLimit, spent, guests, tasks, vendors, tracks, photos, pendingInvites, memberCount] = await Promise.all(
+        [
+            findBudgetLimit(weddingId),
+            findTotalSpent(weddingId),
+            findGuestStats(weddingId),
+            findTaskProgress(weddingId),
+            findVendorStats(weddingId),
+            countTracks(weddingId),
+            countPhotos(weddingId),
+            findPendingInvitesForEmail(req.session.user.email),
+            countMembers(weddingId)
+        ]
+    );
+    const stats = { budgetLimit, spent, guests, tasks, vendors, tracks, photos };
+    const steps = gettingStartedSteps(req.wedding, stats, memberCount);
 
     res.render('dashboard', {
         title: req.t('dashboard.title'),
-        stats: { budgetLimit, spent, guests, tasks, vendors, tracks, photos },
+        stats,
+        steps: steps.every((step) => step.done) ? [] : steps,
         daysLeft: daysUntil(req.wedding.wedding_date),
         pendingInvites,
         errors: []

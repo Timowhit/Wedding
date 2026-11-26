@@ -8,7 +8,8 @@
     <section class="card invite-card" aria-labelledby="invite-wedding">
         <p class="invite-card__icon" aria-hidden="true">💌</p>
         <h2 class="card-title" id="invite-wedding"><%= invite.wedding_name %></h2>
-        <p><%= t('invite.body', { name: invite.invited_by_name, role: t(`role.${invite.role}`) }) %></p>
+        <p><%= t('invite.body', { name: invite.invited_by_name }) %></p>
+        <p class="invite-card__role"><%= t(`invite.role.${invite.role}`) %></p>
 
         <% if (!invite.is_usable) { %>
             <p class="notice notice--error"><%= t('invite.unavailable') %></p>

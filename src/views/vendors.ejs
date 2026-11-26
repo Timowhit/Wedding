@@ -7,8 +7,7 @@
     <%- include('partials/read-only-notice') %>
 
     <% if (canEdit) { %>
-        <section class="card" aria-labelledby="add-vendor-heading">
-            <h2 class="card-title" id="add-vendor-heading"><%= t('vendors.add') %></h2>
+        <%- include('partials/add-panel-start', { id: 'add-vendor', labelKey: 'vendors.add', open: (vendors.length === 0 && activeStatus === null) || vendorForm.errors.length > 0 }) %>
             <%- include('partials/form-errors', { errors: vendorForm.errors, id: 'vendor-errors' }) %>
             <form method="post" action="/vendors" class="form-grid">
                 <%- include('partials/csrf-field') %>
@@ -18,7 +17,7 @@
                     <button type="submit" class="btn btn-primary"><%= t('vendors.addSubmit') %></button>
                 </div>
             </form>
-        </section>
+        <%- include('partials/add-panel-end') %>
     <% } %>
 
     <section aria-labelledby="vendor-list-heading">
@@ -35,36 +34,26 @@
         <% } else { %>
             <ul class="item-list">
                 <% vendors.forEach((vendor) => { %>
-                    <li class="item-card item-card--stacked">
+                    <li class="item-card">
                         <div class="item-info">
-                            <p class="item-name"><%= vendor.name %></p>
-                            <p class="item-meta"><span class="badge"><%= t(`vendorCategory.${vendor.category}`) %></span></p>
-                            <ul class="contact-list">
-                                <% if (vendor.phone) { %><li><a href="tel:<%= vendor.phone.replace(/[^\d+]/g, '') %>"><%= vendor.phone %></a></li><% } %>
-                                <% if (vendor.email) { %><li><a href="mailto:<%= vendor.email %>"><%= vendor.email %></a></li><% } %>
-                                <%# Rows saved by older versions were validated less strictly: only http(s) becomes a link. %>
-                                <% if (vendor.website && /^https?:\/\//i.test(vendor.website)) { %><li><a href="<%= vendor.website %>" rel="noopener noreferrer" target="_blank"><%= t('vendors.visitWebsite') %></a></li><% } %>
-                            </ul>
+                            <p class="item-name"><%= vendor.name %> <span class="tag"><%= t(`vendorCategory.${vendor.category}`) %></span></p>
+                            <%# Rows saved by older versions were validated less strictly: only http(s) becomes a link. %>
+                            <% const website = vendor.website && /^https?:\/\//i.test(vendor.website) ? vendor.website : null; %>
+                            <% if (vendor.phone || vendor.email || website) { %>
+                                <ul class="contact-list">
+                                    <% if (vendor.phone) { %><li><a href="tel:<%= vendor.phone.replace(/[^\d+]/g, '') %>"><%= vendor.phone %></a></li><% } %>
+                                    <% if (vendor.email) { %><li><a href="mailto:<%= vendor.email %>"><%= vendor.email %></a></li><% } %>
+                                    <% if (website) { %><li><a href="<%= website %>" rel="noopener noreferrer" target="_blank"><%= t('vendors.visitWebsite') %><span class="visually-hidden"> (<%= t('action.opensNewTab') %>)</span></a></li><% } %>
+                                </ul>
+                            <% } %>
                             <% if (vendor.notes) { %><p class="item-notes"><%= vendor.notes %></p><% } %>
                         </div>
-                        <div class="item-actions">
-                            <% if (canEdit) { %>
-                                <form method="post" action="/vendors/<%= vendor.id %>/status">
-                                    <%- include('partials/csrf-field') %>
-                                    <%- include('partials/return-to') %>
-                                    <button type="submit" class="badge badge--<%= vendor.status.toLowerCase() %> badge--button"
-                                            aria-label="<%= t('vendors.cycleStatus', { name: vendor.name, status: t(`vendorStatus.${vendor.status}`) }) %>"><%= t(`vendorStatus.${vendor.status}`) %></button>
-                                </form>
-                                <a class="btn btn-ghost btn-small" href="/vendors/<%= vendor.id %>/edit" aria-label="<%= t('action.editNamed', { name: vendor.name }) %>"><%= t('action.edit') %></a>
-                                <form method="post" action="/vendors/<%= vendor.id %>/delete" data-confirm="<%= t('confirm.deleteVendor', { name: vendor.name }) %>">
-                                    <%- include('partials/csrf-field') %>
-                                    <%- include('partials/return-to') %>
-                                    <button type="submit" class="btn btn-danger btn-small" aria-label="<%= t('action.deleteNamed', { name: vendor.name }) %>"><%= t('action.delete') %></button>
-                                </form>
-                            <% } else { %>
-                                <span class="badge badge--<%= vendor.status.toLowerCase() %>"><%= t(`vendorStatus.${vendor.status}`) %></span>
-                            <% } %>
+                        <div class="item-side">
+                            <%- include('partials/status-form', { action: `/vendors/${vendor.id}/status`, field: 'status', value: vendor.status, options: statuses, prefix: 'vendorStatus', label: t('vendors.statusFor', { name: vendor.name }), id: `status-${vendor.id}` }) %>
                         </div>
+                        <% if (canEdit) { %>
+                            <%- include('partials/row-actions', { editHref: `/vendors/${vendor.id}/edit`, deleteAction: `/vendors/${vendor.id}/delete`, name: vendor.name, confirm: t('confirm.deleteVendor', { name: vendor.name }) }) %>
+                        <% } %>
                     </li>
                 <% }); %>
             </ul>

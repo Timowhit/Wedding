@@ -1,0 +1,18 @@
+<%#
+    A row's status picker. Editors get a select that saves on change (a Save button appears
+    without JavaScript); viewers get a read-only status label.
+    Expects: action, field, value, options, prefix (i18n), label (accessible name), id.
+%>
+<% if (canEdit) { %>
+    <form method="post" action="<%= action %>" class="status-form">
+        <%- include('csrf-field') %>
+        <%- include('return-to') %>
+        <label class="visually-hidden" for="<%= id %>"><%= label %></label>
+        <select id="<%= id %>" name="<%= field %>" class="status-select status--<%= value.toLowerCase() %>" data-autosubmit>
+            <%- include('options', { options, selected: value, prefix }) %>
+        </select>
+        <button type="submit" class="btn btn-ghost btn-small" data-hide-with-js><%= t('action.saveShort') %></button>
+    </form>
+<% } else { %>
+    <span class="status status--<%= value.toLowerCase() %>"><%= t(`${prefix}.${value}`) %></span>
+<% } %>

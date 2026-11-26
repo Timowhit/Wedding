@@ -1,4 +1,4 @@
-import { RSVP_STATUSES, nextInCycle } from '../constants.js';
+import { RSVP_STATUSES } from '../constants.js';
 import {
     createGuest,
     deleteGuest,
@@ -69,11 +69,17 @@ const processEditGuest = async (req, res, next) => {
     res.redirect(backTo(req, '/guests'));
 };
 
-/** One click moves Pending -> Confirmed -> Declined -> Pending. */
-const processCycleRsvp = async (req, res, next) => {
-    const guest = isUuid(req.params.id) ? await findGuest(req.params.id, req.wedding.id) : null;
+/** The RSVP picker on each row: sets the chosen status. */
+const processSetRsvp = async (req, res, next) => {
+    if (!isUuid(req.params.id)) return next();
+    const rsvp = readChoice(req.body?.rsvp, RSVP_STATUSES);
+    if (!rsvp) {
+        setFlash(req, 'error', 'validation.choice');
+        return res.redirect(backTo(req, '/guests'));
+    }
+    const guest = await updateGuestRsvp(req.params.id, req.wedding.id, rsvp);
     if (!guest) return next();
-    await updateGuestRsvp(guest.id, req.wedding.id, nextInCycle(RSVP_STATUSES, guest.rsvp));
+    setFlash(req, 'success', 'guests.rsvpSaved', { name: guest.name });
     res.redirect(backTo(req, '/guests'));
 };
 
@@ -83,4 +89,4 @@ const processDeleteGuest = async (req, res, next) => {
     res.redirect(backTo(req, '/guests'));
 };
 
-export { showGuests, processNewGuest, showEditGuest, processEditGuest, processCycleRsvp, processDeleteGuest };
+export { showGuests, processNewGuest, showEditGuest, processEditGuest, processSetRsvp, processDeleteGuest };

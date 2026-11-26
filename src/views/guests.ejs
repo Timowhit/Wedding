@@ -18,8 +18,7 @@
     </section>
 
     <% if (canEdit) { %>
-        <section class="card" aria-labelledby="add-guest-heading">
-            <h2 class="card-title" id="add-guest-heading"><%= t('guests.add') %></h2>
+        <%- include('partials/add-panel-start', { id: 'add-guest', labelKey: 'guests.add', open: stats.total === 0 || guestForm.errors.length > 0 }) %>
             <%- include('partials/form-errors', { errors: guestForm.errors, id: 'guest-errors' }) %>
             <form method="post" action="/guests" class="form-grid">
                 <%- include('partials/csrf-field') %>
@@ -29,7 +28,7 @@
                     <button type="submit" class="btn btn-primary"><%= t('guests.addSubmit') %></button>
                 </div>
             </form>
-        </section>
+        <%- include('partials/add-panel-end') %>
     <% } %>
 
     <section aria-labelledby="guest-list-heading">
@@ -49,28 +48,18 @@
                     <li class="item-card">
                         <div class="item-info">
                             <p class="item-name"><%= guest.name %></p>
-                            <p class="item-meta">
-                                <% if (guest.diet) { %><span><%= t('guests.dietLabel', { diet: guest.diet }) %></span><% } %>
-                                <% if (guest.plus_one) { %><span><%= t('guests.plusOneLabel', { name: guest.plus_one }) %></span><% } %>
-                            </p>
+                            <% if (guest.diet || guest.plus_one) { %>
+                                <p class="item-meta">
+                                    <% if (guest.diet) { %><span><%= t('guests.dietLabel', { diet: guest.diet }) %></span><% } %>
+                                    <% if (guest.plus_one) { %><span><%= t('guests.plusOneLabel', { name: guest.plus_one }) %></span><% } %>
+                                </p>
+                            <% } %>
+                        </div>
+                        <div class="item-side">
+                            <%- include('partials/status-form', { action: `/guests/${guest.id}/rsvp`, field: 'rsvp', value: guest.rsvp, options: statuses, prefix: 'rsvp', label: t('guests.rsvpFor', { name: guest.name }), id: `rsvp-${guest.id}` }) %>
                         </div>
                         <% if (canEdit) { %>
-                            <div class="item-actions">
-                                <form method="post" action="/guests/<%= guest.id %>/rsvp">
-                                    <%- include('partials/csrf-field') %>
-                                    <%- include('partials/return-to') %>
-                                    <button type="submit" class="badge badge--<%= guest.rsvp.toLowerCase() %> badge--button"
-                                            aria-label="<%= t('guests.cycleRsvp', { name: guest.name, status: t(`rsvp.${guest.rsvp}`) }) %>"><%= t(`rsvp.${guest.rsvp}`) %></button>
-                                </form>
-                                <a class="btn btn-ghost btn-small" href="/guests/<%= guest.id %>/edit" aria-label="<%= t('action.editNamed', { name: guest.name }) %>"><%= t('action.edit') %></a>
-                                <form method="post" action="/guests/<%= guest.id %>/delete" data-confirm="<%= t('confirm.deleteGuest', { name: guest.name }) %>">
-                                    <%- include('partials/csrf-field') %>
-                                    <%- include('partials/return-to') %>
-                                    <button type="submit" class="btn btn-danger btn-small" aria-label="<%= t('action.deleteNamed', { name: guest.name }) %>"><%= t('action.delete') %></button>
-                                </form>
-                            </div>
-                        <% } else { %>
-                            <span class="badge badge--<%= guest.rsvp.toLowerCase() %>"><%= t(`rsvp.${guest.rsvp}`) %></span>
+                            <%- include('partials/row-actions', { editHref: `/guests/${guest.id}/edit`, deleteAction: `/guests/${guest.id}/delete`, name: guest.name, confirm: t('confirm.deleteGuest', { name: guest.name }) }) %>
                         <% } %>
                     </li>
                 <% }); %>

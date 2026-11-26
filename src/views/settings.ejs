@@ -54,11 +54,11 @@
                 <li class="item-card">
                     <span class="avatar" aria-hidden="true"><%= label.charAt(0).toUpperCase() %></span>
                     <div class="item-info">
-                        <p class="item-name"><%= label %><% if (isMe) { %> <span class="badge"><%= t('settings.you') %></span><% } %></p>
+                        <p class="item-name"><%= label %><% if (isMe) { %> <span class="tag"><%= t('settings.you') %></span><% } %></p>
                         <p class="item-meta"><%= member.email %></p>
                     </div>
                     <% if (member.role === 'owner' || !isOwner) { %>
-                        <span class="badge badge--<%= member.role %>"><%= t(`role.${member.role}`) %></span>
+                        <span class="role role--<%= member.role %>"><%= t(`role.${member.role}`) %></span>
                     <% } else { %>
                         <div class="item-actions">
                             <form method="post" action="/settings/members/<%= member.user_id %>/role" class="inline-form">
@@ -73,7 +73,7 @@
                             </form>
                             <form method="post" action="/settings/members/<%= member.user_id %>/delete" data-confirm="<%= t('confirm.removeMember', { name: label }) %>">
                                 <%- include('partials/csrf-field') %>
-                                <button type="submit" class="btn btn-danger btn-small" aria-label="<%= t('action.removeNamed', { name: label }) %>"><%= t('action.remove') %></button>
+                                <button type="submit" class="link-action link-action--danger" aria-label="<%= t('action.removeNamed', { name: label }) %>"><%= t('action.remove') %></button>
                             </form>
                         </div>
                     <% } %>
@@ -117,7 +117,7 @@
                             <div class="item-info">
                                 <p class="item-name"><%= invite.invited_email || t('settings.shareLink') %></p>
                                 <p class="item-meta">
-                                    <span class="badge badge--<%= invite.status %>"><%= t(`inviteStatus.${invite.status}`) %></span>
+                                    <span class="status status--<%= invite.status %>"><%= t(`inviteStatus.${invite.status}`) %></span>
                                     <span><%= t(`role.${invite.role}`) %></span>
                                     <% if (invite.status === 'pending') { %><span><%= t('settings.expires', { date: formatDate(invite.expires_at) }) %></span><% } %>
                                 </p>
@@ -131,7 +131,7 @@
                             </div>
                             <form method="post" action="/settings/invites/<%= invite.id %>/delete">
                                 <%- include('partials/csrf-field') %>
-                                <button type="submit" class="btn btn-danger btn-small"><%= t(invite.status === 'pending' ? 'settings.revoke' : 'action.remove') %></button>
+                                <button type="submit" class="link-action link-action--danger"><%= t(invite.status === 'pending' ? 'settings.revoke' : 'action.remove') %></button>
                             </form>
                         </li>
                     <% }); %>
@@ -199,7 +199,7 @@
             <% weddings.forEach((w) => { %>
                 <li class="item-card">
                     <div class="item-info">
-                        <p class="item-name"><%= w.name %><% if (w.id === wedding.id) { %> <span class="badge"><%= t('settings.current') %></span><% } %></p>
+                        <p class="item-name"><%= w.name %><% if (w.id === wedding.id) { %> <span class="tag"><%= t('settings.current') %></span><% } %></p>
                         <p class="item-meta"><%= t(`role.${w.role}`) %><% if (w.wedding_date) { %> · <%= formatDate(w.wedding_date) %><% } %></p>
                     </div>
                     <% if (w.id !== wedding.id) { %>

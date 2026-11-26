@@ -20,11 +20,16 @@
         <h2 class="visually-hidden" id="progress-heading"><%= t('checklist.progress') %></h2>
         <label class="progress-label" for="task-progress"><%= t('checklist.progressLabel', { done: progress.done, total: progress.total }) %></label>
         <progress id="task-progress" class="progress" max="100" value="<%= progress.pct %>"><%= progress.pct %>%</progress>
+        <% if (canEdit && progress.total === 0) { %>
+            <form method="post" action="/checklist/examples" class="card-footer-action">
+                <%- include('partials/csrf-field') %>
+                <button type="submit" class="btn btn-secondary"><%= t('checklist.loadExamples') %></button>
+            </form>
+        <% } %>
     </section>
 
     <% if (canEdit) { %>
-        <section class="card" aria-labelledby="add-task-heading">
-            <h2 class="card-title" id="add-task-heading"><%= t('checklist.add') %></h2>
+        <%- include('partials/add-panel-start', { id: 'add-task', labelKey: 'checklist.add', open: progress.total === 0 || taskForm.errors.length > 0 }) %>
             <%- include('partials/form-errors', { errors: taskForm.errors, id: 'task-errors' }) %>
             <form method="post" action="/checklist" class="form-grid">
                 <%- include('partials/csrf-field') %>
@@ -34,28 +39,27 @@
                     <button type="submit" class="btn btn-primary"><%= t('checklist.addSubmit') %></button>
                 </div>
             </form>
-            <% if (progress.total === 0) { %>
-                <form method="post" action="/checklist/examples" class="form-footnote">
-                    <%- include('partials/csrf-field') %>
-                    <button type="submit" class="btn btn-ghost"><%= t('checklist.loadExamples') %></button>
-                </form>
-            <% } %>
-        </section>
+        <%- include('partials/add-panel-end') %>
     <% } %>
 
     <section aria-labelledby="task-list-heading">
         <h2 class="section-heading" id="task-list-heading"><%= t('checklist.tasks') %></h2>
-        <nav class="filter-tabs" aria-label="<%= t('filter.byStatus') %>">
-            <a class="filter-tab" href="<%= filterUrl({ status: null }) %>" <%- filters.status === null ? 'aria-current="page"' : '' %>><%= t('filter.all') %></a>
-            <a class="filter-tab" href="<%= filterUrl({ status: 'active' }) %>" <%- filters.status === 'active' ? 'aria-current="page"' : '' %>><%= t('checklist.statusActive') %></a>
-            <a class="filter-tab" href="<%= filterUrl({ status: 'done' }) %>" <%- filters.status === 'done' ? 'aria-current="page"' : '' %>><%= t('checklist.statusDone') %></a>
-        </nav>
-        <nav class="filter-tabs" aria-label="<%= t('filter.byCategory') %>">
-            <a class="filter-tab" href="<%= filterUrl({ category: null }) %>" <%- filters.category === null ? 'aria-current="page"' : '' %>><%= t('filter.allCategories') %></a>
-            <% categories.forEach((category) => { %>
-                <a class="filter-tab" href="<%= filterUrl({ category }) %>" <%- filters.category === category ? 'aria-current="page"' : '' %>><%= t(`taskCategory.${category}`) %></a>
-            <% }); %>
-        </nav>
+        <div class="filter-bar">
+            <nav class="filter-tabs" aria-label="<%= t('filter.byStatus') %>">
+                <a class="filter-tab" href="<%= filterUrl({ status: null }) %>" <%- filters.status === null ? 'aria-current="page"' : '' %>><%= t('filter.all') %></a>
+                <a class="filter-tab" href="<%= filterUrl({ status: 'active' }) %>" <%- filters.status === 'active' ? 'aria-current="page"' : '' %>><%= t('checklist.statusActive') %></a>
+                <a class="filter-tab" href="<%= filterUrl({ status: 'done' }) %>" <%- filters.status === 'done' ? 'aria-current="page"' : '' %>><%= t('checklist.statusDone') %></a>
+            </nav>
+            <form method="get" action="/checklist" class="filter-select">
+                <% if (filters.status) { %><input type="hidden" name="status" value="<%= filters.status %>"><% } %>
+                <label for="category-filter"><%= t('field.category') %></label>
+                <select id="category-filter" name="category" data-autosubmit>
+                    <option value=""><%= t('filter.allCategories') %></option>
+                    <%- include('partials/options', { options: categories, selected: filters.category, prefix: 'taskCategory' }) %>
+                </select>
+                <button type="submit" class="btn btn-ghost btn-small" data-hide-with-js><%= t('filter.apply') %></button>
+            </form>
+        </div>
 
         <% if (tasks.length === 0) { %>
             <p class="empty-state"><span aria-hidden="true">📋</span> <%= t(filters.status || filters.category ? 'filter.noMatches' : 'checklist.empty') %></p>
@@ -63,34 +67,27 @@
             <ul class="item-list">
                 <% tasks.forEach((task) => { %>
                     <% const due = toIsoDate(task.due_date); const overdue = !task.done && due && due < today; %>
-                    <li class="item-card <%= task.done ? 'item-card--done' : '' %>">
+                    <li class="item-card item-card--task <%= task.done ? 'item-card--done' : '' %>">
                         <% if (canEdit) { %>
-                            <form method="post" action="/checklist/<%= task.id %>/toggle">
+                            <form method="post" action="/checklist/<%= task.id %>/toggle" class="check-form">
                                 <%- include('partials/csrf-field') %>
                                 <%- include('partials/return-to') %>
                                 <button type="submit" class="check-btn" aria-pressed="<%= task.done %>"
-                                        aria-label="<%= t(task.done ? 'checklist.markActive' : 'checklist.markDone', { name: task.text }) %>"><span aria-hidden="true"><%= task.done ? '✓' : '' %></span></button>
+                                        aria-label="<%= t(task.done ? 'checklist.markActive' : 'checklist.markDone', { name: task.text }) %>"><span class="check-btn__circle" aria-hidden="true"><%= task.done ? '✓' : '' %></span></button>
                             </form>
                         <% } else { %>
-                            <span class="check-btn" aria-hidden="true"><%= task.done ? '✓' : '' %></span>
+                            <span class="check-btn check-btn--static" aria-hidden="true"><span class="check-btn__circle"><%= task.done ? '✓' : '' %></span></span>
                         <% } %>
                         <div class="item-info">
                             <p class="item-name"><%= task.text %><% if (task.done) { %><span class="visually-hidden"> (<%= t('checklist.statusDone') %>)</span><% } %></p>
                             <p class="item-meta">
-                                <span class="badge"><%= t(`taskCategory.${task.category}`) %></span>
+                                <span class="tag"><%= t(`taskCategory.${task.category}`) %></span>
                                 <% if (due) { %><span class="<%= overdue ? 'text-danger' : '' %>"><%= t(overdue ? 'checklist.overdue' : 'checklist.due', { date: formatDate(task.due_date) }) %></span><% } %>
                             </p>
+                            <% if (canEdit) { %>
+                                <%- include('partials/row-actions', { editHref: `/checklist/${task.id}/edit`, deleteAction: `/checklist/${task.id}/delete`, name: task.text, confirm: t('confirm.deleteTask', { name: task.text }) }) %>
+                            <% } %>
                         </div>
-                        <% if (canEdit) { %>
-                            <div class="item-actions">
-                                <a class="btn btn-ghost btn-small" href="/checklist/<%= task.id %>/edit" aria-label="<%= t('action.editNamed', { name: task.text }) %>"><%= t('action.edit') %></a>
-                                <form method="post" action="/checklist/<%= task.id %>/delete" data-confirm="<%= t('confirm.deleteTask', { name: task.text }) %>">
-                                    <%- include('partials/csrf-field') %>
-                                    <%- include('partials/return-to') %>
-                                    <button type="submit" class="btn btn-danger btn-small" aria-label="<%= t('action.deleteNamed', { name: task.text }) %>"><%= t('action.delete') %></button>
-                                </form>
-                            </div>
-                        <% } %>
                     </li>
                 <% }); %>
             </ul>

@@ -1,4 +1,4 @@
-import { VENDOR_CATEGORIES, VENDOR_STATUSES, nextInCycle } from '../constants.js';
+import { VENDOR_CATEGORIES, VENDOR_STATUSES } from '../constants.js';
 import {
     createVendor,
     deleteVendor,
@@ -78,11 +78,17 @@ const processEditVendor = async (req, res, next) => {
     res.redirect(backTo(req, '/vendors'));
 };
 
-/** One click moves Researching -> Contacted -> Booked -> Declined -> Researching. */
-const processCycleStatus = async (req, res, next) => {
-    const vendor = isUuid(req.params.id) ? await findVendor(req.params.id, req.wedding.id) : null;
+/** The status picker on each row: sets the chosen booking status. */
+const processSetStatus = async (req, res, next) => {
+    if (!isUuid(req.params.id)) return next();
+    const status = readChoice(req.body?.status, VENDOR_STATUSES);
+    if (!status) {
+        setFlash(req, 'error', 'validation.choice');
+        return res.redirect(backTo(req, '/vendors'));
+    }
+    const vendor = await updateVendorStatus(req.params.id, req.wedding.id, status);
     if (!vendor) return next();
-    await updateVendorStatus(vendor.id, req.wedding.id, nextInCycle(VENDOR_STATUSES, vendor.status));
+    setFlash(req, 'success', 'vendors.statusSaved', { name: vendor.name });
     res.redirect(backTo(req, '/vendors'));
 };
 
@@ -92,4 +98,4 @@ const processDeleteVendor = async (req, res, next) => {
     res.redirect(backTo(req, '/vendors'));
 };
 
-export { showVendors, processNewVendor, showEditVendor, processEditVendor, processCycleStatus, processDeleteVendor };
+export { showVendors, processNewVendor, showEditVendor, processEditVendor, processSetStatus, processDeleteVendor };

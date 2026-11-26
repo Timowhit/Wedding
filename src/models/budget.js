@@ -79,4 +79,29 @@ const deleteExpense = async (id, weddingId) => {
     return result.rowCount > 0;
 };
 
-export { findBudgetLimit, saveBudgetLimit, findExpenses, findTotalSpent, createExpense, deleteExpense };
+/**
+ * Spending per category, largest first (only categories with expenses).
+ * @param {string} weddingId
+ * @returns {Promise<Array<{category: string, total: number, count: number}>>}
+ */
+const findCategoryTotals = async (weddingId) => {
+    const result = await db.query(
+        `SELECT category, SUM(amount) AS total, COUNT(*) AS count
+         FROM budget_items
+         WHERE wedding_id = $1
+         GROUP BY category
+         ORDER BY SUM(amount) DESC, category ASC;`,
+        [weddingId]
+    );
+    return result.rows.map((row) => ({ category: row.category, total: Number(row.total), count: Number(row.count) }));
+};
+
+export {
+    findCategoryTotals,
+    findBudgetLimit,
+    saveBudgetLimit,
+    findExpenses,
+    findTotalSpent,
+    createExpense,
+    deleteExpense
+};

@@ -161,6 +161,29 @@ describe('weddings, invites and roles', { skip: skipWithoutDb }, () => {
         assert.equal(junk.location, '/settings');
     });
 
+    it('signing up from an invite link does not create a wedding of your own', async () => {
+        await owner.get('/settings');
+        await owner.post('/settings/invites', { email: '', role: 'editor' });
+        const token = tokenIn((await owner.get('/settings')).body);
+
+        const newcomer = new TestClient(app.baseUrl);
+        await newcomer.get(`/invite/${token}`);
+        const registered = await newcomer.register({ name: 'Newcomer', email: 'newcomer@example.com' });
+        assert.equal(registered.location, `/invite/${token}`);
+        const invitePage = await newcomer.get(`/invite/${token}`);
+        assert.match(invitePage.body, /Accept the invite below/);
+        assert.match(invitePage.body, /As an editor you can add and change everything/);
+
+        const { rows } = await app.pool.query(
+            `SELECT COUNT(*)::int AS n FROM wedding_members wm JOIN users u ON u.id = wm.user_id WHERE u.email = 'newcomer@example.com';`
+        );
+        assert.equal(rows[0].n, 0);
+        await newcomer.post(`/invite/${token}/accept`);
+        const settings = await newcomer.get('/settings');
+        assert.doesNotMatch(settings.body, /Newcomer’s Wedding/);
+        assert.match(settings.body, /Olivia’s Wedding/);
+    });
+
     it('revoked invites stop working', async () => {
         const settings = await owner.get('/settings');
         const inviteId = settings.body.match(/\/settings\/invites\/([0-9a-f-]{36})\/delete/)[1];

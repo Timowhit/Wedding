@@ -107,6 +107,15 @@ const findMembers = async (weddingId) => {
 };
 
 /**
+ * @param {string} weddingId
+ * @returns {Promise<number>} How many people (owner included) belong to the wedding.
+ */
+const countMembers = async (weddingId) => {
+    const result = await db.query('SELECT COUNT(*) AS total FROM wedding_members WHERE wedding_id = $1;', [weddingId]);
+    return Number(result.rows[0].total);
+};
+
+/**
  * Adds a member. An existing membership is left untouched (accepting an invite never
  * changes, and in particular never downgrades, a role the user already has).
  * @param {string} weddingId
@@ -165,6 +174,7 @@ export {
     updateWedding,
     updateWeddingDate,
     findMembers,
+    countMembers,
     addMember,
     updateMemberRole,
     removeMember

@@ -73,15 +73,6 @@ const EXAMPLE_TASKS = Object.freeze([
     { key: 'examples.arrangeTransport', category: 'Other' }
 ]);
 
-/**
- * Returns the next value in a list, wrapping around (used by the one-click status buttons).
- * @template T
- * @param {readonly T[]} list
- * @param {T} current
- * @returns {T}
- */
-const nextInCycle = (list, current) => list[(list.indexOf(current) + 1) % list.length];
-
 export {
     BUDGET_CATEGORIES,
     TASK_CATEGORIES,
@@ -90,6 +81,5 @@ export {
     VENDOR_CATEGORIES,
     VENDOR_STATUSES,
     MUSIC_SECTIONS,
-    EXAMPLE_TASKS,
-    nextInCycle
+    EXAMPLE_TASKS
 };

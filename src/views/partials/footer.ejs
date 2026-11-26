@@ -1,4 +1,15 @@
     <footer class="site-footer">
+        <form class="language-form" method="post" action="/language">
+            <%- include('csrf-field') %>
+            <input type="hidden" name="return_to" value="<%= currentUrl %>">
+            <label for="language-select"><%= t('nav.language') %></label>
+            <select id="language-select" name="language" data-autosubmit>
+                <% languages.forEach((code) => { %>
+                    <option value="<%= code %>" <%= code === lang ? 'selected' : '' %>><%= t(`language.${code}`) %></option>
+                <% }); %>
+            </select>
+            <button type="submit" class="btn btn-ghost btn-small" data-hide-with-js><%= t('nav.changeLanguage') %></button>
+        </form>
         <p>&copy; <%= new Date().getFullYear() %> Forever Planner</p>
     </footer>
 </body>
