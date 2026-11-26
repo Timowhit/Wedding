@@ -84,6 +84,13 @@ import {
     requireOwner
 } from '../middleware/wedding.js';
 import {
+    processDeleteItem,
+    processEditItem,
+    processNewItem,
+    showEditItem,
+    showSchedule
+} from '../controllers/schedule.js';
+import {
     processAnswer,
     processDeleteDecision,
     processEditDecision,
@@ -142,6 +149,13 @@ router.post('/decisions/:id/edit', asker, processEditDecision);
 router.post('/decisions/:id/reopen', asker, processReopen);
 router.post('/decisions/:id/delete', asker, processDeleteDecision);
 router.post('/decisions/:id/answer', answerer, processAnswer);
+
+/* Event-day schedule ---------------------------------------------------------------------------- */
+router.get('/schedule', member, showSchedule);
+router.post('/schedule', editor, processNewItem);
+router.get('/schedule/:id/edit', editor, showEditItem);
+router.post('/schedule/:id/edit', editor, processEditItem);
+router.post('/schedule/:id/delete', editor, processDeleteItem);
 
 /* Budget -------------------------------------------------------------------------------------- */
 router.get('/budget', member, showBudget);

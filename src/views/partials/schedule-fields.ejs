@@ -1,0 +1,41 @@
+<%# Fields shared by the add and edit schedule forms. Expects values, errors, errorsId, vendors. %>
+<div class="field">
+    <label for="starts_at"><%= t('field.starts_at') %></label>
+    <input type="time" id="starts_at" name="starts_at" required value="<%= values.starts_at %>" <%- fieldState(errors, 'starts_at', errorsId) %>>
+</div>
+<div class="field">
+    <label for="ends_at"><%= t('field.ends_at') %> <span class="optional"><%= t('form.optional') %></span></label>
+    <input type="time" id="ends_at" name="ends_at" value="<%= values.ends_at %>" <%- fieldState(errors, 'ends_at', errorsId) %>>
+</div>
+<div class="field field--wide">
+    <label for="title"><%= t('field.scheduleTitle') %></label>
+    <input type="text" id="title" name="title" required maxlength="200" value="<%= values.title %>"
+           placeholder="<%= t('schedule.titlePlaceholder') %>" <%- fieldState(errors, 'title', errorsId) %>>
+</div>
+<div class="field">
+    <label for="location"><%= t('field.location') %> <span class="optional"><%= t('form.optional') %></span></label>
+    <input type="text" id="location" name="location" maxlength="200" value="<%= values.location %>" <%- fieldState(errors, 'location', errorsId) %>>
+</div>
+<div class="field">
+    <label for="vendor_id"><%= t('field.vendor') %> <span class="optional"><%= t('form.optional') %></span></label>
+    <select id="vendor_id" name="vendor_id" <%- fieldState(errors, 'vendor_id', errorsId) %>>
+        <option value=""><%= t('schedule.noVendor') %></option>
+        <% vendors.forEach((vendor) => { %>
+            <option value="<%= vendor.id %>" <%= vendor.id === values.vendor_id ? 'selected' : '' %>><%= vendor.name %></option>
+        <% }); %>
+    </select>
+</div>
+<div class="field">
+    <label for="contact"><%= t('field.contact') %> <span class="optional"><%= t('form.optional') %></span></label>
+    <input type="text" id="contact" name="contact" maxlength="200" value="<%= values.contact %>"
+           placeholder="<%= t('schedule.contactPlaceholder') %>" <%- fieldState(errors, 'contact', errorsId) %>>
+</div>
+<div class="field field--wide">
+    <label for="notes"><%= t('field.setupNotes') %> <span class="optional"><%= t('form.optional') %></span></label>
+    <textarea id="notes" name="notes" rows="2" maxlength="2000" <%- fieldState(errors, 'notes', errorsId) %>><%= values.notes %></textarea>
+</div>
+<div class="field field--wide">
+    <label for="contingency"><%= t('field.contingency') %> <span class="optional"><%= t('form.optional') %></span></label>
+    <textarea id="contingency" name="contingency" rows="2" maxlength="2000" placeholder="<%= t('schedule.contingencyPlaceholder') %>"
+              <%- fieldState(errors, 'contingency', errorsId) %>><%= values.contingency %></textarea>
+</div>

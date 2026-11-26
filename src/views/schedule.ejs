@@ -1,0 +1,64 @@
+<%- include('partials/head') %>
+<% if (!print) { %><%- include('partials/header') %><% } %>
+
+<main id="main-content">
+    <% if (print) { %>
+        <p class="print-hide"><a href="/schedule"><%= t('schedule.backFromPrint') %></a></p>
+        <header class="page-header">
+            <h1><%= wedding.name %></h1>
+            <p class="subtitle"><%= t('schedule.printHeading') %><% if (wedding.wedding_date) { %> · <%= formatDate(wedding.wedding_date) %><% } %></p>
+        </header>
+    <% } else { %>
+        <%- include('partials/page-header', { heading: 'schedule.heading', subtitle: 'schedule.subtitle' }) %>
+        <%- include('partials/flash') %>
+        <%- include('partials/read-only-notice') %>
+        <p class="schedule__print"><a href="/schedule?print=1"><%= t('schedule.printable') %></a></p>
+
+        <% if (canEdit) { %>
+            <%- include('partials/add-panel-start', { id: 'add-schedule-item', labelKey: 'schedule.add', open: items.length === 0 || itemForm.errors.length > 0 }) %>
+                <%- include('partials/form-errors', { errors: itemForm.errors, id: 'schedule-errors' }) %>
+                <form method="post" action="/schedule" class="form-grid">
+                    <%- include('partials/csrf-field') %>
+                    <%- include('partials/schedule-fields', { values: itemForm.values, errors: itemForm.errors, errorsId: 'schedule-errors' }) %>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary"><%= t('schedule.addSubmit') %></button>
+                    </div>
+                </form>
+            <%- include('partials/add-panel-end') %>
+        <% } %>
+    <% } %>
+
+    <section aria-labelledby="timeline-heading">
+        <h2 class="section-heading<%= print ? ' visually-hidden' : '' %>" id="timeline-heading"><%= t('schedule.timeline') %></h2>
+        <% if (items.length === 0) { %>
+            <p class="empty-state"><span aria-hidden="true">🕰️</span> <%= t('schedule.empty') %></p>
+        <% } else { %>
+            <ol class="timeline">
+                <% items.forEach((item) => { %>
+                    <% const phone = item.contact || item.vendor_phone; %>
+                    <li class="timeline__item">
+                        <p class="timeline__time">
+                            <%= formatTime(item.starts_at) %><% if (item.ends_at) { %><span class="timeline__end">–<%= formatTime(item.ends_at) %></span><% } %>
+                        </p>
+                        <div class="timeline__body">
+                            <p class="item-name"><%= item.title %></p>
+                            <p class="item-meta">
+                                <% if (item.location) { %><span><%= item.location %></span><% } %>
+                                <% if (item.vendor_name) { %><span><%= item.vendor_name %></span><% } %>
+                                <% if (phone) { %><a href="tel:<%= phone.replace(/[^\d+]/g, '') %>"><%= phone %></a><% } %>
+                            </p>
+                            <% if (item.notes) { %><p class="item-notes"><%= item.notes %></p><% } %>
+                            <% if (item.contingency) { %><p class="timeline__plan-b"><strong><%= t('schedule.planB') %></strong> <%= item.contingency %></p><% } %>
+                            <% if (canEdit && !print) { %>
+                                <%- include('partials/row-actions', { editHref: `/schedule/${item.id}/edit`, deleteAction: `/schedule/${item.id}/delete`, name: item.title, confirm: t('confirm.deleteScheduleItem', { name: item.title }) }) %>
+                            <% } %>
+                        </div>
+                    </li>
+                <% }); %>
+            </ol>
+        <% } %>
+    </section>
+</main>
+
+<% if (!print) { %><%- include('partials/footer') %><% } else { %></body>
+</html><% } %>

@@ -1,5 +1,5 @@
 import { isSupportedLanguage, languageFromHeader, translate } from '../i18n/index.js';
-import { formatCurrency, formatDate, toIsoDate } from '../utils/format.js';
+import { formatCurrency, formatDate, formatTime, toIsoDate } from '../utils/format.js';
 
 /**
  * Chooses the page language and exposes translation/format helpers to every view:
@@ -19,6 +19,7 @@ const setLanguage = (req, res, next) => {
     res.locals.t = req.t;
     res.locals.formatCurrency = (amount) => formatCurrency(amount, lang);
     res.locals.formatDate = (value) => formatDate(value, lang);
+    res.locals.formatTime = (value) => formatTime(value, lang);
     res.locals.toIsoDate = toIsoDate;
     next();
 };
