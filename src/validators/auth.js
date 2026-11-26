@@ -1,7 +1,9 @@
+import { PALETTES, THEME_MODES } from '../constants.js';
 import { isSupportedLanguage } from '../i18n/index.js';
-import { EMAIL_MAX, checkText, collectErrors, isEmail, readText } from './common.js';
+import { EMAIL_MAX, checkText, collectErrors, isEmail, readChoice, readText } from './common.js';
 
 const NAME_MAX = 80;
+const BUSINESS_NAME_MAX = 120;
 const PASSWORD_MIN = 8;
 const PASSWORD_MAX = 200; // stops absurdly long passwords from tying up the hasher
 
@@ -86,7 +88,39 @@ const validatePasswordChange = (body = {}, hasPassword = true) => {
     return { currentPassword, newPassword, errors };
 };
 
+/**
+ * A user's own colour theme.
+ * @param {object} [body] - req.body
+ * @returns {{values: {palette: string, mode: string}, data: {palette: string, mode: string}, errors: Array}}
+ */
+const validateAppearance = (body = {}) => {
+    const values = { palette: readText(body.palette), mode: readText(body.mode) };
+    const { errors, fail } = collectErrors();
+    const palette = readChoice(values.palette, PALETTES);
+    const mode = readChoice(values.mode, THEME_MODES);
+    if (!palette) fail('palette', 'validation.choice');
+    if (!mode) fail('mode', 'validation.choice');
+    return { values, data: { palette, mode }, errors };
+};
+
+/**
+ * A planner's business details. An empty brand palette means "clients keep their own palette".
+ * @param {object} [body] - req.body
+ * @returns {{values: {business_name: string, brand_palette: string}, data: {businessName: string|null, brandPalette: string|null}, errors: Array}}
+ */
+const validateBusiness = (body = {}) => {
+    const values = { business_name: readText(body.business_name), brand_palette: readText(body.brand_palette) };
+    const { errors, fail } = collectErrors();
+    checkText(fail, 'business_name', values.business_name, { max: BUSINESS_NAME_MAX });
+    const brandPalette = values.brand_palette === '' ? null : readChoice(values.brand_palette, PALETTES);
+    if (values.brand_palette !== '' && !brandPalette) fail('brand_palette', 'validation.choice');
+    return { values, data: { businessName: values.business_name || null, brandPalette }, errors };
+};
+
 export {
+    BUSINESS_NAME_MAX,
+    validateAppearance,
+    validateBusiness,
     NAME_MAX,
     PASSWORD_MIN,
     PASSWORD_MAX,

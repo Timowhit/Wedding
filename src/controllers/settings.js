@@ -1,12 +1,19 @@
 import { createInvite, deleteInvite, findInvitesForWedding } from '../models/invites.js';
-import { findPasswordHash, updatePasswordHash, updateProfile } from '../models/users.js';
+import {
+    findPasswordHash,
+    updateAppearance,
+    updateBusiness,
+    updatePasswordHash,
+    updateProfile
+} from '../models/users.js';
+import { PALETTES, THEME_MODES } from '../constants.js';
 import { assignableRoles, findMembers, removeMember, updateMemberRole, updateWedding } from '../models/weddings.js';
 import { toSessionUser } from '../middleware/auth.js';
 import { isEmailConfigured, sendInviteEmail } from '../services/email.js';
 import { setFlash } from '../utils/flash.js';
 import { toIsoDate } from '../utils/format.js';
 import { hashPassword, verifyPassword } from '../utils/password.js';
-import { validatePasswordChange, validateProfile } from '../validators/auth.js';
+import { validateAppearance, validateBusiness, validatePasswordChange, validateProfile } from '../validators/auth.js';
 import { isUuid } from '../validators/common.js';
 import { readAssignableRole, validateInvite, validateWedding } from '../validators/weddings.js';
 
@@ -56,6 +63,19 @@ const renderSettings = async (req, res, { status = 200, forms = {} } = {}) => {
             errors: []
         },
         passwordForm: forms.password ?? { errors: [] },
+        palettes: PALETTES,
+        themeModes: THEME_MODES,
+        appearanceForm: forms.appearance ?? {
+            values: { palette: req.session.user.themePalette, mode: req.session.user.themeMode },
+            errors: []
+        },
+        businessForm: forms.business ?? {
+            values: {
+                business_name: req.session.user.businessName ?? '',
+                brand_palette: req.session.user.brandPalette ?? ''
+            },
+            errors: []
+        },
         inviteForm: forms.invite ?? { values: { email: '', role: 'editor' }, errors: [] },
         inviteRoles: assignableRoles(wedding),
         createdInviteUrl: takeCreatedInviteUrl(req)
@@ -100,6 +120,30 @@ const processPassword = async (req, res) => {
 
     await updatePasswordHash(req.session.user.id, await hashPassword(newPassword));
     setFlash(req, 'success', 'settings.passwordSaved');
+    res.redirect('/settings');
+};
+
+const processAppearance = async (req, res) => {
+    const { values, data, errors } = validateAppearance(req.body);
+    if (errors.length > 0) return renderSettings(req, res, { status: 400, forms: { appearance: { values, errors } } });
+
+    const updated = await updateAppearance(req.session.user.id, data);
+    if (!updated) throw new Error('Current user disappeared during update');
+    req.session.user = toSessionUser(updated);
+    setFlash(req, 'success', 'settings.appearanceSaved');
+    res.redirect('/settings');
+};
+
+/** Planner accounts only; anyone else gets a 404, as if the page did not exist. */
+const processBusiness = async (req, res, next) => {
+    if (!req.session.user.isPlanner) return next();
+    const { values, data, errors } = validateBusiness(req.body);
+    if (errors.length > 0) return renderSettings(req, res, { status: 400, forms: { business: { values, errors } } });
+
+    const updated = await updateBusiness(req.session.user.id, data);
+    if (!updated) return next();
+    req.session.user = toSessionUser(updated);
+    setFlash(req, 'success', 'settings.businessSaved');
     res.redirect('/settings');
 };
 
@@ -177,6 +221,8 @@ const processLeaveWedding = async (req, res) => {
 };
 
 export {
+    processAppearance,
+    processBusiness,
     showSettings,
     processWeddingDetails,
     processProfile,

@@ -28,6 +28,7 @@
     --info-soft: #eef2f8;
     --warning-soft: #fdf5e2;
     --focus: #1a5fb4;
+    --on-primary: #ffffff; /* text on primary and secondary buttons */
 
     --font-display: 'Cormorant Garamond', Georgia, serif;
     --font-body: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -70,6 +71,7 @@
         --info-soft: #232a35;
         --warning-soft: #3a3020;
         --focus: #8ab4f8;
+        --on-primary: #1b1718;
         --shadow-sm: 0 2px 8px rgb(0 0 0 / 40%);
         --shadow: 0 4px 16px rgb(0 0 0 / 50%);
     }
@@ -170,13 +172,13 @@ button {
     padding: var(--space-2) var(--space-4);
     border-radius: var(--radius-sm);
     background: var(--primary);
-    color: #fff;
+    color: var(--on-primary);
     font-weight: 600;
 }
 
 .skip-link:focus {
     top: var(--space-4);
-    color: #fff;
+    color: var(--on-primary);
 }
 
 /* ---------- Header & navigation ---------- */
@@ -730,22 +732,22 @@ textarea {
 
 .btn-primary {
     background: var(--primary);
-    color: #fff;
+    color: var(--on-primary);
 }
 
 .btn-primary:hover {
     background: var(--primary-hover);
-    color: #fff;
+    color: var(--on-primary);
 }
 
 .btn-secondary {
     background: var(--secondary);
-    color: #fff;
+    color: var(--on-primary);
 }
 
 .btn-secondary:hover {
     background: var(--secondary-hover);
-    color: #fff;
+    color: var(--on-primary);
 }
 
 .btn-ghost,
@@ -771,16 +773,7 @@ textarea {
     color: var(--danger);
 }
 
-@media (prefers-color-scheme: dark) {
-    .btn-primary,
-    .btn-secondary,
-    .btn-primary:hover,
-    .btn-secondary:hover,
-    .skip-link,
-    .skip-link:focus {
-        color: #1b1718;
-    }
-}
+
 
 /* ---------- Stats & dashboard ---------- */
 .stats-grid {
@@ -1186,14 +1179,10 @@ select.status-select {
 .filter-tab[aria-current='page'] {
     border-color: var(--primary);
     background: var(--primary);
-    color: #fff;
+    color: var(--on-primary);
 }
 
-@media (prefers-color-scheme: dark) {
-    .filter-tab[aria-current='page'] {
-        color: #1b1718;
-    }
-}
+
 
 /* ---------- Budget ---------- */
 .budget-summary {
@@ -1392,6 +1381,46 @@ select.status-select {
 .photo-credit {
     color: var(--text-muted);
     font-size: 0.75rem;
+}
+
+/* ---------- Choice groups (radio lists) and theme swatches ---------- */
+.choice-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.choice-group legend {
+    margin-bottom: var(--space-2);
+    padding: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.choice {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--target);
+    cursor: pointer;
+}
+
+.choice input {
+    width: 1.125rem;
+    height: 1.125rem;
+    accent-color: var(--primary);
+}
+
+.swatch {
+    display: inline-block;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 1px solid var(--field-border);
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--swatch-a) 50%, var(--swatch-b) 50%);
 }
 
 /* ---------- Add panels (collapsed "+ Add …" forms) ---------- */

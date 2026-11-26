@@ -1,7 +1,8 @@
 import db from './db.js';
 
 // Columns that are safe to load into a session or a view. Never includes password_hash.
-const PUBLIC_COLUMNS = 'id, email, display_name, avatar_url, language, created_at';
+const PUBLIC_COLUMNS = `id, email, display_name, avatar_url, language, created_at, account_type, founding_number,
+                        business_name, theme_palette, theme_mode, brand_palette`;
 
 /**
  * @param {string} id - users.id (UUID).
@@ -114,7 +115,40 @@ const updatePasswordHash = async (id, passwordHash) => {
     await db.query('UPDATE users SET password_hash = $2 WHERE id = $1;', [id, passwordHash]);
 };
 
+/**
+ * Saves a user's own colour theme.
+ * @param {string} id
+ * @param {{palette: string, mode: string}} values - Already validated against PALETTES / THEME_MODES.
+ * @returns {Promise<Object|null>} The updated user (public columns).
+ */
+const updateAppearance = async (id, { palette, mode }) => {
+    const result = await db.query(
+        `UPDATE users SET theme_palette = $2, theme_mode = $3 WHERE id = $1 RETURNING ${PUBLIC_COLUMNS};`,
+        [id, palette, mode]
+    );
+    return result.rows[0] ?? null;
+};
+
+/**
+ * Saves a planner's business name and brand palette (null = clients see their own palette).
+ * Only planner accounts are updated.
+ * @param {string} id
+ * @param {{businessName: string|null, brandPalette: string|null}} values - Already validated.
+ * @returns {Promise<Object|null>} The updated user, or null when the account is not a planner.
+ */
+const updateBusiness = async (id, { businessName, brandPalette }) => {
+    const result = await db.query(
+        `UPDATE users SET business_name = $2, brand_palette = $3
+         WHERE id = $1 AND account_type = 'planner'
+         RETURNING ${PUBLIC_COLUMNS};`,
+        [id, businessName, brandPalette]
+    );
+    return result.rows[0] ?? null;
+};
+
 export {
+    updateAppearance,
+    updateBusiness,
     findUserById,
     findUserForLogin,
     findPasswordHash,

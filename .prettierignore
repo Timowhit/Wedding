@@ -4,3 +4,4 @@ src/db/migrations
 src/views
 coverage
 .superpowers
+public/css/themes.css

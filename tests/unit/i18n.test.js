@@ -7,6 +7,8 @@ import { DICTIONARIES, languageFromHeader, translate } from '../../src/i18n/inde
 import {
     BUDGET_CATEGORIES,
     EXAMPLE_TASKS,
+    PALETTES,
+    THEME_MODES,
     MUSIC_SECTIONS,
     RSVP_STATUSES,
     TASK_CATEGORIES,
@@ -51,7 +53,9 @@ const dynamicKeys = () => [
     ...['client', 'editor', 'viewer'].map((r) => `invite.role.${r}`),
     ...['client', 'editor', 'viewer'].map((r) => `role.planner.${r}`),
     ...['pending', 'accepted', 'expired'].map((s) => `inviteStatus.${s}`),
-    ...Object.keys(DICTIONARIES).map((code) => `language.${code}`)
+    ...Object.keys(DICTIONARIES).map((code) => `language.${code}`),
+    ...PALETTES.map((p) => `palette.${p}`),
+    ...THEME_MODES.map((m) => `themeMode.${m}`)
 ];
 
 describe('translations', () => {

@@ -117,7 +117,7 @@ describe('authentication and security', { skip: skipWithoutDb }, () => {
         const switched = await visitor.post('/language', { language: 'es', return_to: '/login' });
         assert.equal(switched.location, '/login');
         const page = await visitor.get('/login');
-        assert.match(page.body, /<html lang="es">/);
+        assert.match(page.body, /<html lang="es"/);
         assert.match(page.body, /Iniciar sesión/);
 
         const evil = await visitor.post('/language', { language: 'en', return_to: '//evil.example' });
@@ -126,7 +126,7 @@ describe('authentication and security', { skip: skipWithoutDb }, () => {
         const spanishBrowser = await new TestClient(app.baseUrl).request('/login', {
             headers: { 'accept-language': 'es-MX' }
         });
-        assert.match(spanishBrowser.body, /<html lang="es">/);
+        assert.match(spanishBrowser.body, /<html lang="es"/);
     });
 
     it('shows Google sign-in as unavailable when it is not configured', async () => {

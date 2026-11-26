@@ -494,5 +494,27 @@ export default {
     'invite.role.viewer': 'Como lector puedes ver los planes, pero no cambiarlos.',
     'invite.role.client':
         'Como cliente puedes ver y cambiar los planes de tu boda y responder las decisiones de tu organizador.',
-    'auth.accountCreatedForInvite': '¡Bienvenido, {name}! Acepta la invitación de abajo para empezar a planificar.'
+    'auth.accountCreatedForInvite': '¡Bienvenido, {name}! Acepta la invitación de abajo para empezar a planificar.',
+
+    // Themes and planner business details
+    'settings.appearance': 'Apariencia',
+    'settings.appearanceSaved': 'Apariencia guardada.',
+    'settings.business': 'Tu negocio',
+    'settings.businessSaved': 'Datos del negocio guardados.',
+    'settings.noBrand': 'Sin colores de marca (los clientes usan los suyos)',
+    'settings.brandHint': 'Tus clientes ven la aplicación con estos colores en las bodas que organizas.',
+    'settings.brandInUse': 'Tu organizador eligió los colores de esta boda. Tu elección se aplica en todo lo demás.',
+    'field.palette': 'Colores',
+    'field.mode': 'Claro u oscuro',
+    'field.business_name': 'Nombre del negocio',
+    'field.brand_palette': 'Colores de marca',
+    'palette.rose': 'Rosa',
+    'palette.sage': 'Salvia',
+    'palette.navy': 'Azul marino',
+    'palette.champagne': 'Champán',
+    'palette.slate': 'Pizarra',
+    'themeMode.auto': 'Igual que mi dispositivo',
+    'themeMode.light': 'Claro',
+    'themeMode.dark': 'Oscuro',
+    'planner.foundingBadge': 'Organizador fundador n.º {number}: 40% de descuento de por vida.'
 };

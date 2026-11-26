@@ -44,6 +44,8 @@ import {
 import { processAcceptInvite, processDeclineInvite, showInvite } from '../controllers/invites.js';
 import { processAddTrack, processClearSection, processDeleteTrack, showMusic } from '../controllers/music.js';
 import {
+    processAppearance,
+    processBusiness,
     processInvite,
     processLeaveWedding,
     processMemberRole,
@@ -148,6 +150,8 @@ router.post('/inspiration/:id/delete', editor, processDeletePhoto);
 /* Settings ------------------------------------------------------------------------------------ */
 router.get('/settings', member, showSettings);
 router.post('/settings/profile', member, processProfile);
+router.post('/settings/appearance', member, processAppearance);
+router.post('/settings/business', member, processBusiness);
 router.post('/settings/password', member, passwordLimiter, processPassword);
 router.post('/settings/leave', member, processLeaveWedding);
 router.post('/settings/wedding', owner, processWeddingDetails);

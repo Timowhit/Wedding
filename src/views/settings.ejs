@@ -193,6 +193,64 @@
         </section>
     </div>
 
+    <div class="card-row">
+        <section class="card" aria-labelledby="appearance-heading">
+            <h2 class="card-title" id="appearance-heading"><%= t('settings.appearance') %></h2>
+            <%- include('partials/form-errors', { errors: appearanceForm.errors, id: 'appearance-errors' }) %>
+            <form method="post" action="/settings/appearance" class="form-stack">
+                <%- include('partials/csrf-field') %>
+                <fieldset class="choice-group">
+                    <legend><%= t('field.palette') %></legend>
+                    <% palettes.forEach((palette) => { %>
+                        <label class="choice">
+                            <input type="radio" name="palette" value="<%= palette %>" <%= palette === appearanceForm.values.palette ? 'checked' : '' %>>
+                            <span class="swatch" data-swatch="<%= palette %>" aria-hidden="true"></span>
+                            <%= t(`palette.${palette}`) %>
+                        </label>
+                    <% }); %>
+                </fieldset>
+                <fieldset class="choice-group">
+                    <legend><%= t('field.mode') %></legend>
+                    <% themeModes.forEach((mode) => { %>
+                        <label class="choice">
+                            <input type="radio" name="mode" value="<%= mode %>" <%= mode === appearanceForm.values.mode ? 'checked' : '' %>>
+                            <%= t(`themeMode.${mode}`) %>
+                        </label>
+                    <% }); %>
+                </fieldset>
+                <% if (isPlannerWedding && wedding.owner_brand_palette && !isOwner) { %>
+                    <p class="hint"><%= t('settings.brandInUse') %></p>
+                <% } %>
+                <button type="submit" class="btn btn-primary"><%= t('action.save') %></button>
+            </form>
+        </section>
+
+        <% if (user.isPlanner) { %>
+            <section class="card" aria-labelledby="business-heading">
+                <h2 class="card-title" id="business-heading"><%= t('settings.business') %></h2>
+                <%- include('partials/form-errors', { errors: businessForm.errors, id: 'business-errors' }) %>
+                <form method="post" action="/settings/business" class="form-stack">
+                    <%- include('partials/csrf-field') %>
+                    <div class="field">
+                        <label for="business_name"><%= t('field.business_name') %> <span class="optional"><%= t('form.optional') %></span></label>
+                        <input type="text" id="business_name" name="business_name" maxlength="120" autocomplete="organization"
+                               value="<%= businessForm.values.business_name %>" <%- fieldState(businessForm.errors, 'business_name', 'business-errors') %>>
+                    </div>
+                    <div class="field">
+                        <label for="brand_palette"><%= t('field.brand_palette') %></label>
+                        <select id="brand_palette" name="brand_palette" aria-describedby="brand-hint" <%- fieldState(businessForm.errors, 'brand_palette', 'business-errors') %>>
+                            <option value=""><%= t('settings.noBrand') %></option>
+                            <%- include('partials/options', { options: palettes, selected: businessForm.values.brand_palette, prefix: 'palette' }) %>
+                        </select>
+                        <p class="hint" id="brand-hint"><%= t('settings.brandHint') %></p>
+                    </div>
+                    <% if (user.foundingNumber) { %><p class="hint"><%= t('planner.foundingBadge', { number: user.foundingNumber }) %></p><% } %>
+                    <button type="submit" class="btn btn-primary"><%= t('action.save') %></button>
+                </form>
+            </section>
+        <% } %>
+    </div>
+
     <section class="card" aria-labelledby="weddings-heading">
         <h2 class="card-title" id="weddings-heading"><%= t('settings.yourWeddings') %></h2>
         <ul class="item-list">

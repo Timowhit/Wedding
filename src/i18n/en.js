@@ -492,5 +492,27 @@ export default {
     'invite.role.editor': 'As an editor you can add and change everything.',
     'invite.role.viewer': 'As a viewer you can see the plans but not change them.',
     'invite.role.client': "As a client you can see and change your wedding plans and answer your planner's decisions.",
-    'auth.accountCreatedForInvite': 'Welcome, {name}! Accept the invite below to start planning.'
+    'auth.accountCreatedForInvite': 'Welcome, {name}! Accept the invite below to start planning.',
+
+    // Themes and planner business details
+    'settings.appearance': 'Appearance',
+    'settings.appearanceSaved': 'Appearance saved.',
+    'settings.business': 'Your business',
+    'settings.businessSaved': 'Business details saved.',
+    'settings.noBrand': 'No brand colours (clients keep their own)',
+    'settings.brandHint': 'Your clients see the app in these colours inside the weddings you run.',
+    'settings.brandInUse': 'Your planner has chosen the colours for this wedding. Your choice applies everywhere else.',
+    'field.palette': 'Colours',
+    'field.mode': 'Light or dark',
+    'field.business_name': 'Business name',
+    'field.brand_palette': 'Brand colours',
+    'palette.rose': 'Rose',
+    'palette.sage': 'Sage',
+    'palette.navy': 'Navy',
+    'palette.champagne': 'Champagne',
+    'palette.slate': 'Slate',
+    'themeMode.auto': 'Match my device',
+    'themeMode.light': 'Light',
+    'themeMode.dark': 'Dark',
+    'planner.foundingBadge': 'Founding planner #{number}: 40% off for life.'
 };
