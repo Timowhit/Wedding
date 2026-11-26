@@ -41,6 +41,22 @@ describe('planner accounts and founding spots', { skip: skipWithoutDb }, () => {
         assert.match(form.body, /<input type="hidden" name="as" value="planner">/);
     });
 
+    it('the Google button on the sign-up form says "Start now" too', async () => {
+        const saved = { id: process.env.GOOGLE_CLIENT_ID, secret: process.env.GOOGLE_CLIENT_SECRET };
+        process.env.GOOGLE_CLIENT_ID = 'test-client-id';
+        process.env.GOOGLE_CLIENT_SECRET = 'test-client-secret';
+        try {
+            const form = await new TestClient(app.baseUrl).get('/register?as=planner');
+            assert.match(form.body, /href="\/auth\/google/);
+            assert.doesNotMatch(form.body, /Sign up/i);
+        } finally {
+            if (saved.id === undefined) delete process.env.GOOGLE_CLIENT_ID;
+            else process.env.GOOGLE_CLIENT_ID = saved.id;
+            if (saved.secret === undefined) delete process.env.GOOGLE_CLIENT_SECRET;
+            else process.env.GOOGLE_CLIENT_SECRET = saved.secret;
+        }
+    });
+
     it('planner sign-up has no wedding and no founding number yet', async () => {
         const { response } = await registerPlanner(app.baseUrl, 'Paula', 'paula@example.com', 'Paula Events');
         assert.equal(response.status, 302);
@@ -141,6 +157,7 @@ describe('planner accounts and founding spots', { skip: skipWithoutDb }, () => {
         await app.pool.query(
             `INSERT INTO checklist_tasks (wedding_id, text, category, due_date) VALUES ($1, 'Send invitations', 'Invitations', '2020-01-15');
              INSERT INTO decisions (wedding_id, title, due_date) VALUES ($1, 'Choose the menu', CURRENT_DATE + 10);
+             INSERT INTO decisions (wedding_id, title, status, comment) VALUES ($1, 'Pick the band', 'changes_requested', 'Louder');
              INSERT INTO budget_limits (wedding_id, total) VALUES ($1, 1000);
              INSERT INTO budget_items (wedding_id, name, category, amount) VALUES ($1, 'Venue', 'Venue', 1200);
              INSERT INTO guests (wedding_id, name, rsvp) VALUES ($1, 'Grandma', 'Confirmed'), ($1, 'Uncle', 'Pending');`.replaceAll(
@@ -163,6 +180,11 @@ describe('planner accounts and founding spots', { skip: skipWithoutDb }, () => {
         assert.match(page.body, /Send invitations/);
         assert.match(page.body, /Choose the menu/);
         assert.match(page.body, /1 open decision/);
+        // The total at the top counts the same thing as the cards: decisions waiting on couples.
+        assert.match(
+            page.body,
+            /<span class="stat-value">1<\/span><span class="stat-label">decisions waiting on couples/
+        );
         assert.match(page.body, /\$1,200\.00 of \$1,000\.00/);
         assert.match(page.body, /over budget/i);
         assert.match(page.body, /1 of 2 guests confirmed/);

@@ -64,7 +64,8 @@ const findPlannerOverview = async (userId, { q = '', when = 'upcoming' } = {}) =
 };
 
 /**
- * Totals across all of a planner's weddings, for the top of the dashboard.
+ * Totals across all of a planner's weddings, for the top of the dashboard. Decisions count only
+ * those waiting on couples, like the per-wedding cards; sent-back ones are shown on each card.
  * @param {string} userId
  * @returns {Promise<{weddingsThisMonth: number, openDecisions: number, overdueTasks: number}>}
  */
@@ -75,7 +76,7 @@ const findPlannerWorkload = async (userId) => {
            (SELECT COUNT(*) FROM weddings w JOIN mine ON mine.wedding_id = w.id
              WHERE date_trunc('month', w.wedding_date) = date_trunc('month', CURRENT_DATE))::int AS weddings_this_month,
            (SELECT COUNT(*) FROM decisions d JOIN mine ON mine.wedding_id = d.wedding_id
-             WHERE d.status <> 'approved')::int AS open_decisions,
+             WHERE d.status = 'open')::int AS open_decisions,
            (SELECT COUNT(*) FROM checklist_tasks t JOIN mine ON mine.wedding_id = t.wedding_id
              WHERE NOT t.done AND t.due_date < CURRENT_DATE)::int AS overdue_tasks;`,
         [userId]

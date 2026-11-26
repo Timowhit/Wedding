@@ -67,17 +67,18 @@ const updateDecision = async (id, weddingId, { title, details, dueDate }) => {
 };
 
 /**
- * Records the couple's answer.
+ * Records the couple's answer. An approved decision is final until the asker reopens it, so an answer
+ * sent from a page loaded before the approval changes nothing.
  * @param {string} id
  * @param {string} weddingId
  * @param {string} userId - Who answers.
  * @param {{status: 'approved'|'changes_requested', comment: string|null}} answer - Already validated.
- * @returns {Promise<{id: string, title: string, status: string}|null>}
+ * @returns {Promise<{id: string, title: string, status: string}|null>} Null if missing or already approved.
  */
 const answerDecision = async (id, weddingId, userId, { status, comment }) => {
     const result = await db.query(
         `UPDATE decisions SET status = $4, comment = $5, answered_by = $3, answered_at = NOW()
-         WHERE id = $1 AND wedding_id = $2
+         WHERE id = $1 AND wedding_id = $2 AND status <> 'approved'
          RETURNING id, title, status;`,
         [id, weddingId, userId, status, comment]
     );

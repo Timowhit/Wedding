@@ -109,7 +109,7 @@ export default {
     'auth.signIn': 'Sign in',
     'auth.createAccount': 'Start now',
     'auth.continueWithGoogle': 'Continue with Google',
-    'auth.signUpWithGoogle': 'Sign up with Google',
+    'auth.signUpWithGoogle': 'Start now with Google',
     'auth.or': 'or',
     'auth.noAccount': 'New here?',
     'auth.haveAccount': 'Already have an account?',
@@ -634,6 +634,8 @@ export default {
     'decisions.saved': 'Decision “{title}” saved.',
     'decisions.approved': '“{title}” approved.',
     'decisions.sentBack': '“{title}” sent back with your note.',
+    'decisions.alreadyApproved':
+        '“{title}” has already been approved. It needs to be reopened before it can be answered again.',
     'decisions.reopened': 'Decision reopened.',
     'decisions.deleted': 'Decision deleted.',
     'decisions.cannotAsk': 'Only the planning side can ask for decisions in this wedding.',

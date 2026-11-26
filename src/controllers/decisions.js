@@ -73,7 +73,10 @@ const processAnswer = async (req, res, next) => {
     if (errors.length > 0) {
         return renderDecisions(req, res, { status: 400, answerForm: { id: decision.id, values, errors } });
     }
-    await answerDecision(decision.id, req.wedding.id, req.session.user.id, data);
+    if (!(await answerDecision(decision.id, req.wedding.id, req.session.user.id, data))) {
+        setFlash(req, 'error', 'decisions.alreadyApproved', { title: decision.title });
+        return res.redirect('/decisions');
+    }
     setFlash(req, 'success', data.status === 'approved' ? 'decisions.approved' : 'decisions.sentBack', {
         title: decision.title
     });

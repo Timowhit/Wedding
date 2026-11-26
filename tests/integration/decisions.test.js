@@ -98,6 +98,17 @@ describe('decisions', { skip: skipWithoutDb }, () => {
         assert.equal((await statusOf(decisionId)).status, 'approved');
     });
 
+    it('an approved decision cannot be answered again from a stale page', async () => {
+        await client.get('/decisions');
+        const stale = await client.post(`/decisions/${decisionId}/answer`, {
+            status: 'changes_requested',
+            comment: 'Changed my mind'
+        });
+        assert.equal(stale.location, '/decisions');
+        assert.deepEqual(await statusOf(decisionId), { status: 'approved', comment: null });
+        assert.match((await client.get('/decisions')).body, /already been approved/);
+    });
+
     it('viewers, and the planner side in a planner wedding, cannot answer; clients cannot ask', async () => {
         await planner.post(`/decisions/${decisionId}/reopen`);
         await viewer.get('/decisions');
