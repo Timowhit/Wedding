@@ -773,8 +773,6 @@ textarea {
     color: var(--danger);
 }
 
-
-
 /* ---------- Stats & dashboard ---------- */
 .stats-grid {
     display: grid;
@@ -1181,8 +1179,6 @@ select.status-select {
     background: var(--primary);
     color: var(--on-primary);
 }
-
-
 
 /* ---------- Budget ---------- */
 .budget-summary {
