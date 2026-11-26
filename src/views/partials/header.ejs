@@ -35,7 +35,7 @@
         <% } else if (!locals.user) { %>
             <div class="site-header__guest">
                 <a class="btn btn-ghost btn-small" href="/login" <%- currentPath === '/login' ? 'aria-current="page"' : '' %>><%= t('auth.signIn') %></a>
-                <a class="btn btn-primary btn-small" href="/register" <%- currentPath === '/register' ? 'aria-current="page"' : '' %>><%= t('auth.createAccount') %></a>
+                <a class="btn btn-primary btn-small" href="/start" <%- currentPath === '/register' ? 'aria-current="page"' : '' %>><%= t('auth.createAccount') %></a>
             </div>
         <% } %>
     </div>

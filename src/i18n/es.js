@@ -104,7 +104,7 @@ export default {
     'auth.registerHeading': 'Empieza a *planificar*',
     'auth.registerSubtitle': 'Presupuesto, invitados, proveedores, música y más, todo en un solo lugar.',
     'auth.signIn': 'Iniciar sesión',
-    'auth.createAccount': 'Crear cuenta',
+    'auth.createAccount': 'Empieza ahora',
     'auth.continueWithGoogle': 'Continuar con Google',
     'auth.signUpWithGoogle': 'Registrarse con Google',
     'auth.or': 'o',
@@ -516,5 +516,33 @@ export default {
     'themeMode.auto': 'Igual que mi dispositivo',
     'themeMode.light': 'Claro',
     'themeMode.dark': 'Oscuro',
-    'planner.foundingBadge': 'Organizador fundador n.º {number}: 40% de descuento de por vida.'
+    'planner.foundingBadge': 'Organizador fundador n.º {number}: 40% de descuento de por vida.',
+
+    // Start now and planner accounts
+    'start.title': 'Empieza ahora',
+    'start.heading': 'Empieza a *planificar*',
+    'start.subtitle': 'Empezar es gratis. Cuéntanos cómo usarás Forever Planner.',
+    'start.plannerTitle': 'Soy organizador de bodas',
+    'start.plannerBody':
+        'Gestiona las bodas de todos tus clientes en un solo lugar: plazos, decisiones, presupuestos, invitados, mesas y el programa del día.',
+    'start.coupleTitle': 'Estamos planificando nuestra boda',
+    'start.coupleBody':
+        'Gratis para parejas: presupuesto, invitados, proveedores, tareas, música e inspiración, juntos.',
+    'start.foundingNote':
+        'Oferta fundadora: 40% de descuento de por vida para los primeros 300 organizadores. Quedan {left} plazas.',
+    'start.switchToCouple': '¿Planificas tu propia boda?',
+    'start.switchToPlanner': '¿Eres organizador de bodas?',
+    'auth.plannerTitle': 'Empieza como organizador',
+    'auth.plannerHeading': 'Todas las *bodas* de tus clientes, en un solo lugar',
+    'auth.plannerSubtitle': 'Crea tu cuenta de organizador y agrega la boda de tu primer cliente.',
+    'auth.startAsPlanner': 'Empieza como organizador de bodas',
+    'auth.startAsCouple': 'Empieza ahora, gratis para parejas',
+    'auth.plannerCreated': '¡Bienvenido, {name}! Agrega la boda de tu primer cliente para empezar.',
+    'settings.areYouPlanner': '¿Eres organizador de bodas?',
+    'settings.becomePlannerHelp':
+        'Cambia a una cuenta de organizador para gestionar las bodas de tus clientes desde un solo panel. Tu propia boda se queda tal como está.',
+    'settings.becomePlanner': 'Soy organizador de bodas',
+    'settings.becamePlanner':
+        'Ahora tienes una cuenta de organizador. Agrega la boda de tu primer cliente para conseguir una plaza fundadora.',
+    'confirm.becomePlanner': '¿Cambiar a una cuenta de organizador? Por ahora no se puede deshacer.'
 };

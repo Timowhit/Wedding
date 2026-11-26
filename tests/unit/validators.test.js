@@ -72,7 +72,16 @@ describe('auth validators', () => {
             confirm_password: ' secret12 '
         });
         assert.deepEqual(ok.errors, []);
-        assert.deepEqual(ok.values, { name: 'Ana', email: 'ana@example.com' });
+        assert.deepEqual(ok.values, { name: 'Ana', email: 'ana@example.com', business_name: '' });
+
+        const longBusiness = validateRegistration({
+            name: 'Ana',
+            email: 'ana@example.com',
+            business_name: 'x'.repeat(121),
+            password: 'secret12',
+            confirm_password: 'secret12'
+        });
+        assert.deepEqual(fields(longBusiness), ['business_name']);
         assert.equal(ok.password, ' secret12 ');
 
         const bad = validateRegistration({ name: '', email: 'nope', password: 'short', confirm_password: 'other' });

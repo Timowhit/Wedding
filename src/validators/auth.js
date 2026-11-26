@@ -41,11 +41,16 @@ const validateLogin = (body = {}) => {
 
 /**
  * @param {object} [body] - req.body
- * @returns {{values: {name: string, email: string}, password: string, errors: Array}}
+ * @returns {{values: {name: string, email: string, business_name: string}, password: string, errors: Array}}
  *          Values to show again on error (never the password) plus the password itself.
+ *          business_name is only used for planner sign-ups.
  */
 const validateRegistration = (body = {}) => {
-    const values = { name: readText(body.name), email: readText(body.email).toLowerCase() };
+    const values = {
+        name: readText(body.name),
+        email: readText(body.email).toLowerCase(),
+        business_name: readText(body.business_name)
+    };
     const password = readSecret(body.password);
     const { errors, fail } = collectErrors();
 
@@ -54,6 +59,7 @@ const validateRegistration = (body = {}) => {
         fail('email', 'validation.email');
     }
     checkNewPassword(fail, password, readSecret(body.confirm_password));
+    checkText(fail, 'business_name', values.business_name, { max: BUSINESS_NAME_MAX });
 
     return { values, password, errors };
 };
@@ -89,6 +95,13 @@ const validatePasswordChange = (body = {}, hasPassword = true) => {
 };
 
 /**
+ * Which kind of account a sign-up creates ("Start now" as a planner or as a couple).
+ * @param {unknown} value - req.query.as or req.body.as
+ * @returns {'planner'|'couple'}
+ */
+const readSignupKind = (value) => (value === 'planner' ? 'planner' : 'couple');
+
+/**
  * A user's own colour theme.
  * @param {object} [body] - req.body
  * @returns {{values: {palette: string, mode: string}, data: {palette: string, mode: string}, errors: Array}}
@@ -118,6 +131,7 @@ const validateBusiness = (body = {}) => {
 };
 
 export {
+    readSignupKind,
     BUSINESS_NAME_MAX,
     validateAppearance,
     validateBusiness,

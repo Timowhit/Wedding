@@ -6,6 +6,7 @@ import {
     processLogout,
     processRegister,
     showLoginForm,
+    showStart,
     showRegisterForm,
     startGoogleLogin
 } from '../controllers/auth.js';
@@ -44,6 +45,7 @@ import {
 import { processAcceptInvite, processDeclineInvite, showInvite } from '../controllers/invites.js';
 import { processAddTrack, processClearSection, processDeleteTrack, showMusic } from '../controllers/music.js';
 import {
+    processBecomePlanner,
     processAppearance,
     processBusiness,
     processInvite,
@@ -84,6 +86,7 @@ const owner = [...member, requireOwner];
 /* Public ------------------------------------------------------------------------------------- */
 router.get('/login', redirectIfLoggedIn, showLoginForm);
 router.post('/login', redirectIfLoggedIn, loginLimiter, processLogin);
+router.get('/start', redirectIfLoggedIn, showStart);
 router.get('/register', redirectIfLoggedIn, showRegisterForm);
 router.post('/register', redirectIfLoggedIn, registerLimiter, processRegister);
 router.post('/logout', processLogout);
@@ -152,6 +155,7 @@ router.get('/settings', member, showSettings);
 router.post('/settings/profile', member, processProfile);
 router.post('/settings/appearance', member, processAppearance);
 router.post('/settings/business', member, processBusiness);
+router.post('/settings/become-planner', member, processBecomePlanner);
 router.post('/settings/password', member, passwordLimiter, processPassword);
 router.post('/settings/leave', member, processLeaveWedding);
 router.post('/settings/wedding', owner, processWeddingDetails);

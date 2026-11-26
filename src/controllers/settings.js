@@ -4,7 +4,8 @@ import {
     updateAppearance,
     updateBusiness,
     updatePasswordHash,
-    updateProfile
+    updateProfile,
+    upgradeToPlanner
 } from '../models/users.js';
 import { PALETTES, THEME_MODES } from '../constants.js';
 import { assignableRoles, findMembers, removeMember, updateMemberRole, updateWedding } from '../models/weddings.js';
@@ -134,6 +135,16 @@ const processAppearance = async (req, res) => {
     res.redirect('/settings');
 };
 
+/** "I'm a wedding planner": turns a couple account into a planner account. */
+const processBecomePlanner = async (req, res) => {
+    if (req.session.user.isPlanner) return res.redirect('/planner');
+    const updated = await upgradeToPlanner(req.session.user.id);
+    if (!updated) throw new Error('Current user disappeared during update');
+    req.session.user = toSessionUser(updated);
+    setFlash(req, 'success', 'settings.becamePlanner');
+    res.redirect('/planner');
+};
+
 /** Planner accounts only; anyone else gets a 404, as if the page did not exist. */
 const processBusiness = async (req, res, next) => {
     if (!req.session.user.isPlanner) return next();
@@ -221,6 +232,7 @@ const processLeaveWedding = async (req, res) => {
 };
 
 export {
+    processBecomePlanner,
     processAppearance,
     processBusiness,
     showSettings,

@@ -1,0 +1,26 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content">
+    <%- include('partials/page-header', { heading: 'start.heading', subtitle: 'start.subtitle' }) %>
+    <%- include('partials/flash') %>
+
+    <ul class="start-choices">
+        <li class="card start-choice start-choice--planner">
+            <h2 class="card-title"><%= t('start.plannerTitle') %></h2>
+            <p><%= t('start.plannerBody') %></p>
+            <% if (spotsLeft > 0) { %>
+                <p class="founding-note"><%= t('start.foundingNote', { left: spotsLeft }) %></p>
+            <% } %>
+            <a class="btn btn-primary" href="/register?as=planner"><%= t('auth.createAccount') %></a>
+        </li>
+        <li class="card start-choice">
+            <h2 class="card-title"><%= t('start.coupleTitle') %></h2>
+            <p><%= t('start.coupleBody') %></p>
+            <a class="btn btn-secondary" href="/register?as=couple"><%= t('auth.createAccount') %></a>
+        </li>
+    </ul>
+    <p class="form-footnote"><%= t('auth.haveAccount') %> <a href="/login"><%= t('auth.signIn') %></a></p>
+</main>
+
+<%- include('partials/footer') %>

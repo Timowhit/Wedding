@@ -2,24 +2,37 @@
 <%- include('partials/header') %>
 
 <main id="main-content" class="narrow">
-    <%- include('partials/page-header', { heading: 'auth.registerHeading', subtitle: 'auth.registerSubtitle' }) %>
+    <%- include('partials/page-header', signupAs === 'planner'
+        ? { heading: 'auth.plannerHeading', subtitle: 'auth.plannerSubtitle' }
+        : { heading: 'auth.registerHeading', subtitle: 'auth.registerSubtitle' }) %>
     <%- include('partials/flash') %>
 
     <section class="card" aria-labelledby="register-heading">
-        <h2 class="card-title" id="register-heading"><%= t('auth.createAccount') %></h2>
+        <h2 class="card-title" id="register-heading"><%= t(signupAs === 'planner' ? 'auth.startAsPlanner' : 'auth.startAsCouple') %></h2>
+        <% if (signupAs === 'planner' && spotsLeft > 0) { %>
+            <p class="founding-note"><%= t('start.foundingNote', { left: spotsLeft }) %></p>
+        <% } %>
         <% if (googleEnabled) { %>
-            <a class="btn btn-google btn-full" href="/auth/google"><%= t('auth.signUpWithGoogle') %></a>
+            <a class="btn btn-google btn-full" href="/auth/google<%= signupAs === 'planner' ? '?as=planner' : '' %>"><%= t('auth.signUpWithGoogle') %></a>
             <p class="divider"><span><%= t('auth.or') %></span></p>
         <% } %>
 
         <%- include('partials/form-errors', { errors }) %>
         <form method="post" action="/register" class="form-stack">
             <%- include('partials/csrf-field') %>
+            <input type="hidden" name="as" value="<%= signupAs %>">
             <div class="field">
                 <label for="name"><%= t('field.name') %></label>
                 <input type="text" id="name" name="name" value="<%= values.name %>" required maxlength="80"
                        autocomplete="name" <%- fieldState(errors, 'name') %>>
             </div>
+            <% if (signupAs === 'planner') { %>
+                <div class="field">
+                    <label for="business_name"><%= t('field.business_name') %> <span class="optional"><%= t('form.optional') %></span></label>
+                    <input type="text" id="business_name" name="business_name" value="<%= values.business_name %>" maxlength="120"
+                           autocomplete="organization" <%- fieldState(errors, 'business_name') %>>
+                </div>
+            <% } %>
             <div class="field">
                 <label for="email"><%= t('field.email') %></label>
                 <input type="email" id="email" name="email" value="<%= values.email %>" required maxlength="255"
@@ -39,6 +52,7 @@
             <button type="submit" class="btn btn-primary btn-full"><%= t('auth.createAccount') %></button>
         </form>
         <p class="form-footnote"><%= t('auth.haveAccount') %> <a href="/login"><%= t('auth.signIn') %></a></p>
+        <p class="form-footnote"><a href="/register?as=<%= signupAs === 'planner' ? 'couple' : 'planner' %>"><%= t(signupAs === 'planner' ? 'start.switchToCouple' : 'start.switchToPlanner') %></a></p>
     </section>
 </main>
 

@@ -17,7 +17,7 @@
             <p><%= invite.invited_email ? t('invite.signInAs', { email: invite.invited_email }) : t('invite.signInToJoin') %></p>
             <div class="form-actions">
                 <a class="btn btn-primary" href="/login"><%= t('auth.signIn') %></a>
-                <a class="btn btn-secondary" href="/register"><%= t('auth.createAccount') %></a>
+                <a class="btn btn-secondary" href="/start"><%= t('auth.createAccount') %></a>
             </div>
         <% } else if (wrongAccount) { %>
             <p class="notice notice--error"><%= t('invite.wrongAccount', { email: invite.invited_email }) %></p>

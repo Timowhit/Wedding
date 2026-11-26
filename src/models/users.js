@@ -35,17 +35,20 @@ const findPasswordHash = async (id) => {
 
 /**
  * Creates a password account.
- * @param {{email: string, passwordHash: string, displayName: string, language: string}} values - Already validated.
+ * @param {{email: string, passwordHash: string, displayName: string, language: string, accountType?: 'couple'|'planner', businessName?: string|null}} values - Already validated.
  * @param {import('pg').PoolClient|typeof db} [client] - Pass a transaction client to join a transaction.
  * @returns {Promise<Object>} The new user (public columns).
  * @throws {Error} With code 23505 if the email is already registered.
  */
-const createUser = async ({ email, passwordHash, displayName, language }, client = db) => {
+const createUser = async (
+    { email, passwordHash, displayName, language, accountType = 'couple', businessName = null },
+    client = db
+) => {
     const result = await client.query(
-        `INSERT INTO users (email, password_hash, display_name, language)
-         VALUES ($1, $2, $3, $4)
+        `INSERT INTO users (email, password_hash, display_name, language, account_type, business_name)
+         VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING ${PUBLIC_COLUMNS};`,
-        [email, passwordHash, displayName, language]
+        [email, passwordHash, displayName, language, accountType, businessName]
     );
     return result.rows[0];
 };
@@ -53,11 +56,15 @@ const createUser = async ({ email, passwordHash, displayName, language }, client
 /**
  * Finds or creates the account for a Google sign-in. An existing account with the same email
  * is linked rather than duplicated; callers must only pass an email Google has verified.
- * @param {{googleId: string, email: string, displayName: string|null, avatarUrl: string|null, language: string}} profile
+ * @param {{googleId: string, email: string, displayName: string|null, avatarUrl: string|null, language: string, accountType?: 'couple'|'planner'}} profile
+ *        accountType only applies when a new account is created.
  * @param {import('pg').PoolClient|typeof db} [client]
  * @returns {Promise<{user: Object, created: boolean}>}
  */
-const upsertGoogleUser = async ({ googleId, email, displayName, avatarUrl, language }, client = db) => {
+const upsertGoogleUser = async (
+    { googleId, email, displayName, avatarUrl, language, accountType = 'couple' },
+    client = db
+) => {
     const existing = await client.query(`SELECT ${PUBLIC_COLUMNS} FROM users WHERE google_id = $1;`, [googleId]);
     if (existing.rows[0]) return { user: existing.rows[0], created: false };
 
@@ -74,10 +81,10 @@ const upsertGoogleUser = async ({ googleId, email, displayName, avatarUrl, langu
     if (linked.rows[0]) return { user: linked.rows[0], created: false };
 
     const inserted = await client.query(
-        `INSERT INTO users (email, google_id, display_name, avatar_url, language)
-         VALUES ($1, $2, $3, $4, $5)
+        `INSERT INTO users (email, google_id, display_name, avatar_url, language, account_type)
+         VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING ${PUBLIC_COLUMNS};`,
-        [email, googleId, displayName, avatarUrl, language]
+        [email, googleId, displayName, avatarUrl, language, accountType]
     );
     return { user: inserted.rows[0], created: true };
 };
@@ -146,7 +153,24 @@ const updateBusiness = async (id, { businessName, brandPalette }) => {
     return result.rows[0] ?? null;
 };
 
+/**
+ * Turns a couple account into a planner account. Existing weddings are untouched (a wedding only
+ * becomes a planner wedding when a planner creates or takes it over). No founding number is given
+ * here: that happens with the planner's first planner wedding.
+ * @param {string} id
+ * @param {import('pg').PoolClient|typeof db} [client]
+ * @returns {Promise<Object|null>} The updated user, or null when it does not exist.
+ */
+const upgradeToPlanner = async (id, client = db) => {
+    const result = await client.query(
+        `UPDATE users SET account_type = 'planner' WHERE id = $1 RETURNING ${PUBLIC_COLUMNS};`,
+        [id]
+    );
+    return result.rows[0] ?? null;
+};
+
 export {
+    upgradeToPlanner,
     updateAppearance,
     updateBusiness,
     findUserById,

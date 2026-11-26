@@ -1419,6 +1419,37 @@ select.status-select {
     background: linear-gradient(135deg, var(--swatch-a) 50%, var(--swatch-b) 50%);
 }
 
+/* ---------- Start now ---------- */
+.start-choices {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+    gap: var(--space-5);
+}
+
+.start-choice {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    align-items: flex-start;
+}
+
+.start-choice .btn {
+    margin-top: auto;
+}
+
+.start-choice--planner {
+    border-color: var(--primary);
+}
+
+.founding-note {
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    background: var(--primary-soft);
+    color: var(--primary-hover);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
 /* ---------- Add panels (collapsed "+ Add …" forms) ---------- */
 .add-panel {
     padding: 0;

@@ -107,7 +107,7 @@ export default {
     'auth.registerHeading': 'Start *planning*',
     'auth.registerSubtitle': 'Budget, guests, vendors, music and more, all in one place.',
     'auth.signIn': 'Sign in',
-    'auth.createAccount': 'Create account',
+    'auth.createAccount': 'Start now',
     'auth.continueWithGoogle': 'Continue with Google',
     'auth.signUpWithGoogle': 'Sign up with Google',
     'auth.or': 'or',
@@ -514,5 +514,30 @@ export default {
     'themeMode.auto': 'Match my device',
     'themeMode.light': 'Light',
     'themeMode.dark': 'Dark',
-    'planner.foundingBadge': 'Founding planner #{number}: 40% off for life.'
+    'planner.foundingBadge': 'Founding planner #{number}: 40% off for life.',
+
+    // Start now and planner accounts
+    'start.title': 'Start now',
+    'start.heading': 'Start *planning*',
+    'start.subtitle': 'Free to start. Tell us how you will use Forever Planner.',
+    'start.plannerTitle': "I'm a wedding planner",
+    'start.plannerBody':
+        'Run every client wedding in one place: deadlines, decisions, budgets, guests, seating and the event-day schedule.',
+    'start.coupleTitle': "We're planning our wedding",
+    'start.coupleBody': 'Free for couples: budget, guests, vendors, checklist, music and inspiration, together.',
+    'start.foundingNote': 'Founding offer: 40% off for life for the first 300 planners. {left} spots left.',
+    'start.switchToCouple': 'Planning your own wedding instead?',
+    'start.switchToPlanner': 'Are you a wedding planner?',
+    'auth.plannerTitle': 'Start now as a planner',
+    'auth.plannerHeading': "Every client's *wedding*, in one place",
+    'auth.plannerSubtitle': 'Create your planner account, then add your first client wedding.',
+    'auth.startAsPlanner': 'Start now as a wedding planner',
+    'auth.startAsCouple': 'Start now, free for couples',
+    'auth.plannerCreated': 'Welcome, {name}! Add your first client wedding to get started.',
+    'settings.areYouPlanner': 'Are you a wedding planner?',
+    'settings.becomePlannerHelp':
+        "Switch to a planner account to run your clients' weddings from one dashboard. Your own wedding stays exactly as it is.",
+    'settings.becomePlanner': "I'm a wedding planner",
+    'settings.becamePlanner': 'You now have a planner account. Add your first client wedding to claim a founding spot.',
+    'confirm.becomePlanner': 'Switch to a planner account? This cannot be undone yet.'
 };

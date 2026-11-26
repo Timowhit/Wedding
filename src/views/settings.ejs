@@ -296,6 +296,17 @@
         </details>
     </section>
 
+    <% if (!user.isPlanner) { %>
+        <section class="card" aria-labelledby="become-planner-heading">
+            <h2 class="card-title" id="become-planner-heading"><%= t('settings.areYouPlanner') %></h2>
+            <p><%= t('settings.becomePlannerHelp') %></p>
+            <form method="post" action="/settings/become-planner" data-confirm="<%= t('confirm.becomePlanner') %>">
+                <%- include('partials/csrf-field') %>
+                <button type="submit" class="btn btn-secondary"><%= t('settings.becomePlanner') %></button>
+            </form>
+        </section>
+    <% } %>
+
     <% if (!isOwner) { %>
         <section class="card danger-zone" aria-labelledby="leave-heading">
             <h2 class="card-title" id="leave-heading"><%= t('settings.leave') %></h2>
