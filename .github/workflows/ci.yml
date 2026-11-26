@@ -15,7 +15,8 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_PASSWORD: postgres
+          # Throwaway database that only this job can reach, so it needs no password.
+          POSTGRES_HOST_AUTH_METHOD: trust
           POSTGRES_DB: forever_planner_test
         ports: ['5432:5432']
         options: >-
@@ -24,7 +25,7 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     env:
-      TEST_DB_URL: postgresql://postgres:postgres@localhost:5432/forever_planner_test
+      TEST_DB_URL: postgresql://postgres@localhost:5432/forever_planner_test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
