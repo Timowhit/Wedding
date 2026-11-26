@@ -1,0 +1,7 @@
+<div class="account">
+    <span class="account__name"><span class="visually-hidden"><%= t('nav.signedInAs') %></span><%= user.name %></span>
+    <form method="post" action="/logout">
+        <%- include('csrf-field') %>
+        <button type="submit" class="btn btn-ghost btn-small"><%= t('nav.signOut') %></button>
+    </form>
+</div>

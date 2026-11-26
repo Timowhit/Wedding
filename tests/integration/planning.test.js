@@ -54,6 +54,13 @@ describe('planning pages', { skip: skipWithoutDb }, () => {
         assert.equal(invalid.status, 400);
         assert.match(invalid.body, /Please fix the following/);
 
+        assert.match(page.body, /Spending by category/);
+        assert.match(
+            page.body,
+            /<details class="card add-panel" id="add-expense" >/,
+            'the add form starts closed once there are expenses'
+        );
+
         const filtered = await owner.get('/budget?category=Flowers');
         assert.match(filtered.body, /Nothing matches this filter/);
 
@@ -64,15 +71,19 @@ describe('planning pages', { skip: skipWithoutDb }, () => {
         assert.match((await owner.get('/budget')).body, /No expenses yet/);
     });
 
-    it('guests: add, edit, cycle RSVP, filter and delete', async () => {
-        await owner.get('/guests');
+    it('guests: add, edit, set RSVP, filter and delete', async () => {
+        assert.match((await owner.get('/guests')).body, /id="add-guest" open/, 'an empty list opens the add form');
         await owner.post('/guests', { name: 'Jane Smith', rsvp: 'Pending', diet: 'Vegan', plus_one: '' });
         let page = await owner.get('/guests');
         assert.match(page.body, /Diet: Vegan/);
         const id = idOf(page.body, /\/guests\/([0-9a-f-]{36})\/edit/);
 
-        await owner.post(`/guests/${id}/rsvp`);
-        assert.match((await owner.get('/guests?rsvp=Confirmed')).body, /Jane Smith/);
+        await owner.post(`/guests/${id}/rsvp`, { rsvp: 'Confirmed', return_to: '/guests?rsvp=Pending' });
+        const confirmed = await owner.get('/guests?rsvp=Confirmed');
+        assert.match(confirmed.body, /Jane Smith/);
+        assert.match(confirmed.body, /RSVP for Jane Smith updated/);
+        await owner.post(`/guests/${id}/rsvp`, { rsvp: 'Maybe' });
+        assert.match((await owner.get('/guests')).body, /Choose one of the options/);
 
         const edit = await owner.get(`/guests/${id}/edit`);
         assert.match(edit.body, /value="Jane Smith"/);
@@ -126,7 +137,7 @@ describe('planning pages', { skip: skipWithoutDb }, () => {
         assert.match((await owner.get('/checklist')).body, /Taste wedding cakes/);
     });
 
-    it('vendors: rejects unsafe links, edits and cycles status', async () => {
+    it('vendors: rejects unsafe links, edits and sets status', async () => {
         await owner.get('/vendors');
         const unsafe = await owner.post('/vendors', {
             name: 'Bloom',
@@ -152,8 +163,9 @@ describe('planning pages', { skip: skipWithoutDb }, () => {
         assert.match(page.body, /Deposit &lt;b&gt;paid&lt;\/b&gt;/, 'user text is escaped');
 
         const id = idOf(page.body, /\/vendors\/([0-9a-f-]{36})\/status/);
-        await owner.post(`/vendors/${id}/status`);
-        assert.match((await owner.get('/vendors?status=Contacted')).body, /Bloom/);
+        await owner.post(`/vendors/${id}/status`, { status: 'Booked' });
+        assert.match((await owner.get('/vendors?status=Booked')).body, /Bloom/);
+        assert.match((await owner.get('/vendors')).body, /<option value="Booked" selected>/);
     });
 
     it('another wedding’s records are invisible: unknown or foreign ids are 404s', async () => {
@@ -173,6 +185,17 @@ describe('planning pages', { skip: skipWithoutDb }, () => {
         assert.equal((await owner.post("/guests/1' OR '1'='1/delete")).status, 404);
     });
 
+    it('dashboard: getting-started steps track progress and hide unconfigured features', async () => {
+        const fresh = await registeredClient(app.baseUrl, 'Fresh', 'fresh@example.com');
+        const page = await fresh.get('/');
+        assert.match(page.body, /Getting started/);
+        assert.match(page.body, /0 of 5 done/);
+        assert.doesNotMatch(page.body, /href="\/music"/, 'music is hidden when Spotify is not configured');
+        assert.doesNotMatch(page.body, /Join a wedding/, 'joining lives in Settings and on /welcome');
+        await fresh.post('/budget/limit', { total: '1000' });
+        assert.match((await fresh.get('/')).body, /1 of 5 done/);
+    });
+
     it('dashboard: owner sets the date and sees the countdown and stats', async () => {
         await owner.get('/');
         const nextYear = new Date().getFullYear() + 1;
@@ -185,7 +208,7 @@ describe('planning pages', { skip: skipWithoutDb }, () => {
     });
 
     it('music and inspiration explain when search is not configured', async () => {
-        assert.match((await owner.get('/music?q=perfect')).body, /Song search is not set up/);
-        assert.match((await owner.get('/inspiration?q=roses')).body, /Photo search is not set up/);
+        assert.match((await owner.get('/music?q=perfect')).body, /Song search is turned off/);
+        assert.match((await owner.get('/inspiration?q=roses')).body, /Photo search is turned off/);
     });
 });

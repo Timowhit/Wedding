@@ -25,6 +25,16 @@ const renderRegister = (req, res, status, values, errors) =>
         googleEnabled: isGoogleConfigured()
     });
 
+/**
+ * True when the visitor arrived from an invite link (requireLogin or the invite page stored it).
+ * They are about to join someone else's wedding, so no wedding of their own is created; if they
+ * decline, /welcome lets them create one.
+ * @param {import('express').Request} req
+ * @returns {boolean}
+ */
+const isJoiningByInvite = (req) =>
+    typeof req.session.returnTo === 'string' && req.session.returnTo.startsWith('/invite/');
+
 const showLoginForm = (req, res) => renderLogin(req, res, 200, { email: '' }, []);
 
 const processLogin = async (req, res) => {
@@ -53,6 +63,7 @@ const processRegister = async (req, res) => {
     if (errors.length > 0) return renderRegister(req, res, 400, values, errors);
 
     const passwordHash = await hashPassword(password);
+    const createOwnWedding = !isJoiningByInvite(req);
     let user;
     try {
         // The account and its first wedding are created together, or not at all.
@@ -61,7 +72,9 @@ const processRegister = async (req, res) => {
                 { email: values.email, passwordHash, displayName: values.name, language: req.lang },
                 client
             );
-            await createWedding(created.id, { name: req.t('wedding.defaultName', { name: values.name }) }, client);
+            if (createOwnWedding) {
+                await createWedding(created.id, { name: req.t('wedding.defaultName', { name: values.name }) }, client);
+            }
             return created;
         });
     } catch (err) {
@@ -71,7 +84,9 @@ const processRegister = async (req, res) => {
     }
 
     const next = await startUserSession(req, user);
-    setFlash(req, 'success', 'auth.accountCreated', { name: req.session.user.name });
+    setFlash(req, 'success', createOwnWedding ? 'auth.accountCreated' : 'auth.accountCreatedForInvite', {
+        name: req.session.user.name
+    });
     res.redirect(next);
 };
 
@@ -109,9 +124,10 @@ const finishGoogleLogin = (req, res, next) => {
                 return res.redirect('/login');
             }
 
+            const createOwnWedding = !isJoiningByInvite(req);
             const user = await withTransaction(async (client) => {
                 const result = await upsertGoogleUser({ ...profile, language: req.lang }, client);
-                if (result.created) {
+                if (result.created && createOwnWedding) {
                     const name = result.user.display_name || result.user.email;
                     await createWedding(result.user.id, { name: req.t('wedding.defaultName', { name }) }, client);
                 }

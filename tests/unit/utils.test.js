@@ -6,7 +6,6 @@ import { isLocalPath, isSafeReturnPath } from '../../src/utils/session.js';
 import { daysUntil, formatCurrency, formatDate, toIsoDate } from '../../src/utils/format.js';
 import { emphasize, fieldState } from '../../src/utils/view-helpers.js';
 import { escapeHtml } from '../../src/services/email.js';
-import { nextInCycle, RSVP_STATUSES } from '../../src/constants.js';
 
 describe('password hashing', () => {
     it('round-trips scrypt hashes and salts each one', async () => {
@@ -83,12 +82,5 @@ describe('view helpers', () => {
 
     it('email escaping covers attribute-breaking characters', () => {
         assert.equal(escapeHtml(`"><img src=x onerror='a'>&`), '&quot;&gt;&lt;img src=x onerror=&#39;a&#39;&gt;&amp;');
-    });
-});
-
-describe('constants', () => {
-    it('nextInCycle wraps around', () => {
-        assert.equal(nextInCycle(RSVP_STATUSES, 'Pending'), 'Confirmed');
-        assert.equal(nextInCycle(RSVP_STATUSES, 'Declined'), 'Pending');
     });
 });

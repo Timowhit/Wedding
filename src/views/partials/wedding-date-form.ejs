@@ -1,0 +1,6 @@
+<form class="inline-form" method="post" action="/wedding/date" id="wedding-date-form">
+    <%- include('csrf-field') %>
+    <label for="wedding_date"><%= t('dashboard.setDate') %></label>
+    <input type="date" id="wedding_date" name="wedding_date" min="1900-01-01" max="2100-12-31" value="<%= toIsoDate(wedding.wedding_date) %>">
+    <button type="submit" class="btn btn-primary"><%= t('dashboard.saveDate') %></button>
+</form>

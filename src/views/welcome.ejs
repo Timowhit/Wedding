@@ -13,7 +13,7 @@
                     <li class="item-card">
                         <div class="item-info">
                             <p class="item-name"><%= invite.wedding_name %></p>
-                            <p class="item-meta"><%= t('invite.from', { name: invite.invited_by_name }) %> · <%= t(`role.${invite.role}`) %></p>
+                            <p class="item-meta"><%= t('invite.from', { name: invite.invited_by_name }) %> · <%= t(`invite.role.${invite.role}`) %></p>
                         </div>
                         <form method="post" action="/invite/<%= invite.token %>/accept">
                             <%- include('partials/csrf-field') %>

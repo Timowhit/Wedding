@@ -14,7 +14,7 @@
                     <li class="item-card">
                         <div class="item-info">
                             <p class="item-name"><%= invite.wedding_name %></p>
-                            <p class="item-meta"><%= t('invite.from', { name: invite.invited_by_name }) %> · <%= t(`role.${invite.role}`) %></p>
+                            <p class="item-meta"><%= t('invite.from', { name: invite.invited_by_name }) %> · <%= t(`invite.role.${invite.role}`) %></p>
                         </div>
                         <div class="item-actions">
                             <form method="post" action="/invite/<%= invite.token %>/accept">
@@ -48,15 +48,35 @@
         <% } %>
 
         <% if (isOwner) { %>
-            <form class="inline-form" method="post" action="/wedding/date">
-                <%- include('partials/csrf-field') %>
-                <label for="wedding_date"><%= t('dashboard.setDate') %></label>
-                <input type="date" id="wedding_date" name="wedding_date" min="1900-01-01" max="2100-12-31"
-                       value="<%= toIsoDate(wedding.wedding_date) %>">
-                <button type="submit" class="btn btn-primary"><%= t('dashboard.saveDate') %></button>
-            </form>
+            <% if (wedding.wedding_date) { %>
+                <details class="disclosure disclosure--center">
+                    <summary><%= t('dashboard.changeDate') %></summary>
+                    <%- include('partials/wedding-date-form') %>
+                </details>
+            <% } else { %>
+                <%- include('partials/wedding-date-form') %>
+            <% } %>
         <% } %>
     </section>
+
+    <% if (steps.length > 0) { %>
+        <section class="card" aria-labelledby="steps-heading">
+            <h2 class="card-title" id="steps-heading"><%= t('onboarding.heading') %></h2>
+            <p class="hint"><%= t('onboarding.progress', { done: steps.filter((s) => s.done).length, total: steps.length }) %></p>
+            <ol class="steps">
+                <% steps.forEach((step) => { %>
+                    <li class="step <%= step.done ? 'step--done' : '' %>">
+                        <span class="step__mark" aria-hidden="true"><%= step.done ? '✓' : '' %></span>
+                        <% if (step.done) { %>
+                            <span><%= t(step.key) %><span class="visually-hidden"> (<%= t('onboarding.done') %>)</span></span>
+                        <% } else { %>
+                            <a href="<%= step.href %>"><%= t(step.key) %></a>
+                        <% } %>
+                    </li>
+                <% }); %>
+            </ol>
+        </section>
+    <% } %>
 
     <section aria-labelledby="overview-heading">
         <h2 class="section-heading" id="overview-heading"><%= t('dashboard.overview') %></h2>
@@ -81,22 +101,17 @@
                 <span class="stat-value"><%= stats.vendors.total %></span>
                 <span class="stat-label"><%= t('dashboard.vendorsBooked', { count: stats.vendors.booked }) %></span>
             </a></li>
-            <li><a class="stat-card stat-card--link" href="/music">
+            <% if (features.music || stats.tracks > 0) { %><li><a class="stat-card stat-card--link" href="/music">
                 <span class="stat-icon" aria-hidden="true">🎵</span>
                 <span class="stat-value"><%= stats.tracks %></span>
                 <span class="stat-label"><%= t('dashboard.songs') %></span>
-            </a></li>
-            <li><a class="stat-card stat-card--link" href="/inspiration">
+            </a></li><% } %>
+            <% if (features.inspiration || stats.photos > 0) { %><li><a class="stat-card stat-card--link" href="/inspiration">
                 <span class="stat-icon" aria-hidden="true">🌸</span>
                 <span class="stat-value"><%= stats.photos %></span>
                 <span class="stat-label"><%= t('dashboard.photos') %></span>
-            </a></li>
+            </a></li><% } %>
         </ul>
-    </section>
-
-    <section class="card" aria-labelledby="join-heading">
-        <h2 class="card-title" id="join-heading"><%= t('join.heading') %></h2>
-        <%- include('partials/join-form') %>
     </section>
 </main>
 

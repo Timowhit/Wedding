@@ -20,10 +20,10 @@ There is no frontend framework, bundler or TypeScript. `public/js/app.js` is a s
 
 ## Features
 
-- **Dashboard**: countdown to the wedding date, totals for every section, pending invitations
-- **Budget**: total budget, expenses by category, spent/remaining with an over-budget warning
-- **Guests**: RSVP status (one click to change), dietary needs, plus-ones, filter by RSVP, edit
-- **Vendors**: contact details, booking status (one click to change), notes, filter by status, edit
+- **Dashboard**: countdown to the wedding date, a getting-started list for new weddings, totals for every section, pending invitations
+- **Budget**: total budget, expenses, spending per category, spent/remaining with an over-budget warning
+- **Guests**: RSVP status (changed from a picker on each row), dietary needs, plus-ones, filter by RSVP, edit
+- **Vendors**: contact details, booking status (changed from a picker on each row), notes, filter by status, edit
 - **Checklist**: tasks with categories and due dates, overdue highlighting, progress, example tasks
 - **Music**: Spotify search, playlists for six parts of the day, in-page previews
 - **Inspiration**: Unsplash search with photographer credit, a saved board
@@ -79,7 +79,7 @@ node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
 
 **TLS behavior** (see `src/models/db.js`): connections are strict by default. If you hit certificate errors, prefer setting `DB_CA` to your provider's CA. Use `DB_SSL_INSECURE=true` only for troubleshooting, and `DB_SSL_DISABLE=true` only for a database on your own machine.
 
-**Optional services:** every optional integration degrades gracefully. Without Spotify or Unsplash keys the search box is replaced by a short notice; without SMTP, invites are still created and the owner copies the link from the Settings page; without Google keys the Google button is hidden.
+**Optional services:** every optional integration degrades gracefully. Without Spotify or Unsplash keys, Music and Inspiration are left out of the navigation and dashboard, and their pages (still reachable by URL) explain that search is off; without SMTP, invites are still created and the owner copies the link from the Settings page; without Google keys the Google button is hidden.
 
 **Google sign-in:** in the Google Cloud console, add `<APP_URL>/auth/google/callback` as an authorized redirect URI.
 
@@ -109,7 +109,7 @@ Version 2 replaces the JSON API and static HTML pages with server-rendered pages
 3. **Google sign-in:** the callback moved from `/api/v1/auth/google/callback` to `/auth/google/callback`. Update the redirect URI in the Google Cloud console.
 4. **Passwords:** existing bcrypt hashes keep working. Each user's hash is upgraded to scrypt the next time they sign in.
 5. **Logins:** everyone signs in once after the upgrade (JWTs in the browser's `localStorage` are no longer used).
-6. **Old invite links** (`/invite.html?token=...`) no longer open directly. Paste them into "Join a wedding" on the dashboard; the token is extracted from either link format.
+6. **Old invite links** (`/invite.html?token=...`) no longer open directly. Paste them into "Join a wedding" (Settings, or the welcome page); the token is extracted from either link format.
 
 ## Routes
 
@@ -140,11 +140,11 @@ All `POST` routes require the session's CSRF token (see Security Notes).
 | GET    | `/guests`                                   | Member | Guest list (`?rsvp=` filter)                       |
 | POST   | `/guests`                                   | Editor | Add a guest                                        |
 | GET    | `/guests/:id/edit`                          | Editor | Edit form                                          |
-| POST   | `/guests/:id/edit`, `/rsvp`, `/delete`      | Editor | Save / next RSVP status / delete                   |
+| POST   | `/guests/:id/edit`, `/rsvp`, `/delete`      | Editor | Save / set the RSVP status / delete                |
 | GET    | `/vendors`                                  | Member | Vendors (`?status=` filter)                        |
 | POST   | `/vendors`                                  | Editor | Add a vendor                                       |
 | GET    | `/vendors/:id/edit`                         | Editor | Edit form                                          |
-| POST   | `/vendors/:id/edit`, `/status`, `/delete`   | Editor | Save / next booking status / delete                |
+| POST   | `/vendors/:id/edit`, `/status`, `/delete`   | Editor | Save / set the booking status / delete             |
 | GET    | `/music`                                    | Member | Playlists, and Spotify search with `?q=`           |
 | POST   | `/music/tracks`                             | Editor | Add a search result to a section                   |
 | POST   | `/music/tracks/:id/delete`                  | Editor | Remove a song                                      |
@@ -280,7 +280,7 @@ Automated tests cover behavior. Before considering a UI change done, also check:
 - Layout works at phone (390px) and desktop widths, in light and dark mode
 - Keyboard-only navigation works with visible focus, including the mobile menu (Escape closes it)
 - The page works with JavaScript disabled (selects show their submit buttons)
-- Spanish pages have no English left over (switch with the language menu)
+- Spanish pages have no English left over (switch with the language menu in the footer)
 
 ## Contributing
 

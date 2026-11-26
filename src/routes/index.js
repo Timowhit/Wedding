@@ -28,7 +28,7 @@ import {
     showWelcome
 } from '../controllers/dashboard.js';
 import {
-    processCycleRsvp,
+    processSetRsvp,
     processDeleteGuest,
     processEditGuest,
     processNewGuest,
@@ -55,7 +55,7 @@ import {
     showSettings
 } from '../controllers/settings.js';
 import {
-    processCycleStatus,
+    processSetStatus,
     processDeleteVendor,
     processEditVendor,
     processNewVendor,
@@ -122,7 +122,7 @@ router.get('/guests', member, showGuests);
 router.post('/guests', editor, processNewGuest);
 router.get('/guests/:id/edit', editor, showEditGuest);
 router.post('/guests/:id/edit', editor, processEditGuest);
-router.post('/guests/:id/rsvp', editor, processCycleRsvp);
+router.post('/guests/:id/rsvp', editor, processSetRsvp);
 router.post('/guests/:id/delete', editor, processDeleteGuest);
 
 /* Vendors ------------------------------------------------------------------------------------- */
@@ -130,7 +130,7 @@ router.get('/vendors', member, showVendors);
 router.post('/vendors', editor, processNewVendor);
 router.get('/vendors/:id/edit', editor, showEditVendor);
 router.post('/vendors/:id/edit', editor, processEditVendor);
-router.post('/vendors/:id/status', editor, processCycleStatus);
+router.post('/vendors/:id/status', editor, processSetStatus);
 router.post('/vendors/:id/delete', editor, processDeleteVendor);
 
 /* Music --------------------------------------------------------------------------------------- */

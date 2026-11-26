@@ -3,6 +3,7 @@ import {
     createExpense,
     deleteExpense,
     findBudgetLimit,
+    findCategoryTotals,
     findExpenses,
     findTotalSpent,
     saveBudgetLimit
@@ -22,10 +23,11 @@ const EMPTY_EXPENSE = { name: '', category: BUDGET_CATEGORIES[0], amount: '' };
 const renderBudget = async (req, res, { status = 200, limitForm, expenseForm } = {}) => {
     const weddingId = req.wedding.id;
     const category = readChoice(req.query.category, BUDGET_CATEGORIES);
-    const [limit, spent, expenses] = await Promise.all([
+    const [limit, spent, expenses, categoryTotals] = await Promise.all([
         findBudgetLimit(weddingId),
         findTotalSpent(weddingId),
-        findExpenses(weddingId, category)
+        findExpenses(weddingId, category),
+        findCategoryTotals(weddingId)
     ]);
 
     res.status(status).render('budget', {
@@ -38,6 +40,7 @@ const renderBudget = async (req, res, { status = 200, limitForm, expenseForm } =
             over: limit > 0 && spent > limit
         },
         expenses,
+        categoryTotals,
         categories: BUDGET_CATEGORIES,
         activeCategory: category,
         limitForm: limitForm ?? { values: { total: limit > 0 ? String(limit) : '' }, errors: [] },

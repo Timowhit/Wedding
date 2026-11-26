@@ -34,7 +34,7 @@
                                     <a class="photo-credit" href="<%= photo.sourceLink %>?utm_source=forever_planner&utm_medium=referral" rel="noopener noreferrer" target="_blank"><%= t('inspiration.credit', { name: photo.photographer }) %></a>
                                 <% } %>
                                 <% if (photo.saved) { %>
-                                    <span class="badge badge--confirmed"><%= t('inspiration.saved') %></span>
+                                    <span class="status status--saved"><%= t('inspiration.saved') %></span>
                                 <% } else if (canEdit) { %>
                                     <form method="post" action="/inspiration">
                                         <%- include('partials/csrf-field') %>
@@ -58,7 +58,7 @@
                 <form method="post" action="/inspiration/clear" data-confirm="<%= t('confirm.clearBoard') %>">
                     <%- include('partials/csrf-field') %>
                     <%- include('partials/return-to') %>
-                    <button type="submit" class="btn btn-ghost btn-small"><%= t('inspiration.clearBoard') %></button>
+                    <button type="submit" class="link-action link-action--danger"><%= t('inspiration.clearBoard') %></button>
                 </form>
             <% } %>
         </div>
@@ -76,7 +76,7 @@
                                 <form method="post" action="/inspiration/<%= photo.id %>/delete">
                                     <%- include('partials/csrf-field') %>
                                     <%- include('partials/return-to') %>
-                                    <button type="submit" class="btn btn-danger btn-small" aria-label="<%= t('inspiration.removeLabel', { name: photo.alt_desc || t('inspiration.untitled') }) %>"><%= t('action.remove') %></button>
+                                    <button type="submit" class="link-action link-action--danger" aria-label="<%= t('inspiration.removeLabel', { name: photo.alt_desc || t('inspiration.untitled') }) %>"><%= t('action.remove') %></button>
                                 </form>
                             </div>
                         <% } %>

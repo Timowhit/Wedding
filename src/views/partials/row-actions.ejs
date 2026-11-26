@@ -1,0 +1,11 @@
+<%# Quiet Edit / Delete links under a row's details. Expects: editHref (optional), deleteAction, name, confirm. %>
+<div class="row-actions">
+    <% if (locals.editHref) { %>
+        <a class="link-action" href="<%= editHref %>" aria-label="<%= t('action.editNamed', { name }) %>"><%= t('action.edit') %></a>
+    <% } %>
+    <form method="post" action="<%= deleteAction %>" <% if (locals.confirm) { %>data-confirm="<%= confirm %>"<% } %>>
+        <%- include('csrf-field') %>
+        <%- include('return-to') %>
+        <button type="submit" class="link-action link-action--danger" aria-label="<%= t('action.deleteNamed', { name }) %>"><%= t(locals.deleteKey || 'action.delete') %></button>
+    </form>
+</div>

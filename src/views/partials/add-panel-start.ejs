@@ -1,0 +1,8 @@
+<%#
+    Opens a collapsible "Add …" panel. It starts open when the list is empty or the form has
+    errors, so first-time users and corrections see the form; otherwise it is one line.
+    Expects: id, labelKey, open. Close with include('partials/add-panel-end').
+%>
+<details class="card add-panel" id="<%= id %>" <%= open ? 'open' : '' %>>
+    <summary class="add-panel__summary"><span class="add-panel__icon" aria-hidden="true">+</span> <%= t(labelKey) %></summary>
+    <div class="add-panel__body">
