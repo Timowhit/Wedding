@@ -83,6 +83,7 @@ import {
     requireEditor,
     requireOwner
 } from '../middleware/wedding.js';
+import { showLanding } from '../controllers/home.js';
 import {
     processAssignGuest,
     processDeleteTable,
@@ -143,6 +144,8 @@ router.post('/planner/weddings', planner, processNewClientWedding);
 router.post('/planner/weddings/:id/open', planner, processOpenWedding);
 
 /* Dashboard ----------------------------------------------------------------------------------- */
+// Visitors who are not signed in get the public landing page; members fall through to their dashboard.
+router.get('/', showLanding);
 router.get('/', member, showDashboard);
 router.post('/wedding/date', owner, processWeddingDate);
 

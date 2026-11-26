@@ -725,5 +725,52 @@ export default {
     'guests.groupPlaceholder': 'ej. Familia de la novia',
     'field.group_name': 'Grupo',
     'field.tableName': 'Nombre de la mesa',
-    'field.seats': 'Asientos'
+    'field.seats': 'Asientos',
+
+    // Public landing page
+    'landing.title': 'Software de organización de bodas para organizadores',
+    'landing.eyebrow': 'Para organizadores de bodas',
+    'landing.headline': 'Todas las *bodas* de tus clientes, en un solo lugar',
+    'landing.lead':
+        'Plazos, decisiones, presupuestos, invitados, mesas y el programa del día de cada pareja con la que trabajas, en un espacio compartido y tranquilo que tus clientes disfrutan usar.',
+    'landing.coupleLink': '¿Planificas tu propia boda? Empieza gratis',
+    'landing.foundingTitle': 'Organizadores fundadores: {pct}% de descuento de por vida',
+    'landing.foundingBody':
+        'Los primeros {spots} organizadores conservan el descuento para siempre. Anunciaremos los precios antes de empezar a cobrar; tu descuento se mantiene sea cual sea el precio.',
+    'landing.spotsLeft': 'Quedan {left} plazas',
+    'landing.foundingEnded': 'La oferta fundadora ha terminado',
+    'landing.foundingEndedBody':
+        'Las 300 plazas fundadoras están ocupadas. Aún puedes empezar ahora y gestionar tus bodas en Forever Planner.',
+    'landing.featuresHeading': 'Hecho para la forma en que trabajan los organizadores',
+    'landing.feature.dashboard.title': 'Todas las bodas de un vistazo',
+    'landing.feature.dashboard.body':
+        'Tu panel muestra los próximos plazos, las decisiones abiertas y el estado del presupuesto de cada cliente, con la carga de trabajo del mes arriba.',
+    'landing.feature.dashboard.alt':
+        'Panel del organizador con una tarjeta por boda con plazos, decisiones y presupuesto',
+    'landing.feature.decisions.title': 'Decisiones que las parejas aprueban',
+    'landing.feature.decisions.body':
+        'Pide a tu pareja que elija la música o apruebe el menú. Aprueban con un clic o lo devuelven con una nota, y ves quién respondió.',
+    'landing.feature.decisions.alt': 'Página de decisiones con decisiones aprobadas y pendientes',
+    'landing.feature.schedule.title': 'Un programa del día que puedes imprimir',
+    'landing.feature.schedule.body':
+        'Horarios, lugares, llegadas de proveedores con números para llamar, notas de montaje y un plan B para cada momento, en el móvil o en papel.',
+    'landing.feature.schedule.alt': 'Cronograma del día con horarios, proveedores y planes B',
+    'landing.feature.seating.title': 'Una distribución de mesas que cuadra',
+    'landing.feature.seating.body':
+        'Mesas con número de asientos, acompañantes incluidos, grupos de invitados y asientos con arrastrar y soltar, avisando de las mesas llenas antes del día.',
+    'landing.feature.seating.alt': 'Distribución de mesas con asientos y los invitados sin mesa',
+    'landing.feature.budget.title': 'Presupuestos e invitados, compartidos con tu pareja',
+    'landing.feature.budget.body':
+        'Gastos por categoría, confirmaciones, dietas y proveedores, al día gracias a ti y a tus clientes.',
+    'landing.feature.budget.alt': 'Página de presupuesto con gastos por categoría',
+    'landing.couplesHeading': 'Gratis para las parejas',
+    'landing.couplesBody':
+        'Tus clientes se unen con un enlace tuyo, con los colores de tu marca. Las parejas sin organizador también pueden planificar su boda aquí gratis.',
+    'landing.comingHeading': 'Próximamente',
+    'landing.coming.files': 'Contratos, planos y archivos en cada boda',
+    'landing.coming.reminders': 'Recordatorios de reuniones, pagos y preguntas sin responder',
+    'landing.coming.templates': 'Cuestionarios, propuestas y plantillas de mensajes reutilizables',
+    'landing.coming.offline': 'El programa del día sin conexión en tu móvil',
+    'landing.coming.calendar': 'Un calendario con todas tus bodas',
+    'landing.finalHeading': 'Organiza aquí tu próxima boda'
 };

@@ -719,5 +719,52 @@ export default {
     'guests.groupPlaceholder': "e.g. Bride's family",
     'field.group_name': 'Group',
     'field.tableName': 'Table name',
-    'field.seats': 'Seats'
+    'field.seats': 'Seats',
+
+    // Public landing page
+    'landing.title': 'Wedding planning software for planners',
+    'landing.eyebrow': 'For wedding planners',
+    'landing.headline': "Every client's *wedding*, in one place",
+    'landing.lead':
+        'Deadlines, decisions, budgets, guests, seating and the event-day schedule for every couple you plan for, with a calm, shared space your clients actually enjoy using.',
+    'landing.coupleLink': 'Planning your own wedding? Start free',
+    'landing.foundingTitle': 'Founding planners: {pct}% off for life',
+    'landing.foundingBody':
+        'The first {spots} planners lock in the discount forever. Pricing will be announced before billing starts; you keep your discount whatever it is.',
+    'landing.spotsLeft': '{left} spots left',
+    'landing.foundingEnded': 'The founding offer has ended',
+    'landing.foundingEndedBody':
+        'All 300 founding spots are taken. You can still start now and run your weddings in Forever Planner.',
+    'landing.featuresHeading': 'Built for the way planners work',
+    'landing.feature.dashboard.title': 'Every wedding at a glance',
+    'landing.feature.dashboard.body':
+        "Your dashboard shows each client's next deadlines, open decisions and budget status, with this month's workload at the top.",
+    'landing.feature.dashboard.alt':
+        'Planner dashboard with a card per wedding showing deadlines, decisions and budget',
+    'landing.feature.decisions.title': 'Decisions couples can approve',
+    'landing.feature.decisions.body':
+        'Ask your couple to choose the music or sign off the menu. They approve in one click or send it back with a note, and you see who answered.',
+    'landing.feature.decisions.alt': 'Decisions page with approved and waiting decisions',
+    'landing.feature.schedule.title': 'An event-day schedule you can print',
+    'landing.feature.schedule.body':
+        'Times, places, vendor arrivals with tap-to-call numbers, setup notes and a plan B for every moment, on your phone or on paper.',
+    'landing.feature.schedule.alt': 'Event-day timeline with times, vendors and plan B notes',
+    'landing.feature.seating.title': 'A seating chart that adds up',
+    'landing.feature.seating.body':
+        'Tables with seat counts, plus-ones included, guest groups and drag-and-drop seating, with full tables flagged before the day.',
+    'landing.feature.seating.alt': 'Seating chart with tables, seat counts and unseated guests',
+    'landing.feature.budget.title': 'Budgets and guests, shared with your couple',
+    'landing.feature.budget.body':
+        'Spending by category, RSVPs, dietary needs and vendors, kept up to date by you and your clients together.',
+    'landing.feature.budget.alt': 'Budget page with spending by category',
+    'landing.couplesHeading': 'Couples use it free',
+    'landing.couplesBody':
+        'Your clients join with a link from you, in your brand colours. Couples without a planner can plan their own wedding here for free, too.',
+    'landing.comingHeading': 'Coming next',
+    'landing.coming.files': 'Contracts, floor plans and files in each wedding',
+    'landing.coming.reminders': 'Reminders for meetings, payments and unanswered questions',
+    'landing.coming.templates': 'Reusable questionnaires, proposals and message templates',
+    'landing.coming.offline': 'The event-day schedule offline on your phone',
+    'landing.coming.calendar': 'A calendar across all your weddings',
+    'landing.finalHeading': 'Run your next wedding here'
 };

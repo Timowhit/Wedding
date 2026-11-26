@@ -4,6 +4,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DICTIONARIES, languageFromHeader, translate } from '../../src/i18n/index.js';
+import { COMING_NEXT, FEATURES } from '../../src/controllers/home.js';
 import {
     BUDGET_CATEGORIES,
     EXAMPLE_TASKS,
@@ -59,6 +60,8 @@ const dynamicKeys = () => [
     ...['pending', 'accepted', 'expired'].map((s) => `inviteStatus.${s}`),
     ...Object.keys(DICTIONARIES).map((code) => `language.${code}`),
     ...PALETTES.map((p) => `palette.${p}`),
+    ...FEATURES.flatMap(({ key }) => ['title', 'body', 'alt'].map((part) => `landing.feature.${key}.${part}`)),
+    ...COMING_NEXT.map((item) => `landing.coming.${item}`),
     ...THEME_MODES.map((m) => `themeMode.${m}`)
 ];
 

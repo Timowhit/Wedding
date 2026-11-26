@@ -22,6 +22,12 @@ export default [
         }
     },
     {
+        // Node tooling written as CommonJS (the Playwright screenshot script); its page.evaluate
+        // callbacks run in the browser, hence the browser globals too.
+        files: ['scripts/**/*.cjs'],
+        languageOptions: { sourceType: 'commonjs', globals: { ...globals.node, ...globals.browser } }
+    },
+    {
         // Browser scripts: progressive enhancement only, no modules shared with the server.
         files: ['public/js/**/*.js'],
         languageOptions: { sourceType: 'script', globals: globals.browser }

@@ -88,7 +88,7 @@ describe('authentication and security', { skip: skipWithoutDb }, () => {
         const logout = await client.post('/logout');
         assert.equal(logout.location, '/login');
         assert.notEqual(client.cookies.get('fp.sid'), loggedIn);
-        assert.equal((await client.get('/')).status, 302);
+        assert.equal((await client.get('/guests')).status, 302, 'signed out: members-only pages redirect');
     });
 
     it('upgrades legacy bcrypt hashes to scrypt on login', async () => {
