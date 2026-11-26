@@ -1,0 +1,19 @@
+Wedding-planner UX and feature ideas
+
+- Offer wedding-specific templates for timelines, task lists, budgets, and vendor coordination.
+- Provide a dashboard showing each wedding's next deadlines, appointments, outstanding decisions, and budget status.
+- Add customizable checklists with due dates, priorities, and task owners.
+- Manage guest lists, RSVPs, meal choices, accessibility needs, plus-ones, and seating assignments.
+- Track budgets, quotes, contracts, deposits, payment schedules, and final costs.
+- Keep vendor contacts, availability, proposals, notes, and key documents together.
+- Give couples a shared client portal to review plans, upload details, and approve decisions.
+- Support role-based collaboration for planners, assistants, couples, and vendors.
+- Build editable event-day schedules with vendor arrival times, contacts, setup notes, and contingency plans.
+- Add a visual seating-chart editor with table sizes and guest grouping.
+- Store inspiration boards, floor plans, contracts, and other files in each event workspace.
+- Send configurable reminders for meetings, deadlines, payments, and unanswered questions.
+- Include reusable questionnaires, proposals, email messages, and follow-up templates.
+- Make essential schedules and contacts easy to access on mobile, including offline on event day.
+- Support multiple concurrent weddings with calendar views, search, filters, and workload summaries.
+- Let planners customize fields and workflows for different budgets, traditions, and planning styles.
+- Add post-event wrap-up tasks for final payments, rentals, feedback, and archiving.
