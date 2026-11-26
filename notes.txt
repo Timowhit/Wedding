@@ -17,3 +17,4 @@ Wedding-planner UX and feature ideas
 - Support multiple concurrent weddings with calendar views, search, filters, and workload summaries.
 - Let planners customize fields and workflows for different budgets, traditions, and planning styles.
 - Add post-event wrap-up tasks for final payments, rentals, feedback, and archiving.
+- Let users choose a color theme for the app, and let planners set a brand palette their clients see.
