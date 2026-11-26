@@ -40,6 +40,8 @@ Payments and Stripe billing; email reminders; file uploads (contracts, floor pla
 - The founding offer is exactly: **40% off for life, first 300 planners.** No base price is shown; the page says pricing will be announced and the discount is locked in.
 - Approach **A** (below): planner accounts on the existing wedding/membership model.
 - Themes: **personal palette and mode for everyone, and the planner's brand palette wins inside weddings the planner owns** (option "both"). Logo upload waits for the file-upload round.
+- **Handover is in this release:** a couple who started on their own can bring in a planner, who takes over as owner while the couple become clients and keep everything they entered.
+- **Founding numbers are claimed with the first planner wedding:** anyone can start as a planner, but a founding number is assigned only when the planner creates their first client wedding or takes one over by handover. This keeps curious visitors and scripts from using up the 300 spots.
 
 ## Approaches considered
 
@@ -53,18 +55,29 @@ Payments and Stripe billing; email reminders; file uploads (contracts, floor pla
 
 ### Accounts and roles
 
+- **Planner weddings:** `weddings` gains `planner_managed` (boolean, default false). It becomes true when a planner creates a client wedding or takes one over by handover, and never changes otherwise. Planner wording, the `client` role and the brand palette apply only inside planner weddings. A couple who later switches to a planner account keeps their own wedding exactly as it was. _(My call: a per-wedding flag instead of looking at the owner's account type, so upgrading an account never changes existing weddings.)_
 - `users` gains `account_type` (`couple` | `planner`, default `couple`), `founding_number` (1 to 300, unique, null for non-founding), `business_name` (planners, optional, up to 120 characters), `theme_palette`, `theme_mode`, and `brand_palette` (planners only, null means "use each person's own palette").
-- Existing users become `couple`. A couple can switch to a planner account from Settings ("I'm a wedding planner"); that path also gets a founding number while spots remain. A planner cannot switch back in this release.
-- **Founding numbers:** assigned in the same transaction that creates (or upgrades) the planner account. Assignment must be safe under concurrent sign-ups: never above 300, never duplicated (for example an advisory lock or `SELECT … FOR UPDATE` on a single counter row, plus the unique constraint as the final guard). After 300, planners still sign up; they are just not founding. _(Mechanism: builder's call.)_
-- `wedding_members.role` gains `client`. Role ranks: `viewer` < `client` = `editor` < `owner`. In this release a **client can do everything an editor can** (guests, budget, checklist, vendors, music, inspiration, seating, schedule) **plus answer decisions**. Only owners manage members, invites and wedding settings; only the owner and editors create decisions. _(Product call made by me: couples are used to editing their own guest list; restricting clients further is easy later.)_
+- Existing users become `couple`. A couple can switch to a planner account from Settings ("I'm a wedding planner"). A planner cannot switch back in this release.
+- **Founding numbers:** assigned in the same transaction that creates a planner's **first planner wedding** (a new client wedding, or a handover the planner accepts), never at sign-up or upgrade. Assignment must be safe under concurrent requests: never above 300, never duplicated (for example an advisory lock or `SELECT … FOR UPDATE` on a single counter row, plus the unique constraint as the final guard). After 300, planners carry on normally; they are just not founding. "N spots left" on the landing page is 300 minus the numbers assigned. _(Mechanism: builder's call.)_
+- Until a planner has a founding number and spots remain, the planner dashboard shows "Add your first client wedding to claim your founding spot (40% off for life)". When a number is assigned, a success message says "You're founding planner #N".
+- `wedding_members.role` gains `client`. Role ranks: `viewer` < `client` = `editor` < `owner`. In this release a **client can do everything an editor can** (guests, budget, checklist, vendors, music, inspiration, seating, schedule) **plus answer decisions**. Only owners manage members, invites and wedding settings; only the owner and editors create decisions. _(My call: couples are used to editing their own guest list; restricting clients further is easy later.)_
+- **Who answers decisions:** in a planner wedding, clients answer (the planner and assistants ask). In a couple's own wedding, the owner and editors answer, so both partners can. _(My call.)_
 - Invites gain the `client` role. Planners see "Client (the couple)", "Editor (assistant)" and "Viewer" when inviting; couples' own weddings keep "Editor" and "Viewer" only, so couples never see planner wording.
 
 ### Sign-up flow ("Start now")
 
 - `GET /start` offers two cards: "I'm a wedding planner" and "We're planning our wedding". Each leads to the registration form with `?as=planner` or `?as=couple`; `/register` without it behaves as a couple sign-up, as today.
-- Planner registration adds an optional business name field and shows "Founding planner #N" on success while spots remain. **Planner accounts do not get an automatic wedding**; their first screen is the empty planner dashboard with "Add a client wedding".
+- Planner registration adds an optional business name field. **Planner accounts do not get an automatic wedding**; their first screen is the empty planner dashboard with "Add a client wedding" and, while spots remain, the founding-spot message above.
 - Couple registration is unchanged (an automatic wedding, except when joining from an invite link).
-- Google sign-in: "Start now" with Google on the planner card stores the intent in the session, so the new account is created as a planner.
+- Google sign-in: "Start now" with Google on the planner card stores the intent in the session. A new account is created as a planner; an existing couple account is upgraded exactly as with the Settings button. The intent is cleared after this one sign-in. _(My call.)_
+- Accepting a handover invite requires a planner account: a logged-out visitor is offered "Start now as a planner" (or sign-in), and a logged-in couple account is offered the upgrade first.
+
+### Handover: bringing in a planner
+
+- In a couple's own wedding, the owner sees "Bring in your planner" in Settings. It creates an invite with the role `planner` (new value; one active handover invite per wedding). Before creating it, the owner confirms a plain explanation: the planner becomes the owner of the wedding, and the couple become clients who keep everything and can still edit plans.
+- The invite works like the others (email optional, link to copy, expires in 7 days, single use, can be revoked).
+- When a planner accepts, in one transaction: the planner becomes the owner (added if not yet a member), the previous owner and every editor become `client`, viewers stay viewers, `planner_managed` becomes true, and the planner gets a founding number if this is their first planner wedding and spots remain. The "exactly one owner" rule holds throughout.
+- Weddings that are already planner weddings cannot be handed over in this release.
 
 ### Landing page (`GET /` when logged out)
 
@@ -124,7 +137,7 @@ Screenshots are static images in `public/images/`, taken from a seeded demo wedd
 
 - Conventions in `CLAUDE.md` apply: validators return i18n keys, models are scoped by `wedding_id`, every new form has CSRF and `return-to`, every string exists in English and Spanish, no inline script or style, 44px touch targets on narrow screens.
 - One new migration (`008_…`) adds all columns and tables idempotently.
-- README updated: features, routes, roles, founding offer. Integration tests cover each new route, role checks (a client cannot manage members; a viewer cannot answer decisions; a planner from another wedding sees nothing), founding-number assignment including the 300 cap under concurrent sign-ups, and theme resolution.
+- README updated: features, routes, roles, founding offer. Integration tests cover each new route, role checks (a client cannot manage members; a viewer cannot answer decisions; a planner from another wedding sees nothing), founding-number assignment (only on the first planner wedding, including the 300 cap under concurrent requests), handover (ownership moves, roles convert, already-managed weddings refused, non-planners prompted to upgrade), and theme resolution.
 
 ## Left to the builder
 
