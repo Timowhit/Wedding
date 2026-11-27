@@ -170,7 +170,8 @@ import {
     showEditContract,
     showEditPayment,
     showVendor,
-    processRating
+    processRating,
+    processClearRating
 } from '../controllers/payments.js';
 import {
     processAnswer,
@@ -322,6 +323,7 @@ router.get('/vendors/:id/contract', editor, showEditContract);
 router.post('/vendors/:id/contract', editor, processContract);
 router.post('/vendors/:id/payments', editor, processNewPayment);
 router.post('/vendors/:id/rating', editor, processRating);
+router.post('/vendors/:id/rating/clear', editor, processClearRating);
 
 /* Templates (a person's own; see models/templates.js) ------------------------------------------- */
 router.get('/templates', account, showTemplates);

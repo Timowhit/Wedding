@@ -126,6 +126,8 @@ const MESSAGE_KINDS = Object.freeze(['email', 'follow_up', 'proposal']);
 const QUESTION_TYPES = Object.freeze(['short', 'long', 'choice']);
 const MAX_MESSAGES_PER_USER = 100;
 const MAX_QUESTIONNAIRES_PER_USER = 50;
+// Questionnaires sent to one wedding (each is a copy, with its answers).
+const MAX_SENT_QUESTIONNAIRES = 30;
 const MAX_QUESTIONS = 30;
 const MAX_CHOICE_OPTIONS = 20;
 const LIBRARY_LIMITS = Object.freeze({
@@ -240,6 +242,7 @@ export {
     QUESTION_TYPES,
     MAX_MESSAGES_PER_USER,
     MAX_QUESTIONNAIRES_PER_USER,
+    MAX_SENT_QUESTIONNAIRES,
     MAX_QUESTIONS,
     MAX_CHOICE_OPTIONS,
     LIBRARY_LIMITS,
