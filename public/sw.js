@@ -10,7 +10,7 @@
 (function () {
     'use strict';
 
-    const VERSION = 'v1';
+    const VERSION = 'v2';
     const STATIC_CACHE = `fp-static-${VERSION}`;
     const PAGE_CACHE = `fp-pages-${VERSION}`;
     const STATIC_PRECACHE = ['/css/main.css', '/css/themes.css', '/js/app.js'];
@@ -19,7 +19,13 @@
     const NETWORK_TIMEOUT_MS = 4000; // weak signal: show the saved copy instead of waiting
     const UUID = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
     const STATIC_PATHS = /^\/(css|js|images)\//;
-    const EVENT_PATHS = [/^\/schedule$/, /^\/vendors$/, new RegExp(`^/vendors/${UUID}$`, 'i'), /^\/offline$/];
+    const EVENT_PATHS = [
+        /^\/schedule$/,
+        /^\/layout$/,
+        /^\/vendors$/,
+        new RegExp(`^/vendors/${UUID}$`, 'i'),
+        /^\/offline$/
+    ];
 
     /**
      * How a URL is handled.

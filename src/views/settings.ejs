@@ -233,17 +233,36 @@
             <h2 class="card-title" id="appearance-heading"><%= t('settings.appearance') %></h2>
             <p class="hint"><a href="/templates"><%= t('templates.manage') %></a></p>
             <%- include('partials/form-errors', { errors: appearanceForm.errors, id: 'appearance-errors' }) %>
-            <form method="post" action="/settings/appearance" class="form-stack">
+            <form method="post" action="/settings/appearance" class="form-stack" data-live-appearance data-theme-source="<%= themeSource %>">
                 <%- include('partials/csrf-field') %>
+                <p class="hint" data-show-with-js hidden><%= t('settings.liveHint') %></p>
                 <fieldset class="choice-group">
                     <legend><%= t('field.palette') %></legend>
-                    <% palettes.forEach((palette) => { %>
+                    <% [...palettes, 'custom'].forEach((palette) => { %>
                         <label class="choice">
                             <input type="radio" name="palette" value="<%= palette %>" <%= palette === appearanceForm.values.palette ? 'checked' : '' %>>
                             <span class="swatch" data-swatch="<%= palette %>" aria-hidden="true"></span>
                             <%= t(`palette.${palette}`) %>
                         </label>
                     <% }); %>
+                </fieldset>
+                <fieldset class="choice-group custom-colors" aria-describedby="custom-hint">
+                    <legend><%= t('settings.customColors') %></legend>
+                    <p class="hint" id="custom-hint"><%= t('settings.customHint') %></p>
+                    <div class="color-fields">
+                        <% ['primary', 'secondary', 'accent'].forEach((field) => { %>
+                            <div class="field field--color">
+                                <label for="appearance-<%= field %>"><%= t(`field.${field}`) %></label>
+                                <input type="color" id="appearance-<%= field %>" name="<%= field %>" value="<%= appearanceForm.values[field] %>" <%- fieldState(appearanceForm.errors, field, 'appearance-errors') %>>
+                            </div>
+                        <% }); %>
+                    </div>
+                    <div class="field">
+                        <label for="appearance-background"><%= t('field.background') %></label>
+                        <select id="appearance-background" name="background" <%- fieldState(appearanceForm.errors, 'background', 'appearance-errors') %>>
+                            <%- include('partials/options', { options: customBackgrounds, selected: appearanceForm.values.background, prefix: 'background' }) %>
+                        </select>
+                    </div>
                 </fieldset>
                 <fieldset class="choice-group">
                     <legend><%= t('field.mode') %></legend>
@@ -254,10 +273,13 @@
                         </label>
                     <% }); %>
                 </fieldset>
-                <% if (isPlannerWedding && wedding.owner_brand_palette && !isOwner) { %>
+                <% if (themeSource === 'brand') { %>
                     <p class="hint"><%= t('settings.brandInUse') %></p>
+                <% } else if (themeSource === 'wedding') { %>
+                    <p class="hint"><%= t('settings.weddingColorsInUse') %></p>
                 <% } %>
-                <button type="submit" class="btn btn-primary"><%= t('action.save') %></button>
+                <p class="hint live-status" data-save-status role="status" data-saving="<%= t('settings.liveSaving') %>" data-saved="<%= t('settings.liveSaved') %>" data-failed="<%= t('settings.liveFailed') %>"></p>
+                <button type="submit" class="btn btn-primary" data-hide-with-js><%= t('action.save') %></button>
             </form>
         </section>
 

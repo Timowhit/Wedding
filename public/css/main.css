@@ -211,6 +211,7 @@ button {
     align-items: center;
     gap: var(--space-2);
     flex: none;
+    line-height: 1;
     font-family: var(--font-display);
     font-size: 1.5rem;
     font-weight: 600;
@@ -227,7 +228,97 @@ button {
     min-width: 0;
 }
 
-.wedding-switcher select,
+.brand em {
+    color: var(--primary);
+    font-style: italic;
+}
+
+.brand__mark {
+    flex: none;
+    width: 2.25rem;
+    height: auto;
+}
+
+.brand__ring {
+    fill: none;
+    stroke-width: 2.6;
+    stroke-linecap: round;
+}
+
+.brand__ring--a {
+    stroke: var(--primary);
+}
+
+.brand__ring--b {
+    stroke: var(--accent);
+}
+
+.brand__gem {
+    fill: var(--accent);
+}
+
+/* The active wedding: a pill with a small ring, as text (one wedding) or as a selector. */
+.wedding-current,
+.wedding-switcher select {
+    max-width: 16rem;
+    min-height: 2.25rem;
+    padding: var(--space-1) var(--space-4) var(--space-1) 2rem;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    background-color: var(--primary-soft);
+    color: var(--primary-hover);
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.6;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.wedding-current {
+    position: relative;
+    display: block;
+    min-width: 0;
+    margin: 0;
+}
+
+.wedding-switcher {
+    position: relative;
+}
+
+.wedding-current::before,
+.wedding-switcher::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0.75rem;
+    width: 0.7rem;
+    height: 0.7rem;
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.wedding-switcher select {
+    padding-right: 2.25rem;
+    appearance: none;
+    cursor: pointer;
+    /* A chevron drawn with gradients, so it follows the theme colour. */
+    background-image:
+        linear-gradient(45deg, transparent 50%, currentColor 50%),
+        linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position:
+        calc(100% - 1.15rem) 55%,
+        calc(100% - 0.8rem) 55%;
+    background-size: 0.35rem 0.35rem;
+    background-repeat: no-repeat;
+}
+
+.wedding-switcher select:hover {
+    border-color: var(--primary);
+}
+
 .language-form select {
     width: auto;
     max-width: 14rem;
@@ -339,8 +430,9 @@ button {
         font-size: 1.25rem;
     }
 
+    .wedding-current,
     .wedding-switcher select {
-        max-width: 9.5rem;
+        max-width: 11rem;
     }
 
     /* Without JS the "Switch" button is visible too, so the bar may wrap onto a second line. */
@@ -507,6 +599,49 @@ main > * + * {
     border-left-width: 4px;
     border-radius: var(--radius-sm);
     background: var(--info-soft);
+}
+
+.flash {
+    position: relative;
+    transition:
+        opacity 0.4s ease,
+        transform 0.4s ease;
+}
+
+.flash:has(.flash__close:not([hidden])) {
+    padding-right: 3rem;
+}
+
+.flash--hiding {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+}
+
+.flash__close {
+    position: absolute;
+    top: 50%;
+    right: var(--space-2);
+    width: 2rem;
+    height: 2rem;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    transform: translateY(-50%);
+}
+
+.flash__close:hover {
+    background: var(--surface);
+    color: var(--text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .flash {
+        transition: none;
+    }
 }
 
 .flash--success {
@@ -1437,6 +1572,157 @@ select.status-select {
     background: linear-gradient(135deg, var(--swatch-a) 50%, var(--swatch-b) 50%);
 }
 
+/* Until the custom stylesheet has loaded, the custom swatch shows a colour wheel. */
+.swatch[data-swatch='custom'] {
+    --swatch-a: #c86f8b;
+    --swatch-b: #5b8fb0;
+}
+
+.custom-colors {
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+}
+
+.custom-colors .hint {
+    margin: 0;
+}
+
+.color-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-5);
+}
+
+.field--color {
+    display: grid;
+    gap: var(--space-1);
+}
+
+input[type='color'] {
+    width: 4rem;
+    min-height: var(--target);
+    padding: 0.2rem;
+    border: 1px solid var(--field-border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    cursor: pointer;
+}
+
+.live-status:empty {
+    display: none;
+}
+
+/* ---------- Wedding colours ---------- */
+.swatch-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr));
+    gap: var(--space-3);
+    margin: 0 0 var(--space-3);
+    padding: 0;
+    list-style: none;
+}
+
+.swatch-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+}
+
+.swatch-card__chip {
+    flex: none;
+    width: 2.75rem;
+    height: 2.75rem;
+}
+
+.swatch-card__chip rect {
+    stroke: var(--border);
+}
+
+.swatch-card__info {
+    flex: 1;
+    min-width: 0;
+}
+
+.swatch-card__info p {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.colors-off {
+    margin-top: var(--space-3);
+}
+
+.palette-photo {
+    display: grid;
+    gap: var(--space-2);
+    margin-top: var(--space-5);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border);
+}
+
+.palette-photo__heading {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.palette-photo .hint {
+    margin: 0;
+}
+
+.palette-photo__buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.file-button {
+    position: relative;
+    cursor: pointer;
+}
+
+.file-button:focus-within {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+}
+
+.palette-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.palette-suggestion {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--target);
+    padding: var(--space-1) var(--space-3) var(--space-1) var(--space-1);
+    border: 1px solid var(--field-border);
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.palette-suggestion:hover {
+    border-color: var(--primary);
+}
+
+.palette-suggestion svg {
+    width: 1.75rem;
+    height: 1.75rem;
+}
+
 /* ---------- Start now ---------- */
 .start-choices {
     display: grid;
@@ -1819,6 +2105,9 @@ select.status-select {
     .row-actions,
     .schedule__print,
     .print-hide,
+    .layout-tools,
+    .piece-edit,
+    .piece-card form,
     .flash,
     .skip-link {
         display: none !important;
@@ -1834,6 +2123,168 @@ select.status-select {
         color: #000;
         background: none;
     }
+}
+
+/* ---------- Venue layout ---------- */
+.floor-plan-card {
+    display: grid;
+    gap: var(--space-3);
+}
+
+.floor-plan-card .hint {
+    margin: 0;
+}
+
+.floor-plan {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 75vh;
+    overflow: visible;
+    user-select: none;
+}
+
+.floor-plan__room {
+    fill: var(--surface);
+    stroke: var(--field-border);
+    stroke-width: 2px;
+    vector-effect: non-scaling-stroke;
+}
+
+.floor-plan__grid-line {
+    fill: none;
+    stroke: var(--border);
+    stroke-width: 1px;
+    vector-effect: non-scaling-stroke;
+}
+
+.piece__shape {
+    fill: var(--surface-2);
+    stroke: var(--field-border);
+    stroke-width: 1.5px;
+    vector-effect: non-scaling-stroke;
+}
+
+.piece--table .piece__shape {
+    fill: var(--surface);
+    stroke: var(--primary);
+    stroke-width: 2px;
+}
+
+.piece--dance_floor .piece__shape {
+    fill: var(--primary-soft);
+    stroke: var(--primary);
+    stroke-dasharray: 6 4;
+}
+
+.piece--stage .piece__shape,
+.piece--dj .piece__shape {
+    fill: var(--surface-2);
+    stroke: var(--secondary);
+    stroke-width: 2px;
+}
+
+.piece--bar .piece__shape,
+.piece--buffet .piece__shape,
+.piece--cake .piece__shape {
+    fill: var(--warning-soft);
+    stroke: var(--accent);
+    stroke-width: 2px;
+}
+
+.piece--entrance .piece__shape {
+    fill: var(--success-soft);
+    stroke: var(--success);
+}
+
+.piece__label,
+.piece__count {
+    fill: var(--text);
+    font-family: var(--font-body);
+    font-weight: 600;
+    pointer-events: none;
+}
+
+.piece__count {
+    fill: var(--text-muted);
+    font-weight: 500;
+}
+
+[data-layout-editable] .piece {
+    cursor: grab;
+    touch-action: none;
+}
+
+[data-layout-editable] .piece:hover .piece__shape {
+    stroke: var(--primary-hover);
+}
+
+.piece.is-dragging {
+    cursor: grabbing;
+}
+
+.piece.is-dragging .piece__shape {
+    stroke: var(--primary);
+    stroke-width: 3px;
+}
+
+.piece:focus {
+    outline: none;
+}
+
+.piece:focus-visible .piece__shape {
+    stroke: var(--focus);
+    stroke-width: 3px;
+}
+
+.layout-tools {
+    display: grid;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+}
+
+.form-inline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+}
+
+.form-inline .field {
+    margin: 0;
+}
+
+.piece-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: var(--space-1) var(--space-3);
+}
+
+.piece-card > form {
+    grid-row: 1;
+    grid-column: 2;
+}
+
+.piece-edit {
+    grid-column: 1 / -1;
+}
+
+.piece-edit summary {
+    display: inline-block;
+    cursor: pointer;
+}
+
+.piece-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 9rem), 1fr));
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+}
+
+.piece-form .form-actions {
+    grid-column: 1 / -1;
 }
 
 /* ---------- Seating chart ---------- */
