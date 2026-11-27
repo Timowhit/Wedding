@@ -19,30 +19,6 @@ Without this nothing is sent, and nothing breaks.
 
 Cron Jobs are a paid Render instance type.
 
-## 2. Update the Render database
-
-Releases #11, #14 and #15 are merged, and their new columns and tables still need adding on Render: migrations `013` to `016`, which only add things. If you've already run some of them, those are skipped.
-
-On your computer, in the project folder, with `.env` pointing at Render:
-
-```bash
-git checkout main
-```
-
-```bash
-git pull origin main
-```
-
-```bash
-npm run migrate
-```
-
-Then delete the merged branches on GitHub: `planning-details`, `task-celebrations`, `file-uploads` and `library`.
-
 ## 3. Keep an eye on file storage
 
 Uploaded files are stored in your Render database. Each wedding can use up to 250 MB, and each person can upload up to 1 GB in total. Render shows the database size on the database's page. If you get close to your plan's limit, tell me and I'll move files to cheaper storage.
-
-## 4. Reload the site once
-
-[Timowhit/Wedding#17](https://github.com/Timowhit/Wedding/pull/17) is merged. When Render has deployed it, reload the site once in each browser you use. Browsers that still hold the old stylesheet pick up the new one, and from then on every release updates on its own. Then delete the `nav-polish` branch on GitHub.
