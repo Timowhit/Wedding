@@ -3,10 +3,10 @@ Status checked against the code on 2026-11-27. [x] done, [~] partly done (what's
 
 Next up
 - [ ] Let planners customize fields and workflows for different budgets, traditions, and planning styles (the last idea not started).
-- [ ] The navigation has grown to two rows for planners: group Templates, Library and Calendar under one menu.
 
 Done
-- [x] Reusable questionnaires, proposals, email messages, and follow-up templates. (/library and /questionnaires, PR #15; proposals are text templates for now)
+- [x] Navigation grouped into dropdowns (Planning, Money, Guests & venue, Event day, Planner), a styled wedding menu, the task badge just under the header, questions added and removed in the questionnaire builder, and stylesheets that always match the page (fixes the badge looking different between pages). (PR #17)
+- [x] Reusable questionnaires, proposals, email messages, and follow-up templates. (/library and /questionnaires, PR #15, merged; proposals are text templates for now)
 - [x] Store inspiration boards, floor plans, contracts, and other files in each event workspace. (/files, stored in PostgreSQL, PR #14, merged)
 - [x] Gamify task completion with a banner in the top right with tasks and an animation for completion. (Progress badge and celebrations, PR #12, merged)
 - [x] Customizable checklists with due dates, priorities, and task owners. (Priorities and owners, PR #11)

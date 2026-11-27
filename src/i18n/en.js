@@ -18,8 +18,6 @@ export default {
     'nav.inspiration': 'Inspiration',
     'nav.settings': 'Settings',
     'nav.signOut': 'Sign out',
-    'nav.activeWedding': 'Wedding you are planning',
-    'nav.switch': 'Switch',
     'nav.language': 'Language',
     'nav.changeLanguage': 'Change',
     'language.en': 'English',
@@ -1228,7 +1226,7 @@ export default {
     'library.questionText': 'Question',
     'library.questionType': 'Answer',
     'library.questionOptions': 'Options (for a choice, one per line)',
-    'library.builderHint': 'Leave a question empty to skip it. Save to get more empty rows.',
+    'library.builderHint': 'Leave a question empty to skip it.',
     'library.saveQuestionnaire': 'Save questionnaire',
     'library.messageSaved': 'Saved {name}.',
     'library.questionnaireSaved': 'Saved {title}.',
@@ -1266,5 +1264,13 @@ export default {
     'questionnaires.noAnswer': 'No answer yet',
     'questionnaires.remove': 'Remove from this wedding',
     'questionnaires.sent': 'Sent {title}.',
-    'questionnaires.answered': 'Answers saved. Your planner can see them now.'
+    'questionnaires.answered': 'Answers saved. Your planner can see them now.',
+    'nav.group.planning': 'Planning',
+    'nav.group.money': 'Money',
+    'nav.group.guests': 'Guests & venue',
+    'nav.group.day': 'Event day',
+    'nav.group.planner': 'Planner',
+    'library.addQuestion': 'Add a question',
+    'library.removeQuestion': 'Remove this question',
+    'library.removeQuestionN': 'Remove question {n}'
 };

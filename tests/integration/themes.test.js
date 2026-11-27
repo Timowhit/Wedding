@@ -15,7 +15,9 @@ describe('colour themes', { skip: skipWithoutDb }, () => {
         const couple = await registeredClient(app.baseUrl, 'Cleo', 'cleo@example.com');
         const page = await couple.get('/');
         assert.deepEqual(themeOf(page.body), ['rose', 'auto']);
-        assert.match(page.body, /<link rel="stylesheet" href="\/css\/themes.css">/);
+        assert.match(page.body, /<link rel="stylesheet" href="\/css\/themes.css\?v=[0-9a-f]{10}">/);
+        assert.match(page.body, /<link rel="stylesheet" href="\/css\/main.css\?v=[0-9a-f]{10}">/);
+        assert.match(page.body, /<script src="\/js\/app.js\?v=[0-9a-f]{10}" defer>/);
     });
 
     it('a user saves a palette and mode in Settings', async () => {
