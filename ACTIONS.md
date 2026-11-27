@@ -19,24 +19,17 @@ Without this nothing is sent, and nothing breaks.
 
 Cron Jobs are a paid Render instance type.
 
-## 2. Keep an eye on file storage
+## 2. Merge the three open pull requests, then update the Render database
 
-Uploaded files are stored in your Render database. Each wedding can use up to 250 MB, and each person can upload up to 1 GB in total. Render shows the database size on the database's page. If you get close to your plan's limit, tell me and I'll move files to cheaper storage.
+Merge them in this order, each once its checks have passed:
 
-<<<<<<< HEAD
+1. [Timowhit/Wedding#20](https://github.com/Timowhit/Wedding/pull/20): small follow-ups
+2. [Timowhit/Wedding#21](https://github.com/Timowhit/Wedding/pull/21): budget categories and the printable schedule
+3. [Timowhit/Wedding#22](https://github.com/Timowhit/Wedding/pull/22): venue rooms and the inventory
 
-## Merge the budget categories and printable schedule
+If GitHub says one has a conflict after you merge the one before, tell me and I'll fix it.
 
-When [Timowhit/Wedding#21](https://github.com/Timowhit/Wedding/pull/21) passes its checks, merge it, then run `npm run migrate` against Render as in the step above (it adds migration `018`, each wedding's budget categories). Then delete the `budget-print` branch.
-
-## Merge the venue rooms and inventory
-
-When [Timowhit/Wedding#22](https://github.com/Timowhit/Wedding/pull/22) passes its checks, merge it, then run `npm run migrate` against Render straight away: the venue layout page shows an error until it has run. It adds migration `019`, which turns each wedding's current floor plan into its "Main room", with its pieces in it. Then delete the `layout-rooms` branch.
-=======
-
-## 3. Merge the follow-ups, then update the Render database
-
-When [Timowhit/Wedding#20](https://github.com/Timowhit/Wedding/pull/20) passes its checks, merge it. Then, on your computer, in the project folder, with `.env` pointing at Render:
+Then, straight away (the venue layout page shows an error until this has run), on your computer, in the project folder, with `.env` pointing at Render:
 
 ```bash
 git checkout main
@@ -50,10 +43,12 @@ git pull origin main
 npm run migrate
 ```
 
-This adds migration `017`: it remembers which checklist milestones each wedding has celebrated, and makes message names unique without regard to capital letters. Then delete the `follow-ups` branch on GitHub.
+This adds migrations `017` to `019`: celebrated milestones and case-insensitive message names, each wedding's budget categories, and venue rooms (each wedding's current floor plan becomes its "Main room"). Then delete the branches `follow-ups`, `budget-print` and `layout-rooms` on GitHub.
 
-## 4. Check that PDFs open in your browsers
+## 3. Check that PDFs open in your browsers
 
 Files are downloaded in a locked-down mode so nothing in them can run on the site. Open a PDF from **Event day → Files** in each browser you use (Chrome, Firefox, Safari, and on your phone). It should either show the PDF or download it. If one shows an empty or blocked page instead, tell me which browser.
 
-> > > > > > > origin/follow-ups
+## 4. Keep an eye on file storage
+
+Uploaded files are stored in your Render database. Each wedding can use up to 250 MB, and each person can upload up to 1 GB in total. Render shows the database size on the database's page. If you get close to your plan's limit, tell me and I'll move files to cheaper storage.
