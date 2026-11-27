@@ -7,7 +7,7 @@ Next up
 
 Done
 - [x] Reusable questionnaires, proposals, email messages, and follow-up templates. (/library and /questionnaires, PR #15; proposals are text templates for now)
-- [x] Store inspiration boards, floor plans, contracts, and other files in each event workspace. (/files, stored in PostgreSQL, PR #14)
+- [x] Store inspiration boards, floor plans, contracts, and other files in each event workspace. (/files, stored in PostgreSQL, PR #14, merged)
 - [x] Gamify task completion with a banner in the top right with tasks and an animation for completion. (Progress badge and celebrations, PR #12, merged)
 - [x] Customizable checklists with due dates, priorities, and task owners. (Priorities and owners, PR #11)
 - [x] Guest lists, RSVPs, meal choices, accessibility needs, plus-ones, and seating assignments. (Meals and access needs, PR #11)
