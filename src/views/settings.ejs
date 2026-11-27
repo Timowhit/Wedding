@@ -217,6 +217,18 @@
     </div>
 
     <div class="card-row">
+        <section class="card" aria-labelledby="reminders-heading">
+            <h2 class="card-title" id="reminders-heading"><%= t('settings.reminders') %></h2>
+            <form method="post" action="/settings/reminders">
+                <%- include('partials/csrf-field') %>
+                <label class="choice">
+                    <input type="checkbox" name="reminder_emails" value="on" aria-describedby="reminders-hint" <%= user.reminderEmails ? 'checked' : '' %>>
+                    <%= t('settings.remindersLabel') %>
+                </label>
+                <p class="hint" id="reminders-hint"><%= t('settings.remindersHint') %></p>
+                <button type="submit" class="btn btn-secondary"><%= t('action.save') %></button>
+            </form>
+        </section>
         <section class="card" aria-labelledby="appearance-heading">
             <h2 class="card-title" id="appearance-heading"><%= t('settings.appearance') %></h2>
             <p class="hint"><a href="/templates"><%= t('templates.manage') %></a></p>

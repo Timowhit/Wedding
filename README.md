@@ -27,6 +27,7 @@ There is no frontend framework, bundler or TypeScript. `public/js/app.js` is a s
 - **Decisions**: the planner asks, the couple approve or send back with a note
 - **Event-day schedule**: times, places, vendors with tap-to-call numbers, setup notes and a plan B per item; printable
 - **Seating chart**: tables with seat counts (plus-ones included), guest groups, a table picker per guest and drag and drop
+- **Reminder emails**: one morning summary per person, only when something needs attention: booked vendors' payments and checklist tasks that are overdue or due within 7 days, and decisions waiting on them, across every wedding where they are owner, editor or client. Switch it off in Settings or with the one-click unsubscribe link in every email. Sent by `npm run reminders` from a daily scheduled job
 - **Templates**: save a wedding's checklist or event-day timeline as your own template, then add it to another wedding in two taps. Checklist due dates are stored as days before the wedding and worked out again from each wedding's date; tasks already on the list are skipped. Timeline templates keep times, places, notes and plan B, but not the vendor or contact. Manage them at `/templates`
 - **Offline event day**: once the event-day schedule has been opened online, the schedule (and its print view), the vendor list and the vendors on the schedule keep working with no connection, with tap-to-call numbers and a banner showing when the copy was saved. Other pages show a friendly offline page. Signing out removes everything saved on the device
 - **Contracts and payments**: each vendor has a page with its contract (total, signed date, a link to the signed document, what's included, cancellation terms) and a payment schedule with "Mark paid". The budget counts booked vendors' contracts and shows Committed · Paid · Still owed; overdue and upcoming payments appear on each wedding's dashboard and, across all weddings, on the planner dashboard. The event-day schedule shows what each vendor's contract includes
@@ -71,6 +72,7 @@ cp .env.example .env
 | `APP_URL`               | In production | Public base URL, e.g. `https://planner.example.com`. Used in invite links and Google sign-in         |
 | `NODE_ENV`              | No            | `development` or `production` (defaults to `production`)                                             |
 | `PORT`                  | No            | Port the server listens on (defaults to `3000`)                                                      |
+| `FROM_EMAIL`            | No            | Sender address for invite and reminder emails (default `noreply@localhost`)                          |
 | `APP_TIME_ZONE`         | No            | IANA time zone for day-based rules such as overdue payments, e.g. `America/New_York` (default `UTC`) |
 | `ENABLE_SQL_LOGGING`    | No            | `true` logs every query with timing. Only takes effect when `NODE_ENV=development`                   |
 | `DB_CA`                 | No            | Your database provider's CA certificate (PEM text; `\n` sequences are converted to newlines)         |
@@ -127,77 +129,80 @@ Version 2 replaces the JSON API and static HTML pages with server-rendered pages
 
 All `POST` routes require the session's CSRF token (see Security Notes).
 
-| Method | Path                                                      | Access   | Description                                                      |
-| ------ | --------------------------------------------------------- | -------- | ---------------------------------------------------------------- |
-| GET    | `/`                                                       | Public   | Landing page when signed out; dashboard when signed in           |
-| POST   | `/checklist/template`, `/schedule/template`               | Editor   | Save the list as one of your templates (same name replaces)      |
-| POST   | `/checklist/from-template`, `/schedule/from-template`     | Editor   | Add one of your templates to the active wedding                  |
-| GET    | `/templates`                                              | Account  | Your templates                                                   |
-| POST   | `/templates/:id/rename`, `/templates/:id/delete`          | Account  | Rename / delete one of your templates                            |
-| GET    | `/offline`                                                | Public   | Shown by the service worker when a page isn't saved for offline  |
-| GET    | `/start`                                                  | Public   | "Start now": choose planner or couple                            |
-| GET    | `/register?as=planner\|couple`                            | Public   | Sign-up form for a planner or a couple                           |
-| GET    | `/login`, `/register`                                     | Public   | Sign-in and sign-up forms                                        |
-| POST   | `/login`, `/register`                                     | Public   | Sign in / create an account and its first wedding                |
-| POST   | `/logout`                                                 | Public   | Sign out (new session id)                                        |
-| GET    | `/auth/google`, `/auth/google/callback`                   | Public   | Google sign-in round trip                                        |
-| POST   | `/language`                                               | Public   | Change the page language                                         |
-| GET    | `/invite/:token`                                          | Public   | Invite page (offers sign-in when needed)                         |
-| POST   | `/invite/:token/accept`, `/decline`                       | Login    | Accept or decline an invite                                      |
-| GET    | `/welcome`                                                | Login    | Create or join a wedding (users without one)                     |
-| POST   | `/weddings`                                               | Login    | Create another wedding                                           |
-| POST   | `/wedding/switch`                                         | Login    | Change the active wedding (membership checked)                   |
-| POST   | `/invites/join`                                           | Login    | Open an invite from a pasted link                                |
-| GET    | `/`                                                       | Member   | Dashboard                                                        |
-| POST   | `/wedding/date`                                           | Owner    | Set or clear the wedding date                                    |
-| GET    | `/budget`                                                 | Member   | Budget (`?category=` filter)                                     |
-| POST   | `/budget/limit`, `/budget/expenses`                       | Editor   | Set the total / add an expense                                   |
-| POST   | `/budget/expenses/:id/delete`                             | Editor   | Delete an expense                                                |
-| GET    | `/checklist`                                              | Member   | Checklist (`?status=` and `?category=` filters)                  |
-| POST   | `/checklist`, `/checklist/examples`                       | Editor   | Add a task / add the example tasks                               |
-| GET    | `/checklist/:id/edit`                                     | Editor   | Edit form                                                        |
-| POST   | `/checklist/:id/edit`, `/toggle`, `/delete`               | Editor   | Save / mark done or not / delete                                 |
-| GET    | `/guests`                                                 | Member   | Guest list (`?rsvp=` filter)                                     |
-| POST   | `/guests`                                                 | Editor   | Add a guest                                                      |
-| GET    | `/guests/:id/edit`                                        | Editor   | Edit form                                                        |
-| POST   | `/guests/:id/edit`, `/rsvp`, `/delete`                    | Editor   | Save / set the RSVP status / delete                              |
-| GET    | `/vendors`                                                | Member   | Vendors (`?status=` filter)                                      |
-| POST   | `/vendors`                                                | Editor   | Add a vendor                                                     |
-| GET    | `/vendors/:id/edit`                                       | Editor   | Edit form                                                        |
-| POST   | `/vendors/:id/edit`, `/status`, `/delete`                 | Editor   | Save / set the booking status / delete                           |
-| GET    | `/vendors/:id`                                            | Member   | The vendor's contract and payments                               |
-| GET    | `/vendors/:id/contract`                                   | Editor   | Contract form                                                    |
-| POST   | `/vendors/:id/contract`, `/vendors/:id/payments`          | Editor   | Save (or clear) the contract / add a payment                     |
-| GET    | `/payments/:id/edit`                                      | Editor   | Payment form                                                     |
-| POST   | `/payments/:id/edit`, `/paid`, `/delete`                  | Editor   | Save / mark paid (`paid=1`) or unpaid (`paid=0`) / delete        |
-| GET    | `/music`                                                  | Member   | Playlists, and Spotify search with `?q=`                         |
-| POST   | `/music/tracks`                                           | Editor   | Add a search result to a section                                 |
-| POST   | `/music/tracks/:id/delete`                                | Editor   | Remove a song                                                    |
-| POST   | `/music/sections/:slug/clear`                             | Editor   | Empty one section                                                |
-| GET    | `/inspiration`                                            | Member   | Board, and Unsplash search with `?q=`                            |
-| POST   | `/inspiration`, `/inspiration/clear`                      | Editor   | Save a search result / empty the board                           |
-| POST   | `/inspiration/:id/delete`                                 | Editor   | Remove a photo                                                   |
-| GET    | `/settings`                                               | Member   | Wedding, members, invites, profile, password                     |
-| POST   | `/settings/profile`, `/password`, `/leave`                | Member   | Save profile / change password / leave the wedding               |
-| POST   | `/settings/wedding`                                       | Owner    | Rename, change date                                              |
-| GET    | `/planner`                                                | Planner  | All weddings with deadlines, decisions and budgets               |
-| POST   | `/planner/weddings`                                       | Planner  | Add a client wedding (first one claims a founding spot)          |
-| POST   | `/planner/weddings/:id/open`                              | Planner  | Make a wedding active and open its dashboard                     |
-| GET    | `/decisions`                                              | Member   | Decisions and their answers                                      |
-| POST   | `/decisions`, `/decisions/:id/edit`, `/reopen`, `/delete` | Asker    | Ask, edit, reopen or delete a decision                           |
-| POST   | `/decisions/:id/answer`                                   | Answerer | Approve, or request changes with a note                          |
-| GET    | `/schedule`                                               | Member   | Event-day timeline (`?print=1` for the printable version)        |
-| POST   | `/schedule`, `/schedule/:id/edit`, `/delete`              | Editor   | Add, change or remove a schedule item                            |
-| GET    | `/seating`                                                | Member   | Tables and seated guests (`?group=` filters the not-seated list) |
-| POST   | `/seating/tables`, `/seating/tables/:id/edit`, `/delete`  | Editor   | Add, rename/resize or delete a table                             |
-| POST   | `/seating/guests/:id`                                     | Editor   | Seat a guest at a table (`table_id` empty = unseat)              |
-| POST   | `/settings/appearance`                                    | Account  | Save your palette and light/dark mode                            |
-| POST   | `/settings/business`                                      | Planner  | Business name and brand palette                                  |
-| POST   | `/settings/become-planner`                                | Account  | Switch a couple account to a planner account                     |
-| POST   | `/settings/handover`                                      | Owner    | "Bring in your planner" (couples' own weddings)                  |
-| POST   | `/settings/invites`                                       | Owner    | Create an email invite or a share link                           |
-| POST   | `/settings/invites/:id/delete`                            | Owner    | Revoke an invite                                                 |
-| POST   | `/settings/members/:userId/role`, `/delete`               | Owner    | Change a member's role / remove them                             |
+| Method | Path                                                      | Access               | Description                                                      |
+| ------ | --------------------------------------------------------- | -------------------- | ---------------------------------------------------------------- |
+| GET    | `/`                                                       | Public               | Landing page when signed out; dashboard when signed in           |
+| POST   | `/checklist/template`, `/schedule/template`               | Editor               | Save the list as one of your templates (same name replaces)      |
+| POST   | `/checklist/from-template`, `/schedule/from-template`     | Editor               | Add one of your templates to the active wedding                  |
+| GET    | `/templates`                                              | Account              | Your templates                                                   |
+| POST   | `/templates/:id/rename`, `/templates/:id/delete`          | Account              | Rename / delete one of your templates                            |
+| POST   | `/settings/reminders`                                     | Account              | Daily summary email on or off                                    |
+| GET    | `/reminders/unsubscribe?u=&t=`                            | Public (signed link) | Asks to confirm unsubscribing                                    |
+| POST   | `/reminders/unsubscribe?u=&t=`                            | Public (signed link) | Unsubscribes (also mail clients' one-click; no CSRF token)       |
+| GET    | `/offline`                                                | Public               | Shown by the service worker when a page isn't saved for offline  |
+| GET    | `/start`                                                  | Public               | "Start now": choose planner or couple                            |
+| GET    | `/register?as=planner\|couple`                            | Public               | Sign-up form for a planner or a couple                           |
+| GET    | `/login`, `/register`                                     | Public               | Sign-in and sign-up forms                                        |
+| POST   | `/login`, `/register`                                     | Public               | Sign in / create an account and its first wedding                |
+| POST   | `/logout`                                                 | Public               | Sign out (new session id)                                        |
+| GET    | `/auth/google`, `/auth/google/callback`                   | Public               | Google sign-in round trip                                        |
+| POST   | `/language`                                               | Public               | Change the page language                                         |
+| GET    | `/invite/:token`                                          | Public               | Invite page (offers sign-in when needed)                         |
+| POST   | `/invite/:token/accept`, `/decline`                       | Login                | Accept or decline an invite                                      |
+| GET    | `/welcome`                                                | Login                | Create or join a wedding (users without one)                     |
+| POST   | `/weddings`                                               | Login                | Create another wedding                                           |
+| POST   | `/wedding/switch`                                         | Login                | Change the active wedding (membership checked)                   |
+| POST   | `/invites/join`                                           | Login                | Open an invite from a pasted link                                |
+| GET    | `/`                                                       | Member               | Dashboard                                                        |
+| POST   | `/wedding/date`                                           | Owner                | Set or clear the wedding date                                    |
+| GET    | `/budget`                                                 | Member               | Budget (`?category=` filter)                                     |
+| POST   | `/budget/limit`, `/budget/expenses`                       | Editor               | Set the total / add an expense                                   |
+| POST   | `/budget/expenses/:id/delete`                             | Editor               | Delete an expense                                                |
+| GET    | `/checklist`                                              | Member               | Checklist (`?status=` and `?category=` filters)                  |
+| POST   | `/checklist`, `/checklist/examples`                       | Editor               | Add a task / add the example tasks                               |
+| GET    | `/checklist/:id/edit`                                     | Editor               | Edit form                                                        |
+| POST   | `/checklist/:id/edit`, `/toggle`, `/delete`               | Editor               | Save / mark done or not / delete                                 |
+| GET    | `/guests`                                                 | Member               | Guest list (`?rsvp=` filter)                                     |
+| POST   | `/guests`                                                 | Editor               | Add a guest                                                      |
+| GET    | `/guests/:id/edit`                                        | Editor               | Edit form                                                        |
+| POST   | `/guests/:id/edit`, `/rsvp`, `/delete`                    | Editor               | Save / set the RSVP status / delete                              |
+| GET    | `/vendors`                                                | Member               | Vendors (`?status=` filter)                                      |
+| POST   | `/vendors`                                                | Editor               | Add a vendor                                                     |
+| GET    | `/vendors/:id/edit`                                       | Editor               | Edit form                                                        |
+| POST   | `/vendors/:id/edit`, `/status`, `/delete`                 | Editor               | Save / set the booking status / delete                           |
+| GET    | `/vendors/:id`                                            | Member               | The vendor's contract and payments                               |
+| GET    | `/vendors/:id/contract`                                   | Editor               | Contract form                                                    |
+| POST   | `/vendors/:id/contract`, `/vendors/:id/payments`          | Editor               | Save (or clear) the contract / add a payment                     |
+| GET    | `/payments/:id/edit`                                      | Editor               | Payment form                                                     |
+| POST   | `/payments/:id/edit`, `/paid`, `/delete`                  | Editor               | Save / mark paid (`paid=1`) or unpaid (`paid=0`) / delete        |
+| GET    | `/music`                                                  | Member               | Playlists, and Spotify search with `?q=`                         |
+| POST   | `/music/tracks`                                           | Editor               | Add a search result to a section                                 |
+| POST   | `/music/tracks/:id/delete`                                | Editor               | Remove a song                                                    |
+| POST   | `/music/sections/:slug/clear`                             | Editor               | Empty one section                                                |
+| GET    | `/inspiration`                                            | Member               | Board, and Unsplash search with `?q=`                            |
+| POST   | `/inspiration`, `/inspiration/clear`                      | Editor               | Save a search result / empty the board                           |
+| POST   | `/inspiration/:id/delete`                                 | Editor               | Remove a photo                                                   |
+| GET    | `/settings`                                               | Member               | Wedding, members, invites, profile, password                     |
+| POST   | `/settings/profile`, `/password`, `/leave`                | Member               | Save profile / change password / leave the wedding               |
+| POST   | `/settings/wedding`                                       | Owner                | Rename, change date                                              |
+| GET    | `/planner`                                                | Planner              | All weddings with deadlines, decisions and budgets               |
+| POST   | `/planner/weddings`                                       | Planner              | Add a client wedding (first one claims a founding spot)          |
+| POST   | `/planner/weddings/:id/open`                              | Planner              | Make a wedding active and open its dashboard                     |
+| GET    | `/decisions`                                              | Member               | Decisions and their answers                                      |
+| POST   | `/decisions`, `/decisions/:id/edit`, `/reopen`, `/delete` | Asker                | Ask, edit, reopen or delete a decision                           |
+| POST   | `/decisions/:id/answer`                                   | Answerer             | Approve, or request changes with a note                          |
+| GET    | `/schedule`                                               | Member               | Event-day timeline (`?print=1` for the printable version)        |
+| POST   | `/schedule`, `/schedule/:id/edit`, `/delete`              | Editor               | Add, change or remove a schedule item                            |
+| GET    | `/seating`                                                | Member               | Tables and seated guests (`?group=` filters the not-seated list) |
+| POST   | `/seating/tables`, `/seating/tables/:id/edit`, `/delete`  | Editor               | Add, rename/resize or delete a table                             |
+| POST   | `/seating/guests/:id`                                     | Editor               | Seat a guest at a table (`table_id` empty = unseat)              |
+| POST   | `/settings/appearance`                                    | Account              | Save your palette and light/dark mode                            |
+| POST   | `/settings/business`                                      | Planner              | Business name and brand palette                                  |
+| POST   | `/settings/become-planner`                                | Account              | Switch a couple account to a planner account                     |
+| POST   | `/settings/handover`                                      | Owner                | "Bring in your planner" (couples' own weddings)                  |
+| POST   | `/settings/invites`                                       | Owner                | Create an email invite or a share link                           |
+| POST   | `/settings/invites/:id/delete`                            | Owner                | Revoke an invite                                                 |
+| POST   | `/settings/members/:userId/role`, `/delete`               | Owner                | Change a member's role / remove them                             |
 
 **Access levels:** _Account_ = logged in, with or without a wedding (`requireLogin` + `loadOptionalWedding`), so a new planner can use Settings before adding a client. _Planner_ = a planner account (`requirePlanner`; others get a 404). _Member_ = logged in and a member of the active wedding (`requireLogin` + `loadActiveWedding`). _Editor_ = member with the `editor`, `client` or `owner` role (`requireEditor`). _Owner_ = the wedding's owner (`requireOwner`). _Asker_ / _Answerer_ = `requireDecisionRight('ask' | 'answer')`: in a planner wedding the planner side asks and clients answer; in a couple's own wedding owner and editors do both. Viewers see every page read-only; forms they cannot use are not rendered, and the routes refuse them anyway.
 
@@ -277,6 +282,7 @@ checklist_tasks    (id PK, wedding_id, text, category, due_date, done, sort_orde
 guests             (id PK, wedding_id, name, rsvp CHECK, diet, plus_one, group_name, table_id FK NULL)
 vendors            (id PK, wedding_id, name, category, phone, email, website, status CHECK, notes,
                     contract_total >= 0 NULL, contract_signed_on, contract_url, contract_includes, contract_cancellation)
+users (reminders)  reminder_emails BOOLEAN DEFAULT TRUE, reminders_sent_on DATE
 templates          (id PK, user_id FK CASCADE, kind checklist|schedule, name 1..120, items JSONB,
                     UNIQUE (user_id, kind, name))  -- a person's own; never shared with the wedding
 vendor_payments    (id PK, wedding_id FK, vendor_id FK CASCADE, label, amount > 0, due_date, paid_on NULL = unpaid, note)
@@ -307,6 +313,13 @@ Deleting a wedding cascades to its members, invites and (since migration 007) al
 - **Rate limiting:** failed logins (10 per 15 minutes per IP), registrations (10 per hour), wrong current passwords (10 per 15 minutes), invites (20 per hour) and searches (60 per 15 minutes). Counters are kept in server memory, so they reset on restart and are not shared between instances.
 - **Errors:** users see a generic, translated page; details go to the server log only. Form bodies are limited to 20 KB.
 - **Not yet implemented:** password reset by email, email verification for password accounts, and account lockout per email (limits are per IP).
+
+## Reminder emails
+
+- `npm run reminders` (`scripts/send-reminders.js`) sends today's summaries and exits. Run it once a day from a scheduler. On Render: **New → Cron Job**, same repository and environment variables as the web service, build command `npm install`, command `npm run reminders`, schedule e.g. `30 12 * * *`. Render's schedule is in UTC and doesn't follow daylight saving: 12:30 UTC is 7:30 in New York in winter and 8:30 in summer. Cron Jobs are a paid Render instance type. Put the shared variables in a Render **Environment Group** used by both services, so `SESSION_SECRET` and `APP_URL` can't drift apart; the job refuses to run without them. It exits with an error only when nothing could be sent, not when one address is refused.
+- It needs `DB_URL`, `SESSION_SECRET` (signs the unsubscribe links: use the same value as the web service), `APP_URL`, `APP_TIME_ZONE` and the `SMTP_*`/`FROM_EMAIL` settings. Without SMTP it logs that email isn't configured and sends nothing.
+- Each person gets at most one email per day in `APP_TIME_ZONE` (`users.reminders_sent_on`); running it twice sends nothing new. A failure for one person is logged and retried the next day, and doesn't stop the others.
+- `users.reminder_emails` (default on) is the switch in Settings. Unsubscribe links carry `HMAC-SHA256(SESSION_SECRET, user id)`; changing `SESSION_SECRET` invalidates old links (people can still switch off in Settings).
 
 ## Offline event day
 

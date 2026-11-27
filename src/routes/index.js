@@ -48,6 +48,7 @@ import {
     processHandover,
     processBecomePlanner,
     processAppearance,
+    processReminders,
     processBusiness,
     processInvite,
     processLeaveWedding,
@@ -99,6 +100,7 @@ import {
     showSchedule
 } from '../controllers/schedule.js';
 import { showOffline } from '../controllers/offline.js';
+import { processUnsubscribe, showUnsubscribe } from '../controllers/reminders.js';
 import {
     processApplyTemplate,
     processDeleteTemplate,
@@ -259,6 +261,11 @@ router.post('/inspiration/:id/delete', editor, processDeletePhoto);
 router.get('/settings', account, showSettings);
 router.post('/settings/profile', account, processProfile);
 router.post('/settings/appearance', account, processAppearance);
+router.post('/settings/reminders', account, processReminders);
+
+/* Reminder emails: the link is signed (utils/unsubscribe.js), so no sign-in and no CSRF token */
+router.get('/reminders/unsubscribe', showUnsubscribe);
+router.post('/reminders/unsubscribe', processUnsubscribe);
 router.post('/settings/business', account, processBusiness);
 router.post('/settings/become-planner', account, processBecomePlanner);
 router.post('/settings/password', account, passwordLimiter, processPassword);

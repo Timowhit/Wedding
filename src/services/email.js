@@ -61,4 +61,25 @@ ${paragraphs.join('\n')}
     return true;
 };
 
-export { isEmailConfigured, sendInviteEmail, escapeHtml };
+/**
+ * Sends a daily summary built by services/reminders.js, with one-click unsubscribe headers.
+ * @param {{to: string, subject: string, text: string, html: string, unsubscribeUrl: string}} message
+ * @returns {Promise<boolean>} False when email is not configured.
+ */
+const sendReminderEmail = async ({ to, subject, text, html, unsubscribeUrl }) => {
+    if (!isEmailConfigured()) return false;
+    await getTransporter().sendMail({
+        from: `Forever Planner <${process.env.FROM_EMAIL || 'noreply@localhost'}>`,
+        to,
+        subject,
+        text,
+        html,
+        headers: {
+            'List-Unsubscribe': `<${unsubscribeUrl}>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+        }
+    });
+    return true;
+};
+
+export { isEmailConfigured, sendInviteEmail, sendReminderEmail, escapeHtml };

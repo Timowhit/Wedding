@@ -7,6 +7,9 @@ import { randomBytes, timingSafeEqual } from 'node:crypto';
 // Must match the hidden input's name in src/views/partials/csrf-field.ejs.
 const FIELD_NAME = '_csrf';
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+// Unsubscribe links are proven by their own signed token (utils/unsubscribe.js), and mail
+// clients' one-click unsubscribe POSTs can't carry a CSRF token.
+const EXEMPT_PATHS = new Set(['/reminders/unsubscribe']);
 
 /** Returns the session's token, creating it the first time a form needs one. */
 const getToken = (req) => {
@@ -32,7 +35,7 @@ const tokensMatch = (expected, submitted) => {
 const csrfProtection = (req, res, next) => {
     res.locals.csrfToken = () => getToken(req);
 
-    if (SAFE_METHODS.has(req.method)) return next();
+    if (SAFE_METHODS.has(req.method) || EXEMPT_PATHS.has(req.path)) return next();
 
     const expected = req.session.csrfToken;
     const submitted = req.body?.[FIELD_NAME];

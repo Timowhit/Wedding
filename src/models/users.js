@@ -2,7 +2,7 @@ import db from './db.js';
 
 // Columns that are safe to load into a session or a view. Never includes password_hash.
 const PUBLIC_COLUMNS = `id, email, display_name, avatar_url, language, created_at, account_type, founding_number,
-                        business_name, theme_palette, theme_mode, brand_palette`;
+                        business_name, theme_palette, theme_mode, brand_palette, reminder_emails`;
 
 /**
  * @param {string} id - users.id (UUID).
@@ -169,7 +169,22 @@ const upgradeToPlanner = async (id, client = db) => {
     return result.rows[0] ?? null;
 };
 
+/**
+ * Switches the daily reminder email on or off.
+ * @param {string} id
+ * @param {boolean} on
+ * @returns {Promise<object|null>} The updated public row, or null if there is no such user.
+ */
+const setReminderEmails = async (id, on) => {
+    const result = await db.query(`UPDATE users SET reminder_emails = $2 WHERE id = $1 RETURNING ${PUBLIC_COLUMNS};`, [
+        id,
+        on
+    ]);
+    return result.rows[0] ?? null;
+};
+
 export {
+    setReminderEmails,
     upgradeToPlanner,
     updateAppearance,
     updateBusiness,

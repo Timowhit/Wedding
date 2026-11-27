@@ -100,3 +100,36 @@ describe('todayIso', () => {
         assert.equal(isValidTimeZone('Europe/Madrid'), true);
     });
 });
+
+describe('unsubscribe tokens', () => {
+    it('verify only for their user', async () => {
+        process.env.SESSION_SECRET ??= 'unit-test-secret-0123456789abcdef0123';
+        const { isUnsubscribeToken, unsubscribeToken } = await import('../../src/utils/unsubscribe.js');
+        const a = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+        const b = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+        const token = unsubscribeToken(a);
+        assert.match(token, /^[0-9a-f]{64}$/);
+        assert.equal(isUnsubscribeToken(a, token), true);
+        assert.equal(isUnsubscribeToken(b, token), false);
+        assert.equal(isUnsubscribeToken(a, token.slice(0, 63)), false);
+        assert.equal(isUnsubscribeToken(a, undefined), false);
+    });
+});
+
+describe('reminder job settings', () => {
+    it('lists what is missing before anything is sent', async () => {
+        const { reminderConfigProblems, exitCodeFor } = await import('../../src/services/reminder-config.js');
+        assert.deepEqual(
+            reminderConfigProblems({ SESSION_SECRET: 'x'.repeat(32), APP_URL: 'https://planner.example.com' }),
+            []
+        );
+        assert.deepEqual(reminderConfigProblems({ SESSION_SECRET: 'short', APP_URL: '' }), [
+            'SESSION_SECRET',
+            'APP_URL'
+        ]);
+        assert.deepEqual(reminderConfigProblems({}), ['SESSION_SECRET', 'APP_URL']);
+        assert.equal(exitCodeFor({ sent: 5, failed: 1 }), 0, 'one bad address is not a failed job');
+        assert.equal(exitCodeFor({ sent: 0, failed: 3 }), 1, 'nothing could be sent');
+        assert.equal(exitCodeFor({ sent: 0, failed: 0 }), 0);
+    });
+});
