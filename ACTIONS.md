@@ -38,7 +38,7 @@ Until you answer, I'll keep building the other items.
 - the calendar and search
 - the post-event wrap-up
 
-Status: **not ready yet** (final review in progress). When this says ready:
+It has been reviewed and the review's fixes are in. Ready to merge:
 
 1. Open the PR, click **Ready for review**, wait for the CI check to turn green, then **Merge pull request**.
 2. On your computer, in the project folder, with `.env` pointing at Render:

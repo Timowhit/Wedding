@@ -69,7 +69,7 @@ const processRating = async (req, res, next) => {
     const { values, data, errors } = validateRating(req.body);
     if (errors.length > 0) return renderVendorPage(req, res, vendor, { status: 400, ratingForm: { values, errors } });
     await rateVendor(vendor.id, req.wedding.id, data);
-    setFlash(req, 'success', 'wrapup.rated', { name: vendor.name });
+    setFlash(req, 'success', 'wrapup.ratingSaved', { name: vendor.name });
     res.redirect(`/vendors/${vendor.id}`);
 };
 

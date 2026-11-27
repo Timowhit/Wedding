@@ -36,6 +36,11 @@ Partly done
 - [~] Configurable reminders for meetings, deadlines, payments, and unanswered questions.
       Done: daily email digest of tasks, payments and decisions, with a switch and unsubscribe. Missing: meetings, and choosing what or when.
 
+Small follow-ups (from the review of PR #11)
+- [ ] Planner dashboard date filters still use the database's date; switch them to APP_TIME_ZONE like the rest.
+- [ ] Let a vendor rating be cleared.
+- [ ] Wrap-up tasks: stop a second member who uses another language from adding them again.
+
 Not started
 - [ ] Reusable questionnaires, proposals, email messages, and follow-up templates.
 - [ ] Let planners customize fields and workflows for different budgets, traditions, and planning styles.

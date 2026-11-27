@@ -55,6 +55,15 @@ describe('post-event wrap-up', { skip: skipWithoutDb }, () => {
         assert.match(page, /Rate Bloom Florals/);
     });
 
+    it('wrap-up tasks wait until the wedding has happened', async () => {
+        await q(`UPDATE weddings SET wedding_date = '2099-06-01' WHERE id = $1;`, [weddingId]);
+        await ana.get('/');
+        await ana.post('/checklist/wrap-up', {});
+        const none = await q(`SELECT COUNT(*)::int AS n FROM checklist_tasks WHERE wedding_id = $1;`, [weddingId]);
+        assert.equal(none.rows[0].n, 0);
+        await q(`UPDATE weddings SET wedding_date = '2026-01-03' WHERE id = $1;`, [weddingId]);
+    });
+
     it('adds the wrap-up tasks once, dated after the wedding', async () => {
         await ana.get('/');
         assert.equal((await ana.post('/checklist/wrap-up', {})).location, '/');
@@ -85,7 +94,13 @@ describe('post-event wrap-up', { skip: skipWithoutDb }, () => {
         );
         const saved = (await q(`SELECT rating, review FROM vendors WHERE id = $1;`, [vendorId])).rows[0];
         assert.deepEqual(saved, { rating: 4, review: 'Lovely work' });
-        assert.match((await ana.get('/vendors')).body, /aria-label="Rated 4 out of 5"/);
+        const vendorPage = textOf((await ana.get(`/vendors/${vendorId}`)).body);
+        assert.match(vendorPage, /Saved your rating of Bloom Florals/);
+        assert.doesNotMatch(vendorPage, /\{rating\}|\{max\}/, 'no raw placeholders');
+        const list = (await ana.get('/vendors')).body;
+        assert.match(list, /<span class="visually-hidden">Rated 4 out of 5<\/span>/, 'screen readers hear the rating');
+        assert.doesNotMatch(list, /class="stars[^"]*" aria-label/);
+        assert.match((await ana.get(`/vendors/${vendorId}`)).body, /1 star</, 'one star, not "1 stars"');
         assert.doesNotMatch(
             textOf((await ana.get('/')).body),
             /Rate Bloom Florals/,
@@ -104,7 +119,13 @@ describe('post-event wrap-up', { skip: skipWithoutDb }, () => {
         const { findReminderDigest } = await import('../../src/models/reminders.js');
         const anaId = (await q(`SELECT id FROM users WHERE email = 'ana@example.com';`)).rows[0].id;
         assert.deepEqual(await findReminderDigest(anaId, '2026-01-10'), [], 'no reminders for an archived wedding');
+        const { findPlannerPaymentsDue, countPlannerOverdue } = await import('../../src/models/payments.js');
+        const { findPlannerWorkload } = await import('../../src/models/planner.js');
+        assert.deepEqual(await findPlannerPaymentsDue(anaId, { filter: 'overdue', today: '2026-02-01' }), []);
+        assert.equal(await countPlannerOverdue(anaId, '2026-02-01'), 0);
+        assert.equal((await findPlannerWorkload(anaId)).overdueTasks, 0, 'archived tasks are not counted');
         await ana.post('/wedding/unarchive', {});
+        assert.ok((await countPlannerOverdue(anaId, '2026-02-01')) > 0, 'counted again once back');
         assert.doesNotMatch(textOf((await ana.get('/')).body), /This wedding is archived/);
     });
 });

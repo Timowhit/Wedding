@@ -3,11 +3,17 @@ import { addChecklistItems } from '../models/templates.js';
 import { setWeddingArchived } from '../models/weddings.js';
 import { setFlash } from '../utils/flash.js';
 import { toIsoDate } from '../utils/format.js';
+import { todayIso } from '../utils/today.js';
 import { dueDateFrom } from '../validators/templates.js';
 
 /** POST /checklist/wrap-up: adds the after-the-wedding tasks, dated from the wedding day. */
 const processWrapUpTasks = async (req, res) => {
     const weddingIso = toIsoDate(req.wedding.wedding_date) || null;
+    // Only once the day has passed (the dashboard only offers it then); this also keeps them dated.
+    if (!weddingIso || weddingIso >= todayIso()) {
+        setFlash(req, 'info', 'wrapup.notYet');
+        return res.redirect('/');
+    }
     const items = WRAPUP_TASKS.map(({ key, daysAfter }) => ({
         text: req.t(key),
         category: 'Other',

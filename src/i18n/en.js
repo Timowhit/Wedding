@@ -1140,5 +1140,8 @@ export default {
     'wrapup.ratingRange': 'Choose from 1 to {max} stars.',
     'field.rating': 'Stars',
     'field.review': 'Notes',
-    'planner.when.archived': 'Archived'
+    'planner.when.archived': 'Archived',
+    'wrapup.ratingSaved': 'Saved your rating of {name}.',
+    'wrapup.starsOne': '1 star',
+    'wrapup.notYet': 'Wrap-up tasks are for after the wedding day.'
 };

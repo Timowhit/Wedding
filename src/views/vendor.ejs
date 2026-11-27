@@ -54,7 +54,7 @@
     <section class="card" aria-labelledby="rating-heading">
         <h2 class="card-title" id="rating-heading"><%= t('wrapup.ratingHeading') %></h2>
         <% if (vendor.rating) { %>
-            <p class="stars" aria-label="<%= t('wrapup.rated', { rating: vendor.rating, max: ratingMax }) %>"><span aria-hidden="true"><%= '★'.repeat(vendor.rating) + '☆'.repeat(ratingMax - vendor.rating) %></span></p>
+            <p class="stars"><span class="visually-hidden"><%= t('wrapup.rated', { rating: vendor.rating, max: ratingMax }) %></span><span aria-hidden="true"><%= '★'.repeat(vendor.rating) + '☆'.repeat(ratingMax - vendor.rating) %></span></p>
             <% if (vendor.review) { %><p class="preserve-lines"><%= vendor.review %></p><% } %>
         <% } else { %>
             <p class="hint"><%= t('wrapup.ratingHint') %></p>
@@ -68,7 +68,7 @@
                     <% for (let n = 1; n <= ratingMax; n += 1) { %>
                         <label class="choice">
                             <input type="radio" name="rating" value="<%= n %>" <%= String(n) === ratingForm.values.rating ? 'checked' : '' %>>
-                            <span aria-hidden="true"><%= '★'.repeat(n) %></span><span class="visually-hidden"><%= t('wrapup.stars', { count: n }) %></span>
+                            <span aria-hidden="true"><%= '★'.repeat(n) %></span><span class="visually-hidden"><%= t(n === 1 ? 'wrapup.starsOne' : 'wrapup.stars', { count: n }) %></span>
                         </label>
                     <% } %>
                 </fieldset>

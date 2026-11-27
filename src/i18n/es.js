@@ -1149,5 +1149,8 @@ export default {
     'wrapup.ratingRange': 'Elige de 1 a {max} estrellas.',
     'field.rating': 'Estrellas',
     'field.review': 'Notas',
-    'planner.when.archived': 'Archivadas'
+    'planner.when.archived': 'Archivadas',
+    'wrapup.ratingSaved': 'Se guardó tu valoración de {name}.',
+    'wrapup.starsOne': '1 estrella',
+    'wrapup.notYet': 'Las tareas de cierre son para después del día de la boda.'
 };

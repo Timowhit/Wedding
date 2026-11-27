@@ -36,7 +36,7 @@
             <% weeks.forEach((week) => { %>
                 <tr>
                     <% week.forEach((cell) => { const count = counts[cell.day] || 0; %>
-                        <td class="month-grid__day<%= cell.inMonth ? '' : ' month-grid__day--outside' %><%= cell.day === today ? ' month-grid__day--today' : '' %>">
+                        <td class="month-grid__day<%= cell.inMonth ? '' : ' month-grid__day--outside' %><%= cell.day === today ? ' month-grid__day--today' : '' %>"<%- cell.day === today ? ' aria-current="date"' : '' %>>
                             <% if (count > 0 && cell.inMonth) { %>
                                 <a href="#day-<%= cell.day %>" aria-label="<%= t('calendar.dayCount', { date: dayLabel(cell.day), count }) %>">
                                     <span class="month-grid__number"><%= Number(cell.day.slice(8)) %></span>

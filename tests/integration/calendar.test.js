@@ -112,6 +112,8 @@ describe('calendar and search', { skip: skipWithoutDb }, () => {
             const page = await ana.get('/calendar?month=2027-03');
             assert.match(page.body, /href="#day-2027-03-05"/);
             assert.match(page.body, /id="day-2027-03-05"/);
+            const today = await ana.get('/calendar');
+            assert.match(today.body, /aria-current="date"/);
         });
     });
 

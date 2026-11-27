@@ -1,4 +1,4 @@
-import { VENDOR_CATEGORIES, VENDOR_STATUSES } from '../constants.js';
+import { VENDOR_CATEGORIES, VENDOR_STATUSES, RATING_MAX } from '../constants.js';
 import { findVendorMoney } from '../models/payments.js';
 import {
     countVendorPayments,
@@ -43,6 +43,7 @@ const renderVendors = async (req, res, { status = 200, vendorForm } = {}) => {
         paymentCounts,
         categories: VENDOR_CATEGORIES,
         statuses: VENDOR_STATUSES,
+        ratingMax: RATING_MAX,
         activeStatus,
         vendorForm: vendorForm ?? { values: EMPTY_VENDOR, errors: [] }
     });
