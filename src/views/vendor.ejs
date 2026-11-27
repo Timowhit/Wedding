@@ -96,9 +96,9 @@
             <%- include('partials/file-list', { files: vendorFiles }) %>
         <% } %>
         <% if (canEdit) { %>
-            <details class="disclosure">
+            <details class="disclosure" <%= uploadForm.errors.length > 0 ? 'open' : '' %>>
                 <summary><%= t('files.add') %></summary>
-                <%- include('partials/file-upload-form', { form: { values: { kind: 'contract', note: '', vendor_id: vendor.id }, errors: [] }, vendor, kinds: fileKinds, fileMaxMb, noteMax }) %>
+                <%- include('partials/file-upload-form', { form: uploadForm, vendor, kinds: fileKinds, fileMaxMb, noteMax }) %>
             </details>
         <% } %>
     </section>

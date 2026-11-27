@@ -165,6 +165,21 @@ describe('file uploads', { skip: skipWithoutDb }, () => {
         assert.match(page.body, new RegExp(`name="vendor_id" value="${vendorId}"`));
     });
 
+    it('a failed upload from a vendor page shows the error on that vendor page', async () => {
+        await ana.get(`/vendors/${vendorId}`);
+        const failed = await upload(ana, '/files', {
+            file: Buffer.from('<html>no</html>'),
+            name: 'page.html',
+            type: 'text/html',
+            fields: { vendor_id: vendorId, return_to: `/vendors/${vendorId}` }
+        });
+        assert.equal(failed.status, 400);
+        assert.match(failed.body, /id="rating-heading"|id="vendor-files-heading"/, 'the vendor page');
+        assert.match(failed.body, /id="upload-errors"/);
+        assert.match(failed.body, /id="upload-file"[^>]*aria-invalid="true"/);
+        assert.doesNotMatch(failed.body, /id="upload-vendor"/, 'not the /files form with a vendor picker');
+    });
+
     it('an editor deletes a file', async () => {
         const [pdf] = await files();
         await ana.get('/files');

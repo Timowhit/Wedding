@@ -41,7 +41,10 @@ const paymentValues = (payment) => ({
     note: payment.note ?? ''
 });
 
-const renderVendorPage = async (req, res, vendor, { status = 200, paymentForm, ratingForm } = {}) => {
+/**
+ * The vendor page. The upload form comes back with its errors when an upload from here failed.
+ */
+const renderVendorPage = async (req, res, vendor, { status = 200, paymentForm, ratingForm, uploadForm } = {}) => {
     const today = todayIso();
     const [payments, money, vendorFiles] = await Promise.all([
         findPayments(vendor.id, req.wedding.id),
@@ -62,6 +65,7 @@ const renderVendorPage = async (req, res, vendor, { status = 200, paymentForm, r
         },
         ratingMax: RATING_MAX,
         vendorFiles,
+        uploadForm: uploadForm ?? { values: { kind: 'contract', note: '', vendor_id: vendor.id }, errors: [] },
         fileKinds: FILE_KINDS,
         fileMaxMb: MAX_FILE_MB,
         noteMax: FILE_NOTE_MAX
@@ -178,6 +182,7 @@ const processDeletePayment = async (req, res, next) => {
 };
 
 export {
+    renderVendorPage,
     showVendor,
     processRating,
     processClearRating,
