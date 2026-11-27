@@ -1,6 +1,7 @@
 import { createHandoverInvite, createInvite, deleteInvite, findInvitesForWedding } from '../models/invites.js';
 import {
     findPasswordHash,
+    setReminderEmails,
     updateAppearance,
     updateBusiness,
     updatePasswordHash,
@@ -124,6 +125,15 @@ const processPassword = async (req, res) => {
 
     await updatePasswordHash(req.session.user.id, await hashPassword(newPassword));
     setFlash(req, 'success', 'settings.passwordSaved');
+    res.redirect('/settings');
+};
+
+/** "Email me a daily summary" (see services/reminders.js). An unticked checkbox sends nothing. */
+const processReminders = async (req, res) => {
+    const updated = await setReminderEmails(req.session.user.id, req.body?.reminder_emails === 'on');
+    if (!updated) throw new Error('Current user disappeared during update');
+    req.session.user = toSessionUser(updated);
+    setFlash(req, 'success', updated.reminder_emails ? 'settings.remindersOn' : 'settings.remindersOff');
     res.redirect('/settings');
 };
 
@@ -281,6 +291,7 @@ export {
     processHandover,
     processBecomePlanner,
     processAppearance,
+    processReminders,
     processBusiness,
     showSettings,
     processWeddingDetails,

@@ -938,5 +938,17 @@ export default {
     'reminders.open': 'Abrir Forever Planner',
     'reminders.why': 'Recibes este resumen porque los recordatorios diarios están activados en tu cuenta.',
     'reminders.settings': 'Cámbialo en Ajustes',
-    'reminders.unsubscribe': 'Darse de baja'
+    'reminders.unsubscribe': 'Darse de baja',
+    'settings.reminders': 'Recordatorios por correo',
+    'settings.remindersLabel': 'Envíame un resumen diario',
+    'settings.remindersHint':
+        'Un correo por la mañana, solo cuando haya pagos, tareas o decisiones vencidos o para esta semana en tus bodas.',
+    'settings.remindersOn': 'Los resúmenes diarios están activados.',
+    'settings.remindersOff': 'Los resúmenes diarios están desactivados.',
+    'unsubscribe.title': 'Darse de baja',
+    'unsubscribe.heading': 'Resúmenes *diarios*',
+    'unsubscribe.confirm': '¿Dejar de recibir los resúmenes diarios en esta cuenta?',
+    'unsubscribe.submit': 'Darse de baja',
+    'unsubscribe.done': 'Hecho. Ya no recibirás resúmenes diarios.',
+    'unsubscribe.later': 'Puedes volver a activarlos en Ajustes cuando quieras.'
 };

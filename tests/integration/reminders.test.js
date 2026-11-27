@@ -1,6 +1,7 @@
 import { after, before, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { skipWithoutDb, startTestApp } from '../helpers/app.js';
+import { TestClient, registeredClient, skipWithoutDb, startTestApp } from '../helpers/app.js';
+import { unsubscribeToken } from '../../src/utils/unsubscribe.js';
 
 const TODAY = '2027-03-15';
 
@@ -220,6 +221,49 @@ describe('reminders', { skip: skipWithoutDb }, () => {
             } finally {
                 if (saved !== undefined) process.env.SMTP_HOST = saved;
             }
+        });
+    });
+
+    describe('settings and unsubscribe', () => {
+        const remindersOn = async (email) =>
+            (await q('SELECT reminder_emails FROM users WHERE email = $1;', [email])).rows[0].reminder_emails;
+
+        it('the settings switch turns reminders off and on', async () => {
+            const person = await registeredClient(app.baseUrl, 'Rae', 'rae@example.com');
+            const page = (await person.get('/settings')).body;
+            assert.match(page, /id="reminders-heading"/);
+            assert.match(page, /name="reminder_emails"[^>]*checked/);
+            await person.post('/settings/reminders', {});
+            assert.equal(await remindersOn('rae@example.com'), false);
+            assert.doesNotMatch((await person.get('/settings')).body, /name="reminder_emails"[^>]*checked/);
+            await person.get('/settings');
+            await person.post('/settings/reminders', { reminder_emails: 'on' });
+            assert.equal(await remindersOn('rae@example.com'), true);
+        });
+
+        it('unsubscribe link: GET asks, POST switches off, without signing in or a CSRF token', async () => {
+            const visitor = new TestClient(app.baseUrl);
+            const url = `/reminders/unsubscribe?u=${planner}&t=${unsubscribeToken(planner)}`;
+            const confirm = await visitor.get(url);
+            assert.equal(confirm.status, 200);
+            assert.match(confirm.body, /<form method="post"/);
+            assert.equal(await remindersOn('planner@example.com'), true, 'a GET changes nothing');
+            const done = await visitor.post(url, { 'List-Unsubscribe': 'One-Click' });
+            assert.equal(done.status, 200);
+            assert.equal(await remindersOn('planner@example.com'), false);
+            await q('UPDATE users SET reminder_emails = TRUE WHERE id = $1;', [planner]);
+        });
+
+        it("a forged token or another user's id gives 404", async () => {
+            const visitor = new TestClient(app.baseUrl);
+            const forged = `/reminders/unsubscribe?u=${planner}&t=${'0'.repeat(64)}`;
+            assert.equal((await visitor.get(forged)).status, 404);
+            assert.equal((await visitor.post(forged, {})).status, 404);
+            const swapped = `/reminders/unsubscribe?u=${couple}&t=${unsubscribeToken(planner)}`;
+            assert.equal((await visitor.post(swapped, {})).status, 404);
+            assert.equal((await visitor.get('/reminders/unsubscribe?u=nope&t=nope')).status, 404);
+            assert.equal(await remindersOn('planner@example.com'), true);
+            assert.equal(await remindersOn('couple@example.com'), true);
         });
     });
 });

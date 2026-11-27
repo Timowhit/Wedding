@@ -1,0 +1,19 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content" class="narrow">
+    <%- include('partials/page-header', { heading: 'unsubscribe.heading' }) %>
+    <section class="card">
+        <% if (state === 'confirm') { %>
+            <p><%= t('unsubscribe.confirm') %></p>
+            <form method="post" action="<%= action %>">
+                <button type="submit" class="btn btn-primary"><%= t('unsubscribe.submit') %></button>
+            </form>
+        <% } else { %>
+            <p role="status"><%= t('unsubscribe.done') %></p>
+        <% } %>
+        <p class="hint"><%= t('unsubscribe.later') %></p>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

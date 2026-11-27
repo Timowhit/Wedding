@@ -18,6 +18,7 @@ const toSessionUser = (row) => ({
     businessName: row.business_name ?? null,
     themePalette: row.theme_palette,
     themeMode: row.theme_mode,
+    reminderEmails: row.reminder_emails !== false,
     brandPalette: row.brand_palette ?? null
 });
 

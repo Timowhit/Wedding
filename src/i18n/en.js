@@ -929,5 +929,17 @@ export default {
     'reminders.open': 'Open Forever Planner',
     'reminders.why': 'You get this summary because daily reminders are on for your account.',
     'reminders.settings': 'Change this in Settings',
-    'reminders.unsubscribe': 'Unsubscribe'
+    'reminders.unsubscribe': 'Unsubscribe',
+    'settings.reminders': 'Reminder emails',
+    'settings.remindersLabel': 'Email me a daily summary',
+    'settings.remindersHint':
+        'One email in the morning, only when payments, tasks or decisions are overdue or due this week across your weddings.',
+    'settings.remindersOn': 'Daily summaries are on.',
+    'settings.remindersOff': 'Daily summaries are off.',
+    'unsubscribe.title': 'Unsubscribe',
+    'unsubscribe.heading': 'Daily *summaries*',
+    'unsubscribe.confirm': 'Stop the daily summary emails for this account?',
+    'unsubscribe.submit': 'Unsubscribe',
+    'unsubscribe.done': "Done. You won't get daily summaries any more.",
+    'unsubscribe.later': 'You can switch them back on in Settings at any time.'
 };
