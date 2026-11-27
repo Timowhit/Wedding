@@ -25,13 +25,15 @@ const isSafeReturnPath = (value) => isLocalPath(value) && !/^\/(login|register|l
  * were heading to, and stores only the public copy of the user.
  * @param {import('express').Request} req
  * @param {Object} userRow - A users row (public columns).
- * @returns {Promise<string>} Where to redirect next.
+ * @returns {Promise<string>} Where to redirect next: the remembered page, else the planner dashboard
+ *          for planners and the wedding dashboard for everyone else.
  */
 const startUserSession = async (req, userRow) => {
     const { returnTo } = req.session;
     await regenerateSession(req);
     req.session.user = toSessionUser(userRow);
-    return isSafeReturnPath(returnTo) ? returnTo : '/';
+    if (isSafeReturnPath(returnTo)) return returnTo;
+    return req.session.user.isPlanner ? '/planner' : '/';
 };
 
 export { regenerateSession, isLocalPath, isSafeReturnPath, startUserSession };

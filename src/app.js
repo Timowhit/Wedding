@@ -12,6 +12,7 @@ import { setLanguage } from './middleware/i18n.js';
 import { configureGoogle } from './services/google.js';
 import { UNSPLASH_IMAGE_HOSTS, isUnsplashConfigured } from './services/unsplash.js';
 import { isSpotifyConfigured } from './services/spotify.js';
+import { resolveTheme } from './themes.js';
 import { takeFlash } from './utils/flash.js';
 import { emphasize, fieldState } from './utils/view-helpers.js';
 import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES, translate } from './i18n/index.js';
@@ -111,6 +112,8 @@ const createApp = (env = process.env) => {
         res.locals.fieldState = fieldState;
         // Optional features without API keys are left out of the navigation and dashboard.
         res.locals.features = { music: isSpotifyConfigured(), inspiration: isUnsplashConfigured() };
+        // A function, because the wedding is only loaded later by the route's own middleware.
+        res.locals.currentTheme = () => resolveTheme({ user: res.locals.user, wedding: res.locals.wedding });
         next();
     });
     app.use(setCurrentUser);
@@ -138,6 +141,7 @@ const createApp = (env = process.env) => {
             res.locals.csrfToken = () => '';
             res.locals.emphasize = emphasize;
             res.locals.features = { music: false, inspiration: false };
+            res.locals.currentTheme = () => resolveTheme({});
         }
         res.status(status).render('errors/500', { title: res.locals.t('errors.serverErrorTitle'), status });
     });

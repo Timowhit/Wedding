@@ -1,4 +1,5 @@
 import { findBudgetLimit, findTotalSpent } from '../models/budget.js';
+import { countOpenDecisions } from '../models/decisions.js';
 import { findTaskProgress } from '../models/checklist.js';
 import { findGuestStats } from '../models/guests.js';
 import { findPendingInvitesForEmail } from '../models/invites.js';
@@ -36,8 +37,8 @@ const gettingStartedSteps = (wedding, stats, memberCount) => {
 
 const showDashboard = async (req, res) => {
     const weddingId = req.wedding.id;
-    const [budgetLimit, spent, guests, tasks, vendors, tracks, photos, pendingInvites, memberCount] = await Promise.all(
-        [
+    const [budgetLimit, spent, guests, tasks, vendors, tracks, photos, pendingInvites, memberCount, openDecisions] =
+        await Promise.all([
             findBudgetLimit(weddingId),
             findTotalSpent(weddingId),
             findGuestStats(weddingId),
@@ -46,9 +47,9 @@ const showDashboard = async (req, res) => {
             countTracks(weddingId),
             countPhotos(weddingId),
             findPendingInvitesForEmail(req.session.user.email),
-            countMembers(weddingId)
-        ]
-    );
+            countMembers(weddingId),
+            countOpenDecisions(weddingId)
+        ]);
     const stats = { budgetLimit, spent, guests, tasks, vendors, tracks, photos };
     const steps = gettingStartedSteps(req.wedding, stats, memberCount);
 
@@ -56,6 +57,7 @@ const showDashboard = async (req, res) => {
         title: req.t('dashboard.title'),
         stats,
         steps: steps.every((step) => step.done) ? [] : steps,
+        openDecisions,
         daysLeft: daysUntil(req.wedding.wedding_date),
         pendingInvites,
         errors: []

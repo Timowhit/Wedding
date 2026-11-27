@@ -1,14 +1,23 @@
-import { createInvite, deleteInvite, findInvitesForWedding } from '../models/invites.js';
-import { findPasswordHash, updatePasswordHash, updateProfile } from '../models/users.js';
-import { findMembers, removeMember, updateMemberRole, updateWedding } from '../models/weddings.js';
+import { createHandoverInvite, createInvite, deleteInvite, findInvitesForWedding } from '../models/invites.js';
+import {
+    findPasswordHash,
+    updateAppearance,
+    updateBusiness,
+    updatePasswordHash,
+    updateProfile,
+    upgradeToPlanner
+} from '../models/users.js';
+import { PALETTES, THEME_MODES } from '../constants.js';
+import { assignableRoles, findMembers, removeMember, updateMemberRole, updateWedding } from '../models/weddings.js';
 import { toSessionUser } from '../middleware/auth.js';
 import { isEmailConfigured, sendInviteEmail } from '../services/email.js';
 import { setFlash } from '../utils/flash.js';
 import { toIsoDate } from '../utils/format.js';
 import { hashPassword, verifyPassword } from '../utils/password.js';
-import { validatePasswordChange, validateProfile } from '../validators/auth.js';
-import { isUuid } from '../validators/common.js';
-import { readAssignableRole, validateInvite, validateWedding } from '../validators/weddings.js';
+import { validateAppearance, validateBusiness, validatePasswordChange, validateProfile } from '../validators/auth.js';
+import { isUuid, readText } from '../validators/common.js';
+import { isLocalPath } from '../utils/session.js';
+import { readAssignableRole, validateHandover, validateInvite, validateWedding } from '../validators/weddings.js';
 
 /**
  * Public base URL used in invite links. server.js requires APP_URL in production, so links
@@ -33,10 +42,11 @@ const takeCreatedInviteUrl = (req) => {
  * `forms` holds the values/errors for each one.
  */
 const renderSettings = async (req, res, { status = 200, forms = {} } = {}) => {
+    // A planner may have no wedding yet; then only the account sections are shown.
     const wedding = req.wedding;
-    const isOwner = wedding.role === 'owner';
+    const isOwner = wedding?.role === 'owner';
     const [members, invites, passwordHash] = await Promise.all([
-        findMembers(wedding.id),
+        wedding ? findMembers(wedding.id) : [],
         isOwner ? findInvitesForWedding(wedding.id) : [],
         findPasswordHash(req.session.user.id)
     ]);
@@ -48,7 +58,7 @@ const renderSettings = async (req, res, { status = 200, forms = {} } = {}) => {
         hasPassword: Boolean(passwordHash),
         emailEnabled: isEmailConfigured(),
         weddingForm: forms.wedding ?? {
-            values: { name: wedding.name, wedding_date: toIsoDate(wedding.wedding_date) },
+            values: { name: wedding?.name ?? '', wedding_date: toIsoDate(wedding?.wedding_date) },
             errors: []
         },
         profileForm: forms.profile ?? {
@@ -56,7 +66,22 @@ const renderSettings = async (req, res, { status = 200, forms = {} } = {}) => {
             errors: []
         },
         passwordForm: forms.password ?? { errors: [] },
+        palettes: PALETTES,
+        themeModes: THEME_MODES,
+        appearanceForm: forms.appearance ?? {
+            values: { palette: req.session.user.themePalette, mode: req.session.user.themeMode },
+            errors: []
+        },
+        businessForm: forms.business ?? {
+            values: {
+                business_name: req.session.user.businessName ?? '',
+                brand_palette: req.session.user.brandPalette ?? ''
+            },
+            errors: []
+        },
         inviteForm: forms.invite ?? { values: { email: '', role: 'editor' }, errors: [] },
+        handoverForm: forms.handover ?? { values: { email: '' }, errors: [] },
+        inviteRoles: wedding ? assignableRoles(wedding) : [],
         createdInviteUrl: takeCreatedInviteUrl(req)
     });
 };
@@ -102,9 +127,45 @@ const processPassword = async (req, res) => {
     res.redirect('/settings');
 };
 
+const processAppearance = async (req, res) => {
+    const { values, data, errors } = validateAppearance(req.body);
+    if (errors.length > 0) return renderSettings(req, res, { status: 400, forms: { appearance: { values, errors } } });
+
+    const updated = await updateAppearance(req.session.user.id, data);
+    if (!updated) throw new Error('Current user disappeared during update');
+    req.session.user = toSessionUser(updated);
+    setFlash(req, 'success', 'settings.appearanceSaved');
+    res.redirect('/settings');
+};
+
+/** "I'm a wedding planner": turns a couple account into a planner account. */
+const processBecomePlanner = async (req, res) => {
+    if (req.session.user.isPlanner) return res.redirect('/planner');
+    const updated = await upgradeToPlanner(req.session.user.id);
+    if (!updated) throw new Error('Current user disappeared during update');
+    req.session.user = toSessionUser(updated);
+    setFlash(req, 'success', 'settings.becamePlanner');
+    // From a handover invite, go back to it so the new planner can accept.
+    const returnTo = readText(req.body?.return_to);
+    res.redirect(isLocalPath(returnTo) && returnTo.startsWith('/invite/') ? returnTo : '/planner');
+};
+
+/** Planner accounts only; anyone else gets a 404, as if the page did not exist. */
+const processBusiness = async (req, res, next) => {
+    if (!req.session.user.isPlanner) return next();
+    const { values, data, errors } = validateBusiness(req.body);
+    if (errors.length > 0) return renderSettings(req, res, { status: 400, forms: { business: { values, errors } } });
+
+    const updated = await updateBusiness(req.session.user.id, data);
+    if (!updated) return next();
+    req.session.user = toSessionUser(updated);
+    setFlash(req, 'success', 'settings.businessSaved');
+    res.redirect('/settings');
+};
+
 /** Owner only. With an email: an email invite (sent if SMTP is set up). Without: a share link. */
 const processInvite = async (req, res) => {
-    const { values, data, errors } = validateInvite(req.body);
+    const { values, data, errors } = validateInvite(req.body, req.wedding);
     if (data.email && data.email === req.session.user.email.toLowerCase()) {
         errors.push({ field: 'email', key: 'settings.inviteSelf' });
     }
@@ -143,6 +204,47 @@ const processInvite = async (req, res) => {
     res.redirect('/settings');
 };
 
+/**
+ * Owner of a couple's own wedding: "Bring in your planner". Creates a single-use handover invite;
+ * the planner who accepts it becomes the owner and the couple become clients.
+ */
+const processHandover = async (req, res) => {
+    if (req.wedding.planner_managed) {
+        setFlash(req, 'error', 'settings.handoverAlreadyPlanner');
+        return res.redirect('/settings');
+    }
+    const { values, data, errors } = validateHandover(req.body);
+    if (data.email && data.email === req.session.user.email.toLowerCase()) {
+        errors.push({ field: 'email', key: 'settings.inviteSelf' });
+    }
+    if (errors.length > 0) return renderSettings(req, res, { status: 400, forms: { handover: { values, errors } } });
+
+    const invite = await createHandoverInvite(req.wedding.id, req.session.user.id, data.email);
+    const url = inviteUrlFor(req, invite.token);
+    let sent = false;
+    if (invite.invited_email) {
+        try {
+            sent = await sendInviteEmail({
+                to: invite.invited_email,
+                inviteUrl: url,
+                subject: req.t('email.handoverSubject', { inviter: req.session.user.name, wedding: req.wedding.name }),
+                lines: [
+                    req.t('email.handoverIntro', { inviter: req.session.user.name, wedding: req.wedding.name }),
+                    req.t('email.inviteExpiry')
+                ],
+                buttonLabel: req.t('email.inviteButton')
+            });
+        } catch (err) {
+            console.error('Handover email failed:', err.message);
+        }
+    }
+    if (!sent) req.session.createdInviteUrl = url;
+    setFlash(req, 'success', sent ? 'settings.handoverSent' : 'settings.handoverCreated', {
+        email: invite.invited_email ?? ''
+    });
+    res.redirect('/settings');
+};
+
 const processRevokeInvite = async (req, res) => {
     const deleted = isUuid(req.params.id) && (await deleteInvite(req.params.id, req.wedding.id));
     setFlash(req, deleted ? 'success' : 'error', deleted ? 'settings.inviteRevoked' : 'settings.inviteMissing');
@@ -150,7 +252,7 @@ const processRevokeInvite = async (req, res) => {
 };
 
 const processMemberRole = async (req, res) => {
-    const role = readAssignableRole(req.body);
+    const role = readAssignableRole(req.body, req.wedding);
     const changed =
         role !== null && isUuid(req.params.userId) && (await updateMemberRole(req.wedding.id, req.params.userId, role));
     setFlash(req, changed ? 'success' : 'error', changed ? 'settings.roleSaved' : 'settings.memberMissing');
@@ -176,6 +278,10 @@ const processLeaveWedding = async (req, res) => {
 };
 
 export {
+    processHandover,
+    processBecomePlanner,
+    processAppearance,
+    processBusiness,
     showSettings,
     processWeddingDetails,
     processProfile,

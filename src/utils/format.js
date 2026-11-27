@@ -59,4 +59,20 @@ const daysUntil = (value, today = new Date()) => {
     return Math.round((target - now) / 86_400_000);
 };
 
-export { formatCurrency, formatDate, toIsoDate, daysUntil };
+/**
+ * Formats a "HH:MM" time of day for the page language, e.g. "3:00 PM" in English, "15:00" in Spanish.
+ * @param {string|null} value
+ * @param {string} lang
+ * @returns {string} '' when there is no time.
+ */
+const formatTime = (value, lang) => {
+    if (!value) return '';
+    const [hours, minutes] = value.split(':').map(Number);
+    return new Intl.DateTimeFormat(LOCALES[lang] ?? LOCALES.en, {
+        hour: 'numeric',
+        minute: '2-digit',
+        timeZone: 'UTC'
+    }).format(new Date(Date.UTC(2000, 0, 1, hours, minutes)));
+};
+
+export { formatCurrency, formatDate, formatTime, toIsoDate, daysUntil };

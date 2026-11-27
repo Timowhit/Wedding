@@ -16,6 +16,7 @@
         </section>
     <% } %>
 
+    <% if (wedding) { %>
     <section class="card" aria-labelledby="details-heading">
         <h2 class="card-title" id="details-heading"><%= t('settings.weddingDetails') %></h2>
         <% if (isOwner) { %>
@@ -65,7 +66,7 @@
                                 <%- include('partials/csrf-field') %>
                                 <label class="visually-hidden" for="role-<%= member.user_id %>"><%= t('settings.roleFor', { name: label }) %></label>
                                 <select id="role-<%= member.user_id %>" name="role">
-                                    <% ['editor', 'viewer'].forEach((role) => { %>
+                                    <% inviteRoles.forEach((role) => { %>
                                         <option value="<%= role %>" <%= role === member.role ? 'selected' : '' %>><%= t(`role.${role}`) %></option>
                                     <% }); %>
                                 </select>
@@ -97,8 +98,8 @@
                 <div class="field field--wide">
                     <label for="invite-role"><%= t('field.role') %></label>
                     <select id="invite-role" name="role" <%- fieldState(inviteForm.errors, 'role', 'invite-errors') %>>
-                        <% ['editor', 'viewer'].forEach((role) => { %>
-                            <option value="<%= role %>" <%= role === inviteForm.values.role ? 'selected' : '' %>><%= t(`role.${role}Description`) %></option>
+                        <% inviteRoles.forEach((role) => { %>
+                            <option value="<%= role %>" <%= role === inviteForm.values.role ? 'selected' : '' %>><%= t(isPlannerWedding ? `role.planner.${role}` : `role.${role}Description`) %></option>
                         <% }); %>
                     </select>
                 </div>
@@ -106,6 +107,27 @@
                     <button type="submit" class="btn btn-primary"><%= t('settings.createInvite') %></button>
                 </div>
             </form>
+
+            <% if (!isPlannerWedding) { %>
+                <details class="disclosure" id="handover" <%= handoverForm.errors.length > 0 ? 'open' : '' %>>
+                    <summary><%= t('settings.handover') %></summary>
+                    <p><%= t('settings.handoverHelp') %></p>
+                    <%- include('partials/form-errors', { errors: handoverForm.errors, id: 'handover-errors' }) %>
+                    <form method="post" action="/settings/handover" class="form-stack">
+                        <%- include('partials/csrf-field') %>
+                        <div class="field">
+                            <label for="handover-email"><%= t('settings.plannerEmail') %> <span class="optional"><%= t('form.optional') %></span></label>
+                            <input type="email" id="handover-email" name="email" maxlength="255" value="<%= handoverForm.values.email %>"
+                                   <%- fieldState(handoverForm.errors, 'email', 'handover-errors') %>>
+                        </div>
+                        <label class="choice">
+                            <input type="checkbox" name="confirm" value="yes" required <%- fieldState(handoverForm.errors, 'confirm', 'handover-errors') %>>
+                            <%= t('settings.handoverConfirm') %>
+                        </label>
+                        <button type="submit" class="btn btn-secondary"><%= t('settings.handoverSubmit') %></button>
+                    </form>
+                </details>
+            <% } %>
 
             <h3 class="subheading"><%= t('settings.invites') %></h3>
             <% if (invites.length === 0) { %>
@@ -138,6 +160,7 @@
                 </ul>
             <% } %>
         </section>
+    <% } %>
     <% } %>
 
     <div class="card-row">
@@ -193,6 +216,65 @@
         </section>
     </div>
 
+    <div class="card-row">
+        <section class="card" aria-labelledby="appearance-heading">
+            <h2 class="card-title" id="appearance-heading"><%= t('settings.appearance') %></h2>
+            <%- include('partials/form-errors', { errors: appearanceForm.errors, id: 'appearance-errors' }) %>
+            <form method="post" action="/settings/appearance" class="form-stack">
+                <%- include('partials/csrf-field') %>
+                <fieldset class="choice-group">
+                    <legend><%= t('field.palette') %></legend>
+                    <% palettes.forEach((palette) => { %>
+                        <label class="choice">
+                            <input type="radio" name="palette" value="<%= palette %>" <%= palette === appearanceForm.values.palette ? 'checked' : '' %>>
+                            <span class="swatch" data-swatch="<%= palette %>" aria-hidden="true"></span>
+                            <%= t(`palette.${palette}`) %>
+                        </label>
+                    <% }); %>
+                </fieldset>
+                <fieldset class="choice-group">
+                    <legend><%= t('field.mode') %></legend>
+                    <% themeModes.forEach((mode) => { %>
+                        <label class="choice">
+                            <input type="radio" name="mode" value="<%= mode %>" <%= mode === appearanceForm.values.mode ? 'checked' : '' %>>
+                            <%= t(`themeMode.${mode}`) %>
+                        </label>
+                    <% }); %>
+                </fieldset>
+                <% if (isPlannerWedding && wedding.owner_brand_palette && !isOwner) { %>
+                    <p class="hint"><%= t('settings.brandInUse') %></p>
+                <% } %>
+                <button type="submit" class="btn btn-primary"><%= t('action.save') %></button>
+            </form>
+        </section>
+
+        <% if (user.isPlanner) { %>
+            <section class="card" aria-labelledby="business-heading">
+                <h2 class="card-title" id="business-heading"><%= t('settings.business') %></h2>
+                <%- include('partials/form-errors', { errors: businessForm.errors, id: 'business-errors' }) %>
+                <form method="post" action="/settings/business" class="form-stack">
+                    <%- include('partials/csrf-field') %>
+                    <div class="field">
+                        <label for="business_name"><%= t('field.business_name') %> <span class="optional"><%= t('form.optional') %></span></label>
+                        <input type="text" id="business_name" name="business_name" maxlength="120" autocomplete="organization"
+                               value="<%= businessForm.values.business_name %>" <%- fieldState(businessForm.errors, 'business_name', 'business-errors') %>>
+                    </div>
+                    <div class="field">
+                        <label for="brand_palette"><%= t('field.brand_palette') %></label>
+                        <select id="brand_palette" name="brand_palette" aria-describedby="brand-hint" <%- fieldState(businessForm.errors, 'brand_palette', 'business-errors') %>>
+                            <option value=""><%= t('settings.noBrand') %></option>
+                            <%- include('partials/options', { options: palettes, selected: businessForm.values.brand_palette, prefix: 'palette' }) %>
+                        </select>
+                        <p class="hint" id="brand-hint"><%= t('settings.brandHint') %></p>
+                    </div>
+                    <% if (user.foundingNumber) { %><p class="hint"><%= t('planner.foundingBadge', { number: user.foundingNumber }) %></p><% } %>
+                    <button type="submit" class="btn btn-primary"><%= t('action.save') %></button>
+                </form>
+            </section>
+        <% } %>
+    </div>
+
+    <% if (weddings.length > 0) { %>
     <section class="card" aria-labelledby="weddings-heading">
         <h2 class="card-title" id="weddings-heading"><%= t('settings.yourWeddings') %></h2>
         <ul class="item-list">
@@ -237,8 +319,20 @@
             <%- include('partials/join-form') %>
         </details>
     </section>
+    <% } %>
 
-    <% if (!isOwner) { %>
+    <% if (!user.isPlanner) { %>
+        <section class="card" aria-labelledby="become-planner-heading">
+            <h2 class="card-title" id="become-planner-heading"><%= t('settings.areYouPlanner') %></h2>
+            <p><%= t('settings.becomePlannerHelp') %></p>
+            <form method="post" action="/settings/become-planner" data-confirm="<%= t('confirm.becomePlanner') %>">
+                <%- include('partials/csrf-field') %>
+                <button type="submit" class="btn btn-secondary"><%= t('settings.becomePlanner') %></button>
+            </form>
+        </section>
+    <% } %>
+
+    <% if (wedding && !isOwner) { %>
         <section class="card danger-zone" aria-labelledby="leave-heading">
             <h2 class="card-title" id="leave-heading"><%= t('settings.leave') %></h2>
             <p><%= t('settings.leaveHelp', { name: wedding.name }) %></p>

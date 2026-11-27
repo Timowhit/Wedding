@@ -3,15 +3,22 @@ import { setFlash } from '../utils/flash.js';
 
 /**
  * Builds the copy of a user kept in the session. Only what pages need; never the password hash.
- * @param {{id: string, email: string, display_name: string|null, avatar_url: string|null, language: string}} row
- * @returns {{id: string, email: string, name: string, avatarUrl: string|null, language: string}}
+ * @param {Object} row - A users row with the public columns (see models/users.js).
+ * @returns {{id: string, email: string, name: string, avatarUrl: string|null, language: string, accountType: string, isPlanner: boolean, foundingNumber: number|null, businessName: string|null, themePalette: string, themeMode: string, brandPalette: string|null}}
  */
 const toSessionUser = (row) => ({
     id: row.id,
     email: row.email,
     name: row.display_name || row.email,
     avatarUrl: row.avatar_url,
-    language: row.language
+    language: row.language,
+    accountType: row.account_type,
+    isPlanner: row.account_type === 'planner',
+    foundingNumber: row.founding_number ?? null,
+    businessName: row.business_name ?? null,
+    themePalette: row.theme_palette,
+    themeMode: row.theme_mode,
+    brandPalette: row.brand_palette ?? null
 });
 
 /**
@@ -69,4 +76,14 @@ const redirectIfLoggedIn = (req, res, next) => {
     next();
 };
 
-export { toSessionUser, refreshSessionUser, setCurrentUser, requireLogin, redirectIfLoggedIn };
+/**
+ * Planner accounts only. Anyone else gets the 404 page, as if the page did not exist.
+ * Must run after requireLogin.
+ * @type {import('express').RequestHandler}
+ */
+const requirePlanner = (req, res, next) => {
+    if (req.session.user?.isPlanner) return next();
+    next('router');
+};
+
+export { requirePlanner, toSessionUser, refreshSessionUser, setCurrentUser, requireLogin, redirectIfLoggedIn };

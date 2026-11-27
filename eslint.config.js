@@ -2,7 +2,7 @@ import js from '@eslint/js';
 import globals from 'globals';
 
 export default [
-    { ignores: ['node_modules/', 'coverage/'] },
+    { ignores: ['node_modules/', 'coverage/', '.superpowers/'] },
     js.configs.recommended,
     {
         files: ['**/*.js'],
@@ -20,6 +20,12 @@ export default [
             'no-implicit-coercion': 'error',
             'no-console': ['error', { allow: ['info', 'warn', 'error'] }]
         }
+    },
+    {
+        // Node tooling written as CommonJS (the Playwright screenshot script); its page.evaluate
+        // callbacks run in the browser, hence the browser globals too.
+        files: ['scripts/**/*.cjs'],
+        languageOptions: { sourceType: 'commonjs', globals: { ...globals.node, ...globals.browser } }
     },
     {
         // Browser scripts: progressive enhancement only, no modules shared with the server.

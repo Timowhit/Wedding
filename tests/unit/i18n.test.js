@@ -4,9 +4,12 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DICTIONARIES, languageFromHeader, translate } from '../../src/i18n/index.js';
+import { COMING_NEXT, FEATURES } from '../../src/controllers/home.js';
 import {
     BUDGET_CATEGORIES,
     EXAMPLE_TASKS,
+    PALETTES,
+    THEME_MODES,
     MUSIC_SECTIONS,
     RSVP_STATUSES,
     TASK_CATEGORIES,
@@ -46,10 +49,20 @@ const dynamicKeys = () => [
     ...RSVP_STATUSES.flatMap((v) => [`rsvp.${v}`, `rsvpPlural.${v}`]),
     ...MUSIC_SECTIONS.map((s) => `music.section.${s.slug}`),
     ...EXAMPLE_TASKS.map((task) => task.key),
-    ...['owner', 'editor', 'viewer'].map((r) => `role.${r}`),
-    ...['editor', 'viewer'].flatMap((r) => [`role.${r}Description`, `invite.role.${r}`]),
+    ...['owner', 'editor', 'client', 'viewer'].map((r) => `role.${r}`),
+    ...['upcoming', 'past', 'all'].map((w) => `planner.when.${w}`),
+    ...['task', 'decision'].map((k) => `planner.kind.${k}`),
+    ...['open', 'approved', 'changes_requested'].map((s) => `decisionStatus.${s}`),
+    ...['editor', 'viewer'].map((r) => `role.${r}Description`),
+    ...['client', 'editor', 'viewer', 'planner'].map((r) => `invite.role.${r}`),
+    'role.planner',
+    ...['client', 'editor', 'viewer'].map((r) => `role.planner.${r}`),
     ...['pending', 'accepted', 'expired'].map((s) => `inviteStatus.${s}`),
-    ...Object.keys(DICTIONARIES).map((code) => `language.${code}`)
+    ...Object.keys(DICTIONARIES).map((code) => `language.${code}`),
+    ...PALETTES.map((p) => `palette.${p}`),
+    ...FEATURES.flatMap(({ key }) => ['title', 'body', 'alt'].map((part) => `landing.feature.${key}.${part}`)),
+    ...COMING_NEXT.map((item) => `landing.coming.${item}`),
+    ...THEME_MODES.map((m) => `themeMode.${m}`)
 ];
 
 describe('translations', () => {

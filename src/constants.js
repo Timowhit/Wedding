@@ -1,3 +1,14 @@
+/** Account kinds. Planners run client weddings; couples plan their own (and are planners' clients). */
+const ACCOUNT_TYPES = Object.freeze(['couple', 'planner']);
+
+/** The founding offer: the first FOUNDING_SPOTS planners keep FOUNDING_DISCOUNT_PCT off for life. */
+const FOUNDING_SPOTS = 300;
+const FOUNDING_DISCOUNT_PCT = 40;
+
+/** Colour themes. Values are stored in users.theme_palette / brand_palette and theme_mode. */
+const PALETTES = Object.freeze(['rose', 'sage', 'navy', 'champagne', 'slate']);
+const THEME_MODES = Object.freeze(['auto', 'light', 'dark']);
+
 /**
  * Fixed option lists. Values are stored in the database exactly as written here (several are
  * also enforced by CHECK constraints), so never rename a value without a migration. Views show
@@ -74,6 +85,11 @@ const EXAMPLE_TASKS = Object.freeze([
 ]);
 
 export {
+    ACCOUNT_TYPES,
+    FOUNDING_SPOTS,
+    FOUNDING_DISCOUNT_PCT,
+    PALETTES,
+    THEME_MODES,
     BUDGET_CATEGORIES,
     TASK_CATEGORIES,
     TASK_STATUSES,

@@ -20,3 +20,8 @@
     <input type="text" id="plus_one" name="plus_one" maxlength="200" value="<%= values.plus_one %>"
            placeholder="<%= t('guests.plusOnePlaceholder') %>" <%- fieldState(errors, 'plus_one', errorsId) %>>
 </div>
+<div class="field">
+    <label for="group_name"><%= t('field.group_name') %> <span class="optional"><%= t('form.optional') %></span></label>
+    <input type="text" id="group_name" name="group_name" maxlength="80" value="<%= values.group_name %>"
+           placeholder="<%= t('guests.groupPlaceholder') %>" <%- fieldState(errors, 'group_name', errorsId) %>>
+</div>

@@ -1,0 +1,68 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content" class="landing">
+    <%- include('partials/flash') %>
+
+    <section class="hero" aria-labelledby="hero-heading">
+        <p class="hero__eyebrow"><%= t('landing.eyebrow') %></p>
+        <h1 id="hero-heading" class="hero__title"><%- emphasize(t('landing.headline')) %></h1>
+        <p class="hero__lead"><%= t('landing.lead') %></p>
+        <div class="hero__actions">
+            <a class="btn btn-primary btn-large" href="/register?as=planner"><%= t('auth.createAccount') %></a>
+            <a class="hero__secondary" href="/register?as=couple"><%= t('landing.coupleLink') %></a>
+        </div>
+        <img class="hero__image" src="<%= features[0].image %>" alt="<%= t('landing.feature.dashboard.alt') %>" width="1200" height="750">
+    </section>
+
+    <section class="founding-band" aria-labelledby="founding-heading">
+        <% if (spotsLeft > 0) { %>
+            <h2 id="founding-heading" class="founding-band__title"><%= t('landing.foundingTitle', { pct: discountPct }) %></h2>
+            <p><%= t('landing.foundingBody', { spots: foundingSpots }) %></p>
+            <p class="founding-band__left"><strong><%= t('landing.spotsLeft', { left: spotsLeft }) %></strong></p>
+            <a class="btn btn-primary" href="/register?as=planner"><%= t('auth.createAccount') %></a>
+        <% } else { %>
+            <h2 id="founding-heading" class="founding-band__title"><%= t('landing.foundingEnded') %></h2>
+            <p><%= t('landing.foundingEndedBody') %></p>
+            <a class="btn btn-primary" href="/register?as=planner"><%= t('auth.createAccount') %></a>
+        <% } %>
+    </section>
+
+    <section aria-labelledby="features-heading">
+        <h2 id="features-heading" class="landing__heading"><%= t('landing.featuresHeading') %></h2>
+        <ul class="features">
+            <% features.forEach((feature, index) => { %>
+                <li class="feature <%= index % 2 === 1 ? 'feature--flip' : '' %>">
+                    <div class="feature__text">
+                        <h3><%= t(`landing.feature.${feature.key}.title`) %></h3>
+                        <p><%= t(`landing.feature.${feature.key}.body`) %></p>
+                    </div>
+                    <img class="feature__image" src="<%= feature.image %>" alt="<%= t(`landing.feature.${feature.key}.alt`) %>"
+                         width="1200" height="750" loading="lazy">
+                </li>
+            <% }); %>
+        </ul>
+    </section>
+
+    <section class="card landing__couples" aria-labelledby="couples-heading">
+        <h2 id="couples-heading" class="landing__heading"><%= t('landing.couplesHeading') %></h2>
+        <p><%= t('landing.couplesBody') %></p>
+        <a class="btn btn-secondary" href="/register?as=couple"><%= t('auth.createAccount') %></a>
+    </section>
+
+    <section aria-labelledby="coming-heading">
+        <h2 id="coming-heading" class="landing__heading"><%= t('landing.comingHeading') %></h2>
+        <ul class="coming-next">
+            <% comingNext.forEach((item) => { %>
+                <li><%= t(`landing.coming.${item}`) %></li>
+            <% }); %>
+        </ul>
+    </section>
+
+    <section class="landing__final" aria-labelledby="final-heading">
+        <h2 id="final-heading" class="landing__heading"><%= t('landing.finalHeading') %></h2>
+        <a class="btn btn-primary btn-large" href="/register?as=planner"><%= t('auth.createAccount') %></a>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

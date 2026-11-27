@@ -18,6 +18,7 @@ const LIMITS = Object.freeze({
     guestName: 200,
     diet: 300,
     plusOne: 200,
+    group: 80,
     vendorName: 200,
     phone: 50,
     notes: 2000,
@@ -74,14 +75,15 @@ const validateTask = (body = {}) => {
 
 /**
  * @param {object} [body] - req.body
- * @returns {{values: object, data: {name: string, rsvp: string, diet: string|null, plusOne: string|null}, errors: Array}}
+ * @returns {{values: object, data: {name: string, rsvp: string, diet: string|null, plusOne: string|null, groupName: string|null}, errors: Array}}
  */
 const validateGuest = (body = {}) => {
     const values = {
         name: readText(body.name),
         rsvp: readText(body.rsvp),
         diet: readText(body.diet),
-        plus_one: readText(body.plus_one)
+        plus_one: readText(body.plus_one),
+        group_name: readText(body.group_name)
     };
     const { errors, fail } = collectErrors();
 
@@ -90,10 +92,17 @@ const validateGuest = (body = {}) => {
     if (!rsvp) fail('rsvp', 'validation.choice');
     checkText(fail, 'diet', values.diet, { max: LIMITS.diet });
     checkText(fail, 'plus_one', values.plus_one, { max: LIMITS.plusOne });
+    checkText(fail, 'group_name', values.group_name, { max: LIMITS.group });
 
     return {
         values,
-        data: { name: values.name, rsvp, diet: optional(values.diet), plusOne: optional(values.plus_one) },
+        data: {
+            name: values.name,
+            rsvp,
+            diet: optional(values.diet),
+            plusOne: optional(values.plus_one),
+            groupName: optional(values.group_name)
+        },
         errors
     };
 };

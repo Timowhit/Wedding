@@ -6,6 +6,7 @@ import {
     processLogout,
     processRegister,
     showLoginForm,
+    showStart,
     showRegisterForm,
     startGoogleLogin
 } from '../controllers/auth.js';
@@ -44,6 +45,10 @@ import {
 import { processAcceptInvite, processDeclineInvite, showInvite } from '../controllers/invites.js';
 import { processAddTrack, processClearSection, processDeleteTrack, showMusic } from '../controllers/music.js';
 import {
+    processHandover,
+    processBecomePlanner,
+    processAppearance,
+    processBusiness,
     processInvite,
     processLeaveWedding,
     processMemberRole,
@@ -62,7 +67,8 @@ import {
     showEditVendor,
     showVendors
 } from '../controllers/vendors.js';
-import { redirectIfLoggedIn, requireLogin } from '../middleware/auth.js';
+import { redirectIfLoggedIn, requireLogin, requirePlanner } from '../middleware/auth.js';
+import { processNewClientWedding, processOpenWedding, showPlannerDashboard } from '../controllers/planner.js';
 import {
     inviteLimiter,
     loginLimiter,
@@ -70,7 +76,37 @@ import {
     registerLimiter,
     searchLimiter
 } from '../middleware/rateLimit.js';
-import { loadActiveWedding, requireEditor, requireOwner } from '../middleware/wedding.js';
+import {
+    loadActiveWedding,
+    loadOptionalWedding,
+    requireDecisionRight,
+    requireEditor,
+    requireOwner
+} from '../middleware/wedding.js';
+import { showLanding } from '../controllers/home.js';
+import {
+    processAssignGuest,
+    processDeleteTable,
+    processEditTable,
+    processNewTable,
+    showSeating
+} from '../controllers/seating.js';
+import {
+    processDeleteItem,
+    processEditItem,
+    processNewItem,
+    showEditItem,
+    showSchedule
+} from '../controllers/schedule.js';
+import {
+    processAnswer,
+    processDeleteDecision,
+    processEditDecision,
+    processNewDecision,
+    processReopen,
+    showDecisions,
+    showEditDecision
+} from '../controllers/decisions.js';
 
 const router = Router();
 
@@ -78,10 +114,14 @@ const router = Router();
 const member = [requireLogin, loadActiveWedding];
 const editor = [...member, requireEditor];
 const owner = [...member, requireOwner];
+// Account pages work with or without an active wedding (a new planner has none yet).
+const account = [requireLogin, loadOptionalWedding];
+const planner = [requireLogin, requirePlanner, loadOptionalWedding];
 
 /* Public ------------------------------------------------------------------------------------- */
 router.get('/login', redirectIfLoggedIn, showLoginForm);
 router.post('/login', redirectIfLoggedIn, loginLimiter, processLogin);
+router.get('/start', redirectIfLoggedIn, showStart);
 router.get('/register', redirectIfLoggedIn, showRegisterForm);
 router.post('/register', redirectIfLoggedIn, registerLimiter, processRegister);
 router.post('/logout', processLogout);
@@ -98,9 +138,41 @@ router.post('/invites/join', requireLogin, processJoinByLink);
 router.post('/invite/:token/accept', requireLogin, processAcceptInvite);
 router.post('/invite/:token/decline', requireLogin, processDeclineInvite);
 
+/* Planner dashboard ---------------------------------------------------------------------------- */
+router.get('/planner', planner, showPlannerDashboard);
+router.post('/planner/weddings', planner, processNewClientWedding);
+router.post('/planner/weddings/:id/open', planner, processOpenWedding);
+
 /* Dashboard ----------------------------------------------------------------------------------- */
+// Visitors who are not signed in get the public landing page; members fall through to their dashboard.
+router.get('/', showLanding);
 router.get('/', member, showDashboard);
 router.post('/wedding/date', owner, processWeddingDate);
+
+/* Decisions ----------------------------------------------------------------------------------- */
+const asker = [...member, requireDecisionRight('ask')];
+const answerer = [...member, requireDecisionRight('answer')];
+router.get('/decisions', member, showDecisions);
+router.post('/decisions', asker, processNewDecision);
+router.get('/decisions/:id/edit', asker, showEditDecision);
+router.post('/decisions/:id/edit', asker, processEditDecision);
+router.post('/decisions/:id/reopen', asker, processReopen);
+router.post('/decisions/:id/delete', asker, processDeleteDecision);
+router.post('/decisions/:id/answer', answerer, processAnswer);
+
+/* Event-day schedule ---------------------------------------------------------------------------- */
+router.get('/schedule', member, showSchedule);
+router.post('/schedule', editor, processNewItem);
+router.get('/schedule/:id/edit', editor, showEditItem);
+router.post('/schedule/:id/edit', editor, processEditItem);
+router.post('/schedule/:id/delete', editor, processDeleteItem);
+
+/* Seating chart ------------------------------------------------------------------------------- */
+router.get('/seating', member, showSeating);
+router.post('/seating/tables', editor, processNewTable);
+router.post('/seating/tables/:id/edit', editor, processEditTable);
+router.post('/seating/tables/:id/delete', editor, processDeleteTable);
+router.post('/seating/guests/:id', editor, processAssignGuest);
 
 /* Budget -------------------------------------------------------------------------------------- */
 router.get('/budget', member, showBudget);
@@ -146,12 +218,16 @@ router.post('/inspiration/clear', editor, processClearBoard);
 router.post('/inspiration/:id/delete', editor, processDeletePhoto);
 
 /* Settings ------------------------------------------------------------------------------------ */
-router.get('/settings', member, showSettings);
-router.post('/settings/profile', member, processProfile);
-router.post('/settings/password', member, passwordLimiter, processPassword);
+router.get('/settings', account, showSettings);
+router.post('/settings/profile', account, processProfile);
+router.post('/settings/appearance', account, processAppearance);
+router.post('/settings/business', account, processBusiness);
+router.post('/settings/become-planner', account, processBecomePlanner);
+router.post('/settings/password', account, passwordLimiter, processPassword);
 router.post('/settings/leave', member, processLeaveWedding);
 router.post('/settings/wedding', owner, processWeddingDetails);
 router.post('/settings/invites', owner, inviteLimiter, processInvite);
+router.post('/settings/handover', owner, inviteLimiter, processHandover);
 router.post('/settings/invites/:id/delete', owner, processRevokeInvite);
 router.post('/settings/members/:userId/role', owner, processMemberRole);
 router.post('/settings/members/:userId/delete', owner, processRemoveMember);

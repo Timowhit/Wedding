@@ -7,6 +7,7 @@ Server-rendered Express 5 + EJS + PostgreSQL app. Read README.md for setup, rout
 - `npm run dev`: run locally (needs `.env`, see `.env.example`)
 - `npm run migrate`: apply new migrations
 - `npm run check`: lint + format check + tests. Must pass before a change is done.
+- `npm run build:themes`: regenerate `public/css/themes.css` after editing `src/themes.js` (a test fails if it is stale; never edit the CSS file by hand).
 - Integration tests need `TEST_DB_URL` pointing at a throwaway database (it is wiped).
 
 ## Code style
@@ -19,7 +20,9 @@ Server-rendered Express 5 + EJS + PostgreSQL app. Read README.md for setup, rout
 
 ## Layers
 
-- `routes/index.js` is the single list of routes; every route states its access level (`member`, `editor`, `owner`).
+- `routes/index.js` is the single list of routes; every route states its access level (`account`, `planner`, `member`, `editor`, `owner`, `asker`/`answerer`). Settings pages use the `account` chain (`loadOptionalWedding`) so they work for a planner with no wedding yet.
+- Roles: compare with `ROLE_RANK` in `middleware/wedding.js` (`client` ranks with `editor`); never test role strings for "can edit". Who asks and answers decisions comes from `decisionPermissions(wedding)` (it depends on `planner_managed`). Offer roles through `assignableRoles(wedding)`, so `client` only appears in planner weddings.
+- Themes: page palette comes from `resolveTheme({ user, wedding })`; palettes and modes are listed in `PALETTES`/`THEME_MODES` in `constants.js`.
 - Controllers: validate -> call models/services -> render or redirect. No SQL. On success, `setFlash` then redirect (post/redirect/get). On validation errors, re-render the page with status 400 and the submitted values.
 - Validators (`src/validators`) are pure and return `{ values, data, errors }`, where errors are `{ field, key, vars? }` and `key` is an i18n key.
 - Models own all SQL: parameterized, scoped by `wedding_id`, explicit column lists (never `SELECT *` for users: it would load `password_hash`).

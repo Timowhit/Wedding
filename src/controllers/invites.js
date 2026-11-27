@@ -1,4 +1,6 @@
-import { acceptInvite, declineInvite, findInviteByToken } from '../models/invites.js';
+import { acceptHandover, acceptInvite, declineInvite, findInviteByToken } from '../models/invites.js';
+import { findUserById } from '../models/users.js';
+import { toSessionUser } from '../middleware/auth.js';
 import { setFlash } from '../utils/flash.js';
 import { isUuid } from '../validators/common.js';
 
@@ -28,7 +30,9 @@ const showInvite = async (req, res, next) => {
     res.render('invite', {
         title: req.t('invite.title'),
         invite,
+        isHandover: invite.role === 'planner',
         wrongAccount: isForSomeoneElse(invite, user),
+        ownInvite: Boolean(user && invite.invited_by === user.id),
         errors: []
     });
 };
@@ -48,6 +52,8 @@ const processAcceptInvite = async (req, res, next) => {
         return res.redirect(backToInvite);
     }
 
+    if (invite.role === 'planner') return processAcceptHandover(req, res, invite);
+
     const outcome = await acceptInvite(invite, req.session.user.id);
     if (outcome === 'unavailable') {
         setFlash(req, 'error', 'invite.unavailable');
@@ -58,6 +64,36 @@ const processAcceptInvite = async (req, res, next) => {
     setFlash(req, 'success', outcome === 'joined' ? 'invite.joined' : 'invite.alreadyMember', {
         name: invite.wedding_name
     });
+    res.redirect('/');
+};
+
+/**
+ * A planner takes over a couple's wedding. Couple accounts are sent back to the invite page, which
+ * offers the switch to a planner account; the couple who sent the invite cannot accept it.
+ */
+const processAcceptHandover = async (req, res, invite) => {
+    const backToInvite = `/invite/${invite.token}`;
+    if (!req.session.user.isPlanner) {
+        setFlash(req, 'error', 'invite.handoverNeedsPlanner');
+        return res.redirect(backToInvite);
+    }
+    if (invite.invited_by === req.session.user.id) {
+        setFlash(req, 'error', 'invite.ownHandover');
+        return res.redirect(backToInvite);
+    }
+
+    const { outcome, foundingNumber } = await acceptHandover(invite, req.session.user.id);
+    if (outcome === 'unavailable') {
+        setFlash(req, 'error', 'invite.unavailable');
+        return res.redirect(backToInvite);
+    }
+
+    const refreshed = await findUserById(req.session.user.id);
+    if (refreshed) req.session.user = toSessionUser(refreshed);
+    req.session.activeWeddingId = invite.wedding_id;
+    if (foundingNumber)
+        setFlash(req, 'success', 'planner.foundingClaimed', { number: foundingNumber, name: invite.wedding_name });
+    else setFlash(req, 'success', 'invite.handedOver', { name: invite.wedding_name });
     res.redirect('/');
 };
 

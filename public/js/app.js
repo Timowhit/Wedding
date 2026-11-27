@@ -5,6 +5,7 @@
  * - forms marked [data-confirm] ask for confirmation before submitting
  * - buttons marked [data-copy] copy the value of the input they name
  * - the mobile navigation toggle
+ * - seating chart drag and drop (it sets the guest's table picker and submits the same form)
  * Loaded as an external file because the Content-Security-Policy forbids inline scripts.
  */
 (function () {
@@ -58,4 +59,34 @@
             }
         });
     }
+
+    // Seating chart: drag a guest onto a table card (or the unseated list) to move them.
+    let dragged = null;
+    document.querySelectorAll('[data-guest-id]').forEach((guest) => {
+        guest.addEventListener('dragstart', (event) => {
+            dragged = guest;
+            event.dataTransfer.effectAllowed = 'move';
+            guest.classList.add('is-dragging');
+        });
+        guest.addEventListener('dragend', () => {
+            guest.classList.remove('is-dragging');
+            dragged = null;
+        });
+    });
+    document.querySelectorAll('[data-drop-table]').forEach((zone) => {
+        zone.addEventListener('dragover', (event) => {
+            if (!dragged) return;
+            event.preventDefault();
+            zone.classList.add('is-drop-target');
+        });
+        zone.addEventListener('dragleave', () => zone.classList.remove('is-drop-target'));
+        zone.addEventListener('drop', (event) => {
+            event.preventDefault();
+            zone.classList.remove('is-drop-target');
+            const select = dragged && dragged.querySelector('select[name="table_id"]');
+            if (!select || select.value === zone.getAttribute('data-drop-table')) return;
+            select.value = zone.getAttribute('data-drop-table');
+            select.form.requestSubmit();
+        });
+    });
 })();

@@ -1,12 +1,20 @@
 import { PG_ERRORS, withTransaction } from '../models/db.js';
-import { createUser, findUserForLogin, updateLanguage, updatePasswordHash, upsertGoogleUser } from '../models/users.js';
+import {
+    createUser,
+    findUserForLogin,
+    updateLanguage,
+    updatePasswordHash,
+    upgradeToPlanner,
+    upsertGoogleUser
+} from '../models/users.js';
+import { countFoundingSpotsLeft } from '../models/founding.js';
 import { createWedding } from '../models/weddings.js';
 import { authenticateWithGoogle, isGoogleConfigured, passport } from '../services/google.js';
 import { isSupportedLanguage } from '../i18n/index.js';
 import { setFlash } from '../utils/flash.js';
 import { getDummyHash, hashPassword, needsRehash, verifyPassword } from '../utils/password.js';
 import { isLocalPath, regenerateSession, startUserSession } from '../utils/session.js';
-import { validateLogin, validateRegistration } from '../validators/auth.js';
+import { readSignupKind, validateLogin, validateRegistration } from '../validators/auth.js';
 import { readText } from '../validators/common.js';
 
 const renderLogin = (req, res, status, values, errors) =>
@@ -17,13 +25,19 @@ const renderLogin = (req, res, status, values, errors) =>
         googleEnabled: isGoogleConfigured()
     });
 
-const renderRegister = (req, res, status, values, errors) =>
+const renderRegister = async (req, res, status, signupAs, values, errors) =>
     res.status(status).render('register', {
-        title: req.t('auth.registerTitle'),
+        title: req.t(signupAs === 'planner' ? 'auth.plannerTitle' : 'auth.registerTitle'),
+        signupAs,
+        spotsLeft: signupAs === 'planner' ? await countFoundingSpotsLeft() : 0,
         values,
         errors,
         googleEnabled: isGoogleConfigured()
     });
+
+/** "Start now": choose between a planner account and a couple account. */
+const showStart = async (req, res) =>
+    res.render('start', { title: req.t('start.title'), spotsLeft: await countFoundingSpotsLeft() });
 
 /**
  * True when the visitor arrived from an invite link (requireLogin or the invite page stored it).
@@ -56,20 +70,30 @@ const processLogin = async (req, res) => {
     res.redirect(next);
 };
 
-const showRegisterForm = (req, res) => renderRegister(req, res, 200, { name: '', email: '' }, []);
+const showRegisterForm = (req, res) =>
+    renderRegister(req, res, 200, readSignupKind(req.query.as), { name: '', email: '', business_name: '' }, []);
 
 const processRegister = async (req, res) => {
+    const signupAs = readSignupKind(req.body?.as);
     const { values, password, errors } = validateRegistration(req.body);
-    if (errors.length > 0) return renderRegister(req, res, 400, values, errors);
+    if (errors.length > 0) return renderRegister(req, res, 400, signupAs, values, errors);
 
     const passwordHash = await hashPassword(password);
-    const createOwnWedding = !isJoiningByInvite(req);
+    // Planners start with an empty dashboard and add client weddings; couples get their own wedding.
+    const createOwnWedding = signupAs === 'couple' && !isJoiningByInvite(req);
     let user;
     try {
         // The account and its first wedding are created together, or not at all.
         user = await withTransaction(async (client) => {
             const created = await createUser(
-                { email: values.email, passwordHash, displayName: values.name, language: req.lang },
+                {
+                    email: values.email,
+                    passwordHash,
+                    displayName: values.name,
+                    language: req.lang,
+                    accountType: signupAs,
+                    businessName: signupAs === 'planner' ? values.business_name || null : null
+                },
                 client
             );
             if (createOwnWedding) {
@@ -80,13 +104,17 @@ const processRegister = async (req, res) => {
     } catch (err) {
         // users.email is UNIQUE, so the database is the final judge even for simultaneous sign-ups.
         if (err.code !== PG_ERRORS.UNIQUE_VIOLATION) throw err;
-        return renderRegister(req, res, 409, values, [{ field: 'email', key: 'auth.emailTaken' }]);
+        return renderRegister(req, res, 409, signupAs, values, [{ field: 'email', key: 'auth.emailTaken' }]);
     }
 
     const next = await startUserSession(req, user);
-    setFlash(req, 'success', createOwnWedding ? 'auth.accountCreated' : 'auth.accountCreatedForInvite', {
-        name: req.session.user.name
-    });
+    const welcomeKey =
+        signupAs === 'planner'
+            ? 'auth.plannerCreated'
+            : createOwnWedding
+              ? 'auth.accountCreated'
+              : 'auth.accountCreatedForInvite';
+    setFlash(req, 'success', welcomeKey, { name: req.session.user.name });
     res.redirect(next);
 };
 
@@ -104,6 +132,9 @@ const startGoogleLogin = (req, res, next) => {
         setFlash(req, 'error', 'auth.googleNotConfigured');
         return res.redirect('/login');
     }
+    // "Start now as a planner" with Google: remembered for the callback (see finishGoogleLogin).
+    if (req.query.as === 'planner') req.session.signupAs = 'planner';
+    else delete req.session.signupAs;
     authenticateWithGoogle({ scope: ['profile', 'email'] })(req, res, next);
 };
 
@@ -124,12 +155,22 @@ const finishGoogleLogin = (req, res, next) => {
                 return res.redirect('/login');
             }
 
-            const createOwnWedding = !isJoiningByInvite(req);
+            // The planner intent applies to this one sign-in only.
+            const asPlanner = req.session.signupAs === 'planner';
+            delete req.session.signupAs;
+            const createOwnWedding = !asPlanner && !isJoiningByInvite(req);
             const user = await withTransaction(async (client) => {
-                const result = await upsertGoogleUser({ ...profile, language: req.lang }, client);
+                const result = await upsertGoogleUser(
+                    { ...profile, language: req.lang, accountType: asPlanner ? 'planner' : 'couple' },
+                    client
+                );
                 if (result.created && createOwnWedding) {
                     const name = result.user.display_name || result.user.email;
                     await createWedding(result.user.id, { name: req.t('wedding.defaultName', { name }) }, client);
+                }
+                // An existing couple account that chose "Start now as a planner" is upgraded, as in Settings.
+                if (!result.created && asPlanner && result.user.account_type !== 'planner') {
+                    return upgradeToPlanner(result.user.id, client);
                 }
                 return result.user;
             });
@@ -161,6 +202,7 @@ const processLanguage = async (req, res) => {
 };
 
 export {
+    showStart,
     showLoginForm,
     processLogin,
     showRegisterForm,

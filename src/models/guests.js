@@ -1,6 +1,6 @@
 import db from './db.js';
 
-const GUEST_COLUMNS = 'id, name, rsvp, diet, plus_one, created_at';
+const GUEST_COLUMNS = 'id, name, rsvp, diet, plus_one, group_name, table_id, created_at';
 
 /**
  * Guests alphabetically, optionally only one RSVP status.
@@ -59,15 +59,15 @@ const findGuest = async (id, weddingId) => {
 
 /**
  * @param {string} weddingId
- * @param {{name: string, rsvp: string, diet: string|null, plusOne: string|null}} values - Already validated.
+ * @param {{name: string, rsvp: string, diet: string|null, plusOne: string|null, groupName: string|null}} values - Already validated.
  * @returns {Promise<{id: string, name: string}>}
  */
-const createGuest = async (weddingId, { name, rsvp, diet, plusOne }) => {
+const createGuest = async (weddingId, { name, rsvp, diet, plusOne, groupName = null }) => {
     const result = await db.query(
-        `INSERT INTO guests (wedding_id, name, rsvp, diet, plus_one)
-         VALUES ($1, $2, $3, $4, $5)
+        `INSERT INTO guests (wedding_id, name, rsvp, diet, plus_one, group_name)
+         VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING id, name;`,
-        [weddingId, name, rsvp, diet, plusOne]
+        [weddingId, name, rsvp, diet, plusOne, groupName]
     );
     return result.rows[0];
 };
@@ -75,15 +75,15 @@ const createGuest = async (weddingId, { name, rsvp, diet, plusOne }) => {
 /**
  * @param {string} id
  * @param {string} weddingId
- * @param {{name: string, rsvp: string, diet: string|null, plusOne: string|null}} values - Already validated.
+ * @param {{name: string, rsvp: string, diet: string|null, plusOne: string|null, groupName: string|null}} values - Already validated.
  * @returns {Promise<{id: string, name: string}|null>}
  */
-const updateGuest = async (id, weddingId, { name, rsvp, diet, plusOne }) => {
+const updateGuest = async (id, weddingId, { name, rsvp, diet, plusOne, groupName = null }) => {
     const result = await db.query(
-        `UPDATE guests SET name = $3, rsvp = $4, diet = $5, plus_one = $6
+        `UPDATE guests SET name = $3, rsvp = $4, diet = $5, plus_one = $6, group_name = $7
          WHERE id = $1 AND wedding_id = $2
          RETURNING id, name;`,
-        [id, weddingId, name, rsvp, diet, plusOne]
+        [id, weddingId, name, rsvp, diet, plusOne, groupName]
     );
     return result.rows[0] ?? null;
 };
