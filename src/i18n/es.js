@@ -1066,5 +1066,18 @@ export default {
     'layout.deleted': 'Quitado del plano.',
     'layout.limit': 'Un plano puede tener hasta {max} elementos.',
     'layout.removeTableNamed': 'Quitar del plano: {name}',
-    'nav.activeWeddingLabel': 'Boda que estás planificando: '
+    'nav.activeWeddingLabel': 'Boda que estás planificando: ',
+    'field.priority': 'Prioridad',
+    'field.assignee_id': 'Quién se encarga',
+    'priority.high': 'Alta',
+    'priority.normal': 'Normal',
+    'priority.low': 'Baja',
+    'priorityTag.high': 'Prioridad alta',
+    'priorityTag.low': 'Prioridad baja',
+    'checklist.nobody': 'Nadie todavía',
+    'checklist.for': 'Para {name}',
+    'checklist.filterWho': 'Tareas de quién',
+    'checklist.everyone': 'De todos',
+    'checklist.mine': 'Mías',
+    'checklist.highOnly': 'Prioridad alta'
 };

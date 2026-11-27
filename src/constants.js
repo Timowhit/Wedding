@@ -45,6 +45,9 @@ const TASK_CATEGORIES = Object.freeze([
 ]);
 
 const TASK_STATUSES = Object.freeze(['active', 'done']);
+// Highest first: the checklist sorts by this order within a due date.
+const TASK_PRIORITIES = Object.freeze(['high', 'normal', 'low']);
+const DEFAULT_TASK_PRIORITY = 'normal';
 
 const RSVP_STATUSES = Object.freeze(['Pending', 'Confirmed', 'Declined']);
 
@@ -164,6 +167,8 @@ export {
     BUDGET_CATEGORIES,
     TASK_CATEGORIES,
     TASK_STATUSES,
+    TASK_PRIORITIES,
+    DEFAULT_TASK_PRIORITY,
     RSVP_STATUSES,
     VENDOR_CATEGORIES,
     VENDOR_STATUSES,

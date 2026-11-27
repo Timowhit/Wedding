@@ -28,6 +28,7 @@ describe('colour themes', () => {
             ['on-primary', 'primary'],
             ['on-primary', 'secondary'],
             ['danger', 'surface'],
+            ['danger', 'danger-soft'],
             ['success', 'success-soft']
         ];
         for (const palette of PALETTES) {

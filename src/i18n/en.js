@@ -1057,5 +1057,18 @@ export default {
     'layout.deleted': 'Removed from the plan.',
     'layout.limit': 'A plan can hold up to {max} pieces.',
     'layout.removeTableNamed': 'Take off the plan: {name}',
-    'nav.activeWeddingLabel': 'Wedding you are planning: '
+    'nav.activeWeddingLabel': 'Wedding you are planning: ',
+    'field.priority': 'Priority',
+    'field.assignee_id': 'Who’s doing it',
+    'priority.high': 'High',
+    'priority.normal': 'Normal',
+    'priority.low': 'Low',
+    'priorityTag.high': 'High priority',
+    'priorityTag.low': 'Low priority',
+    'checklist.nobody': 'Nobody yet',
+    'checklist.for': 'For {name}',
+    'checklist.filterWho': 'Whose tasks',
+    'checklist.everyone': 'Everyone’s',
+    'checklist.mine': 'Mine',
+    'checklist.highOnly': 'High priority'
 };

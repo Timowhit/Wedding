@@ -1,4 +1,5 @@
-import { EXAMPLE_TASKS, TASK_CATEGORIES, TASK_STATUSES } from '../constants.js';
+import { DEFAULT_TASK_PRIORITY, EXAMPLE_TASKS, TASK_CATEGORIES, TASK_PRIORITIES, TASK_STATUSES } from '../constants.js';
+import { findMembers } from '../models/weddings.js';
 import { PG_ERRORS } from '../models/db.js';
 import {
     createTask,
@@ -14,22 +15,39 @@ import { findTemplates } from '../models/templates.js';
 import { setFlash } from '../utils/flash.js';
 import { backTo } from '../utils/redirect.js';
 import { toIsoDate } from '../utils/format.js';
+import { todayIso } from '../utils/today.js';
 import { isUuid, readChoice } from '../validators/common.js';
 import { validateTask } from '../validators/planning.js';
 
-const EMPTY_TASK = { text: '', category: TASK_CATEGORIES[0], due_date: '' };
+const EMPTY_TASK = {
+    text: '',
+    category: TASK_CATEGORIES[0],
+    due_date: '',
+    priority: DEFAULT_TASK_PRIORITY,
+    assignee_id: ''
+};
+// ?who=me shows the signed-in person's tasks.
+const WHO_FILTERS = Object.freeze(['me']);
+
+/** The wedding's members as owner options: { id, name }. */
+const ownerOptions = async (weddingId) =>
+    (await findMembers(weddingId)).map((member) => ({ id: member.user_id, name: member.display_name || member.email }));
 const DUPLICATE_ERROR = { field: 'text', key: 'checklist.duplicate' };
 
 const renderChecklist = async (req, res, { status = 200, taskForm, templateForm } = {}) => {
     const weddingId = req.wedding.id;
     const filters = {
         category: readChoice(req.query.category, TASK_CATEGORIES),
-        status: readChoice(req.query.status, TASK_STATUSES)
+        status: readChoice(req.query.status, TASK_STATUSES),
+        priority: readChoice(req.query.priority, TASK_PRIORITIES),
+        who: readChoice(req.query.who, WHO_FILTERS)
     };
-    const [tasks, progress, templates] = await Promise.all([
-        findTasks(weddingId, filters),
+    const assigneeId = filters.who === 'me' ? req.session.user.id : null;
+    const [tasks, progress, templates, owners] = await Promise.all([
+        findTasks(weddingId, { ...filters, assigneeId }),
         findTaskProgress(weddingId),
-        findTemplates(req.session.user.id, 'checklist')
+        findTemplates(req.session.user.id, 'checklist'),
+        ownerOptions(weddingId)
     ]);
 
     res.status(status).render('checklist', {
@@ -38,26 +56,37 @@ const renderChecklist = async (req, res, { status = 200, taskForm, templateForm 
         progress,
         filters,
         categories: TASK_CATEGORIES,
-        today: toIsoDate(new Date()),
+        priorities: TASK_PRIORITIES,
+        owners,
+        today: todayIso(),
         taskForm: taskForm ?? { values: EMPTY_TASK, errors: [] },
         templates,
         templateForm: templateForm ?? { values: { name: '' }, errors: [] }
     });
 };
 
-const renderEditTask = (req, res, { status = 200, id, values, errors = [] }) =>
+const renderEditTask = async (req, res, { status = 200, id, values, errors = [] }) =>
     res.status(status).render('edit-task', {
         title: req.t('checklist.editTitle'),
         formAction: `/checklist/${id}/edit`,
         categories: TASK_CATEGORIES,
+        priorities: TASK_PRIORITIES,
+        owners: await ownerOptions(req.wedding.id),
         values,
         errors
     });
 
+/** Validates a task form against this wedding's members. */
+const readTaskForm = async (req) =>
+    validateTask(
+        req.body,
+        (await ownerOptions(req.wedding.id)).map((owner) => owner.id)
+    );
+
 const showChecklist = (req, res) => renderChecklist(req, res);
 
 const processNewTask = async (req, res) => {
-    const { values, data, errors } = validateTask(req.body);
+    const { values, data, errors } = await readTaskForm(req);
     if (errors.length === 0) {
         try {
             await createTask(req.wedding.id, data);
@@ -76,13 +105,19 @@ const showEditTask = async (req, res, next) => {
     if (!task) return next();
     renderEditTask(req, res, {
         id: task.id,
-        values: { text: task.text, category: task.category, due_date: toIsoDate(task.due_date) }
+        values: {
+            text: task.text,
+            category: task.category,
+            due_date: toIsoDate(task.due_date),
+            priority: task.priority,
+            assignee_id: task.assignee_id ?? ''
+        }
     });
 };
 
 const processEditTask = async (req, res, next) => {
     if (!isUuid(req.params.id)) return next();
-    const { values, data, errors } = validateTask(req.body);
+    const { values, data, errors } = await readTaskForm(req);
     if (errors.length === 0) {
         try {
             const updated = await updateTask(req.params.id, req.wedding.id, data);

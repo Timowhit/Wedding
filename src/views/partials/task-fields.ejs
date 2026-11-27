@@ -1,4 +1,4 @@
-<%# Fields shared by the add and edit task forms. Expects values, errors, errorsId, categories. %>
+<%# Fields shared by the add and edit task forms. Expects values, errors, errorsId, categories, priorities, owners. %>
 <div class="field field--wide">
     <label for="text"><%= t('field.text') %></label>
     <input type="text" id="text" name="text" required maxlength="500" value="<%= values.text %>"
@@ -14,4 +14,19 @@
     <label for="due_date"><%= t('field.due_date') %> <span class="optional"><%= t('form.optional') %></span></label>
     <input type="date" id="due_date" name="due_date" min="1900-01-01" max="2100-12-31" value="<%= values.due_date %>"
            <%- fieldState(errors, 'due_date', errorsId) %>>
+</div>
+<div class="field">
+    <label for="priority"><%= t('field.priority') %></label>
+    <select id="priority" name="priority" <%- fieldState(errors, 'priority', errorsId) %>>
+        <%- include('options', { options: priorities, selected: values.priority, prefix: 'priority' }) %>
+    </select>
+</div>
+<div class="field">
+    <label for="assignee_id"><%= t('field.assignee_id') %> <span class="optional"><%= t('form.optional') %></span></label>
+    <select id="assignee_id" name="assignee_id" <%- fieldState(errors, 'assignee_id', errorsId) %>>
+        <option value=""><%= t('checklist.nobody') %></option>
+        <% owners.forEach((owner) => { %>
+            <option value="<%= owner.id %>" <%= owner.id === values.assignee_id ? 'selected' : '' %>><%= owner.name %></option>
+        <% }); %>
+    </select>
 </div>

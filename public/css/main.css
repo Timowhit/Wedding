@@ -1205,6 +1205,17 @@ textarea {
     white-space: nowrap;
 }
 
+.priority--high {
+    background: var(--danger-soft);
+    color: var(--danger);
+    font-weight: 600;
+}
+
+.priority--low {
+    background: transparent;
+    border: 1px dashed var(--border);
+}
+
 .status,
 .role {
     display: inline-flex;
