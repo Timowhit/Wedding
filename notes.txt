@@ -2,9 +2,10 @@ Wedding-planner UX and feature ideas
 Status checked against the code on 2026-11-27. [x] done, [~] partly done (what's missing is listed), [ ] not started.
 
 Next up
-- [ ] Store inspiration boards, floor plans, contracts, and other files in each event workspace (file uploads). Waiting on the storage choice in ACTIONS.md.
+- [ ] Reusable questionnaires, proposals, email messages, and follow-up templates (proposed next).
 
 Done
+- [x] Store inspiration boards, floor plans, contracts, and other files in each event workspace. (/files, stored in PostgreSQL, branch file-uploads)
 - [x] Gamify task completion with a banner in the top right with tasks and an animation for completion. (Progress badge and celebrations, PR #12)
 - [x] Customizable checklists with due dates, priorities, and task owners. (Priorities and owners, PR #11)
 - [x] Guest lists, RSVPs, meal choices, accessibility needs, plus-ones, and seating assignments. (Meals and access needs, PR #11)
@@ -28,9 +29,9 @@ Partly done
 - [~] A dashboard showing each wedding's next deadlines, appointments, outstanding decisions, and budget status.
       Done: deadlines, decisions, payments due, budget, and a calendar. Missing: appointments (meetings with a time).
 - [~] Vendor contacts, availability, proposals, notes, and key documents together.
-      Done: contacts, notes, contract link and key terms, ratings after the wedding. Missing: availability, proposals, file uploads.
+      Done: contacts, notes, contract link and key terms, ratings after the wedding. Missing: availability and proposals.
 - [~] A shared client portal for couples to review plans, upload details, and approve decisions.
-      Done: client role and decisions to approve. Missing: uploads.
+      Done: client role, decisions to approve, and file uploads (editors and clients).
 - [~] Role-based collaboration for planners, assistants, couples, and vendors.
       Done: owner, editor (assistant), client and viewer. Missing: a vendor role.
 - [~] Configurable reminders for meetings, deadlines, payments, and unanswered questions.
@@ -44,5 +45,4 @@ Small follow-ups (from the review of PR #11)
 - [ ] Celebrations: remember the highest milestone per wedding so unticking and ticking again doesn't repeat the big confetti.
 
 Not started
-- [ ] Reusable questionnaires, proposals, email messages, and follow-up templates.
 - [ ] Let planners customize fields and workflows for different budgets, traditions, and planning styles.

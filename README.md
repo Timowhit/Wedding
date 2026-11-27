@@ -40,6 +40,7 @@ There is no frontend framework, bundler or TypeScript. `public/js/app.js` is a s
 - **Search** (`/search`): guests, vendors, tasks, decisions and event-day items across all your weddings; each result opens in its wedding
 - **Wrap-up**: after the wedding day, the dashboard shows what is still owed, booked vendors to rate (1-5 stars and notes) and a button that adds dated wrap-up tasks. The owner can archive the wedding: it leaves active lists, the calendar and reminders, and can be brought back
 - **Progress badge and celebrations**: a ring at the top right shows the wedding's checklist progress and opens to the next three tasks. Ticking a task off brings a short confetti burst and a message, with a bigger one at 25%, 50%, 75% and 100% (CSS only; still for people who prefer reduced motion)
+- **Files** (`/files`): contracts, floor plans, inspiration photos and other files for each wedding, stored in PostgreSQL. Photos show as a grid; vendor pages show and upload that vendor's files. PDF, photos, Word, Excel and text up to 10 MB each and 250 MB per wedding; types are checked from the file's contents
 - **Notices**: confirmations fade after a few seconds (paused while hovered or focused); errors stay until dismissed
 - **Dashboard**: countdown to the wedding date, a getting-started list for new weddings, totals for every section, pending invitations
 - **Budget**: total budget, expenses, spending per category, spent/remaining with an over-budget warning
@@ -215,6 +216,10 @@ All `POST` routes require the session's CSRF token (see Security Notes).
 | POST   | `/checklist/wrap-up`                                      | Editor               | Add the wrap-up tasks (after the wedding)                                |
 | POST   | `/vendors/:id/rating`                                     | Editor               | Rate a vendor 1-5 with notes                                             |
 | POST   | `/wedding/archive`, `/wedding/unarchive`                  | Owner                | Archive the wedding or bring it back                                     |
+| GET    | `/files?kind=`                                            | Member               | The wedding's files                                                      |
+| POST   | `/files` (multipart)                                      | Editor               | Upload a file (CSRF checked after parsing)                               |
+| GET    | `/files/:id`                                              | Member               | Download (sandboxed, nosniff)                                            |
+| POST   | `/files/:id/delete`                                       | Editor               | Delete a file                                                            |
 | GET    | `/layout`                                                 | Member               | The venue floor plan                                                     |
 | POST   | `/layout/room`                                            | Editor               | Room size and unit (pieces are moved back inside)                        |
 | POST   | `/layout/tables`, `/layout/items`                         | Editor               | Place a seating table / add a fixture                                    |
@@ -318,6 +323,8 @@ layout_items       (id PK, wedding_id FK CASCADE, kind, label NULL, table_id UNI
 checklist (013)    priority high|normal|low, assignee_id FK users NULL (shown only while a member)
 guests (013)       meal NULL, accessibility NULL
 weddings (014)     archived_at NULL   vendors (014) rating 1..5 NULL, review NULL
+wedding_files (015) (id PK, wedding_id FK CASCADE, vendor_id FK SET NULL, uploaded_by FK SET NULL, kind, name,
+                    content_type, size, note, data BYTEA)  -- lists never select data
 vendor_payments    (id PK, wedding_id FK, vendor_id FK CASCADE, label, amount > 0, due_date, paid_on NULL = unpaid, note)
 music_tracks       (id PK, wedding_id, section, track_id, track_name, artist_name, artwork_url, UNIQUE (wedding_id, section, track_id))
 inspiration_photos (id PK, wedding_id, photo_id, thumb_url, full_url, alt_desc, source_link, UNIQUE (wedding_id, photo_id))
@@ -339,6 +346,7 @@ Deleting a wedding cascades to its members, invites and (since migration 007) al
 - **Google sign-in:** Passport's `state` parameter blocks login CSRF, and an existing account is only linked when Google reports the email as verified.
 - **Security headers:** `helmet` sets a Content-Security-Policy that allows only this site's scripts and styles, plus the exact third-party hosts in use (Google Fonts, Spotify artwork and embeds, Unsplash images). **Views must not use inline `<script>`, inline event handlers or `style=""` attributes**; the integration tests check every page for this.
 - **Third-party data:** the forms that save songs and photos send only an id. The server looks the details up from Spotify or Unsplash and accepts image URLs only on their expected hosts, so a forged form cannot store arbitrary URLs. API keys never reach the browser.
+- **Uploads:** the file type comes from the file's first bytes (no HTML or SVG). Downloads send the stored type with `nosniff`, `Content-Security-Policy: sandbox` and `inline` only for images and PDFs. Multipart forms are parsed only on `/files` after the login and editor checks, then their CSRF token is checked (`middleware/upload.js`); the global CSRF check refuses any other multipart POST.
 - **Payments:** every payment query is scoped by `wedding_id`; adding a payment checks the vendor's wedding in the same statement, so a forged vendor or payment id from another wedding changes nothing (404). Contract links must be `https://`, are shown as escaped links that open in a new tab with `rel="noopener noreferrer"`, and are never fetched by the server.
 - **Founding numbers:** handed out inside the transaction that creates a planner's first planner wedding (or accepts a handover). The single `founding_counter` row is locked with `SELECT … FOR UPDATE`, so concurrent claims take turns; `users.founding_number` is `UNIQUE` and limited to 1–300 as the final guard. Tests run five simultaneous claims for the last spot.
 - **Handover:** only the owner of a couple's own wedding can create one (after an explicit confirmation), only a planner account can accept it, the inviter cannot accept their own, and accepting is one transaction that keeps exactly one owner.
