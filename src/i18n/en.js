@@ -1270,7 +1270,6 @@ export default {
     'nav.group.guests': 'Guests & venue',
     'nav.group.day': 'Event day',
     'nav.group.planner': 'Planner',
-    'library.addQuestion': 'Add a question',
-    'library.removeQuestion': 'Remove this question',
-    'library.removeQuestionN': 'Remove question {n}'
+    'library.removeQuestionN': 'Remove question {n}',
+    'library.addQuestionUnderN': 'Add a question under question {n}'
 };

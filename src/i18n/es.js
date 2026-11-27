@@ -1279,7 +1279,6 @@ export default {
     'nav.group.guests': 'Invitados y lugar',
     'nav.group.day': 'Día de la boda',
     'nav.group.planner': 'Organizador',
-    'library.addQuestion': 'Añadir una pregunta',
-    'library.removeQuestion': 'Quitar esta pregunta',
-    'library.removeQuestionN': 'Quitar la pregunta {n}'
+    'library.removeQuestionN': 'Quitar la pregunta {n}',
+    'library.addQuestionUnderN': 'Añadir una pregunta debajo de la pregunta {n}'
 };

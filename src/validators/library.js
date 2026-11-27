@@ -49,8 +49,7 @@ const validateQuestionnaire = (body = {}) => {
         return match && Number(match[1]) >= MAX_BUILDER_ROWS && readText(body[key]);
     });
     for (let i = 0; i < MAX_BUILDER_ROWS; i += 1) {
-        // A missing row was removed in the browser; a ticked "remove" box drops it without JavaScript.
-        if (!(`q${i}_text` in body) || body[`q${i}_remove`]) continue;
+        if (!(`q${i}_text` in body)) continue; // removed in the browser
         rows.push({
             text: readText(body[`q${i}_text`]),
             type: readText(body[`q${i}_type`]),
@@ -133,4 +132,11 @@ const validateAnswers = (body = {}, questions) => {
 const fillPlaceholders = (text, fields) =>
     String(text ?? '').replace(/\{(\w+)\}/g, (whole, key) => (Object.hasOwn(fields, key) ? fields[key] : whole));
 
-export { validateMessage, validateQuestionnaire, normaliseQuestions, validateAnswers, fillPlaceholders };
+export {
+    MAX_BUILDER_ROWS,
+    validateMessage,
+    validateQuestionnaire,
+    normaliseQuestions,
+    validateAnswers,
+    fillPlaceholders
+};

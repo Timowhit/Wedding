@@ -195,7 +195,7 @@ button {
 
 .site-header__bar {
     display: flex;
-    flex: 1 1 100%; /* full width, so the progress badge can sit at the top right */
+    flex: 0 1 auto; /* brand, wedding and navigation share one line on wide screens */
     align-items: center;
     gap: var(--space-3);
     min-width: 0;
@@ -416,9 +416,42 @@ button {
     transform: translateY(4px);
 }
 
+/* Wide screens keep the header on one line by dropping, as space runs out: the account name
+   (Settings shows it), the wordmark (the ring stays as the home link), then the wedding's date. */
+@media (min-width: 66.01rem) and (max-width: 100rem) {
+    .site-nav .account__name {
+        display: none;
+    }
+}
+
+@media (min-width: 66.01rem) and (max-width: 84rem) {
+    .site-header__bar .brand__name {
+        display: none;
+    }
+}
+
+@media (min-width: 66.01rem) and (max-width: 72rem) {
+    .wedding-menu__current .wedding-menu__date {
+        display: none;
+    }
+
+    .site-header .wedding-menu__current {
+        max-width: 12rem;
+    }
+
+    .site-header {
+        column-gap: var(--space-3);
+    }
+
+    .site-nav .nav-group__label,
+    .site-nav .site-nav__groups > li > a {
+        padding-inline: var(--space-2);
+    }
+}
+
 /* Small screens with JavaScript: one header row (brand, wedding, menu button); the links and
    the account controls live in the menu. Without JavaScript everything stays visible. */
-@media (max-width: 52rem) {
+@media (max-width: 66rem) {
     .site-header {
         padding: var(--space-2) var(--space-4);
     }
@@ -3029,7 +3062,7 @@ input[type='color'] {
 
 .question-rows {
     display: grid;
-    gap: var(--space-3);
+    gap: var(--space-5); /* room for each question's pill above its border */
     margin: 0;
     padding: 0;
     list-style: none;
@@ -3048,6 +3081,60 @@ input[type='color'] {
 .question-row legend {
     padding: 0 var(--space-1);
     font-weight: 600;
+}
+
+.question-row fieldset {
+    position: relative;
+}
+
+/* A question's −/+ pill sits on the fieldset's top border, opposite its legend. */
+.step-pill {
+    position: absolute;
+    top: -1.875rem; /* centred on the border, level with the legend */
+    right: var(--space-3);
+    display: inline-flex;
+    overflow: hidden;
+    border: 1px solid var(--field-border);
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+}
+
+.step-pill__btn {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.step-pill__btn + .step-pill__btn {
+    border-left: 1px solid var(--field-border);
+}
+
+.step-pill__btn:hover:not(:disabled) {
+    background: var(--surface-2);
+    color: var(--text);
+}
+
+.step-pill__btn[data-remove-question]:hover:not(:disabled) {
+    color: var(--danger);
+}
+
+.step-pill__btn:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: -2px;
+}
+
+.step-pill__btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
 }
 
 .question-row .field:last-child {

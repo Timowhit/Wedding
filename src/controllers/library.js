@@ -1,4 +1,4 @@
-import { MAX_QUESTIONS, MESSAGE_KINDS, QUESTION_TYPES, SPARE_QUESTION_ROWS } from '../constants.js';
+import { MESSAGE_KINDS, QUESTION_TYPES, SPARE_QUESTION_ROWS } from '../constants.js';
 import { PG_ERRORS } from '../models/db.js';
 import {
     createMessage,
@@ -21,8 +21,9 @@ import { findMembers } from '../models/weddings.js';
 import { setFlash } from '../utils/flash.js';
 import { daysUntil, formatDate } from '../utils/format.js';
 import { todayIso } from '../utils/today.js';
-import { isUuid } from '../validators/common.js';
+import { isUuid, readText } from '../validators/common.js';
 import {
+    MAX_BUILDER_ROWS,
     fillPlaceholders,
     normaliseQuestions,
     validateAnswers,
@@ -140,12 +141,13 @@ const builderRows = (questions) => [
     ...Array.from({ length: SPARE_QUESTION_ROWS }, blankRow)
 ];
 
-const renderBuilder = (req, res, { status = 200, id = null, values, errors = [] }) =>
+const renderBuilder = (req, res, { status = 200, id = null, values, errors = [], focus = null }) =>
     res.status(status).render('edit-questionnaire', {
         title: req.t(id ? 'library.editQuestionnaire' : 'library.newQuestionnaire'),
         id,
         types: QUESTION_TYPES,
-        maxRows: MAX_QUESTIONS + SPARE_QUESTION_ROWS,
+        maxRows: MAX_BUILDER_ROWS,
+        focus,
         values: { ...values, rows: values.rows.length > 0 ? values.rows : builderRows([]) },
         errors
     });
@@ -154,18 +156,31 @@ const renderBuilder = (req, res, { status = 200, id = null, values, errors = [] 
 const showNewQuestionnaire = (req, res) =>
     renderBuilder(req, res, { values: { title: '', intro: '', rows: builderRows([]) } });
 
+const ROW_ACTION = /^(add|remove):(\d{1,3})$/;
+
 /**
- * "Add a question" without JavaScript posts the form with add_row: show it again with one more
- * empty row, saving nothing and showing no errors yet.
+ * A question's −/+ pill without JavaScript posts the form with row_action ("add:2" adds an empty
+ * question under the third, "remove:2" removes it): show the form again, saving nothing and
+ * showing no errors yet. The last question stays, and no more than the builder's rows are added.
  */
-const addRow = (req, res, id = null) => {
+const changeRows = (req, res, id = null) => {
     const { values } = validateQuestionnaire(req.body);
-    renderBuilder(req, res, { id, values: { ...values, rows: [...values.rows, blankRow()] } });
+    const rows = [...values.rows];
+    const [, action, at] = ROW_ACTION.exec(readText(req.body.row_action)) ?? [];
+    const index = Number(at);
+    let focus = null;
+    if (action === 'add' && index < rows.length && rows.length < MAX_BUILDER_ROWS) {
+        rows.splice(index + 1, 0, blankRow());
+        focus = index + 1;
+    } else if (action === 'remove' && index < rows.length && rows.length > 1) {
+        rows.splice(index, 1);
+    }
+    renderBuilder(req, res, { id, values: { ...values, rows }, focus });
 };
 
 /** POST /library/questionnaires */
 const processNewQuestionnaire = async (req, res) => {
-    if (req.body?.add_row) return addRow(req, res);
+    if (req.body?.row_action) return changeRows(req, res);
     const { values, data, errors } = validateQuestionnaire(req.body);
     if (errors.length > 0) return renderBuilder(req, res, { status: 400, values, errors });
     const created = await createQuestionnaire(req.session.user.id, data);
@@ -195,7 +210,7 @@ const showEditQuestionnaire = async (req, res, next) => {
 const processEditQuestionnaire = async (req, res, next) => {
     const questionnaire = await loadQuestionnaire(req);
     if (!questionnaire) return next();
-    if (req.body?.add_row) return addRow(req, res, questionnaire.id);
+    if (req.body?.row_action) return changeRows(req, res, questionnaire.id);
     const { values, data, errors } = validateQuestionnaire(req.body);
     if (errors.length > 0) return renderBuilder(req, res, { status: 400, id: questionnaire.id, values, errors });
     await updateQuestionnaire(questionnaire.id, req.session.user.id, data);
