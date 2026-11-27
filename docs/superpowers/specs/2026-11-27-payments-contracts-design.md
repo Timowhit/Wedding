@@ -125,24 +125,26 @@ Other expenses
   - vendor still owed = vendor committed − vendor paid, never below zero
 
   Overpaying one vendor never hides money owed to another.
+
 - **Committed** = sum of vendor committed + sum of ordinary expenses.
 - **Paid** = sum of vendor paid + sum of ordinary expenses.
 - **Still owed** = sum of vendor still owed.
 - The vendor page's "Still owed" uses the same per-vendor rule: contract total minus paid. That includes any part not yet scheduled, so it can be more than the sum of unpaid payments, and the page shows the unscheduled difference beside it.
 - Over budget means Committed > Total. Category totals include vendor contracts under the vendor's category, using a fixed mapping kept beside the two lists in `constants.js` _(builder's call: the lists barely overlap by name)_:
 
-  | Vendor category | Budget category |
-  |---|---|
-  | Photographer, Videographer | Photography |
-  | Florist | Flowers |
-  | Caterer, Cake | Catering |
-  | Venue | Venue |
-  | DJ / Band | Music |
-  | Hair & Makeup | Attire |
-  | Transportation | Transportation |
-  | Officiant, Other | Other |
+  | Vendor category            | Budget category |
+  | -------------------------- | --------------- |
+  | Photographer, Videographer | Photography     |
+  | Florist                    | Flowers         |
+  | Caterer, Cake              | Catering        |
+  | Venue                      | Venue           |
+  | DJ / Band                  | Music           |
+  | Hair & Makeup              | Attire          |
+  | Transportation             | Transportation  |
+  | Officiant, Other           | Other           |
 
   A test fails if a vendor category has no mapping.
+
 - **Double-counting warning:** when an ordinary expense's name contains a vendor's name, or the expense is in a contracted vendor's (mapped) category **and** its amount equals that vendor's contract total or one of its payments, show a quiet notice at the top: "Some expenses may duplicate vendor contracts. Delete any that are already part of a contract." It links to the expense list. _(Builder's call: the amount check keeps it from nagging when an expense and a contract legitimately share a category. It only warns and never changes data.)_
 
 ### Dashboards
