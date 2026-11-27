@@ -4,6 +4,8 @@
         const next = { ...filters, ...changes };
         if (next.status) params.set('status', next.status);
         if (next.category) params.set('category', next.category);
+        if (next.priority) params.set('priority', next.priority);
+        if (next.who) params.set('who', next.who);
         const query = params.toString();
         return query ? `/checklist?${query}` : '/checklist';
     };
@@ -51,8 +53,15 @@
                 <a class="filter-tab" href="<%= filterUrl({ status: 'active' }) %>" <%- filters.status === 'active' ? 'aria-current="page"' : '' %>><%= t('checklist.statusActive') %></a>
                 <a class="filter-tab" href="<%= filterUrl({ status: 'done' }) %>" <%- filters.status === 'done' ? 'aria-current="page"' : '' %>><%= t('checklist.statusDone') %></a>
             </nav>
+            <nav class="filter-tabs" aria-label="<%= t('checklist.filterWho') %>">
+                <a class="filter-tab" href="<%= filterUrl({ who: null, priority: null }) %>" <%- !filters.who && !filters.priority ? 'aria-current="page"' : '' %>><%= t('checklist.everyone') %></a>
+                <a class="filter-tab" href="<%= filterUrl({ who: 'me', priority: null }) %>" <%- filters.who === 'me' ? 'aria-current="page"' : '' %>><%= t('checklist.mine') %></a>
+                <a class="filter-tab" href="<%= filterUrl({ who: null, priority: 'high' }) %>" <%- filters.priority === 'high' ? 'aria-current="page"' : '' %>><%= t('checklist.highOnly') %></a>
+            </nav>
             <form method="get" action="/checklist" class="filter-select">
                 <% if (filters.status) { %><input type="hidden" name="status" value="<%= filters.status %>"><% } %>
+                <% if (filters.who) { %><input type="hidden" name="who" value="<%= filters.who %>"><% } %>
+                <% if (filters.priority) { %><input type="hidden" name="priority" value="<%= filters.priority %>"><% } %>
                 <label for="category-filter"><%= t('field.category') %></label>
                 <select id="category-filter" name="category" data-autosubmit>
                     <option value=""><%= t('filter.allCategories') %></option>
@@ -63,7 +72,7 @@
         </div>
 
         <% if (tasks.length === 0) { %>
-            <p class="empty-state"><span aria-hidden="true">📋</span> <%= t(filters.status || filters.category ? 'filter.noMatches' : 'checklist.empty') %></p>
+            <p class="empty-state"><span aria-hidden="true">📋</span> <%= t(filters.status || filters.category || filters.priority || filters.who ? 'filter.noMatches' : 'checklist.empty') %></p>
         <% } else { %>
             <ul class="item-list">
                 <% tasks.forEach((task) => { %>
@@ -83,6 +92,8 @@
                             <p class="item-name"><%= task.text %><% if (task.done) { %><span class="visually-hidden"> (<%= t('checklist.statusDone') %>)</span><% } %></p>
                             <p class="item-meta">
                                 <span class="tag"><%= t(`taskCategory.${task.category}`) %></span>
+                                <% if (task.priority !== 'normal') { %><span class="tag priority priority--<%= task.priority %>"><%= t(`priorityTag.${task.priority}`) %></span><% } %>
+                                <% if (task.assignee_name) { %><span><%= t('checklist.for', { name: task.assignee_name }) %></span><% } %>
                                 <% if (due) { %><span class="<%= overdue ? 'text-danger' : '' %>"><%= t(overdue ? 'checklist.overdue' : 'checklist.due', { date: formatDate(task.due_date) }) %></span><% } %>
                             </p>
                             <% if (canEdit) { %>

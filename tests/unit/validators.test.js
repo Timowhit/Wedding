@@ -152,7 +152,15 @@ describe('planning validators', () => {
 
     it('validateGuest stores empty optional fields as null', () => {
         const result = validateGuest({ name: 'Ana', rsvp: 'Pending', diet: ' ', plus_one: '' });
-        assert.deepEqual(result.data, { name: 'Ana', rsvp: 'Pending', diet: null, plusOne: null, groupName: null });
+        assert.deepEqual(result.data, {
+            name: 'Ana',
+            rsvp: 'Pending',
+            diet: null,
+            plusOne: null,
+            groupName: null,
+            meal: null,
+            accessibility: null
+        });
         assert.deepEqual(fields(validateGuest({ name: 'Ana', rsvp: 'Maybe' })), ['rsvp']);
     });
 

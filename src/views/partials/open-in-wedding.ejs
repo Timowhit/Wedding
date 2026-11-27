@@ -1,0 +1,7 @@
+<%# A link-like button that switches to a wedding and opens one of its pages. Expects weddingId, page, label. %>
+<form method="post" action="/wedding/switch" class="open-in-wedding">
+    <%- include('csrf-field') %>
+    <input type="hidden" name="wedding_id" value="<%= weddingId %>">
+    <input type="hidden" name="return_to" value="<%= page %>">
+    <button type="submit" class="link-button"><%= label %></button>
+</form>

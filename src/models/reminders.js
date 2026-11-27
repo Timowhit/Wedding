@@ -39,6 +39,7 @@ const findReminderDigest = async (userId, today) => {
              FROM weddings w JOIN wedding_members wm ON wm.wedding_id = w.id
              WHERE wm.user_id = $1 AND wm.role = ANY($2)
                AND (w.wedding_date IS NULL OR w.wedding_date >= $3::date - $4::int)
+               AND w.archived_at IS NULL
              ORDER BY LOWER(w.name) ASC, w.id ASC;`,
             [userId, REMINDER_ROLES, today, REMINDER_PAST_WEDDING_DAYS]
         )

@@ -28,6 +28,7 @@ describe('colour themes', () => {
             ['on-primary', 'primary'],
             ['on-primary', 'secondary'],
             ['danger', 'surface'],
+            ['danger', 'danger-soft'],
             ['success', 'success-soft']
         ];
         for (const palette of PALETTES) {
@@ -73,5 +74,16 @@ describe('colour themes', () => {
         });
         assert.deepEqual(resolveTheme({ user: null }), { palette: 'rose', mode: 'auto' });
         assert.ok(THEME_MODES.includes(resolveTheme({}).mode));
+    });
+
+    it('text never uses a colour that is only checked at 3:1 (accent) or an unchecked pair', async () => {
+        const css = await readFile(new URL('../../public/css/main.css', import.meta.url), 'utf8');
+        assert.doesNotMatch(
+            css,
+            /(^|[^-])color:\s*var\(--accent\)/m,
+            'accent is a 3:1 colour: use it for borders and marks only'
+        );
+        const avatar = css.match(/\.avatar \{[^}]*\}/)[0];
+        assert.match(avatar, /color: var\(--primary-hover\)/, 'avatar text on primary-soft uses the checked pair');
     });
 });

@@ -1,23 +1,32 @@
 import db from './db.js';
 
-const TASK_COLUMNS = 'id, text, category, due_date, done, sort_order, created_at';
+// The owner's name only while they are still a member: someone who left shows as nobody.
+const TASK_SELECT = `SELECT t.id, t.text, t.category, t.due_date, t.done, t.sort_order, t.created_at, t.priority,
+                            CASE WHEN wm.user_id IS NULL THEN NULL ELSE t.assignee_id END AS assignee_id,
+                            CASE WHEN wm.user_id IS NULL THEN NULL ELSE COALESCE(u.display_name, u.email) END AS assignee_name
+                     FROM checklist_tasks t
+                     LEFT JOIN wedding_members wm ON wm.wedding_id = t.wedding_id AND wm.user_id = t.assignee_id
+                     LEFT JOIN users u ON u.id = wm.user_id`;
+// High first, then normal, then low (see TASK_PRIORITIES).
+const PRIORITY_ORDER = `CASE t.priority WHEN 'high' THEN 0 WHEN 'normal' THEN 1 ELSE 2 END`;
 
 /**
  * Tasks in display order, optionally filtered.
  * @param {string} weddingId
- * @param {{category?: string|null, status?: 'active'|'done'|null}} [filters] - Already validated.
+ * @param {{category?: string|null, status?: 'active'|'done'|null, priority?: string|null, assigneeId?: string|null}} [filters] - Already validated.
  * @returns {Promise<Array<Object>>}
  */
-const findTasks = async (weddingId, { category = null, status = null } = {}) => {
+const findTasks = async (weddingId, { category = null, status = null, priority = null, assigneeId = null } = {}) => {
     const done = status === null ? null : status === 'done';
     const result = await db.query(
-        `SELECT ${TASK_COLUMNS}
-         FROM checklist_tasks
-         WHERE wedding_id = $1
-           AND ($2::text IS NULL OR category = $2)
-           AND ($3::boolean IS NULL OR done = $3)
-         ORDER BY done ASC, due_date ASC NULLS LAST, sort_order ASC, created_at ASC;`,
-        [weddingId, category, done]
+        `${TASK_SELECT}
+         WHERE t.wedding_id = $1
+           AND ($2::text IS NULL OR t.category = $2)
+           AND ($3::boolean IS NULL OR t.done = $3)
+           AND ($4::text IS NULL OR t.priority = $4)
+           AND ($5::uuid IS NULL OR (t.assignee_id = $5 AND wm.user_id IS NOT NULL))
+         ORDER BY t.done ASC, t.due_date ASC NULLS LAST, ${PRIORITY_ORDER}, t.sort_order ASC, t.created_at ASC;`,
+        [weddingId, category, done, priority, assigneeId]
     );
     return result.rows;
 };
@@ -44,25 +53,22 @@ const findTaskProgress = async (weddingId) => {
  * @returns {Promise<Object|null>}
  */
 const findTask = async (id, weddingId) => {
-    const result = await db.query(`SELECT ${TASK_COLUMNS} FROM checklist_tasks WHERE id = $1 AND wedding_id = $2;`, [
-        id,
-        weddingId
-    ]);
+    const result = await db.query(`${TASK_SELECT} WHERE t.id = $1 AND t.wedding_id = $2;`, [id, weddingId]);
     return result.rows[0] ?? null;
 };
 
 /**
  * @param {string} weddingId
- * @param {{text: string, category: string, dueDate: string|null}} values - Already validated.
+ * @param {{text: string, category: string, dueDate: string|null, priority: string, assigneeId: string|null}} values - Already validated; assigneeId is a member.
  * @returns {Promise<{id: string, text: string}>}
  * @throws {Error} With code 23505 when the wedding already has a task with the same text.
  */
-const createTask = async (weddingId, { text, category, dueDate }) => {
+const createTask = async (weddingId, { text, category, dueDate, priority, assigneeId }) => {
     const result = await db.query(
-        `INSERT INTO checklist_tasks (wedding_id, text, category, due_date)
-         VALUES ($1, $2, $3, $4)
+        `INSERT INTO checklist_tasks (wedding_id, text, category, due_date, priority, assignee_id)
+         VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING id, text;`,
-        [weddingId, text, category, dueDate]
+        [weddingId, text, category, dueDate, priority, assigneeId]
     );
     return result.rows[0];
 };
@@ -70,16 +76,16 @@ const createTask = async (weddingId, { text, category, dueDate }) => {
 /**
  * @param {string} id
  * @param {string} weddingId
- * @param {{text: string, category: string, dueDate: string|null}} values - Already validated.
+ * @param {{text: string, category: string, dueDate: string|null, priority: string, assigneeId: string|null}} values - Already validated; assigneeId is a member.
  * @returns {Promise<{id: string, text: string}|null>}
  * @throws {Error} With code 23505 when another task already has the same text.
  */
-const updateTask = async (id, weddingId, { text, category, dueDate }) => {
+const updateTask = async (id, weddingId, { text, category, dueDate, priority, assigneeId }) => {
     const result = await db.query(
-        `UPDATE checklist_tasks SET text = $3, category = $4, due_date = $5
+        `UPDATE checklist_tasks SET text = $3, category = $4, due_date = $5, priority = $6, assignee_id = $7
          WHERE id = $1 AND wedding_id = $2
          RETURNING id, text;`,
-        [id, weddingId, text, category, dueDate]
+        [id, weddingId, text, category, dueDate, priority, assigneeId]
     );
     return result.rows[0] ?? null;
 };

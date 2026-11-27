@@ -15,7 +15,7 @@ const findTablesWithGuests = async (weddingId) => {
             [weddingId]
         ),
         db.query(
-            `SELECT g.id, g.name, g.plus_one, g.group_name, g.table_id, ${SEATS_TAKEN} AS seats_taken
+            `SELECT g.id, g.name, g.plus_one, g.group_name, g.accessibility, g.table_id, ${SEATS_TAKEN} AS seats_taken
              FROM guests g
              WHERE g.wedding_id = $1 AND g.table_id IS NOT NULL AND g.rsvp <> 'Declined'
              ORDER BY LOWER(g.name), g.id;`,
@@ -36,7 +36,7 @@ const findTablesWithGuests = async (weddingId) => {
  */
 const findUnseatedGuests = async (weddingId, group = null) => {
     const result = await db.query(
-        `SELECT g.id, g.name, g.plus_one, g.group_name
+        `SELECT g.id, g.name, g.plus_one, g.group_name, g.accessibility
          FROM guests g
          WHERE g.wedding_id = $1 AND g.table_id IS NULL AND g.rsvp <> 'Declined'
            AND ($2::text IS NULL OR g.group_name = $2)

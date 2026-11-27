@@ -5,8 +5,9 @@ import { createWedding } from './weddings.js';
 
 /** Weddings a planner sees on the dashboard: every wedding they belong to. */
 const WHEN_FILTERS = Object.freeze({
-    upcoming: '(w.wedding_date IS NULL OR w.wedding_date >= CURRENT_DATE)',
-    past: 'w.wedding_date < CURRENT_DATE',
+    upcoming: '(w.wedding_date IS NULL OR w.wedding_date >= CURRENT_DATE) AND w.archived_at IS NULL',
+    past: 'w.wedding_date < CURRENT_DATE AND w.archived_at IS NULL',
+    archived: 'w.archived_at IS NOT NULL',
     all: 'TRUE'
 });
 const DEADLINES_PER_WEDDING = 3;
@@ -73,7 +74,8 @@ const findPlannerOverview = async (userId, { q = '', when = 'upcoming' } = {}) =
  */
 const findPlannerWorkload = async (userId) => {
     const result = await db.query(
-        `WITH mine AS (SELECT wedding_id FROM wedding_members WHERE user_id = $1)
+        `WITH mine AS (SELECT wm.wedding_id FROM wedding_members wm JOIN weddings aw ON aw.id = wm.wedding_id
+                       WHERE wm.user_id = $1 AND aw.archived_at IS NULL)
          SELECT
            (SELECT COUNT(*) FROM weddings w JOIN mine ON mine.wedding_id = w.id
              WHERE date_trunc('month', w.wedding_date) = date_trunc('month', CURRENT_DATE))::int AS weddings_this_month,

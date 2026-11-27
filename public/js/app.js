@@ -268,8 +268,12 @@
                     .replace('{x}', position.x)
                     .replace('{y}', position.y);
         };
+        // Each piece remembers its latest save, so an older reply arriving late can't move it back.
+        const latestSave = new WeakMap();
         const save = (piece) => {
             const position = positionOf(piece);
+            const attempt = (latestSave.get(piece) || 0) + 1;
+            latestSave.set(piece, attempt);
             fetch('/layout/items/' + piece.getAttribute('data-piece-id') + '/move', {
                 method: 'POST',
                 credentials: 'same-origin',
@@ -280,11 +284,12 @@
                     response.ok ? response.json() : Promise.reject(new Error(String(response.status)))
                 )
                 .then((saved) => {
+                    if (latestSave.get(piece) !== attempt) return;
                     place(piece, saved);
                     if (failed) failed.hidden = true;
                 })
                 .catch(() => {
-                    if (failed) failed.hidden = false;
+                    if (failed && latestSave.get(piece) === attempt) failed.hidden = false;
                 });
         };
         const toPlan = (event) => {

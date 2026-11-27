@@ -248,7 +248,7 @@ const PLANNER_DUE_LIMITS = Object.freeze({
 
 /**
  * "Payments due" across every wedding a planner belongs to, past weddings included (an unpaid
- * bill is still owed).
+ * bill is still owed) but archived ones left out.
  * @param {string} userId
  * @param {{filter?: 'month'|'next30'|'overdue', today?: string}} [options] - filter already validated.
  * @returns {Promise<Array<{id: string, wedding_id: string, wedding_name: string, vendor_id: string, vendor_name: string, label: string|null, amount: number, due_date: Date, overdue: boolean}>>}
@@ -258,6 +258,7 @@ const findPlannerPaymentsDue = async (userId, { filter = 'month', today = todayI
     const result = await db.query(
         `${DUE_SELECT} AND ${limit}
            AND p.wedding_id IN (SELECT wedding_id FROM wedding_members WHERE user_id = $3)
+           AND w.archived_at IS NULL
          ORDER BY p.due_date ASC, w.name ASC, v.name ASC, p.id ASC;`,
         [COUNTED_STATUS, today, userId]
     );
@@ -273,7 +274,8 @@ const findPlannerPaymentsDue = async (userId, { filter = 'month', today = todayI
 const countPlannerOverdue = async (userId, today = todayIso()) => {
     const result = await db.query(
         `SELECT COUNT(*)::int AS count FROM (${DUE_SELECT} AND ${PLANNER_DUE_LIMITS.overdue}
-           AND p.wedding_id IN (SELECT wedding_id FROM wedding_members WHERE user_id = $3)) due;`,
+           AND p.wedding_id IN (SELECT wedding_id FROM wedding_members WHERE user_id = $3)
+           AND w.archived_at IS NULL) due;`,
         [COUNTED_STATUS, today, userId]
     );
     return result.rows[0].count;

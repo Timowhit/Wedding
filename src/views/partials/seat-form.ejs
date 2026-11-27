@@ -2,6 +2,7 @@
 <li class="seat-guest" data-guest="<%= guest.name %>" <% if (canEdit) { %>data-guest-id="<%= guest.id %>" draggable="true"<% } %>>
     <span class="seat-guest__name"><%= guest.name %><% if (guest.plus_one) { %> <span class="hint">+ <%= guest.plus_one %></span><% } %></span>
     <% if (guest.group_name) { %><span class="tag"><%= guest.group_name %></span><% } %>
+    <% if (guest.accessibility) { %><span class="access-flag"><span aria-hidden="true">♿</span><span class="visually-hidden"><%= t('guests.accessibilityLabel', { needs: guest.accessibility }) %></span></span><% } %>
     <% if (canEdit) { %>
         <form method="post" action="/seating/guests/<%= guest.id %>" class="status-form seat-guest__form">
             <%- include('csrf-field') %>

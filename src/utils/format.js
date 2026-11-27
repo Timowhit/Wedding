@@ -34,6 +34,25 @@ const formatDate = (value, lang) => {
 };
 
 /**
+ * A compact date for tight spaces such as the header ("Jun 13, 2026", "13 jun 2026").
+ * @param {Date|string|null} value
+ * @param {string} lang
+ * @returns {string} '' when there is no date.
+ */
+const formatShortDate = (value, lang) => {
+    const iso = toIsoDate(value);
+    if (!iso) return '';
+    return new Intl.DateTimeFormat(LOCALES[lang] ?? LOCALES.en, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        timeZone: 'UTC'
+    })
+        .format(new Date(`${iso}T00:00:00Z`))
+        .replace('.', '');
+};
+
+/**
  * Converts a DATE column value to "YYYY-MM-DD" (for <input type="date"> and comparisons).
  * @param {Date|string|null} value
  * @returns {string} '' when there is no date.
@@ -75,4 +94,4 @@ const formatTime = (value, lang) => {
     }).format(new Date(Date.UTC(2000, 0, 1, hours, minutes)));
 };
 
-export { formatCurrency, formatDate, formatTime, toIsoDate, daysUntil };
+export { formatCurrency, formatDate, formatShortDate, formatTime, toIsoDate, daysUntil };

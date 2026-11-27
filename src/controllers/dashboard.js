@@ -5,10 +5,12 @@ import { findGuestStats } from '../models/guests.js';
 import { findPendingInvitesForEmail } from '../models/invites.js';
 import { countTracks } from '../models/music.js';
 import { countPhotos } from '../models/inspiration.js';
-import { findVendorStats } from '../models/vendors.js';
+import { findUnratedBookedVendors, findVendorStats } from '../models/vendors.js';
+import { COUNTED_STATUS } from '../constants.js';
+import { todayIso } from '../utils/today.js';
 import { countMembers, createWedding, updateWeddingDate } from '../models/weddings.js';
 import { switchActiveWedding } from '../middleware/wedding.js';
-import { daysUntil } from '../utils/format.js';
+import { daysUntil, toIsoDate } from '../utils/format.js';
 import { setFlash } from '../utils/flash.js';
 import { isLocalPath } from '../utils/session.js';
 import { isUuid, readText } from '../validators/common.js';
@@ -61,6 +63,11 @@ const showDashboard = async (req, res) => {
         photos
     };
     const steps = gettingStartedSteps(req.wedding, stats, memberCount);
+    const weddingIso = toIsoDate(req.wedding.wedding_date);
+    const wrapUp =
+        weddingIso && weddingIso < todayIso()
+            ? { owed: money.owed, unrated: await findUnratedBookedVendors(weddingId, COUNTED_STATUS) }
+            : null;
 
     res.render('dashboard', {
         title: req.t('dashboard.title'),
@@ -68,6 +75,8 @@ const showDashboard = async (req, res) => {
         paymentsDue,
         steps: steps.every((step) => step.done) ? [] : steps,
         openDecisions,
+        wrapUp,
+        archived: Boolean(req.wedding.archived_at),
         daysLeft: daysUntil(req.wedding.wedding_date),
         pendingInvites,
         errors: []

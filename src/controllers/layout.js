@@ -85,14 +85,16 @@ const processNewFixture = async (req, res) => {
     if (await limitReached(req)) return res.redirect('/layout');
     const [room, others] = await Promise.all([findRoom(req.wedding.id), findLayoutItems(req.wedding.id)]);
     const piece = { ...fixtureDefaults(data.kind, room.unit), rotation: 0 };
-    await addLayoutItem(req.wedding.id, {
+    const added = await addLayoutItem(req.wedding.id, {
         ...piece,
         ...findFreeSpot(piece, room, others),
         kind: data.kind,
         label: data.label,
         tableId: null
     });
-    setFlash(req, 'success', 'layout.added', { name: data.label || req.t(`layoutKind.${data.kind}`) });
+    // Null only when another request filled the last space a moment earlier.
+    if (added) setFlash(req, 'success', 'layout.added', { name: data.label || req.t(`layoutKind.${data.kind}`) });
+    else setFlash(req, 'error', 'layout.limit', { max: MAX_LAYOUT_ITEMS });
     res.redirect('/layout');
 };
 
@@ -104,14 +106,15 @@ const processPlaceTable = async (req, res, next) => {
         if (await limitReached(req)) return res.redirect('/layout');
         const [room, others] = await Promise.all([findRoom(req.wedding.id), findLayoutItems(req.wedding.id)]);
         const piece = { ...tableDefaults(table.seats, room.unit), rotation: 0 };
-        await addLayoutItem(req.wedding.id, {
+        const added = await addLayoutItem(req.wedding.id, {
             ...piece,
             ...findFreeSpot(piece, room, others),
             kind: 'table',
             label: null,
             tableId: table.id
         });
-        setFlash(req, 'success', 'layout.added', { name: table.name });
+        // Null when the plan filled up, or the same table was placed a moment earlier.
+        if (added) setFlash(req, 'success', 'layout.added', { name: table.name });
     }
     res.redirect('/layout');
 };

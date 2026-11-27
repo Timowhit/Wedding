@@ -1,4 +1,4 @@
-<%# Fields shared by the add and edit guest forms. Expects values, errors, errorsId, statuses. %>
+<%# Fields shared by the add and edit guest forms. Expects values, errors, errorsId, statuses, mealOptions. %>
 <div class="field field--wide">
     <label for="name"><%= t('field.guestName') %></label>
     <input type="text" id="name" name="name" required maxlength="200" value="<%= values.name %>"
@@ -24,4 +24,17 @@
     <label for="group_name"><%= t('field.group_name') %> <span class="optional"><%= t('form.optional') %></span></label>
     <input type="text" id="group_name" name="group_name" maxlength="80" value="<%= values.group_name %>"
            placeholder="<%= t('guests.groupPlaceholder') %>" <%- fieldState(errors, 'group_name', errorsId) %>>
+</div>
+<div class="field">
+    <label for="meal"><%= t('field.meal') %> <span class="optional"><%= t('form.optional') %></span></label>
+    <input type="text" id="meal" name="meal" maxlength="60" list="meal-options" value="<%= values.meal %>"
+           placeholder="<%= t('guests.mealPlaceholder') %>" <%- fieldState(errors, 'meal', errorsId) %>>
+    <datalist id="meal-options">
+        <% (locals.mealOptions || []).forEach((meal) => { %><option value="<%= meal %>"><% }); %>
+    </datalist>
+</div>
+<div class="field field--wide">
+    <label for="accessibility"><%= t('field.accessibility') %> <span class="optional"><%= t('form.optional') %></span></label>
+    <input type="text" id="accessibility" name="accessibility" maxlength="300" value="<%= values.accessibility %>"
+           placeholder="<%= t('guests.accessibilityPlaceholder') %>" <%- fieldState(errors, 'accessibility', errorsId) %>>
 </div>

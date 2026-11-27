@@ -1,6 +1,6 @@
 import db from './db.js';
 
-const GUEST_COLUMNS = 'id, name, rsvp, diet, plus_one, group_name, table_id, created_at';
+const GUEST_COLUMNS = 'id, name, rsvp, diet, plus_one, group_name, table_id, meal, accessibility, created_at';
 
 /**
  * Guests alphabetically, optionally only one RSVP status.
@@ -58,16 +58,54 @@ const findGuest = async (id, weddingId) => {
 };
 
 /**
+ * How many guests who haven't declined chose each meal (most chosen first), and how many haven't
+ * chosen yet. Meals are free text, so "fish" and "Fish" count together, shown as first written.
  * @param {string} weddingId
- * @param {{name: string, rsvp: string, diet: string|null, plusOne: string|null, groupName: string|null}} values - Already validated.
+ * @returns {Promise<{meals: Array<{meal: string, count: number}>, notChosen: number}>}
+ */
+const findMealSummary = async (weddingId) => {
+    const result = await db.query(
+        `SELECT MIN(meal) AS meal, COUNT(*)::int AS count, meal IS NULL AS not_chosen
+         FROM guests
+         WHERE wedding_id = $1 AND rsvp <> 'Declined'
+         GROUP BY LOWER(meal), meal IS NULL
+         ORDER BY not_chosen, count DESC, LOWER(MIN(meal));`,
+        [weddingId]
+    );
+    const notChosen = result.rows.find((row) => row.not_chosen)?.count ?? 0;
+    return {
+        meals: result.rows.filter((row) => !row.not_chosen).map(({ meal, count }) => ({ meal, count })),
+        notChosen
+    };
+};
+
+/**
+ * Every meal written for this wedding, for the form's suggestions.
+ * @param {string} weddingId
+ * @returns {Promise<string[]>}
+ */
+const findMealOptions = async (weddingId) => {
+    const result = await db.query(
+        `SELECT MIN(meal) AS meal FROM guests WHERE wedding_id = $1 AND meal IS NOT NULL GROUP BY LOWER(meal) ORDER BY LOWER(MIN(meal));`,
+        [weddingId]
+    );
+    return result.rows.map((row) => row.meal);
+};
+
+/**
+ * @param {string} weddingId
+ * @param {{name: string, rsvp: string, diet: string|null, plusOne: string|null, groupName: string|null, meal?: string|null, accessibility?: string|null}} values - Already validated.
  * @returns {Promise<{id: string, name: string}>}
  */
-const createGuest = async (weddingId, { name, rsvp, diet, plusOne, groupName = null }) => {
+const createGuest = async (
+    weddingId,
+    { name, rsvp, diet, plusOne, groupName = null, meal = null, accessibility = null }
+) => {
     const result = await db.query(
-        `INSERT INTO guests (wedding_id, name, rsvp, diet, plus_one, group_name)
-         VALUES ($1, $2, $3, $4, $5, $6)
+        `INSERT INTO guests (wedding_id, name, rsvp, diet, plus_one, group_name, meal, accessibility)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          RETURNING id, name;`,
-        [weddingId, name, rsvp, diet, plusOne, groupName]
+        [weddingId, name, rsvp, diet, plusOne, groupName, meal, accessibility]
     );
     return result.rows[0];
 };
@@ -75,15 +113,19 @@ const createGuest = async (weddingId, { name, rsvp, diet, plusOne, groupName = n
 /**
  * @param {string} id
  * @param {string} weddingId
- * @param {{name: string, rsvp: string, diet: string|null, plusOne: string|null, groupName: string|null}} values - Already validated.
+ * @param {{name: string, rsvp: string, diet: string|null, plusOne: string|null, groupName: string|null, meal?: string|null, accessibility?: string|null}} values - Already validated.
  * @returns {Promise<{id: string, name: string}|null>}
  */
-const updateGuest = async (id, weddingId, { name, rsvp, diet, plusOne, groupName = null }) => {
+const updateGuest = async (
+    id,
+    weddingId,
+    { name, rsvp, diet, plusOne, groupName = null, meal = null, accessibility = null }
+) => {
     const result = await db.query(
-        `UPDATE guests SET name = $3, rsvp = $4, diet = $5, plus_one = $6, group_name = $7
+        `UPDATE guests SET name = $3, rsvp = $4, diet = $5, plus_one = $6, group_name = $7, meal = $8, accessibility = $9
          WHERE id = $1 AND wedding_id = $2
          RETURNING id, name;`,
-        [id, weddingId, name, rsvp, diet, plusOne, groupName]
+        [id, weddingId, name, rsvp, diet, plusOne, groupName, meal, accessibility]
     );
     return result.rows[0] ?? null;
 };
@@ -113,4 +155,14 @@ const deleteGuest = async (id, weddingId) => {
     return result.rowCount > 0;
 };
 
-export { findGuests, findGuestStats, findGuest, createGuest, updateGuest, updateGuestRsvp, deleteGuest };
+export {
+    findGuests,
+    findGuestStats,
+    findGuest,
+    createGuest,
+    updateGuest,
+    updateGuestRsvp,
+    deleteGuest,
+    findMealSummary,
+    findMealOptions
+};

@@ -1,4 +1,12 @@
-import { BUDGET_CATEGORIES, RSVP_STATUSES, TASK_CATEGORIES, VENDOR_CATEGORIES, VENDOR_STATUSES } from '../constants.js';
+import {
+    BUDGET_CATEGORIES,
+    DEFAULT_TASK_PRIORITY,
+    RSVP_STATUSES,
+    TASK_CATEGORIES,
+    TASK_PRIORITIES,
+    VENDOR_CATEGORIES,
+    VENDOR_STATUSES
+} from '../constants.js';
 import {
     checkText,
     collectErrors,
@@ -19,6 +27,8 @@ const LIMITS = Object.freeze({
     diet: 300,
     plusOne: 200,
     group: 80,
+    meal: 60,
+    accessibility: 300,
     vendorName: 200,
     phone: 50,
     notes: 2000,
@@ -58,24 +68,41 @@ const validateExpense = (body = {}) => {
 };
 
 /**
+ * A checklist task. Priority and owner are optional in the body (forms from before they existed,
+ * and the example tasks, leave them out): normal priority and nobody.
  * @param {object} [body] - req.body
- * @returns {{values: {text: string, category: string, due_date: string}, data: {text: string, category: string, dueDate: string|null}, errors: Array}}
+ * @param {string[]} [memberIds] - User ids of the wedding's members; the owner must be one of them.
+ * @returns {{values: {text: string, category: string, due_date: string, priority: string, assignee_id: string}, data: {text: string, category: string, dueDate: string|null, priority: string, assigneeId: string|null}, errors: Array}}
  */
-const validateTask = (body = {}) => {
-    const values = { text: readText(body.text), category: readText(body.category), due_date: readText(body.due_date) };
+const validateTask = (body = {}, memberIds = []) => {
+    const values = {
+        text: readText(body.text),
+        category: readText(body.category),
+        due_date: readText(body.due_date),
+        priority: readText(body.priority) || DEFAULT_TASK_PRIORITY,
+        assignee_id: readText(body.assignee_id)
+    };
     const { errors, fail } = collectErrors();
 
     checkText(fail, 'text', values.text, { required: true, max: LIMITS.taskText });
     const category = readChoice(values.category, TASK_CATEGORIES);
     if (!category) fail('category', 'validation.choice');
     if (values.due_date.length > 0 && !isValidDate(values.due_date)) fail('due_date', 'validation.date');
+    const priority = readChoice(values.priority, TASK_PRIORITIES);
+    if (!priority) fail('priority', 'validation.choice');
+    const assigneeId = values.assignee_id ? readChoice(values.assignee_id, memberIds) : null;
+    if (values.assignee_id && !assigneeId) fail('assignee_id', 'validation.choice');
 
-    return { values, data: { text: values.text, category, dueDate: optional(values.due_date) }, errors };
+    return {
+        values,
+        data: { text: values.text, category, dueDate: optional(values.due_date), priority, assigneeId },
+        errors
+    };
 };
 
 /**
  * @param {object} [body] - req.body
- * @returns {{values: object, data: {name: string, rsvp: string, diet: string|null, plusOne: string|null, groupName: string|null}, errors: Array}}
+ * @returns {{values: object, data: {name: string, rsvp: string, diet: string|null, plusOne: string|null, groupName: string|null, meal: string|null, accessibility: string|null}, errors: Array}}
  */
 const validateGuest = (body = {}) => {
     const values = {
@@ -83,11 +110,15 @@ const validateGuest = (body = {}) => {
         rsvp: readText(body.rsvp),
         diet: readText(body.diet),
         plus_one: readText(body.plus_one),
-        group_name: readText(body.group_name)
+        group_name: readText(body.group_name),
+        meal: readText(body.meal),
+        accessibility: readText(body.accessibility)
     };
     const { errors, fail } = collectErrors();
 
     checkText(fail, 'name', values.name, { required: true, max: LIMITS.guestName });
+    checkText(fail, 'meal', values.meal, { max: LIMITS.meal });
+    checkText(fail, 'accessibility', values.accessibility, { max: LIMITS.accessibility });
     const rsvp = readChoice(values.rsvp, RSVP_STATUSES);
     if (!rsvp) fail('rsvp', 'validation.choice');
     checkText(fail, 'diet', values.diet, { max: LIMITS.diet });
@@ -101,7 +132,9 @@ const validateGuest = (body = {}) => {
             rsvp,
             diet: optional(values.diet),
             plusOne: optional(values.plus_one),
-            groupName: optional(values.group_name)
+            groupName: optional(values.group_name),
+            meal: optional(values.meal),
+            accessibility: optional(values.accessibility)
         },
         errors
     };

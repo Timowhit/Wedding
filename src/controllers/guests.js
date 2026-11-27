@@ -5,6 +5,8 @@ import {
     findGuest,
     findGuestStats,
     findGuests,
+    findMealOptions,
+    findMealSummary,
     updateGuest,
     updateGuestRsvp
 } from '../models/guests.js';
@@ -13,11 +15,24 @@ import { backTo } from '../utils/redirect.js';
 import { isUuid, readChoice } from '../validators/common.js';
 import { validateGuest } from '../validators/planning.js';
 
-const EMPTY_GUEST = { name: '', rsvp: 'Pending', diet: '', plus_one: '', group_name: '' };
+const EMPTY_GUEST = {
+    name: '',
+    rsvp: 'Pending',
+    diet: '',
+    plus_one: '',
+    group_name: '',
+    meal: '',
+    accessibility: ''
+};
 
 const renderGuests = async (req, res, { status = 200, guestForm } = {}) => {
     const rsvp = readChoice(req.query.rsvp, RSVP_STATUSES);
-    const [guests, stats] = await Promise.all([findGuests(req.wedding.id, rsvp), findGuestStats(req.wedding.id)]);
+    const [guests, stats, mealSummary, mealOptions] = await Promise.all([
+        findGuests(req.wedding.id, rsvp),
+        findGuestStats(req.wedding.id),
+        findMealSummary(req.wedding.id),
+        findMealOptions(req.wedding.id)
+    ]);
 
     res.status(status).render('guests', {
         title: req.t('guests.title'),
@@ -25,15 +40,18 @@ const renderGuests = async (req, res, { status = 200, guestForm } = {}) => {
         stats,
         statuses: RSVP_STATUSES,
         activeRsvp: rsvp,
+        mealSummary,
+        mealOptions,
         guestForm: guestForm ?? { values: EMPTY_GUEST, errors: [] }
     });
 };
 
-const renderEditGuest = (req, res, { status = 200, id, values, errors = [] }) =>
+const renderEditGuest = async (req, res, { status = 200, id, values, errors = [] }) =>
     res.status(status).render('edit-guest', {
         title: req.t('guests.editTitle'),
         formAction: `/guests/${id}/edit`,
         statuses: RSVP_STATUSES,
+        mealOptions: await findMealOptions(req.wedding.id),
         values,
         errors
     });
@@ -59,6 +77,8 @@ const showEditGuest = async (req, res, next) => {
             rsvp: guest.rsvp,
             diet: guest.diet ?? '',
             plus_one: guest.plus_one ?? '',
+            meal: guest.meal ?? '',
+            accessibility: guest.accessibility ?? '',
             group_name: guest.group_name ?? ''
         }
     });

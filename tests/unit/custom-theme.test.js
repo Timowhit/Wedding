@@ -63,6 +63,7 @@ describe('custom colours', () => {
             ['on-primary', 'primary'],
             ['on-primary', 'secondary'],
             ['danger', 'surface'],
+            ['danger', 'danger-soft'],
             ['success', 'success-soft']
         ];
         for (const key of AWKWARD) {

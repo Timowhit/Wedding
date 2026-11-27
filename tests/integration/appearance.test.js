@@ -26,6 +26,8 @@ describe('appearance', { skip: skipWithoutDb }, () => {
             const one = await couple.get('/');
             assert.doesNotMatch(one.body, /id="wedding-switcher"/);
             assert.match(one.body, /class="wedding-current"/);
+            await couple.post('/wedding/date', { wedding_date: '2027-09-18' });
+            assert.match((await couple.get('/')).body, /class="wedding-current"[^]*?Ana.s Wedding · [^<]*2027/);
 
             await couple.post('/weddings', { name: 'Second wedding', wedding_date: '2027-06-12' });
             const two = await couple.get('/');

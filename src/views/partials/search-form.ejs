@@ -1,0 +1,6 @@
+<%# The search box (GET /search). Expects query (may be empty). %>
+<form method="get" action="/search" class="search-form" role="search">
+    <label for="search-q" class="visually-hidden"><%= t('search.label') %></label>
+    <input type="search" id="search-q" name="q" maxlength="100" value="<%= locals.query || '' %>" placeholder="<%= t('search.placeholder') %>">
+    <button type="submit" class="btn btn-secondary btn-small"><%= t('search.submit') %></button>
+</form>
