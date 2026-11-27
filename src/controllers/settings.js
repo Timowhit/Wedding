@@ -8,7 +8,8 @@ import {
     updateProfile,
     upgradeToPlanner
 } from '../models/users.js';
-import { PALETTES, THEME_MODES } from '../constants.js';
+import { CUSTOM_BACKGROUNDS, PALETTES, THEME_MODES } from '../constants.js';
+import { parseColorsKey, resolveTheme } from '../themes.js';
 import { assignableRoles, findMembers, removeMember, updateMemberRole, updateWedding } from '../models/weddings.js';
 import { toSessionUser } from '../middleware/auth.js';
 import { isEmailConfigured, sendInviteEmail } from '../services/email.js';
@@ -36,6 +37,23 @@ const takeCreatedInviteUrl = (req) => {
     const url = req.session.createdInviteUrl ?? null;
     delete req.session.createdInviteUrl;
     return url;
+};
+
+// What the custom colour pickers start from before someone has saved their own: the Rose palette.
+const DEFAULT_CUSTOM_COLORS = 'a85a73-4f7a59-b8862b-n';
+
+/** The appearance form's values from the session user, custom colours included. */
+const appearanceValues = (user) => {
+    const colors = parseColorsKey(user.themeColors) ?? parseColorsKey(DEFAULT_CUSTOM_COLORS);
+    return { palette: user.themePalette, mode: user.themeMode, ...colors };
+};
+
+/** Whose colours this page shows: the person's own, the wedding's, or the planner's brand. */
+const themeSource = (user, wedding) => {
+    if (parseColorsKey(wedding?.theme_colors)) return 'wedding';
+    const personal = resolveTheme({ user });
+    const shown = resolveTheme({ user, wedding });
+    return shown.palette === personal.palette && shown.colors === personal.colors ? 'personal' : 'brand';
 };
 
 /**
@@ -69,10 +87,9 @@ const renderSettings = async (req, res, { status = 200, forms = {} } = {}) => {
         passwordForm: forms.password ?? { errors: [] },
         palettes: PALETTES,
         themeModes: THEME_MODES,
-        appearanceForm: forms.appearance ?? {
-            values: { palette: req.session.user.themePalette, mode: req.session.user.themeMode },
-            errors: []
-        },
+        customBackgrounds: CUSTOM_BACKGROUNDS,
+        appearanceForm: forms.appearance ?? { values: appearanceValues(req.session.user), errors: [] },
+        themeSource: themeSource(req.session.user, wedding),
         businessForm: forms.business ?? {
             values: {
                 business_name: req.session.user.businessName ?? '',
@@ -137,13 +154,32 @@ const processReminders = async (req, res) => {
     res.redirect('/settings');
 };
 
+/**
+ * Saves the appearance form. The settings page saves itself with fetch as you change it; those
+ * requests ask for JSON and get the theme back, plus whether it is what this page shows (inside a
+ * wedding with its own colours or a planner's brand, the personal choice applies elsewhere).
+ */
 const processAppearance = async (req, res) => {
+    const wantsJson = req.accepts(['html', 'json']) === 'json';
     const { values, data, errors } = validateAppearance(req.body);
-    if (errors.length > 0) return renderSettings(req, res, { status: 400, forms: { appearance: { values, errors } } });
+    if (errors.length > 0) {
+        if (wantsJson) return res.status(400).json({ errors: errors.map((error) => req.t(error.key, error.vars)) });
+        return renderSettings(req, res, { status: 400, forms: { appearance: { values, errors } } });
+    }
 
     const updated = await updateAppearance(req.session.user.id, data);
     if (!updated) throw new Error('Current user disappeared during update');
     req.session.user = toSessionUser(updated);
+    if (wantsJson) {
+        const personal = resolveTheme({ user: req.session.user });
+        const shown = resolveTheme({ user: req.session.user, wedding: req.wedding });
+        return res.json({
+            palette: personal.palette,
+            mode: personal.mode,
+            colors: personal.colors ?? null,
+            applied: shown.palette === personal.palette && shown.colors === personal.colors
+        });
+    }
     setFlash(req, 'success', 'settings.appearanceSaved');
     res.redirect('/settings');
 };

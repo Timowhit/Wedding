@@ -7,10 +7,12 @@
         { href: '/budget', key: 'nav.budget', hidden: !hasWedding },
         { href: '/guests', key: 'nav.guests', hidden: !hasWedding },
         { href: '/seating', key: 'nav.seating', hidden: !hasWedding },
+        { href: '/layout', key: 'nav.layout', hidden: !hasWedding },
         { href: '/vendors', key: 'nav.vendors', hidden: !hasWedding },
         { href: '/checklist', key: 'nav.checklist', hidden: !hasWedding },
         { href: '/decisions', key: 'nav.decisions', hidden: !hasWedding },
         { href: '/schedule', key: 'nav.schedule', hidden: !hasWedding },
+        { href: '/colors', key: 'nav.colors', hidden: !hasWedding },
         { href: '/music', key: 'nav.music', hidden: !hasWedding || !features.music },
         { href: '/inspiration', key: 'nav.inspiration', hidden: !hasWedding || !features.inspiration },
         { href: '/templates', key: 'nav.templates', hidden: !isPlanner },
@@ -21,20 +23,22 @@
 %>
 <header class="site-header">
     <div class="site-header__bar">
-        <a class="brand" href="/"><span aria-hidden="true">💍</span> <span class="brand__name">Forever Planner</span></a>
+        <a class="brand" href="/"><%- include('logo') %><span class="brand__name">Forever <em>Planner</em></span></a>
 
-        <% if (hasNav && hasWedding) { %>
+        <% if (hasNav && hasWedding && weddings.length > 1) { %>
             <form class="wedding-switcher" method="post" action="/wedding/switch">
                 <%- include('csrf-field') %>
                 <input type="hidden" name="return_to" value="<%= currentUrl %>">
                 <label class="visually-hidden" for="wedding-switcher"><%= t('nav.activeWedding') %></label>
                 <select id="wedding-switcher" name="wedding_id" data-autosubmit>
                     <% weddings.forEach((w) => { %>
-                        <option value="<%= w.id %>" <%= w.id === wedding.id ? 'selected' : '' %>><%= w.name %></option>
+                        <option value="<%= w.id %>" <%= w.id === wedding.id ? 'selected' : '' %>><%= w.wedding_date ? `${w.name} · ${formatDate(w.wedding_date)}` : w.name %></option>
                     <% }); %>
                 </select>
                 <button type="submit" class="btn btn-ghost btn-small" data-hide-with-js><%= t('nav.switch') %></button>
             </form>
+        <% } else if (hasNav && hasWedding) { %>
+            <p class="wedding-current"><span class="visually-hidden"><%= t('nav.activeWedding') %>: </span><%= wedding.name %></p>
         <% } %>
         <% if (hasNav) { %>
             <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav" hidden>

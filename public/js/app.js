@@ -1,10 +1,13 @@
 /**
  * Progressive enhancement only. Every feature works without JavaScript: forms post normally
  * and the server renders the result. This file adds conveniences on top:
+ * - success and info notices fade after a few seconds; every notice gets a close button
+ * - Settings > Appearance previews every change and saves it with fetch
  * - selects marked [data-autosubmit] submit their form on change (their button is then hidden)
  * - forms marked [data-confirm] ask for confirmation before submitting
  * - buttons marked [data-copy] copy the value of the input they name
  * - the mobile navigation toggle
+ * - venue layout: drag pieces or move them with the arrow keys, saved with fetch
  * - seating chart drag and drop (it sets the guest's table picker and submits the same form)
  * - offline event day: registers /sw.js on signed-in pages, saves the event-day pages, shows the
  *   offline banner (see public/sw.js)
@@ -23,6 +26,137 @@
     document.querySelectorAll('[data-hide-with-js]').forEach(function (element) {
         element.hidden = true;
     });
+
+    // Notices: success and info fade after a few seconds (paused while hovered or focused);
+    // every notice gets a close button. Errors never fade, because people need them to fix a form.
+    const FLASH_VISIBLE_MS = 4000;
+    const FLASH_FADE_MS = 400;
+    document.querySelectorAll('.flash').forEach(function (flash) {
+        const close = flash.querySelector('[data-dismiss]');
+        const hide = function () {
+            flash.classList.add('flash--hiding');
+            setTimeout(function () {
+                flash.remove();
+            }, FLASH_FADE_MS);
+        };
+        if (close) {
+            close.hidden = false;
+            close.addEventListener('click', hide);
+        }
+        if (!flash.hasAttribute('data-autohide')) return;
+        let timer = setTimeout(hide, FLASH_VISIBLE_MS);
+        const pause = function () {
+            clearTimeout(timer);
+        };
+        const resume = function () {
+            if (flash.matches(':hover') || flash.contains(document.activeElement)) return;
+            clearTimeout(timer);
+            timer = setTimeout(hide, FLASH_VISIBLE_MS);
+        };
+        flash.addEventListener('mouseenter', pause);
+        flash.addEventListener('focusin', pause);
+        flash.addEventListener('mouseleave', resume);
+        flash.addEventListener('focusout', resume);
+    });
+
+    document.querySelectorAll('[data-show-with-js]').forEach(function (element) {
+        element.hidden = false;
+    });
+
+    // Settings > Appearance: every change shows at once and saves itself. The custom colours'
+    // stylesheet comes from the server (/css/custom/<key>.css), so the colour rules live in one
+    // place. A new stylesheet replaces the old one only once it has loaded, so nothing flickers.
+    const appearance = document.querySelector('form[data-live-appearance]');
+    if (appearance && window.fetch && window.URLSearchParams) {
+        const html = document.documentElement;
+        const status = appearance.querySelector('[data-save-status]');
+        // Inside a wedding with its own colours or a planner's brand, the choice applies elsewhere.
+        const previewHere = appearance.getAttribute('data-theme-source') === 'personal';
+        const PREVIEW_DELAY_MS = 150;
+        const SAVE_DELAY_MS = 600;
+        let previewTimer = null;
+        let saveTimer = null;
+        let saveCount = 0;
+
+        const colorsKey = function (form) {
+            const hex = function (name) {
+                return String(form.get(name) || '')
+                    .replace('#', '')
+                    .toLowerCase();
+            };
+            return [hex('primary'), hex('secondary'), hex('accent'), form.get('background')].join('-');
+        };
+        const setStatus = function (key, text) {
+            if (status) status.textContent = text || status.getAttribute(key) || '';
+        };
+        const useCustomSheet = function (href, done) {
+            const current = document.querySelector('link[data-custom-theme]');
+            if (current && current.getAttribute('href') === href) return done();
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = href;
+            link.setAttribute('data-custom-theme', '');
+            link.addEventListener('load', function () {
+                document.querySelectorAll('link[data-custom-theme]').forEach(function (old) {
+                    if (old !== link) old.remove();
+                });
+                done();
+            });
+            document.head.appendChild(link);
+        };
+        const preview = function () {
+            const form = new FormData(appearance);
+            const palette = String(form.get('palette') || '');
+            const apply = function () {
+                if (!previewHere) return;
+                html.setAttribute('data-palette', palette);
+                html.setAttribute('data-mode', String(form.get('mode') || 'auto'));
+            };
+            // Inside a wedding with its own colours (or a planner's brand) the page keeps those: the
+            // choice is saved for elsewhere, and swapping the stylesheet here would hide the wedding's.
+            if (
+                previewHere &&
+                palette === 'custom' &&
+                /^[0-9a-f]{6}-[0-9a-f]{6}-[0-9a-f]{6}-[npsa]$/.test(colorsKey(form))
+            ) {
+                useCustomSheet('/css/custom/' + colorsKey(form) + '.css', apply);
+            } else {
+                apply();
+            }
+        };
+        const save = function () {
+            const attempt = ++saveCount;
+            setStatus('data-saving');
+            fetch(appearance.action, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams(new FormData(appearance))
+            })
+                .then(function (response) {
+                    return response.json().then(function (body) {
+                        if (attempt !== saveCount) return; // a newer change is on its way
+                        if (response.ok) setStatus('data-saved');
+                        else setStatus('data-failed', (body.errors || []).join(' '));
+                    });
+                })
+                .catch(function () {
+                    if (attempt === saveCount) setStatus('data-failed');
+                });
+        };
+        const changed = function () {
+            clearTimeout(previewTimer);
+            clearTimeout(saveTimer);
+            previewTimer = setTimeout(preview, PREVIEW_DELAY_MS);
+            saveTimer = setTimeout(save, SAVE_DELAY_MS);
+        };
+        appearance.addEventListener('input', changed);
+        appearance.addEventListener('change', changed);
+        appearance.addEventListener('submit', function (event) {
+            event.preventDefault();
+            changed();
+        });
+    }
 
     document.addEventListener('submit', function (event) {
         const message = event.target.getAttribute('data-confirm');
@@ -91,6 +225,123 @@
             select.form.requestSubmit();
         });
     });
+    // Venue layout: drag a piece, or focus it and use the arrow keys (Shift moves further). Each
+    // move is saved with fetch; the server keeps it inside the room and answers the final spot.
+    const plan = document.querySelector('svg[data-layout-editable]');
+    if (plan && window.fetch && plan.getScreenCTM) {
+        const room = { width: Number(plan.dataset.roomWidth), depth: Number(plan.dataset.roomDepth) };
+        const tokenInput = document.querySelector('input[name="_csrf"]');
+        const failed = document.querySelector('[data-layout-error]');
+        const KEY_STEP = 0.5;
+        const KEY_STEP_LARGE = 5;
+        const KEY_SAVE_DELAY_MS = 500;
+        const snap = (value) => Math.round(value * 2) / 2;
+        const positionOf = (piece) => {
+            const match = /translate\(([-\d.]+) ([-\d.]+)\)/.exec(piece.getAttribute('transform') || '');
+            return match ? { x: Number(match[1]), y: Number(match[2]) } : { x: 0, y: 0 };
+        };
+        // The same rule as clampToRoom in src/validators/layout.js, so pieces don't jump on save.
+        const inside = (piece, x, y) => {
+            const radians = (Number(piece.dataset.rotation) * Math.PI) / 180;
+            const cos = Math.abs(Math.cos(radians));
+            const sin = Math.abs(Math.sin(radians));
+            const width = Number(piece.dataset.width);
+            const depth = Number(piece.dataset.depth);
+            const halfX = (width * cos + depth * sin) / 2;
+            const halfY = (width * sin + depth * cos) / 2;
+            const fit = (value, half, size) =>
+                half * 2 >= size ? size / 2 : Math.min(Math.max(value, half), size - half);
+            return { x: snap(fit(x, halfX, room.width)), y: snap(fit(y, halfY, room.depth)) };
+        };
+        const place = (piece, position) => {
+            piece.setAttribute('transform', 'translate(' + position.x + ' ' + position.y + ')');
+            const id = piece.getAttribute('data-piece-id');
+            const form = document.querySelector('[data-piece-form="' + id + '"]');
+            if (form) {
+                form.elements.x.value = position.x;
+                form.elements.y.value = position.y;
+            }
+            const meta = document.querySelector('[data-piece-meta="' + id + '"]');
+            if (meta)
+                meta.textContent = meta
+                    .getAttribute('data-template')
+                    .replace('{x}', position.x)
+                    .replace('{y}', position.y);
+        };
+        const save = (piece) => {
+            const position = positionOf(piece);
+            fetch('/layout/items/' + piece.getAttribute('data-piece-id') + '/move', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ _csrf: tokenInput ? tokenInput.value : '', x: position.x, y: position.y })
+            })
+                .then((response) =>
+                    response.ok ? response.json() : Promise.reject(new Error(String(response.status)))
+                )
+                .then((saved) => {
+                    place(piece, saved);
+                    if (failed) failed.hidden = true;
+                })
+                .catch(() => {
+                    if (failed) failed.hidden = false;
+                });
+        };
+        const toPlan = (event) => {
+            const point = plan.createSVGPoint();
+            point.x = event.clientX;
+            point.y = event.clientY;
+            return point.matrixTransform(plan.getScreenCTM().inverse());
+        };
+
+        let drag = null;
+        plan.querySelectorAll('[data-piece-id]').forEach((piece) => {
+            piece.addEventListener('pointerdown', (event) => {
+                if (event.button !== 0) return;
+                const start = toPlan(event);
+                const position = positionOf(piece);
+                drag = { piece, dx: start.x - position.x, dy: start.y - position.y, moved: false };
+                // Drawn last, so the piece being moved stays on top. Re-inserting a node releases
+                // pointer capture, so this comes before capturing.
+                piece.parentNode.appendChild(piece);
+                piece.setPointerCapture(event.pointerId);
+                piece.classList.add('is-dragging');
+            });
+            piece.addEventListener('pointermove', (event) => {
+                if (!drag || drag.piece !== piece) return;
+                const point = toPlan(event);
+                place(piece, inside(piece, point.x - drag.dx, point.y - drag.dy));
+                drag.moved = true;
+            });
+            const end = () => {
+                if (!drag || drag.piece !== piece) return;
+                piece.classList.remove('is-dragging');
+                if (drag.moved) save(piece);
+                drag = null;
+            };
+            piece.addEventListener('pointerup', end);
+            piece.addEventListener('pointercancel', end);
+
+            let keyTimer = null;
+            piece.addEventListener('keydown', (event) => {
+                const step = event.shiftKey ? KEY_STEP_LARGE : KEY_STEP;
+                const moves = {
+                    ArrowLeft: [-step, 0],
+                    ArrowRight: [step, 0],
+                    ArrowUp: [0, -step],
+                    ArrowDown: [0, step]
+                };
+                const move = moves[event.key];
+                if (!move) return;
+                event.preventDefault();
+                const position = positionOf(piece);
+                place(piece, inside(piece, position.x + move[0], position.y + move[1]));
+                clearTimeout(keyTimer);
+                keyTimer = setTimeout(() => save(piece), KEY_SAVE_DELAY_MS);
+            });
+        });
+    }
+
     // Offline event day -------------------------------------------------------------------------
     const body = document.body;
     // A page older than this when it loads came from the saved copy, not the network.
@@ -150,6 +401,7 @@
                 const pages = () => [
                     '/schedule',
                     '/schedule?print=1',
+                    '/layout',
                     '/vendors',
                     ...Array.from(document.querySelectorAll('a[data-offline-page]'), (link) =>
                         link.getAttribute('href')

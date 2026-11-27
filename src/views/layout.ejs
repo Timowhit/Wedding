@@ -1,0 +1,178 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+<%
+    const fmt = (n) => String(Number(n));
+    const unitLabel = t(`layoutUnit.${room.unit}`);
+    const nameOf = (item) => (item.kind === 'table' ? item.table_name : item.label || t(`layoutKind.${item.kind}`));
+    // Label size in room units: readable on a phone, never larger than a small table.
+    const fontSize = Math.min(Math.max(room.width, room.depth) / 60, room.unit === "m" ? 0.5 : 1.6);
+%>
+
+<main id="main-content">
+    <%- include('partials/page-header', { heading: 'layout.heading', subtitle: 'layout.subtitle' }) %>
+    <%- include('partials/flash') %>
+    <%- include('partials/read-only-notice') %>
+
+    <section class="card floor-plan-card" aria-labelledby="plan-heading">
+        <h2 class="card-title" id="plan-heading"><%= t('layout.planHeading', { width: fmt(room.width), depth: fmt(room.depth), unit: unitLabel }) %></h2>
+        <%# Positions and sizes are SVG attributes in room units, so the CSP (no inline styles) is never in the way. %>
+        <svg class="floor-plan" viewBox="0 0 <%= fmt(room.width) %> <%= fmt(room.depth) %>" role="<%= canEdit ? 'group' : 'img' %>" aria-labelledby="plan-title"
+             <% if (canEdit) { %>data-layout-editable data-room-width="<%= fmt(room.width) %>" data-room-depth="<%= fmt(room.depth) %>"<% } %>>
+            <title id="plan-title"><%= t('layout.planTitle', { width: fmt(room.width), depth: fmt(room.depth), unit: unitLabel, count: items.length }) %></title>
+            <defs>
+                <pattern id="plan-grid" width="<%= grid %>" height="<%= grid %>" patternUnits="userSpaceOnUse">
+                    <path class="floor-plan__grid-line" d="M <%= grid %> 0 L 0 0 0 <%= grid %>"/>
+                </pattern>
+            </defs>
+            <rect class="floor-plan__room" width="<%= fmt(room.width) %>" height="<%= fmt(room.depth) %>"/>
+            <rect class="floor-plan__grid" width="<%= fmt(room.width) %>" height="<%= fmt(room.depth) %>" fill="url(#plan-grid)"/>
+            <% items.forEach((item) => { %>
+                <g class="piece piece--<%= item.kind %>" transform="translate(<%= fmt(item.x) %> <%= fmt(item.y) %>)"
+                   data-piece-id="<%= item.id %>" data-width="<%= fmt(item.width) %>" data-depth="<%= fmt(item.depth) %>" data-rotation="<%= item.rotation %>"
+                   <% if (canEdit) { %>tabindex="0" role="button" aria-label="<%= t('layout.moveLabel', { name: nameOf(item) }) %>"<% } %>>
+                    <g transform="rotate(<%= item.rotation %>)">
+                        <% if (item.shape === 'round') { %>
+                            <ellipse class="piece__shape" rx="<%= fmt(item.width / 2) %>" ry="<%= fmt(item.depth / 2) %>"/>
+                        <% } else { %>
+                            <rect class="piece__shape" x="<%= fmt(-item.width / 2) %>" y="<%= fmt(-item.depth / 2) %>" width="<%= fmt(item.width) %>" height="<%= fmt(item.depth) %>" rx="<%= fmt(Math.min(item.width, item.depth) / 10) %>"/>
+                        <% } %>
+                    </g>
+                    <text class="piece__label" font-size="<%= fontSize.toFixed(2) %>" text-anchor="middle" y="<%= item.kind === 'table' ? (-fontSize * 0.2).toFixed(2) : (fontSize * 0.35).toFixed(2) %>"><%= nameOf(item) %></text>
+                    <% if (item.kind === 'table') { %>
+                        <text class="piece__count" font-size="<%= (fontSize * 0.85).toFixed(2) %>" text-anchor="middle" y="<%= (fontSize * 0.95).toFixed(2) %>"><%= item.seated %>/<%= item.seats %></text>
+                    <% } %>
+                </g>
+            <% }); %>
+        </svg>
+        <p class="hint"><%= t('layout.gridHint', { size: grid, unit: unitLabel }) %><% if (canEdit) { %> <span data-show-with-js hidden><%= t('layout.dragHint') %></span><% } %></p>
+        <p class="hint text-danger" data-layout-error role="status" hidden><%= t('layout.moveFailed') %></p>
+    </section>
+
+    <% if (canEdit) { %>
+        <div class="layout-tools">
+            <%- include('partials/add-panel-start', { id: 'add-piece', labelKey: 'layout.add', open: items.length === 0 || fixtureForm.errors.length > 0 }) %>
+                <% if (unplaced.length > 0) { %>
+                    <form method="post" action="/layout/tables" class="form-inline">
+                        <%- include('partials/csrf-field') %>
+                        <div class="field">
+                            <label for="place-table"><%= t('layout.placeTable') %></label>
+                            <select id="place-table" name="table_id">
+                                <% unplaced.forEach((table) => { %>
+                                    <option value="<%= table.id %>"><%= table.name %> (<%= t('layout.seats', { count: table.seats }) %>)</option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-secondary"><%= t('layout.placeSubmit') %></button>
+                    </form>
+                <% } else { %>
+                    <p class="hint"><%= t('layout.noTables') %> <a href="/seating"><%= t('layout.toSeating') %></a></p>
+                <% } %>
+
+                <%- include('partials/form-errors', { errors: fixtureForm.errors, id: 'fixture-errors' }) %>
+                <form method="post" action="/layout/items" class="form-inline">
+                    <%- include('partials/csrf-field') %>
+                    <div class="field">
+                        <label for="fixture-kind"><%= t('layout.fixture') %></label>
+                        <select id="fixture-kind" name="kind" <%- fieldState(fixtureForm.errors, 'kind', 'fixture-errors') %>>
+                            <%- include('partials/options', { options: fixtures, selected: fixtureForm.values.kind, prefix: 'layoutKind' }) %>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="fixture-label"><%= t('layout.label') %> <span class="optional"><%= t('form.optional') %></span></label>
+                        <input type="text" id="fixture-label" name="label" maxlength="60" value="<%= fixtureForm.values.label %>" <%- fieldState(fixtureForm.errors, 'label', 'fixture-errors') %>>
+                    </div>
+                    <button type="submit" class="btn btn-primary"><%= t('layout.addSubmit') %></button>
+                </form>
+            <%- include('partials/add-panel-end') %>
+
+            <%- include('partials/add-panel-start', { id: 'room-size', labelKey: 'layout.room', open: roomForm.errors.length > 0 }) %>
+                <%- include('partials/form-errors', { errors: roomForm.errors, id: 'room-errors' }) %>
+                <form method="post" action="/layout/room" class="form-inline">
+                    <%- include('partials/csrf-field') %>
+                    <div class="field">
+                        <label for="room-width"><%= t('layout.width') %></label>
+                        <input type="number" id="room-width" name="width" min="5" max="500" step="0.5" inputmode="decimal" required value="<%= roomForm.values.width %>" <%- fieldState(roomForm.errors, 'width', 'room-errors') %>>
+                    </div>
+                    <div class="field">
+                        <label for="room-depth"><%= t('layout.depth') %></label>
+                        <input type="number" id="room-depth" name="depth" min="5" max="500" step="0.5" inputmode="decimal" required value="<%= roomForm.values.depth %>" <%- fieldState(roomForm.errors, 'depth', 'room-errors') %>>
+                    </div>
+                    <div class="field">
+                        <label for="room-unit"><%= t('layout.unitLabel') %></label>
+                        <select id="room-unit" name="unit" <%- fieldState(roomForm.errors, 'unit', 'room-errors') %>>
+                            <%- include('partials/options', { options: units, selected: roomForm.values.unit, prefix: 'layoutUnit' }) %>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-secondary"><%= t('layout.roomSubmit') %></button>
+                </form>
+                <p class="hint"><%= t('layout.roomHint') %></p>
+            <%- include('partials/add-panel-end') %>
+        </div>
+    <% } %>
+
+    <section aria-labelledby="pieces-heading">
+        <h2 class="section-heading" id="pieces-heading"><%= t('layout.pieces') %></h2>
+        <p class="hint"><%= t('layout.count', { count: items.length, max: maxItems }) %></p>
+        <% if (items.length === 0) { %>
+            <p class="empty-state"><%= t('layout.empty') %></p>
+        <% } else { %>
+            <ul class="item-list">
+                <% items.forEach((item) => {
+                    const editing = pieceForm && pieceForm.id === item.id;
+                    const values = editing ? pieceForm.values : { label: item.label || '', shape: item.shape, x: fmt(item.x), y: fmt(item.y), width: fmt(item.width), depth: fmt(item.depth), rotation: String(item.rotation) };
+                    const errors = editing ? pieceForm.errors : [];
+                    const errorsId = `piece-errors-${item.id}`;
+                %>
+                    <li class="item-card piece-card">
+                        <div class="item-info">
+                            <p class="item-name"><%= nameOf(item) %><% if (item.kind === 'table') { %> <span class="tag"><%= t('layout.seated', { seated: item.seated, seats: item.seats }) %></span><% } %></p>
+                            <p class="item-meta" data-piece-meta="<%= item.id %>" data-template="<%= t('layout.pieceMeta', { width: fmt(item.width), depth: fmt(item.depth), unit: unitLabel, x: '{x}', y: '{y}', rotation: item.rotation }) %>"><%= t('layout.pieceMeta', { width: fmt(item.width), depth: fmt(item.depth), unit: unitLabel, x: fmt(item.x), y: fmt(item.y), rotation: item.rotation }) %></p>
+                        </div>
+                        <% if (canEdit) { %>
+                            <details class="piece-edit" <%= editing ? 'open' : '' %>>
+                                <summary class="link-action" aria-label="<%= t('action.editNamed', { name: nameOf(item) }) %>"><%= t('action.edit') %></summary>
+                                <%- include('partials/form-errors', { errors, id: errorsId }) %>
+                                <form method="post" action="/layout/items/<%= item.id %>" class="piece-form" data-piece-form="<%= item.id %>">
+                                    <%- include('partials/csrf-field') %>
+                                    <% if (item.kind !== 'table') { %>
+                                        <div class="field">
+                                            <label for="label-<%= item.id %>"><%= t('layout.label') %> <span class="optional"><%= t('form.optional') %></span></label>
+                                            <input type="text" id="label-<%= item.id %>" name="label" maxlength="60" value="<%= values.label %>" <%- fieldState(errors, 'label', errorsId) %>>
+                                        </div>
+                                    <% } else { %>
+                                        <input type="hidden" name="label" value="">
+                                    <% } %>
+                                    <div class="field">
+                                        <label for="shape-<%= item.id %>"><%= t('layout.shape') %></label>
+                                        <select id="shape-<%= item.id %>" name="shape" <%- fieldState(errors, 'shape', errorsId) %>>
+                                            <%- include('partials/options', { options: shapes, selected: values.shape, prefix: 'layoutShape' }) %>
+                                        </select>
+                                    </div>
+                                    <% [['x', 'layout.fromLeft'], ['y', 'layout.fromTop'], ['width', 'layout.width'], ['depth', 'layout.depth']].forEach(([field, key]) => { %>
+                                        <div class="field">
+                                            <label for="<%= field %>-<%= item.id %>"><%= t(key) %> (<%= unitLabel %>)</label>
+                                            <input type="number" id="<%= field %>-<%= item.id %>" name="<%= field %>" step="0.5" inputmode="decimal" required value="<%= values[field] %>" <%- fieldState(errors, field, errorsId) %>>
+                                        </div>
+                                    <% }); %>
+                                    <div class="field">
+                                        <label for="rotation-<%= item.id %>"><%= t('layout.rotation') %></label>
+                                        <input type="number" id="rotation-<%= item.id %>" name="rotation" min="0" max="359" step="15" required value="<%= values.rotation %>" <%- fieldState(errors, 'rotation', errorsId) %>>
+                                    </div>
+                                    <div class="form-actions">
+                                        <button type="submit" class="btn btn-primary btn-small"><%= t('action.save') %></button>
+                                    </div>
+                                </form>
+                            </details>
+                            <form method="post" action="/layout/items/<%= item.id %>/delete" data-confirm="<%= t('layout.confirmDelete', { name: nameOf(item) }) %>">
+                                <%- include('partials/csrf-field') %>
+                                <button type="submit" class="link-action link-action--danger" aria-label="<%= t(item.kind === 'table' ? 'layout.removeTableNamed' : 'action.deleteNamed', { name: nameOf(item) }) %>"><%= t(item.kind === 'table' ? 'layout.removeTable' : 'action.delete') %></button>
+                            </form>
+                        <% } %>
+                    </li>
+                <% }); %>
+            </ul>
+        <% } %>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

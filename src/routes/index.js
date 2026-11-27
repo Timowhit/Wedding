@@ -99,6 +99,23 @@ import {
     showEditItem,
     showSchedule
 } from '../controllers/schedule.js';
+import { showCustomCss } from '../controllers/themes.js';
+import {
+    processDeletePiece,
+    processEditPiece,
+    processMovePiece,
+    processNewFixture,
+    processPlaceTable,
+    processRoom,
+    showLayout
+} from '../controllers/layout.js';
+import {
+    processAppColors,
+    processAppColorsOff,
+    processDeleteColor,
+    processNewColor,
+    showColors
+} from '../controllers/colors.js';
 import { showOffline } from '../controllers/offline.js';
 import { processUnsubscribe, showUnsubscribe } from '../controllers/reminders.js';
 import {
@@ -143,6 +160,7 @@ router.get('/login', redirectIfLoggedIn, showLoginForm);
 router.post('/login', redirectIfLoggedIn, loginLimiter, processLogin);
 router.get('/start', redirectIfLoggedIn, showStart);
 router.get('/offline', showOffline);
+router.get('/css/custom/:key.css', showCustomCss);
 router.get('/register', redirectIfLoggedIn, showRegisterForm);
 router.post('/register', redirectIfLoggedIn, registerLimiter, processRegister);
 router.post('/logout', processLogout);
@@ -180,6 +198,22 @@ router.post('/decisions/:id/edit', asker, processEditDecision);
 router.post('/decisions/:id/reopen', asker, processReopen);
 router.post('/decisions/:id/delete', asker, processDeleteDecision);
 router.post('/decisions/:id/answer', answerer, processAnswer);
+
+/* Wedding colours ------------------------------------------------------------------------------- */
+router.get('/colors', member, showColors);
+router.post('/colors', editor, processNewColor);
+router.post('/colors/app', editor, processAppColors);
+router.post('/colors/app/off', editor, processAppColorsOff);
+router.post('/colors/:id/delete', editor, processDeleteColor);
+
+/* Venue layout (member reads, editor changes) ---------------------------------------------------- */
+router.get('/layout', member, showLayout);
+router.post('/layout/room', editor, processRoom);
+router.post('/layout/items', editor, processNewFixture);
+router.post('/layout/tables', editor, processPlaceTable);
+router.post('/layout/items/:id', editor, processEditPiece);
+router.post('/layout/items/:id/move', editor, processMovePiece);
+router.post('/layout/items/:id/delete', editor, processDeletePiece);
 
 /* Event-day schedule ---------------------------------------------------------------------------- */
 router.get('/schedule', member, showSchedule);
