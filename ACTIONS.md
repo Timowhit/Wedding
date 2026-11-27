@@ -39,8 +39,8 @@ It applies `013_planning_details.sql` and `014_wrap_up.sql`, which only add colu
 
 ## 3. Merge the file uploads release
 
-[Timowhit/Wedding#14](https://github.com/Timowhit/Wedding/pull/14) adds the Files page and files on vendor pages, stored in your PostgreSQL database as you chose.
+[Timowhit/Wedding#14](https://github.com/Timowhit/Wedding/pull/14) adds the Files page and files on vendor pages, stored in your PostgreSQL database as you chose. It has had a security review and the fixes are in. Ready to merge.
 
 1. Open the PR, click **Ready for review**, wait for the CI check, then **Merge pull request**.
 2. Pull `main` and run `npm run migrate` again, as in step 2. It adds `015_files.sql`.
-3. Keep an eye on your Render database's storage. Each wedding can use up to 250 MB of files, and Render shows the database size on the database's page. If you get close to your plan's limit, tell me and I'll move files to cheaper storage.
+3. Keep an eye on your Render database's storage. Each wedding can use up to 250 MB of files, and each person can upload up to 1 GB in total across their weddings. Render shows the database size on the database's page. If you get close to your plan's limit, tell me and I'll move files to cheaper storage.

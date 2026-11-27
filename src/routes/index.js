@@ -75,7 +75,8 @@ import {
     loginLimiter,
     passwordLimiter,
     registerLimiter,
-    searchLimiter
+    searchLimiter,
+    uploadLimiter
 } from '../middleware/rateLimit.js';
 import {
     loadActiveWedding,
@@ -224,7 +225,7 @@ router.post('/layout/items/:id/delete', editor, processDeletePiece);
 
 /* Files (member downloads, editor uploads; uploads are multipart, see middleware/upload.js) ----- */
 router.get('/files', member, showFiles);
-router.post('/files', editor, parseUpload, verifyUploadCsrf, processUpload);
+router.post('/files', editor, uploadLimiter, parseUpload, verifyUploadCsrf, processUpload);
 router.get('/files/:id', member, downloadFile);
 router.post('/files/:id/delete', editor, processDeleteFile);
 

@@ -1,4 +1,4 @@
-import { FILE_KINDS, MAX_FILE_MB, RATING_MAX, VENDOR_STATUSES } from '../constants.js';
+import { FILE_KINDS, FILE_NOTE_MAX, MAX_FILE_MB, RATING_MAX, VENDOR_STATUSES } from '../constants.js';
 import { findFiles } from '../models/files.js';
 import {
     createPayment,
@@ -63,7 +63,8 @@ const renderVendorPage = async (req, res, vendor, { status = 200, paymentForm, r
         ratingMax: RATING_MAX,
         vendorFiles,
         fileKinds: FILE_KINDS,
-        fileMaxMb: MAX_FILE_MB
+        fileMaxMb: MAX_FILE_MB,
+        noteMax: FILE_NOTE_MAX
     });
 };
 

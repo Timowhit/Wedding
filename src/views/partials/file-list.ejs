@@ -10,7 +10,7 @@
                 <% if (canEdit) { %>
                     <form method="post" action="/files/<%= file.id %>/delete" data-confirm="<%= t('files.confirmDelete', { name: file.name }) %>">
                         <%- include('csrf-field') %>
-                        <%- include('return-to') %>
+                        <input type="hidden" name="return_to" value="<%= currentUrl %>">
                         <button type="submit" class="link-action link-action--danger" aria-label="<%= t('action.deleteNamed', { name: file.name }) %>"><%= t('action.delete') %></button>
                     </form>
                 <% } %>
@@ -34,7 +34,7 @@
                 <% if (canEdit) { %>
                     <form method="post" action="/files/<%= file.id %>/delete" data-confirm="<%= t('files.confirmDelete', { name: file.name }) %>">
                         <%- include('csrf-field') %>
-                        <%- include('return-to') %>
+                        <input type="hidden" name="return_to" value="<%= currentUrl %>">
                         <button type="submit" class="link-action link-action--danger" aria-label="<%= t('action.deleteNamed', { name: file.name }) %>"><%= t('action.delete') %></button>
                     </form>
                 <% } %>

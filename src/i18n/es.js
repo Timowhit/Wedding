@@ -1196,5 +1196,9 @@ export default {
     'fileKindPlural.contract': 'Contratos',
     'fileKindPlural.floor_plan': 'Planos',
     'fileKindPlural.inspiration': 'Inspiración',
-    'fileKindPlural.other': 'Otros'
+    'fileKindPlural.other': 'Otros',
+    'files.busy': 'Ahora mismo hay muchas subidas. Inténtalo de nuevo en un momento.',
+    'files.userFull': 'Has subido {max} GB de archivos entre tus bodas. Elimina algunos para subir más.',
+    'files.tooMany': 'Son muchas subidas en poco tiempo. Espera un rato e inténtalo de nuevo.',
+    'files.pages': 'Páginas'
 };

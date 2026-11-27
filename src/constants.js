@@ -110,6 +110,10 @@ const MAX_WEDDING_FILES_MB = 250;
 const MAX_FILE_BYTES = MAX_FILE_MB * BYTES_PER_MB;
 const MAX_WEDDING_FILE_BYTES = MAX_WEDDING_FILES_MB * BYTES_PER_MB;
 const FILE_NOTE_MAX = 300;
+// Everything one person has uploaded, across all their weddings: stops one account filling the database.
+const MAX_USER_FILES_GB = 1;
+const MAX_USER_FILE_BYTES = MAX_USER_FILES_GB * 1024 * BYTES_PER_MB;
+const FILES_PER_PAGE = 24;
 const REVIEW_MAX = 2000;
 
 /** Which budget category a booked vendor's contract counts under (the two lists use different names). */
@@ -198,6 +202,9 @@ export {
     MAX_FILE_BYTES,
     MAX_WEDDING_FILE_BYTES,
     FILE_NOTE_MAX,
+    MAX_USER_FILES_GB,
+    MAX_USER_FILE_BYTES,
+    FILES_PER_PAGE,
     REVIEW_MAX,
     DEFAULT_TASK_PRIORITY,
     RSVP_STATUSES,

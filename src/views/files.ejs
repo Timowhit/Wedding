@@ -25,6 +25,13 @@
             <p class="empty-state"><%= t(activeKind ? 'filter.noMatches' : 'files.empty') %></p>
         <% } else { %>
             <%- include('partials/file-list', { files }) %>
+            <% if (pages > 1) { %>
+                <nav class="pager" aria-label="<%= t('files.pages') %>">
+                    <% for (let p = 1; p <= pages; p += 1) { %>
+                        <a class="filter-tab" href="/files?<%= activeKind ? `kind=${activeKind}&` : '' %>page=<%= p %>" <%- p === page ? 'aria-current="page"' : '' %>><%= p %></a>
+                    <% } %>
+                </nav>
+            <% } %>
         <% } %>
     </section>
 </main>

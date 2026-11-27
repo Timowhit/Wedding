@@ -171,4 +171,95 @@ describe('file uploads', { skip: skipWithoutDb }, () => {
         assert.equal((await ana.post(`/files/${pdf.id}/delete`, {})).location, '/files');
         assert.equal((await files()).length, 1);
     });
+
+    describe('review fixes', () => {
+        it('keeps non-English file names intact', async () => {
+            await ana.get('/files');
+            await upload(ana, '/files', { file: PDF, name: 'contrato niño.pdf' });
+            assert.ok((await files()).some((file) => file.name === 'contrato niño.pdf'));
+        });
+
+        it('simultaneous uploads cannot slip past the wedding limit', async () => {
+            const before = (await files()).length;
+            const used = (
+                await app.pool.query(
+                    `SELECT COALESCE(SUM(size),0)::bigint AS n FROM wedding_files WHERE wedding_id = $1;`,
+                    [weddingId]
+                )
+            ).rows[0].n;
+            const room = 2 * PDF.length + 5;
+            await app.pool.query(
+                `INSERT INTO wedding_files (wedding_id, kind, name, content_type, size, data) VALUES ($1, 'other', 'filler', 'application/pdf', $2, '\\x00');`,
+                [weddingId, 250 * 1024 * 1024 - Number(used) - room]
+            );
+            await ana.get('/files');
+            await Promise.all(
+                Array.from({ length: 5 }, (_, i) => upload(ana, '/files', { file: PDF, name: `race ${i}.pdf` }))
+            );
+            assert.equal((await files()).length - before - 1, 2, 'only two fit');
+            await app.pool.query(
+                `DELETE FROM wedding_files WHERE wedding_id = $1 AND (name = 'filler' OR name LIKE 'race %');`,
+                [weddingId]
+            );
+        });
+
+        it('each person can upload at most 1 GB across all their weddings', async () => {
+            const anaId = (await app.pool.query(`SELECT id FROM users WHERE email = 'ana@example.com';`)).rows[0].id;
+            const other = (
+                await app.pool.query(`INSERT INTO weddings (name, created_by) VALUES ('Elsewhere', $1) RETURNING id;`, [
+                    anaId
+                ])
+            ).rows[0].id;
+            await app.pool.query(
+                `INSERT INTO wedding_files (wedding_id, uploaded_by, kind, name, content_type, size, data) VALUES ($1, $2, 'other', 'big', 'application/pdf', $3, '\\x00');`,
+                [other, anaId, 1024 * 1024 * 1024 - 10]
+            );
+            const refused = await upload(ana, '/files', { file: PDF, name: 'over.pdf' });
+            assert.equal(refused.status, 400);
+            assert.match(refused.body, /1 GB/);
+            await app.pool.query(`DELETE FROM weddings WHERE id = $1;`, [other]);
+        });
+
+        it('a broken upload is a form error, not a server error', async () => {
+            await ana.get('/files');
+            const broken = await ana.request('/files', {
+                method: 'POST',
+                headers: { 'content-type': 'multipart/form-data; boundary=XYZ' },
+                body: `--XYZ\r\nContent-Disposition: form-data; name="_csrf"\r\n\r\n${ana.csrfToken}\r\n--XYZ\r\nContent-Disposition: form-data; name="file"; filename="a.pdf"\r\n\r\n%PDF-cut`
+            });
+            assert.ok([400, 403].includes(broken.status), `got ${broken.status}`);
+        });
+
+        it('downloads are not kept in the browser cache, and large files arrive whole', async () => {
+            const big = Buffer.concat([PDF, Buffer.alloc(3 * 1024 * 1024 + 17, 7)]);
+            await ana.get('/files');
+            await upload(ana, '/files', { file: big, name: 'big plan.pdf' });
+            const { id } = (await files()).find((file) => file.name === 'big plan.pdf');
+            const response = await fetch(`${app.baseUrl}/files/${id}`, {
+                headers: { cookie: [...ana.cookies].map(([k, v]) => `${k}=${v}`).join('; ') }
+            });
+            assert.match(response.headers.get('cache-control'), /no-store/);
+            assert.ok(Buffer.from(await response.arrayBuffer()).equals(big), 'every chunk, in order');
+        });
+
+        it('the photo grid shows 24 per page', async () => {
+            await app.pool.query(
+                `INSERT INTO wedding_files (wedding_id, kind, name, content_type, size, data)
+                 SELECT $1, 'inspiration', 'photo ' || n, 'image/png', 1, '\\x00' FROM generate_series(1, 30) AS n;`,
+                [weddingId]
+            );
+            const first = await ana.get('/files?kind=inspiration');
+            assert.equal(first.body.match(/class="photo-card"/g).length, 24);
+            assert.match(first.body, /href="\/files\?kind=inspiration&amp;page=2"/);
+            const second = await ana.get('/files?kind=inspiration&page=2');
+            assert.ok(second.body.match(/class="photo-card"/g).length >= 6);
+        });
+
+        it('the file input links to its error message on a failed upload', async () => {
+            await ana.get('/files');
+            const bad = await upload(ana, '/files', { file: HTML, name: 'x.pdf' });
+            assert.match(bad.body, /id="upload-file"[^>]*aria-describedby="upload-hint upload-errors"/);
+            assert.equal((bad.body.match(/id="upload-file"[^>]*/)[0].match(/aria-describedby/g) || []).length, 1);
+        });
+    });
 });

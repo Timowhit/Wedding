@@ -92,7 +92,7 @@
         <% if (canEdit) { %>
             <details class="disclosure">
                 <summary><%= t('files.add') %></summary>
-                <%- include('partials/file-upload-form', { form: { values: { kind: 'contract', note: '', vendor_id: vendor.id }, errors: [] }, vendor, kinds: fileKinds, fileMaxMb }) %>
+                <%- include('partials/file-upload-form', { form: { values: { kind: 'contract', note: '', vendor_id: vendor.id }, errors: [] }, vendor, kinds: fileKinds, fileMaxMb, noteMax }) %>
             </details>
         <% } %>
     </section>

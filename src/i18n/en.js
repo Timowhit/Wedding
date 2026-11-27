@@ -1187,5 +1187,9 @@ export default {
     'fileKindPlural.contract': 'Contracts',
     'fileKindPlural.floor_plan': 'Floor plans',
     'fileKindPlural.inspiration': 'Inspiration',
-    'fileKindPlural.other': 'Other'
+    'fileKindPlural.other': 'Other',
+    'files.busy': 'Lots of uploads are happening right now. Please try again in a moment.',
+    'files.userFull': 'You have uploaded {max} GB of files across your weddings. Delete some to upload more.',
+    'files.tooMany': "That's a lot of uploads in a short time. Please wait a while and try again.",
+    'files.pages': 'Pages'
 };

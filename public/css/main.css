@@ -2803,6 +2803,13 @@ input[type='color'] {
     white-space: nowrap;
 }
 
+.pager {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+}
+
 .file-card {
     align-items: start;
 }
