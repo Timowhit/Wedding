@@ -1616,6 +1616,113 @@ input[type='color'] {
     display: none;
 }
 
+/* ---------- Wedding colours ---------- */
+.swatch-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr));
+    gap: var(--space-3);
+    margin: 0 0 var(--space-3);
+    padding: 0;
+    list-style: none;
+}
+
+.swatch-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+}
+
+.swatch-card__chip {
+    flex: none;
+    width: 2.75rem;
+    height: 2.75rem;
+}
+
+.swatch-card__chip rect {
+    stroke: var(--border);
+}
+
+.swatch-card__info {
+    flex: 1;
+    min-width: 0;
+}
+
+.swatch-card__info p {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.colors-off {
+    margin-top: var(--space-3);
+}
+
+.palette-photo {
+    display: grid;
+    gap: var(--space-2);
+    margin-top: var(--space-5);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border);
+}
+
+.palette-photo__heading {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.palette-photo .hint {
+    margin: 0;
+}
+
+.palette-photo__buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.file-button {
+    position: relative;
+    cursor: pointer;
+}
+
+.file-button:focus-within {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+}
+
+.palette-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.palette-suggestion {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--target);
+    padding: var(--space-1) var(--space-3) var(--space-1) var(--space-1);
+    border: 1px solid var(--field-border);
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.palette-suggestion:hover {
+    border-color: var(--primary);
+}
+
+.palette-suggestion svg {
+    width: 1.75rem;
+    height: 1.75rem;
+}
+
 /* ---------- Start now ---------- */
 .start-choices {
     display: grid;

@@ -100,6 +100,13 @@ import {
     showSchedule
 } from '../controllers/schedule.js';
 import { showCustomCss } from '../controllers/themes.js';
+import {
+    processAppColors,
+    processAppColorsOff,
+    processDeleteColor,
+    processNewColor,
+    showColors
+} from '../controllers/colors.js';
 import { showOffline } from '../controllers/offline.js';
 import { processUnsubscribe, showUnsubscribe } from '../controllers/reminders.js';
 import {
@@ -182,6 +189,13 @@ router.post('/decisions/:id/edit', asker, processEditDecision);
 router.post('/decisions/:id/reopen', asker, processReopen);
 router.post('/decisions/:id/delete', asker, processDeleteDecision);
 router.post('/decisions/:id/answer', answerer, processAnswer);
+
+/* Wedding colours ------------------------------------------------------------------------------- */
+router.get('/colors', member, showColors);
+router.post('/colors', editor, processNewColor);
+router.post('/colors/app', editor, processAppColors);
+router.post('/colors/app/off', editor, processAppColorsOff);
+router.post('/colors/:id/delete', editor, processDeleteColor);
 
 /* Event-day schedule ---------------------------------------------------------------------------- */
 router.get('/schedule', member, showSchedule);

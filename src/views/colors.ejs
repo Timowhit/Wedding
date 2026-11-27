@@ -1,0 +1,128 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content">
+    <%- include('partials/page-header', { heading: 'colors.heading', subtitle: 'colors.subtitle' }) %>
+    <%- include('partials/flash') %>
+    <%- include('partials/read-only-notice') %>
+
+    <section class="card" aria-labelledby="palette-heading">
+        <h2 class="card-title" id="palette-heading"><%= t('colors.palette') %></h2>
+        <% if (colors.length === 0) { %>
+            <p class="empty-state"><%= t('colors.empty') %></p>
+        <% } else { %>
+            <ul class="swatch-list">
+                <% colors.forEach((color) => { %>
+                    <li class="swatch-card">
+                        <%# Drawn with SVG fill, because the CSP forbids inline styles. %>
+                        <svg class="swatch-card__chip" viewBox="0 0 40 40" aria-hidden="true" focusable="false"><rect width="40" height="40" rx="10" fill="<%= color.hex %>"/></svg>
+                        <div class="swatch-card__info">
+                            <p class="item-name"><%= color.name || color.hex %></p>
+                            <% if (color.name) { %><p class="item-meta"><%= color.hex %></p><% } %>
+                        </div>
+                        <% if (canEdit) { %>
+                            <form method="post" action="/colors/<%= color.id %>/delete">
+                                <%- include('partials/csrf-field') %>
+                                <button type="submit" class="link-action link-action--danger" aria-label="<%= t('action.deleteNamed', { name: color.name || color.hex }) %>"><%= t('action.delete') %></button>
+                            </form>
+                        <% } %>
+                    </li>
+                <% }); %>
+            </ul>
+        <% } %>
+        <p class="hint"><%= t('colors.count', { count: colors.length, max: maxColors }) %></p>
+    </section>
+
+    <% if (canEdit) { %>
+        <section class="card" aria-labelledby="add-color-heading">
+            <h2 class="card-title" id="add-color-heading"><%= t('colors.add') %></h2>
+            <%- include('partials/form-errors', { errors: colorForm.errors, id: 'color-errors' }) %>
+            <form method="post" action="/colors" class="form-stack" data-color-form>
+                <%- include('partials/csrf-field') %>
+                <div class="color-fields">
+                    <div class="field field--color">
+                        <label for="color-picker"><%= t('colors.picker') %></label>
+                        <input type="color" id="color-picker" name="picker" value="<%= colorForm.values.picker || '#c48b9f' %>" <%- fieldState(colorForm.errors, 'picker', 'color-errors') %>>
+                    </div>
+                    <div class="field">
+                        <label for="color-hex"><%= t('colors.hex') %> <span class="optional"><%= t('form.optional') %></span></label>
+                        <input type="text" id="color-hex" name="hex" maxlength="7" placeholder="#c48b9f" autocomplete="off" spellcheck="false" aria-describedby="color-hex-hint"
+                               value="<%= colorForm.values.hex %>" <%- fieldState(colorForm.errors, 'hex', 'color-errors') %>>
+                        <p class="hint" id="color-hex-hint"><%= t('colors.hexHint') %></p>
+                    </div>
+                    <div class="field">
+                        <label for="color-name"><%= t('colors.name') %> <span class="optional"><%= t('form.optional') %></span></label>
+                        <input type="text" id="color-name" name="name" maxlength="40" placeholder="<%= t('colors.namePlaceholder') %>"
+                               value="<%= colorForm.values.name %>" <%- fieldState(colorForm.errors, 'name', 'color-errors') %>>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary"><%= t('colors.addSubmit') %></button>
+                </div>
+            </form>
+
+            <%# Needs JavaScript (public/js/palette.js reveals it); the picker above works without. %>
+            <div class="palette-photo" data-palette-photo hidden data-use-label="<%= t('colors.useSuggestion', { hex: '{hex}' }) %>" data-empty="<%= t('colors.noSuggestions') %>">
+                <h3 class="palette-photo__heading"><%= t('colors.fromPhoto') %></h3>
+                <p class="hint"><%= t('colors.fromPhotoHint') %></p>
+                <div class="palette-photo__buttons">
+                    <label class="btn btn-secondary btn-small file-button">
+                        <%= t('colors.upload') %>
+                        <input type="file" accept="image/*" class="visually-hidden">
+                    </label>
+                    <label class="btn btn-ghost btn-small file-button">
+                        <%= t('colors.camera') %>
+                        <input type="file" accept="image/*" capture="environment" class="visually-hidden">
+                    </label>
+                </div>
+                <div class="palette-suggestions" data-palette-results aria-live="polite"></div>
+                <p class="hint" data-palette-hint hidden><%= t('colors.suggestionsHint') %></p>
+            </div>
+        </section>
+    <% } %>
+
+    <section class="card" aria-labelledby="app-colors-heading">
+        <h2 class="card-title" id="app-colors-heading"><%= t('colors.appHeading') %></h2>
+        <p class="hint"><%= t(appColorsOn ? 'colors.appOnHint' : 'colors.appHint') %></p>
+        <% if (canEdit && colors.length > 0) { %>
+            <%- include('partials/form-errors', { errors: appForm.errors, id: 'app-errors' }) %>
+            <form method="post" action="/colors/app" class="form-stack">
+                <%- include('partials/csrf-field') %>
+                <div class="color-fields">
+                    <% ['primary', 'secondary', 'accent'].forEach((field) => { %>
+                        <div class="field">
+                            <label for="app-<%= field %>"><%= t(`field.${field}`) %></label>
+                            <select id="app-<%= field %>" name="<%= field %>" <%- fieldState(appForm.errors, field, 'app-errors') %>>
+                                <% const known = colors.some((c) => c.hex === appForm.values[field]); %>
+                                <% if (!known && appForm.values[field]) { %><option value="<%= appForm.values[field] %>" selected><%= appForm.values[field] %></option><% } %>
+                                <% colors.forEach((color) => { %>
+                                    <option value="<%= color.hex %>" <%= color.hex === appForm.values[field] ? 'selected' : '' %>><%= color.name ? `${color.name} (${color.hex})` : color.hex %></option>
+                                <% }); %>
+                            </select>
+                        </div>
+                    <% }); %>
+                    <div class="field">
+                        <label for="app-background"><%= t('field.background') %></label>
+                        <select id="app-background" name="background" <%- fieldState(appForm.errors, 'background', 'app-errors') %>>
+                            <%- include('partials/options', { options: backgrounds, selected: appForm.values.background, prefix: 'background' }) %>
+                        </select>
+                    </div>
+                </div>
+                <p class="hint"><%= t('colors.adjustHint') %></p>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary"><%= t(appColorsOn ? 'colors.appUpdate' : 'colors.appSubmit') %></button>
+                </div>
+            </form>
+            <% if (appColorsOn) { %>
+                <form method="post" action="/colors/app/off" class="colors-off">
+                    <%- include('partials/csrf-field') %>
+                    <button type="submit" class="btn btn-ghost btn-small"><%= t('colors.appOffSubmit') %></button>
+                </form>
+            <% } %>
+        <% } else if (canEdit) { %>
+            <p class="hint"><%= t('colors.appNeedsColors') %></p>
+        <% } %>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

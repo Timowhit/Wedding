@@ -116,6 +116,9 @@ const PLANNER_PAYMENT_FILTERS = Object.freeze(['month', 'next30', 'overdue']);
 const TEMPLATE_KINDS = Object.freeze(['checklist', 'schedule']);
 /** Per account, so one person can't fill the database with templates. */
 const MAX_TEMPLATES_PER_USER = 100;
+// Wedding colours page: swatches per wedding and the length of a swatch's name.
+const MAX_WEDDING_COLORS = 12;
+const COLOR_NAME_MAX = 40;
 /** Per template; more than any real checklist or timeline. */
 const MAX_TEMPLATE_ITEMS = 300;
 
@@ -149,6 +152,8 @@ export {
     PLANNER_PAYMENT_FILTERS,
     TEMPLATE_KINDS,
     MAX_TEMPLATES_PER_USER,
+    MAX_WEDDING_COLORS,
+    COLOR_NAME_MAX,
     MAX_TEMPLATE_ITEMS,
     REMINDER_WINDOW_DAYS,
     REMINDER_ROLES,
