@@ -100,6 +100,8 @@ import {
     showSchedule
 } from '../controllers/schedule.js';
 import { showCustomCss } from '../controllers/themes.js';
+import { downloadFile, processDeleteFile, processUpload, showFiles } from '../controllers/files.js';
+import { parseUpload, verifyUploadCsrf } from '../middleware/upload.js';
 import { processArchive, processWrapUpTasks } from '../controllers/wrapup.js';
 import { showCalendar, showSearch } from '../controllers/calendar.js';
 import {
@@ -219,6 +221,12 @@ router.post('/layout/tables', editor, processPlaceTable);
 router.post('/layout/items/:id', editor, processEditPiece);
 router.post('/layout/items/:id/move', editor, processMovePiece);
 router.post('/layout/items/:id/delete', editor, processDeletePiece);
+
+/* Files (member downloads, editor uploads; uploads are multipart, see middleware/upload.js) ----- */
+router.get('/files', member, showFiles);
+router.post('/files', editor, parseUpload, verifyUploadCsrf, processUpload);
+router.get('/files/:id', member, downloadFile);
+router.post('/files/:id/delete', editor, processDeleteFile);
 
 /* Event-day schedule ---------------------------------------------------------------------------- */
 router.get('/schedule', member, showSchedule);

@@ -2768,6 +2768,52 @@ input[type='color'] {
     }
 }
 
+/* ---------- Files ---------- */
+.photo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 11rem), 1fr));
+    gap: var(--space-3);
+    margin: 0 0 var(--space-4);
+    padding: 0;
+    list-style: none;
+}
+
+.photo-card {
+    display: grid;
+    gap: var(--space-1);
+    padding: var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+}
+
+.photo-card img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: calc(var(--radius-sm) - 2px);
+    object-fit: cover;
+    background: var(--surface-2);
+}
+
+.photo-card .item-meta {
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-card {
+    align-items: start;
+}
+
+.upload-form input[type='file'] {
+    padding: var(--space-2);
+    border: 1px dashed var(--field-border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+}
+
 /* ---------- Wrap-up ---------- */
 .wrapup__list {
     display: grid;

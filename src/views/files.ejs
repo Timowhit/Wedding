@@ -1,0 +1,32 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content">
+    <%- include('partials/page-header', { heading: 'files.heading', subtitle: 'files.subtitle' }) %>
+    <%- include('partials/flash') %>
+    <%- include('partials/read-only-notice') %>
+
+    <% if (canEdit) { %>
+        <%- include('partials/add-panel-start', { id: 'upload-file-panel', labelKey: 'files.add', open: files.length === 0 || uploadForm.errors.length > 0 }) %>
+            <%- include('partials/file-upload-form', { form: uploadForm }) %>
+        <%- include('partials/add-panel-end') %>
+    <% } %>
+
+    <section aria-labelledby="files-heading">
+        <h2 class="section-heading" id="files-heading"><%= t('files.list') %></h2>
+        <p class="hint"><%= t('files.used', { used: usedMb, max: maxMb }) %></p>
+        <nav class="filter-tabs" aria-label="<%= t('files.filter') %>">
+            <a class="filter-tab" href="/files" <%- activeKind === null ? 'aria-current="page"' : '' %>><%= t('filter.all') %></a>
+            <% kinds.forEach((kind) => { %>
+                <a class="filter-tab" href="/files?kind=<%= kind %>" <%- activeKind === kind ? 'aria-current="page"' : '' %>><%= t(`fileKindPlural.${kind}`) %></a>
+            <% }); %>
+        </nav>
+        <% if (files.length === 0) { %>
+            <p class="empty-state"><%= t(activeKind ? 'filter.noMatches' : 'files.empty') %></p>
+        <% } else { %>
+            <%- include('partials/file-list', { files }) %>
+        <% } %>
+    </section>
+</main>
+
+<%- include('partials/footer') %>
