@@ -143,6 +143,7 @@ describe('payments', { skip: skipWithoutDb }, () => {
                 paid: 1650,
                 owed: 3600,
                 expenses: 450,
+                remaining: -250,
                 over: true
             });
         });
@@ -194,6 +195,19 @@ describe('payments', { skip: skipWithoutDb }, () => {
             assert.deepEqual(await amounts('next30'), [10, 20, 30, 40]);
             assert.deepEqual(await amounts('overdue'), [30, 40]);
             assert.equal(await m.countPlannerOverdue(userId, TODAY), 2);
+        });
+
+        it('cents add up exactly: no false over-budget from float rounding', async () => {
+            const w = await newWedding('Money G');
+            await newVendor(w, { total: 1000.01 });
+            await app.pool.query(
+                `INSERT INTO budget_items (wedding_id, name, category, amount) VALUES ($1, 'Rings', 'Attire', 500.10);
+                 INSERT INTO budget_limits (wedding_id, total) VALUES ($1, 1500.11);`.replaceAll('$1', `'${w}'`)
+            );
+            const summary = await m.findMoneySummary(w);
+            assert.equal(summary.committed, 1500.11);
+            assert.equal(summary.over, false);
+            assert.equal(summary.limit - summary.committed, 0);
         });
 
         it("createPayment refuses another wedding's vendor", async () => {
@@ -353,6 +367,9 @@ describe('payments', { skip: skipWithoutDb }, () => {
                 paid_on: '2027-03-01',
                 note: ''
             });
+            assert.equal((await paymentsOf(vendorId))[0].paid_on, '2027-03-01');
+            // "Mark paid" from a page loaded before that edit keeps the real paid date.
+            await client.post(`/payments/${paymentId}/paid`, { paid: '1' });
             assert.equal((await paymentsOf(vendorId))[0].paid_on, '2027-03-01');
 
             await planner.get(`/vendors/${vendorId}`);
@@ -538,6 +555,7 @@ describe('payments', { skip: skipWithoutDb }, () => {
 
         it('the dashboard budget stat uses committed', async () => {
             assert.match(textOf((await couple.get('/')).body), /\$5,250\.00 committed of \$32,000\.00/);
+            assert.match(textOf((await couple.get('/')).body), /\$3,600\.00 still owed/);
         });
 
         it('the planner card uses committed', async () => {

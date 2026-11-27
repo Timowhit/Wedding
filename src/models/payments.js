@@ -16,9 +16,12 @@ const PAYMENT_COLUMNS = 'id, vendor_id, label, amount::float AS amount, due_date
 
 /**
  * Per-vendor figures. `scope` picks the weddings ('= $1' for one id, '= ANY($1)' for an array);
- * $2 today, $3 counted status, $4 paid-only status.
+ * $2 today, $3 counted status, $4 paid-only status. With `exact`, amounts stay NUMERIC so callers
+ * can add them up without float rounding.
  */
-const vendorMoneySql = (scope) => `
+const vendorMoneySql = (scope, { exact = false } = {}) => {
+    const cast = exact ? '' : '::float';
+    return `
     WITH pay AS (
         SELECT vendor_id,
                SUM(amount) AS scheduled,
@@ -38,11 +41,12 @@ const vendorMoneySql = (scope) => `
         WHERE v.wedding_id ${scope}
     )
     SELECT id, wedding_id, name, category, status,
-           contract_total::float AS contract_total, scheduled::float AS scheduled,
-           committed::float AS committed, paid::float AS paid,
-           GREATEST(committed - paid, 0)::float AS owed,
+           contract_total${cast} AS contract_total, scheduled${cast} AS scheduled,
+           committed${cast} AS committed, paid${cast} AS paid,
+           GREATEST(committed - paid, 0)${cast} AS owed,
            overdue, next_due
     FROM figures`;
+};
 
 const vendorMoneyRows = async (weddingId, today) =>
     (await db.query(vendorMoneySql('= $1'), [weddingId, today, COUNTED_STATUS, PAID_ONLY_STATUS])).rows;
@@ -82,28 +86,37 @@ const findVendorMoney = async (weddingId, today = todayIso()) => {
 /**
  * Budget totals for a wedding. Ordinary expenses count as already paid.
  * @param {string} weddingId
- * @returns {Promise<{limit: number, committed: number, paid: number, owed: number, expenses: number, over: boolean}>}
+ * @returns {Promise<{limit: number, committed: number, paid: number, owed: number, expenses: number, remaining: number, over: boolean}>}
  */
 const findMoneySummary = async (weddingId) => {
+    // Totals, differences and the over-budget test stay NUMERIC in SQL: adding floats in JS can
+    // make 1000.01 + 500.10 exceed a 1500.11 budget by a fraction of a cent.
     const result = await db.query(
-        `WITH v AS (${vendorMoneySql('= $1')})
-         SELECT (SELECT COALESCE(MAX(total), 0) FROM budget_limits WHERE wedding_id = $1)::float AS limit_total,
-                (SELECT COALESCE(SUM(amount), 0) FROM budget_items WHERE wedding_id = $1)::float AS expenses,
-                COALESCE(SUM(v.committed), 0)::float AS committed,
-                COALESCE(SUM(v.paid), 0)::float AS paid,
-                COALESCE(SUM(v.owed), 0)::float AS owed
-         FROM v;`,
+        `WITH v AS (${vendorMoneySql('= $1', { exact: true })}),
+              totals AS (
+                  SELECT (SELECT COALESCE(MAX(total), 0) FROM budget_limits WHERE wedding_id = $1) AS limit_total,
+                         (SELECT COALESCE(SUM(amount), 0) FROM budget_items WHERE wedding_id = $1) AS expenses,
+                         (SELECT COALESCE(SUM(committed), 0) FROM v) AS vendor_committed,
+                         (SELECT COALESCE(SUM(paid), 0) FROM v) AS vendor_paid,
+                         (SELECT COALESCE(SUM(owed), 0) FROM v) AS owed)
+         SELECT limit_total::float AS limit_total, expenses::float AS expenses,
+                (vendor_committed + expenses)::float AS committed,
+                (vendor_paid + expenses)::float AS paid,
+                owed::float AS owed,
+                (limit_total - vendor_committed - expenses)::float AS remaining,
+                (limit_total > 0 AND vendor_committed + expenses > limit_total) AS over
+         FROM totals;`,
         [weddingId, todayIso(), COUNTED_STATUS, PAID_ONLY_STATUS]
     );
     const row = result.rows[0];
-    const committed = row.committed + row.expenses;
     return {
         limit: row.limit_total,
-        committed,
-        paid: row.paid + row.expenses,
+        committed: row.committed,
+        paid: row.paid,
         owed: row.owed,
         expenses: row.expenses,
-        over: row.limit_total > 0 && committed > row.limit_total
+        remaining: row.remaining,
+        over: row.over
     };
 };
 
@@ -116,7 +129,7 @@ const findMoneySummary = async (weddingId) => {
 const findCommittedByWedding = async (weddingIds) => {
     if (weddingIds.length === 0) return new Map();
     const result = await db.query(
-        `WITH v AS (${vendorMoneySql('= ANY($1)')}),
+        `WITH v AS (${vendorMoneySql('= ANY($1)', { exact: true })}),
               amounts AS (
                   SELECT wedding_id, committed FROM v
                   UNION ALL
@@ -163,7 +176,11 @@ const findBudgetCategoryTotals = async (weddingId) => {
         findContractRows(weddingId)
     ]);
     const totals = new Map(expenses.rows.map((row) => [row.category, row.total]));
-    for (const row of contracts) totals.set(row.budgetCategory, (totals.get(row.budgetCategory) ?? 0) + row.committed);
+    const CENTS = 100;
+    for (const row of contracts) {
+        const sum = (totals.get(row.budgetCategory) ?? 0) + row.committed;
+        totals.set(row.budgetCategory, Math.round(sum * CENTS) / CENTS);
+    }
     return [...totals]
         .map(([category, total]) => ({ category, total }))
         .sort((a, b) => b.total - a.total || a.category.localeCompare(b.category));
@@ -325,7 +342,7 @@ const updatePayment = async (id, weddingId, { label, amount, dueDate, paidOn, no
 };
 
 /**
- * Marks a payment paid on a date, or unpaid (null).
+ * Marks a payment paid on a date (keeping an existing paid date), or unpaid (null).
  * @param {string} id
  * @param {string} weddingId
  * @param {string|null} paidOn - YYYY-MM-DD or null.
@@ -333,7 +350,10 @@ const updatePayment = async (id, weddingId, { label, amount, dueDate, paidOn, no
  */
 const setPaymentPaid = async (id, weddingId, paidOn) => {
     const result = await db.query(
-        `UPDATE vendor_payments SET paid_on = $3 WHERE id = $1 AND wedding_id = $2 RETURNING ${PAYMENT_COLUMNS};`,
+        // Marking paid keeps a paid date that is already set (a page loaded before someone entered
+        // the real date must not overwrite it); marking unpaid clears it.
+        `UPDATE vendor_payments SET paid_on = CASE WHEN $3::date IS NULL THEN NULL ELSE COALESCE(paid_on, $3::date) END
+         WHERE id = $1 AND wedding_id = $2 RETURNING ${PAYMENT_COLUMNS};`,
         [id, weddingId, paidOn]
     );
     return result.rows[0] ?? null;

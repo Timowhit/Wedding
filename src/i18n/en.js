@@ -847,5 +847,6 @@ export default {
     'paymentsDue.filter.overdue': 'Overdue',
     'paymentsDue.none': 'Nothing due here. Overdue payments always show up too.',
     'paymentsDue.openNamed': 'Open {vendor} in {wedding}',
-    'planner.overduePaymentsAll': 'payments overdue'
+    'planner.overduePaymentsAll': 'payments overdue',
+    'dashboard.stillOwed': '{amount} still owed'
 };

@@ -50,7 +50,16 @@ const showDashboard = async (req, res) => {
             countMembers(weddingId),
             countOpenDecisions(weddingId)
         ]);
-    const stats = { budgetLimit: money.limit, committed: money.committed, guests, tasks, vendors, tracks, photos };
+    const stats = {
+        budgetLimit: money.limit,
+        committed: money.committed,
+        owed: money.owed,
+        guests,
+        tasks,
+        vendors,
+        tracks,
+        photos
+    };
     const steps = gettingStartedSteps(req.wedding, stats, memberCount);
 
     res.render('dashboard', {

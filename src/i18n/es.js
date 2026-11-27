@@ -853,5 +853,6 @@ export default {
     'paymentsDue.filter.overdue': 'Vencidos',
     'paymentsDue.none': 'Nada pendiente aquí. Los pagos vencidos también aparecen siempre.',
     'paymentsDue.openNamed': 'Abrir {vendor} en {wedding}',
-    'planner.overduePaymentsAll': 'pagos vencidos'
+    'planner.overduePaymentsAll': 'pagos vencidos',
+    'dashboard.stillOwed': '{amount} pendiente'
 };

@@ -35,7 +35,6 @@ const renderBudget = async (req, res, { status = 200, limitForm, expenseForm } =
         title: req.t('budget.title'),
         summary: {
             ...money,
-            remaining: limit - committed,
             pct: percentOf(committed),
             paidPct: percentOf(money.paid)
         },
