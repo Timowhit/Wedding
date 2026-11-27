@@ -18,3 +18,10 @@ Wedding-planner UX and feature ideas
 - Let planners customize fields and workflows for different budgets, traditions, and planning styles.
 - Add post-event wrap-up tasks for final payments, rentals, feedback, and archiving.
 - Let users choose a color theme for the app, and let planners set a brand palette their clients see.
+- Notification flags like "10 example tasks added." or "Successfully Logged In." should only show for a couple seconds.
+- Wedding Color palette page that allows the option to make the actual app match the theme; should have the option for taking a picture, upload image, or hexcode color selector.
+- Venue layout design page
+- redo logo
+- settings > appearance should be able to change the colors without scrolling back down or having to hit save; should be live and the background should be configurable too (three color level: primary,secondary,accent).
+- improve look of wedding selector dropdown in header
+- 
