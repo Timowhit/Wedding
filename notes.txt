@@ -50,3 +50,6 @@ Small follow-ups (from the review of PR #11)
 - [ ] Library: case-insensitive unique names; cap questionnaires sent per wedding; clear a chosen answer; warn when two partners save answers at once; long messages may be cut off in some email apps (suggest Copy).
 
 Not started
+- [ ] Option to use a playground, where sign in is bypassed but the user is informed that their work will not be saved if they leave without signing up.
+- [ ] Offer many more languages
+- [ ] 
