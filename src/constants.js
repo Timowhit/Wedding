@@ -29,8 +29,14 @@ const BUDGET_CATEGORIES = Object.freeze([
     'Invitations',
     'Transportation',
     'Honeymoon',
+    'Decorations',
     'Other'
 ]);
+// Expenses in a deleted category move here; it can't be deleted.
+const FALLBACK_BUDGET_CATEGORY = 'Other';
+const BUDGET_CATEGORY_NAME_MAX = 60;
+// Categories per wedding, suggested ones included.
+const MAX_BUDGET_CATEGORIES = 40;
 
 const TASK_CATEGORIES = Object.freeze([
     'Venue',
@@ -212,6 +218,9 @@ export {
     CUSTOM_PALETTE,
     CUSTOM_BACKGROUNDS,
     BUDGET_CATEGORIES,
+    BUDGET_CATEGORY_NAME_MAX,
+    FALLBACK_BUDGET_CATEGORY,
+    MAX_BUDGET_CATEGORIES,
     TASK_CATEGORIES,
     TASK_STATUSES,
     TASK_PRIORITIES,

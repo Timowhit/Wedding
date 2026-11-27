@@ -100,9 +100,23 @@ describe('event-day schedule', { skip: skipWithoutDb }, () => {
     it('has a printable version without navigation', async () => {
         const print = await couple.get('/schedule?print=1');
         assert.equal(print.status, 200);
-        assert.match(print.body, /<body class="print-view"[ >]/);
+        assert.match(print.body, /<body class="print-view print-mono"[ >]/, 'black and white by default');
+        assert.match(print.body, /<html [^>]*data-mode="light"/, 'a white page, whatever the theme');
+        assert.match(print.body, /href="\/schedule\?print=1&amp;color=1"/, 'a switch to colour');
         assert.doesNotMatch(print.body, /id="site-nav"/);
         assert.match(print.body, /Ceremony/);
+    });
+
+    it('offers the printable version in colour too, next to the black-and-white link', async () => {
+        const page = (await couple.get('/schedule')).body;
+        assert.match(page, /href="\/schedule\?print=1"[^]*?href="\/schedule\?print=1&amp;color=1"/);
+        const colour = await couple.get('/schedule?print=1&color=1');
+        assert.match(colour.body, /<body class="print-view"[ >]/);
+        assert.match(colour.body, /href="\/schedule\?print=1"/, 'and back to black and white');
+        const css = (await couple.get('/css/main.css')).body;
+        assert.match(css, /\.print-view main\s*\{[^}]*page:\s*a4-sheet/, 'the printable schedule prints on A4…');
+        assert.match(css, /@page a4-sheet\s*\{[^}]*size:\s*A4/);
+        assert.doesNotMatch(css, /@page\s*\{[^}]*size:/, '…and other pages on the person’s own paper');
     });
 
     it('another wedding cannot edit or delete these items', async () => {

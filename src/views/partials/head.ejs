@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <% const theme = currentTheme(); const asset = locals.asset || ((path) => path); %>
-<html lang="<%= lang %>" data-palette="<%= theme.palette %>" data-mode="<%= theme.mode %>">
+<html lang="<%= lang %>" data-palette="<%= theme.palette %>" data-mode="<%= locals.forceLightMode ? 'light' : theme.mode %>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

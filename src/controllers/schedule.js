@@ -34,10 +34,14 @@ const renderSchedule = async (req, res, { status = 200, itemForm, templateForm }
         findRooms(req.wedding.id)
     ]);
     const print = req.query.print === '1';
+    // The printable version is black and white unless colour is asked for, on a white page.
+    const colour = print && req.query.color === '1';
     res.status(status).render('schedule', {
         title: req.t('schedule.title'),
-        bodyClass: print ? 'print-view' : '',
+        bodyClass: print ? `print-view${colour ? '' : ' print-mono'}` : '',
+        forceLightMode: print,
         print,
+        colour,
         items,
         // "Save for offline" saves /layout; the other rooms are listed so they are saved too.
         offlineRooms: rooms.slice(1).map((room) => `/layout?room=${room.id}`),

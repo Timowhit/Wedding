@@ -23,6 +23,10 @@ Cron Jobs are a paid Render instance type.
 
 Uploaded files are stored in your Render database. Each wedding can use up to 250 MB, and each person can upload up to 1 GB in total. Render shows the database size on the database's page. If you get close to your plan's limit, tell me and I'll move files to cheaper storage.
 
+## Merge the budget categories and printable schedule
+
+When [Timowhit/Wedding#21](https://github.com/Timowhit/Wedding/pull/21) passes its checks, merge it, then run `npm run migrate` against Render as in the step above (it adds migration `018`, each wedding's budget categories). Then delete the `budget-print` branch.
+
 ## Merge the venue rooms and inventory
 
 When [Timowhit/Wedding#22](https://github.com/Timowhit/Wedding/pull/22) passes its checks, merge it, then run `npm run migrate` against Render straight away: the venue layout page shows an error until it has run. It adds migration `019`, which turns each wedding's current floor plan into its "Main room", with its pieces in it. Then delete the `layout-rooms` branch.

@@ -27,6 +27,8 @@ Done
 - [x] Let users choose a color theme for the app, and let planners set a brand palette their clients see.
 - [x] Venue layout inventory: a sidebar with seating tables not on a plan yet (tables made on the seating page appear there automatically) and pieces kept off the plan for later; place one, or all tables at once. (PR #22)
 - [x] Several rooms or floors in the venue layout, each with its own size and unit; pieces move between rooms or to the inventory. (PR #22)
+- [x] Categorizable budget amounts: suggested categories (venue, catering, attire, invitations, decorations…) that can be deleted and brought back, the wedding's own categories, and a planned amount per category. (PR #21)
+- [x] The printable event-day schedule is black and white by default, laid out as an A4 page, with an "In colour" option next to the printable version link. (PR #21)
 
 Partly done
 - [~] Wedding-specific templates for timelines, task lists, budgets, and vendor coordination.
@@ -56,5 +58,3 @@ Not started
 - [ ] Option to use a playground, where sign in is bypassed but the user is informed that their work will not be saved if they leave without signing up.
 - [ ] Offer many more languages
 - [ ] DJ page, where songs can be selected, sequenced, and played. Preferance would be youtube or spotify but we want to stay ad free.
-- [ ] catogorizable budget quantities, i.e. venue, food, wardobe, invitations, decorations... some default options should be possible to generate but able to delete and add their own too.
-- [ ] printable version should be black and white by default (displayed in A4 format) with a selection option for color next to the printable version link on the event day schedule page.

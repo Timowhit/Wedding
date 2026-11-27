@@ -248,6 +248,13 @@
         renumber();
     }
 
+    document.querySelectorAll('[data-print]').forEach(function (button) {
+        button.hidden = false;
+        button.addEventListener('click', function () {
+            window.print();
+        });
+    });
+
     document.addEventListener('submit', function (event) {
         const message = event.target.getAttribute('data-confirm');
         if (message && !window.confirm(message)) event.preventDefault();
