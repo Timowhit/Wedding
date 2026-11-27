@@ -2105,6 +2105,9 @@ input[type='color'] {
     .row-actions,
     .schedule__print,
     .print-hide,
+    .layout-tools,
+    .piece-edit,
+    .piece-card form,
     .flash,
     .skip-link {
         display: none !important;
@@ -2120,6 +2123,168 @@ input[type='color'] {
         color: #000;
         background: none;
     }
+}
+
+/* ---------- Venue layout ---------- */
+.floor-plan-card {
+    display: grid;
+    gap: var(--space-3);
+}
+
+.floor-plan-card .hint {
+    margin: 0;
+}
+
+.floor-plan {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 75vh;
+    overflow: visible;
+    user-select: none;
+}
+
+.floor-plan__room {
+    fill: var(--surface);
+    stroke: var(--field-border);
+    stroke-width: 2px;
+    vector-effect: non-scaling-stroke;
+}
+
+.floor-plan__grid-line {
+    fill: none;
+    stroke: var(--border);
+    stroke-width: 1px;
+    vector-effect: non-scaling-stroke;
+}
+
+.piece__shape {
+    fill: var(--surface-2);
+    stroke: var(--field-border);
+    stroke-width: 1.5px;
+    vector-effect: non-scaling-stroke;
+}
+
+.piece--table .piece__shape {
+    fill: var(--surface);
+    stroke: var(--primary);
+    stroke-width: 2px;
+}
+
+.piece--dance_floor .piece__shape {
+    fill: var(--primary-soft);
+    stroke: var(--primary);
+    stroke-dasharray: 6 4;
+}
+
+.piece--stage .piece__shape,
+.piece--dj .piece__shape {
+    fill: var(--surface-2);
+    stroke: var(--secondary);
+    stroke-width: 2px;
+}
+
+.piece--bar .piece__shape,
+.piece--buffet .piece__shape,
+.piece--cake .piece__shape {
+    fill: var(--warning-soft);
+    stroke: var(--accent);
+    stroke-width: 2px;
+}
+
+.piece--entrance .piece__shape {
+    fill: var(--success-soft);
+    stroke: var(--success);
+}
+
+.piece__label,
+.piece__count {
+    fill: var(--text);
+    font-family: var(--font-body);
+    font-weight: 600;
+    pointer-events: none;
+}
+
+.piece__count {
+    fill: var(--text-muted);
+    font-weight: 500;
+}
+
+[data-layout-editable] .piece {
+    cursor: grab;
+    touch-action: none;
+}
+
+[data-layout-editable] .piece:hover .piece__shape {
+    stroke: var(--primary-hover);
+}
+
+.piece.is-dragging {
+    cursor: grabbing;
+}
+
+.piece.is-dragging .piece__shape {
+    stroke: var(--primary);
+    stroke-width: 3px;
+}
+
+.piece:focus {
+    outline: none;
+}
+
+.piece:focus-visible .piece__shape {
+    stroke: var(--focus);
+    stroke-width: 3px;
+}
+
+.layout-tools {
+    display: grid;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+}
+
+.form-inline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+}
+
+.form-inline .field {
+    margin: 0;
+}
+
+.piece-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: var(--space-1) var(--space-3);
+}
+
+.piece-card > form {
+    grid-row: 1;
+    grid-column: 2;
+}
+
+.piece-edit {
+    grid-column: 1 / -1;
+}
+
+.piece-edit summary {
+    display: inline-block;
+    cursor: pointer;
+}
+
+.piece-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 9rem), 1fr));
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+}
+
+.piece-form .form-actions {
+    grid-column: 1 / -1;
 }
 
 /* ---------- Seating chart ---------- */

@@ -119,6 +119,30 @@ const MAX_TEMPLATES_PER_USER = 100;
 // Wedding colours page: swatches per wedding and the length of a swatch's name.
 const MAX_WEDDING_COLORS = 12;
 const COLOR_NAME_MAX = 40;
+
+// Venue layout (see src/validators/layout.js). Sizes are in the room's unit; positions are centres.
+const LAYOUT_UNITS = Object.freeze(['ft', 'm']);
+const DEFAULT_ROOM = Object.freeze({ width: 60, depth: 40, unit: 'ft' });
+const ROOM_SIZE_MIN = 5;
+const ROOM_SIZE_MAX = 500;
+const PIECE_SIZE_MIN = 0.5;
+const PIECE_SIZE_MAX = 200;
+const MAX_LAYOUT_ITEMS = 200;
+const LAYOUT_LABEL_MAX = 60;
+const LAYOUT_SHAPES = Object.freeze(['rect', 'round']);
+// What can be added besides seating tables, with a typical size in feet (width, depth, shape).
+const LAYOUT_FIXTURES = Object.freeze({
+    dance_floor: { width: 20, depth: 20, shape: 'rect' },
+    stage: { width: 16, depth: 8, shape: 'rect' },
+    bar: { width: 12, depth: 3, shape: 'rect' },
+    buffet: { width: 16, depth: 3, shape: 'rect' },
+    dj: { width: 6, depth: 3, shape: 'rect' },
+    cake: { width: 4, depth: 4, shape: 'round' },
+    gifts: { width: 6, depth: 3, shape: 'rect' },
+    photo_booth: { width: 8, depth: 8, shape: 'rect' },
+    entrance: { width: 6, depth: 1, shape: 'rect' },
+    other: { width: 6, depth: 6, shape: 'rect' }
+});
 /** Per template; more than any real checklist or timeline. */
 const MAX_TEMPLATE_ITEMS = 300;
 
@@ -154,6 +178,16 @@ export {
     MAX_TEMPLATES_PER_USER,
     MAX_WEDDING_COLORS,
     COLOR_NAME_MAX,
+    LAYOUT_UNITS,
+    DEFAULT_ROOM,
+    ROOM_SIZE_MIN,
+    ROOM_SIZE_MAX,
+    PIECE_SIZE_MIN,
+    PIECE_SIZE_MAX,
+    MAX_LAYOUT_ITEMS,
+    LAYOUT_LABEL_MAX,
+    LAYOUT_SHAPES,
+    LAYOUT_FIXTURES,
     MAX_TEMPLATE_ITEMS,
     REMINDER_WINDOW_DAYS,
     REMINDER_ROLES,

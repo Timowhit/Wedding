@@ -18,13 +18,28 @@ describe('service worker', () => {
     const route = (path, origin = ORIGIN) => routeFor(new URL(path, origin), ORIGIN);
 
     it('routeFor classifies paths', () => {
-        for (const path of ['/css/main.css', '/css/themes.css', '/js/app.js', '/images/landing-planner.jpg']) {
+        for (const path of [
+            '/css/main.css',
+            '/css/themes.css',
+            '/css/custom/a85a73-4f7a59-b8862b-n.css',
+            '/js/app.js',
+            '/js/palette.js',
+            '/images/logo.svg'
+        ]) {
             assert.equal(route(path), 'static', path);
         }
-        for (const path of ['/schedule', '/schedule?print=1', '/vendors', `/vendors/${ID}`, '/offline']) {
+        for (const path of ['/schedule', '/schedule?print=1', '/layout', '/vendors', `/vendors/${ID}`, '/offline']) {
             assert.equal(route(path), 'event', path);
         }
-        for (const path of [`/vendors/${ID}/edit`, `/vendors/${ID}/contract`, '/budget', '/', '/vendors/not-an-id']) {
+        for (const path of [
+            `/vendors/${ID}/edit`,
+            `/vendors/${ID}/contract`,
+            '/budget',
+            '/',
+            '/vendors/not-an-id',
+            '/colors',
+            '/layout/items'
+        ]) {
             assert.equal(route(path), 'page', path);
         }
         assert.equal(route('/schedule', 'https://evil.example'), 'skip');

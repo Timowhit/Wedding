@@ -101,6 +101,15 @@ import {
 } from '../controllers/schedule.js';
 import { showCustomCss } from '../controllers/themes.js';
 import {
+    processDeletePiece,
+    processEditPiece,
+    processMovePiece,
+    processNewFixture,
+    processPlaceTable,
+    processRoom,
+    showLayout
+} from '../controllers/layout.js';
+import {
     processAppColors,
     processAppColorsOff,
     processDeleteColor,
@@ -196,6 +205,15 @@ router.post('/colors', editor, processNewColor);
 router.post('/colors/app', editor, processAppColors);
 router.post('/colors/app/off', editor, processAppColorsOff);
 router.post('/colors/:id/delete', editor, processDeleteColor);
+
+/* Venue layout (member reads, editor changes) ---------------------------------------------------- */
+router.get('/layout', member, showLayout);
+router.post('/layout/room', editor, processRoom);
+router.post('/layout/items', editor, processNewFixture);
+router.post('/layout/tables', editor, processPlaceTable);
+router.post('/layout/items/:id', editor, processEditPiece);
+router.post('/layout/items/:id/move', editor, processMovePiece);
+router.post('/layout/items/:id/delete', editor, processDeletePiece);
 
 /* Event-day schedule ---------------------------------------------------------------------------- */
 router.get('/schedule', member, showSchedule);
