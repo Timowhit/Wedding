@@ -6,6 +6,8 @@
  * - buttons marked [data-copy] copy the value of the input they name
  * - the mobile navigation toggle
  * - seating chart drag and drop (it sets the guest's table picker and submits the same form)
+ * - offline event day: registers /sw.js on signed-in pages, saves the event-day pages, shows the
+ *   offline banner (see public/sw.js)
  * Loaded as an external file because the Content-Security-Policy forbids inline scripts.
  */
 (function () {
@@ -89,4 +91,89 @@
             select.form.requestSubmit();
         });
     });
+    // Offline event day -------------------------------------------------------------------------
+    const body = document.body;
+    const formatTime = (date) => date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    const banner = document.querySelector('[data-offline-banner]');
+    const showBanner = () => {
+        if (!banner) return;
+        banner.hidden = navigator.onLine;
+        const time = banner.querySelector('[data-saved-time]');
+        const savedAt = new Date(body.getAttribute('data-rendered-at'));
+        if (time && !Number.isNaN(savedAt.getTime())) {
+            time.dateTime = savedAt.toISOString();
+            time.textContent = formatTime(savedAt);
+        }
+    };
+    showBanner();
+    window.addEventListener('online', showBanner);
+    window.addEventListener('offline', showBanner);
+
+    if (body.hasAttribute('data-offline') && 'serviceWorker' in navigator) {
+        /** Sends a message to the active worker and resolves with its reply (or null). */
+        const ask = (message) =>
+            navigator.serviceWorker.ready.then(
+                (registration) =>
+                    new Promise((resolve) => {
+                        if (!registration.active) return resolve(null);
+                        const channel = new MessageChannel();
+                        channel.port1.onmessage = (event) => resolve(event.data);
+                        registration.active.postMessage(message, [channel.port2]);
+                    })
+            );
+
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+
+        // A saved event day belongs to one wedding: drop it when the active wedding changes.
+        const wedding = body.getAttribute('data-wedding');
+        let savedFor = null;
+        try {
+            savedFor = window.localStorage.getItem('fp-offline-wedding');
+        } catch {
+            savedFor = null;
+        }
+        const remember = () => {
+            try {
+                window.localStorage.setItem('fp-offline-wedding', wedding);
+            } catch {
+                // Private mode: nothing to remember between visits.
+            }
+        };
+        const cleared =
+            wedding && navigator.onLine && savedFor && savedFor !== wedding
+                ? ask({ type: 'clear-pages' }).then(remember)
+                : Promise.resolve();
+
+        const saveButton = document.querySelector('[data-save-offline]');
+        if (saveButton && wedding) {
+            const status = document.querySelector('[data-save-offline-status]');
+            const hint = document.querySelector('[data-save-offline-hint]');
+            const pages = () => [
+                '/schedule',
+                '/schedule?print=1',
+                '/vendors',
+                ...Array.from(document.querySelectorAll('a[data-offline-page]'), (link) => link.getAttribute('href'))
+            ];
+            const save = () => {
+                if (!navigator.onLine) return;
+                saveButton.disabled = true;
+                cleared
+                    .then(() => ask({ type: 'save', urls: pages() }))
+                    .then((reply) => {
+                        saveButton.disabled = false;
+                        if (!reply || reply.type !== 'saved') return;
+                        remember();
+                        if (status) {
+                            status.querySelector('time').textContent = formatTime(new Date());
+                            status.hidden = false;
+                        }
+                    });
+            };
+            saveButton.hidden = false;
+            if (hint) hint.hidden = false;
+            saveButton.addEventListener('click', save);
+            save();
+        }
+    }
 })();

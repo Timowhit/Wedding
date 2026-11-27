@@ -27,6 +27,7 @@ There is no frontend framework, bundler or TypeScript. `public/js/app.js` is a s
 - **Decisions**: the planner asks, the couple approve or send back with a note
 - **Event-day schedule**: times, places, vendors with tap-to-call numbers, setup notes and a plan B per item; printable
 - **Seating chart**: tables with seat counts (plus-ones included), guest groups, a table picker per guest and drag and drop
+- **Offline event day**: once the event-day schedule has been opened online, the schedule (and its print view), the vendor list and the vendors on the schedule keep working with no connection, with tap-to-call numbers and a banner showing when the copy was saved. Other pages show a friendly offline page. Signing out removes everything saved on the device
 - **Contracts and payments**: each vendor has a page with its contract (total, signed date, a link to the signed document, what's included, cancellation terms) and a payment schedule with "Mark paid". The budget counts booked vendors' contracts and shows Committed · Paid · Still owed; overdue and upcoming payments appear on each wedding's dashboard and, across all weddings, on the planner dashboard. The event-day schedule shows what each vendor's contract includes
 - **Themes**: Rose, Sage, Navy, Champagne and Slate palettes, each in light, dark or automatic mode
 - **Dashboard**: countdown to the wedding date, a getting-started list for new weddings, totals for every section, pending invitations
@@ -128,6 +129,7 @@ All `POST` routes require the session's CSRF token (see Security Notes).
 | Method | Path                                                      | Access   | Description                                                      |
 | ------ | --------------------------------------------------------- | -------- | ---------------------------------------------------------------- |
 | GET    | `/`                                                       | Public   | Landing page when signed out; dashboard when signed in           |
+| GET    | `/offline`                                                | Public   | Shown by the service worker when a page isn't saved for offline  |
 | GET    | `/start`                                                  | Public   | "Start now": choose planner or couple                            |
 | GET    | `/register?as=planner\|couple`                            | Public   | Sign-up form for a planner or a couple                           |
 | GET    | `/login`, `/register`                                     | Public   | Sign-in and sign-up forms                                        |
@@ -298,6 +300,14 @@ Deleting a wedding cascades to its members, invites and (since migration 007) al
 - **Rate limiting:** failed logins (10 per 15 minutes per IP), registrations (10 per hour), wrong current passwords (10 per 15 minutes), invites (20 per hour) and searches (60 per 15 minutes). Counters are kept in server memory, so they reset on restart and are not shared between instances.
 - **Errors:** users see a generic, translated page; details go to the server log only. Form bodies are limited to 20 KB.
 - **Not yet implemented:** password reset by email, email verification for password accounts, and account lockout per email (limits are per IP).
+
+## Offline event day
+
+- `public/sw.js` is a service worker, registered by `public/js/app.js` on signed-in pages only. It caches static files, and the event-day pages network-first: `/schedule` (with any query), `/vendors`, `/vendors/<id>` and `/offline`. Other pages are network-only and fall back to `/offline`. It only stores successful same-origin GETs, never a redirect to `/login`.
+- The schedule page asks the worker to save the event-day pages on every online visit, and when someone taps "Save for offline".
+- Each page carries `data-wedding`. When the active wedding changes, `app.js` asks the worker to drop the saved pages, so an offline copy is never another couple's day.
+- Sign-out sends `Clear-Site-Data: "cache", "storage"`, which removes the saved pages and the worker.
+- Bump `VERSION` in `sw.js` when what is cached changes meaning; old caches are deleted on activation.
 
 ## Money rules (contracts and payments)
 
