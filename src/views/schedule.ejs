@@ -49,6 +49,12 @@
                             </p>
                             <% if (item.notes) { %><p class="item-notes"><%= item.notes %></p><% } %>
                             <% if (item.contingency) { %><p class="timeline__plan-b"><strong><%= t('schedule.planB') %></strong> <%= item.contingency %></p><% } %>
+                            <% if (item.vendor_includes) { %>
+                                <details class="timeline__includes"<%= print ? ' open' : '' %>>
+                                    <summary><%= t('contract.includes') %></summary>
+                                    <p class="preserve-lines"><%= item.vendor_includes %></p>
+                                </details>
+                            <% } %>
                             <% if (canEdit && !print) { %>
                                 <%- include('partials/row-actions', { editHref: `/schedule/${item.id}/edit`, deleteAction: `/schedule/${item.id}/delete`, name: item.title, confirm: t('confirm.deleteScheduleItem', { name: item.title }) }) %>
                             <% } %>

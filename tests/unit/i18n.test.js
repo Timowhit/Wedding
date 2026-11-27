@@ -9,6 +9,7 @@ import {
     BUDGET_CATEGORIES,
     EXAMPLE_TASKS,
     PALETTES,
+    PLANNER_PAYMENT_FILTERS,
     THEME_MODES,
     MUSIC_SECTIONS,
     RSVP_STATUSES,
@@ -62,7 +63,8 @@ const dynamicKeys = () => [
     ...PALETTES.map((p) => `palette.${p}`),
     ...FEATURES.flatMap(({ key }) => ['title', 'body', 'alt'].map((part) => `landing.feature.${key}.${part}`)),
     ...COMING_NEXT.map((item) => `landing.coming.${item}`),
-    ...THEME_MODES.map((m) => `themeMode.${m}`)
+    ...THEME_MODES.map((m) => `themeMode.${m}`),
+    ...PLANNER_PAYMENT_FILTERS.map((f) => `paymentsDue.filter.${f}`)
 ];
 
 describe('translations', () => {

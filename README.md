@@ -27,6 +27,7 @@ There is no frontend framework, bundler or TypeScript. `public/js/app.js` is a s
 - **Decisions**: the planner asks, the couple approve or send back with a note
 - **Event-day schedule**: times, places, vendors with tap-to-call numbers, setup notes and a plan B per item; printable
 - **Seating chart**: tables with seat counts (plus-ones included), guest groups, a table picker per guest and drag and drop
+- **Contracts and payments**: each vendor has a page with its contract (total, signed date, a link to the signed document, what's included, cancellation terms) and a payment schedule with "Mark paid". The budget counts booked vendors' contracts and shows Committed · Paid · Still owed; overdue and upcoming payments appear on each wedding's dashboard and, across all weddings, on the planner dashboard. The event-day schedule shows what each vendor's contract includes
 - **Themes**: Rose, Sage, Navy, Champagne and Slate palettes, each in light, dark or automatic mode
 - **Dashboard**: countdown to the wedding date, a getting-started list for new weddings, totals for every section, pending invitations
 - **Budget**: total budget, expenses, spending per category, spent/remaining with an over-budget warning
@@ -61,23 +62,24 @@ Copy `.env.example` to `.env` (it is gitignored, so never commit it) and fill it
 cp .env.example .env
 ```
 
-| Variable                | Required      | Purpose                                                                                         |
-| ----------------------- | ------------- | ----------------------------------------------------------------------------------------------- |
-| `DB_URL`                | Yes           | PostgreSQL connection string: `postgresql://user:pass@host:port/db`                             |
-| `SESSION_SECRET`        | Yes           | At least 32 random characters; signs the session cookie. The server refuses to start without it |
-| `APP_URL`               | In production | Public base URL, e.g. `https://planner.example.com`. Used in invite links and Google sign-in    |
-| `NODE_ENV`              | No            | `development` or `production` (defaults to `production`)                                        |
-| `PORT`                  | No            | Port the server listens on (defaults to `3000`)                                                 |
-| `ENABLE_SQL_LOGGING`    | No            | `true` logs every query with timing. Only takes effect when `NODE_ENV=development`              |
-| `DB_CA`                 | No            | Your database provider's CA certificate (PEM text; `\n` sequences are converted to newlines)    |
-| `DB_SSL_INSECURE`       | No            | `true` keeps TLS encryption but skips certificate verification                                  |
-| `DB_SSL_DISABLE`        | No            | `true` connects without TLS, for a local database. Refused when `NODE_ENV=production`           |
-| `GOOGLE_CLIENT_ID`      | No            | Enables "Continue with Google" (with `GOOGLE_CLIENT_SECRET`)                                    |
-| `GOOGLE_CLIENT_SECRET`  | No            | See above                                                                                       |
-| `SPOTIFY_CLIENT_ID`     | No            | Enables music search (with `SPOTIFY_CLIENT_SECRET`)                                             |
-| `SPOTIFY_CLIENT_SECRET` | No            | See above                                                                                       |
-| `UNSPLASH_ACCESS_KEY`   | No            | Enables inspiration photo search                                                                |
-| `SMTP_HOST`             | No            | Enables invite emails. Also `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `FROM_EMAIL`  |
+| Variable                | Required      | Purpose                                                                                              |
+| ----------------------- | ------------- | ---------------------------------------------------------------------------------------------------- |
+| `DB_URL`                | Yes           | PostgreSQL connection string: `postgresql://user:pass@host:port/db`                                  |
+| `SESSION_SECRET`        | Yes           | At least 32 random characters; signs the session cookie. The server refuses to start without it      |
+| `APP_URL`               | In production | Public base URL, e.g. `https://planner.example.com`. Used in invite links and Google sign-in         |
+| `NODE_ENV`              | No            | `development` or `production` (defaults to `production`)                                             |
+| `PORT`                  | No            | Port the server listens on (defaults to `3000`)                                                      |
+| `APP_TIME_ZONE`         | No            | IANA time zone for day-based rules such as overdue payments, e.g. `America/New_York` (default `UTC`) |
+| `ENABLE_SQL_LOGGING`    | No            | `true` logs every query with timing. Only takes effect when `NODE_ENV=development`                   |
+| `DB_CA`                 | No            | Your database provider's CA certificate (PEM text; `\n` sequences are converted to newlines)         |
+| `DB_SSL_INSECURE`       | No            | `true` keeps TLS encryption but skips certificate verification                                       |
+| `DB_SSL_DISABLE`        | No            | `true` connects without TLS, for a local database. Refused when `NODE_ENV=production`                |
+| `GOOGLE_CLIENT_ID`      | No            | Enables "Continue with Google" (with `GOOGLE_CLIENT_SECRET`)                                         |
+| `GOOGLE_CLIENT_SECRET`  | No            | See above                                                                                            |
+| `SPOTIFY_CLIENT_ID`     | No            | Enables music search (with `SPOTIFY_CLIENT_SECRET`)                                                  |
+| `SPOTIFY_CLIENT_SECRET` | No            | See above                                                                                            |
+| `UNSPLASH_ACCESS_KEY`   | No            | Enables inspiration photo search                                                                     |
+| `SMTP_HOST`             | No            | Enables invite emails. Also `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `FROM_EMAIL`       |
 
 Generate a session secret with:
 
@@ -156,6 +158,11 @@ All `POST` routes require the session's CSRF token (see Security Notes).
 | POST   | `/vendors`                                                | Editor   | Add a vendor                                                     |
 | GET    | `/vendors/:id/edit`                                       | Editor   | Edit form                                                        |
 | POST   | `/vendors/:id/edit`, `/status`, `/delete`                 | Editor   | Save / set the booking status / delete                           |
+| GET    | `/vendors/:id`                                            | Member   | The vendor's contract and payments                               |
+| GET    | `/vendors/:id/contract`                                   | Editor   | Contract form                                                    |
+| POST   | `/vendors/:id/contract`, `/vendors/:id/payments`          | Editor   | Save (or clear) the contract / add a payment                     |
+| GET    | `/payments/:id/edit`                                      | Editor   | Payment form                                                     |
+| POST   | `/payments/:id/edit`, `/paid`, `/delete`                  | Editor   | Save / mark paid (`paid=1`) or unpaid (`paid=0`) / delete        |
 | GET    | `/music`                                                  | Member   | Playlists, and Spotify search with `?q=`                         |
 | POST   | `/music/tracks`                                           | Editor   | Add a search result to a section                                 |
 | POST   | `/music/tracks/:id/delete`                                | Editor   | Remove a song                                                    |
@@ -261,7 +268,9 @@ budget_limits      (id PK, wedding_id UNIQUE, total)
 budget_items       (id PK, wedding_id, name, category, amount)
 checklist_tasks    (id PK, wedding_id, text, category, due_date, done, sort_order, UNIQUE (wedding_id, text))
 guests             (id PK, wedding_id, name, rsvp CHECK, diet, plus_one, group_name, table_id FK NULL)
-vendors            (id PK, wedding_id, name, category, phone, email, website, status CHECK, notes)
+vendors            (id PK, wedding_id, name, category, phone, email, website, status CHECK, notes,
+                    contract_total >= 0 NULL, contract_signed_on, contract_url, contract_includes, contract_cancellation)
+vendor_payments    (id PK, wedding_id FK, vendor_id FK CASCADE, label, amount > 0, due_date, paid_on NULL = unpaid, note)
 music_tracks       (id PK, wedding_id, section, track_id, track_name, artist_name, artwork_url, UNIQUE (wedding_id, section, track_id))
 inspiration_photos (id PK, wedding_id, photo_id, thumb_url, full_url, alt_desc, source_link, UNIQUE (wedding_id, photo_id))
 session            (sid PK, sess, expire)  -- connect-pg-simple
@@ -282,12 +291,24 @@ Deleting a wedding cascades to its members, invites and (since migration 007) al
 - **Google sign-in:** Passport's `state` parameter blocks login CSRF, and an existing account is only linked when Google reports the email as verified.
 - **Security headers:** `helmet` sets a Content-Security-Policy that allows only this site's scripts and styles, plus the exact third-party hosts in use (Google Fonts, Spotify artwork and embeds, Unsplash images). **Views must not use inline `<script>`, inline event handlers or `style=""` attributes**; the integration tests check every page for this.
 - **Third-party data:** the forms that save songs and photos send only an id. The server looks the details up from Spotify or Unsplash and accepts image URLs only on their expected hosts, so a forged form cannot store arbitrary URLs. API keys never reach the browser.
+- **Payments:** every payment query is scoped by `wedding_id`; adding a payment checks the vendor's wedding in the same statement, so a forged vendor or payment id from another wedding changes nothing (404). Contract links must be `https://`, are shown as escaped links that open in a new tab with `rel="noopener noreferrer"`, and are never fetched by the server.
 - **Founding numbers:** handed out inside the transaction that creates a planner's first planner wedding (or accepts a handover). The single `founding_counter` row is locked with `SELECT … FOR UPDATE`, so concurrent claims take turns; `users.founding_number` is `UNIQUE` and limited to 1–300 as the final guard. Tests run five simultaneous claims for the last spot.
 - **Handover:** only the owner of a couple's own wedding can create one (after an explicit confirmation), only a planner account can accept it, the inviter cannot accept their own, and accepting is one transaction that keeps exactly one owner.
 - **Open redirects:** `return_to` values and post-login destinations must be same-site paths (`isLocalPath`).
 - **Rate limiting:** failed logins (10 per 15 minutes per IP), registrations (10 per hour), wrong current passwords (10 per 15 minutes), invites (20 per hour) and searches (60 per 15 minutes). Counters are kept in server memory, so they reset on restart and are not shared between instances.
 - **Errors:** users see a generic, translated page; details go to the server log only. Form bodies are limited to 20 KB.
 - **Not yet implemented:** password reset by email, email verification for password accounts, and account lockout per email (limits are per IP).
+
+## Money rules (contracts and payments)
+
+All money figures come from `src/models/payments.js`, so the vendor page, budget, dashboards and planner cards always agree:
+
+- **Booked** vendors count in full: committed = the larger of the contract total and the sum of its payments.
+- **Researching / Contacted** vendors count nothing; a contract total is shown as a quote.
+- **Declined** vendors count only payments already paid (as both committed and paid).
+- Each vendor is worked out on its own, then summed: still owed = committed − paid, never below zero per vendor, so overpaying one vendor never hides money owed to another. Ordinary budget expenses count as committed and paid.
+- Contracts count in the budget category mapped from the vendor's category (`VENDOR_BUDGET_CATEGORY` in `constants.js`).
+- "Today" (overdue, due within 30 days, the date "Mark paid" records) is `todayIso()` in `APP_TIME_ZONE`.
 
 ## Planners and the founding offer
 

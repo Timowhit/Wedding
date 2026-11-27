@@ -22,6 +22,7 @@ Server-rendered Express 5 + EJS + PostgreSQL app. Read README.md for setup, rout
 
 - `routes/index.js` is the single list of routes; every route states its access level (`account`, `planner`, `member`, `editor`, `owner`, `asker`/`answerer`). Settings pages use the `account` chain (`loadOptionalWedding`) so they work for a planner with no wedding yet.
 - Roles: compare with `ROLE_RANK` in `middleware/wedding.js` (`client` ranks with `editor`); never test role strings for "can edit". Who asks and answers decisions comes from `decisionPermissions(wedding)` (it depends on `planner_managed`). Offer roles through `assignableRoles(wedding)`, so `client` only appears in planner weddings.
+- Money: every vendor/budget figure comes from `models/payments.js` (status rule: Booked counts, Declined counts only what was paid). Don't sum amounts elsewhere. Day-based rules use `todayIso()` (`utils/today.js`, `APP_TIME_ZONE`), not `new Date()` or `CURRENT_DATE`.
 - Themes: page palette comes from `resolveTheme({ user, wedding })`; palettes and modes are listed in `PALETTES`/`THEME_MODES` in `constants.js`.
 - Controllers: validate -> call models/services -> render or redirect. No SQL. On success, `setFlash` then redirect (post/redirect/get). On validation errors, re-render the page with status 400 and the submitted values.
 - Validators (`src/validators`) are pure and return `{ values, data, errors }`, where errors are `{ field, key, vars? }` and `key` is an i18n key.

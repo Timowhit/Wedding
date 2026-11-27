@@ -1587,6 +1587,186 @@ select.status-select {
     max-width: 48rem;
 }
 
+/* Vendor page: contract and payments ----------------------------------------------------------- */
+
+.back-link {
+    margin: var(--space-3) 0 0;
+    font-size: 0.875rem;
+}
+
+.page-header--left {
+    text-align: left;
+}
+
+.page-header--left .item-meta,
+.page-header--left .contact-list {
+    margin-bottom: var(--space-2);
+}
+
+.card-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2);
+}
+
+.contract-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-4);
+}
+
+/* Contract text is typed with line breaks; keep them without allowing any HTML. */
+.preserve-lines {
+    white-space: pre-line;
+}
+
+.payments-summary {
+    margin: 0;
+}
+
+.payment-list {
+    margin: var(--space-3) 0;
+    padding: 0;
+    list-style: none;
+}
+
+.payment {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+    padding: var(--space-3) 0;
+    border-top: 1px solid var(--border);
+}
+
+.payment__main {
+    display: grid;
+    flex: 1 1 14rem;
+    grid-template-columns: 1fr auto;
+    gap: 0 var(--space-3);
+    min-width: 0;
+}
+
+.payment__main p {
+    margin: 0;
+}
+
+.payment__name {
+    font-weight: 600;
+}
+
+.payment__amount {
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+.payment__when,
+.payment__main .item-notes {
+    grid-column: 1 / -1;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.payment__when.text-danger {
+    color: var(--danger);
+}
+
+.payment--paid .payment__name,
+.payment--paid .payment__amount {
+    color: var(--text-muted);
+}
+
+.payment .row-actions {
+    flex-basis: 100%;
+}
+
+.money-line {
+    font-variant-numeric: tabular-nums;
+}
+
+.item-link {
+    color: inherit;
+}
+
+.timeline__includes {
+    margin-top: var(--space-2);
+    font-size: 0.875rem;
+}
+
+.timeline__includes summary {
+    display: flex;
+    align-items: center;
+    min-height: var(--target);
+    color: var(--primary);
+    cursor: pointer;
+}
+
+.timeline__includes p {
+    margin: 0 0 var(--space-2);
+}
+
+/* Payments due (wedding and planner dashboards) ----------------------------------------------- */
+
+.due-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.due {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0 var(--space-3);
+    align-items: baseline;
+    padding: var(--space-2) 0;
+    border-top: 1px solid var(--border);
+}
+
+.due:first-child {
+    border-top: 0;
+}
+
+.due__vendor,
+.due__open {
+    grid-row: 1;
+    grid-column: 1;
+    font-weight: 600;
+}
+
+.due__amount {
+    grid-row: 1;
+    grid-column: 2;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+.due__wedding,
+.due__label,
+.due__when {
+    grid-column: 1 / -1;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.due--overdue .due__when {
+    color: var(--danger);
+}
+
+/* A form button that reads as a link (POST actions such as "open this wedding"). */
+.link-button {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--primary);
+    font: inherit;
+    font-weight: inherit;
+    text-align: left;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
 @media print {
     .site-header,
     .site-footer,
@@ -2040,7 +2220,10 @@ select.status-select {
     .contact-list a,
     .track__preview summary,
     .brand,
-    .category-total__name {
+    .category-total__name,
+    .step a,
+    .due__vendor,
+    .link-button {
         min-height: var(--target);
     }
 
@@ -2051,6 +2234,9 @@ select.status-select {
     .link-action,
     .contact-list a,
     .category-total__name,
+    .step a,
+    .due__vendor,
+    .link-button,
     .disclosure summary,
     .track__preview summary {
         display: inline-flex;

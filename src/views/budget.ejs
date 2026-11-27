@@ -10,16 +10,19 @@
         <h2 class="visually-hidden" id="summary-heading"><%= t('budget.summary') %></h2>
         <dl class="budget-summary">
             <div class="budget-box"><dt><%= t('budget.total') %></dt><dd><%= summary.limit > 0 ? formatCurrency(summary.limit) : t('budget.notSet') %></dd></div>
-            <div class="budget-box"><dt><%= t('budget.spent') %></dt><dd><%= formatCurrency(summary.spent) %></dd></div>
+            <div class="budget-box"><dt><%= t('budget.committed') %></dt><dd><%= formatCurrency(summary.committed) %></dd></div>
+            <div class="budget-box"><dt><%= t('budget.paid') %></dt><dd><%= formatCurrency(summary.paid) %></dd></div>
+            <div class="budget-box"><dt><%= t('budget.owed') %></dt><dd><%= formatCurrency(summary.owed) %></dd></div>
             <div class="budget-box <%= summary.remaining < 0 ? 'budget-box--over' : '' %>">
                 <dt><%= t('budget.remaining') %></dt><dd><%= summary.limit > 0 ? formatCurrency(summary.remaining) : '—' %></dd>
             </div>
         </dl>
         <% if (summary.limit > 0) { %>
-            <label class="progress-label" for="budget-progress"><%= t('budget.used', { pct: summary.pct }) %></label>
+            <label class="progress-label" for="budget-progress"><%= t('budget.used', { pct: summary.pct, paid: summary.paidPct }) %></label>
             <progress id="budget-progress" class="progress <%= summary.over ? 'progress--over' : '' %>" max="100" value="<%= summary.pct %>"><%= summary.pct %>%</progress>
             <% if (summary.over) { %><p class="notice notice--error"><%= t('budget.overBudget') %></p><% } %>
         <% } %>
+        <% if (duplicateHint) { %><p class="notice"><%= t('budget.duplicateHint') %> <a href="#expenses-heading"><%= t('budget.reviewExpenses') %></a></p><% } %>
 
         <% if (canEdit) { %>
             <details class="disclosure" <%= summary.limit === 0 || limitForm.errors.length > 0 ? 'open' : '' %>>
@@ -42,7 +45,7 @@
             <h2 class="card-title" id="by-category-heading"><%= t('budget.byCategory') %></h2>
             <ul class="category-totals">
                 <% categoryTotals.forEach((row) => { %>
-                    <% const share = summary.spent > 0 ? Math.round((row.total / summary.spent) * 100) : 0; %>
+                    <% const share = summary.committed > 0 ? Math.round((row.total / summary.committed) * 100) : 0; %>
                     <li class="category-total">
                         <a href="/budget?category=<%= encodeURIComponent(row.category) %>" class="category-total__name"><%= t(`budgetCategory.${row.category}`) %></a>
                         <span class="category-total__amount"><%= formatCurrency(row.total) %></span>
@@ -55,7 +58,7 @@
     <% } %>
 
     <% if (canEdit) { %>
-        <%- include('partials/add-panel-start', { id: 'add-expense', labelKey: 'budget.addExpense', open: (summary.spent === 0 && summary.limit > 0) || expenseForm.errors.length > 0 }) %>
+        <%- include('partials/add-panel-start', { id: 'add-expense', labelKey: 'budget.addExpense', open: (summary.expenses === 0 && contracts.length === 0 && summary.limit > 0) || expenseForm.errors.length > 0 }) %>
             <%- include('partials/form-errors', { errors: expenseForm.errors, id: 'expense-errors' }) %>
             <form method="post" action="/budget/expenses" class="form-grid">
                 <%- include('partials/csrf-field') %>
@@ -83,8 +86,24 @@
         <%- include('partials/add-panel-end') %>
     <% } %>
 
+    <% if (contracts.length > 0) { %>
+        <section aria-labelledby="contracts-heading">
+            <h2 class="section-heading" id="contracts-heading"><%= t('budget.vendorContracts') %></h2>
+            <ul class="item-list">
+                <% contracts.forEach((row) => { %>
+                    <li class="item-card">
+                        <div class="item-info">
+                            <p class="item-name"><a class="item-link" href="/vendors/<%= row.id %>"><%= row.name %></a> <span class="tag"><%= t(`budgetCategory.${row.budgetCategory}`) %></span></p>
+                            <p class="item-meta money-line"><%= t('budget.contractPaid', { paid: formatCurrency(row.paid), owed: formatCurrency(row.owed) }) %></p>
+                        </div>
+                        <p class="item-amount"><%= formatCurrency(row.committed) %></p>
+                    </li>
+                <% }); %>
+            </ul>
+        </section>
+    <% } %>
     <section aria-labelledby="expenses-heading">
-        <h2 class="section-heading" id="expenses-heading"><%= t('budget.expenses') %></h2>
+        <h2 class="section-heading" id="expenses-heading"><%= t(contracts.length > 0 ? 'budget.otherExpenses' : 'budget.expenses') %></h2>
         <% if (activeCategory) { %>
             <p class="filter-note"><%= t('budget.showingCategory', { category: t(`budgetCategory.${activeCategory}`) }) %> <a href="/budget"><%= t('filter.showAll') %></a></p>
         <% } %>

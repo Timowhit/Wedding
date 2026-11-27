@@ -1,10 +1,15 @@
 import { createApp } from './src/app.js';
 import { pool, testConnection } from './src/models/db.js';
+import { isValidTimeZone } from './src/utils/today.js';
 
 const PORT = Number(process.env.PORT) || 3000;
 const NODE_ENV = process.env.NODE_ENV?.toLowerCase() || 'production';
 
 const app = createApp();
+
+if (process.env.APP_TIME_ZONE && !isValidTimeZone(process.env.APP_TIME_ZONE)) {
+    console.warn(`APP_TIME_ZONE "${process.env.APP_TIME_ZONE}" is not a known time zone; using UTC.`);
+}
 
 // Refuse to start without a database: every page needs it, including sessions.
 try {

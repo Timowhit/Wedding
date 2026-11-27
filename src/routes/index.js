@@ -99,6 +99,16 @@ import {
     showSchedule
 } from '../controllers/schedule.js';
 import {
+    processContract,
+    processDeletePayment,
+    processEditPayment,
+    processNewPayment,
+    processPaid,
+    showEditContract,
+    showEditPayment,
+    showVendor
+} from '../controllers/payments.js';
+import {
     processAnswer,
     processDeleteDecision,
     processEditDecision,
@@ -204,6 +214,16 @@ router.get('/vendors/:id/edit', editor, showEditVendor);
 router.post('/vendors/:id/edit', editor, processEditVendor);
 router.post('/vendors/:id/status', editor, processSetStatus);
 router.post('/vendors/:id/delete', editor, processDeleteVendor);
+router.get('/vendors/:id', member, showVendor);
+router.get('/vendors/:id/contract', editor, showEditContract);
+router.post('/vendors/:id/contract', editor, processContract);
+router.post('/vendors/:id/payments', editor, processNewPayment);
+
+/* Vendor payments --------------------------------------------------------------------------------- */
+router.get('/payments/:id/edit', editor, showEditPayment);
+router.post('/payments/:id/edit', editor, processEditPayment);
+router.post('/payments/:id/paid', editor, processPaid);
+router.post('/payments/:id/delete', editor, processDeletePayment);
 
 /* Music --------------------------------------------------------------------------------------- */
 router.get('/music', member, searchLimiter, showMusic);

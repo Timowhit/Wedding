@@ -1,0 +1,26 @@
+<%# Fields shared by the add and edit payment forms. Expects values, errors, errorsId. %>
+<div class="field">
+    <label for="payment-label"><%= t('field.label') %> <span class="optional"><%= t('form.optional') %></span></label>
+    <input type="text" id="payment-label" name="label" maxlength="120" value="<%= values.label %>"
+           placeholder="<%= t('payments.labelPlaceholder') %>" <%- fieldState(errors, 'label', errorsId) %>>
+</div>
+<div class="field">
+    <label for="payment-amount"><%= t('field.amount') %></label>
+    <input type="text" id="payment-amount" name="amount" inputmode="decimal" required value="<%= values.amount %>"
+           <%- fieldState(errors, 'amount', errorsId) %>>
+</div>
+<div class="field">
+    <label for="payment-due"><%= t('field.due_date') %> <span class="optional"><%= t('form.optional') %></span></label>
+    <input type="date" id="payment-due" name="due_date" min="1900-01-01" max="2100-12-31" value="<%= values.due_date %>"
+           <%- fieldState(errors, 'due_date', errorsId) %>>
+</div>
+<div class="field">
+    <label for="payment-paid"><%= t('field.paid_on') %> <span class="optional"><%= t('form.optional') %></span></label>
+    <input type="date" id="payment-paid" name="paid_on" min="1900-01-01" max="2100-12-31" value="<%= values.paid_on %>"
+           <%- fieldState(errors, 'paid_on', errorsId, 'payment-paid-hint') %>>
+    <p class="hint" id="payment-paid-hint"><%= t('payments.paidHint') %></p>
+</div>
+<div class="field field--wide">
+    <label for="payment-note"><%= t('field.note') %> <span class="optional"><%= t('form.optional') %></span></label>
+    <input type="text" id="payment-note" name="note" maxlength="500" value="<%= values.note %>" <%- fieldState(errors, 'note', errorsId) %>>
+</div>

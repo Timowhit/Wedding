@@ -65,6 +65,22 @@
         <% } %>
     </section>
 
+    <% if (paymentsDue.length > 0) { %>
+        <section class="card" aria-labelledby="payments-due-heading">
+            <h2 class="card-title" id="payments-due-heading"><%= t('paymentsDue.heading') %></h2>
+            <ul class="due-list">
+                <% paymentsDue.forEach((p) => { %>
+                    <li class="due <%= p.overdue ? 'due--overdue' : '' %>">
+                        <a class="due__vendor" href="/vendors/<%= p.vendor_id %>"><%= p.vendor_name %></a>
+                        <span class="due__label"><%= p.label || t('payments.payment') %></span>
+                        <span class="due__amount"><%= formatCurrency(p.amount) %></span>
+                        <span class="due__when"><%= t('payments.dueOn', { date: formatDate(p.due_date) }) %><% if (p.overdue) { %> · <strong><%= t('payments.overdue') %></strong><% } %></span>
+                    </li>
+                <% }); %>
+            </ul>
+        </section>
+    <% } %>
+
     <% if (steps.length > 0) { %>
         <section class="card" aria-labelledby="steps-heading">
             <h2 class="card-title" id="steps-heading"><%= t('onboarding.heading') %></h2>
@@ -89,8 +105,9 @@
         <ul class="stats-grid">
             <li><a class="stat-card stat-card--link" href="/budget">
                 <span class="stat-icon" aria-hidden="true">💰</span>
-                <span class="stat-value"><%= formatCurrency(stats.spent) %></span>
-                <span class="stat-label"><%= stats.budgetLimit > 0 ? t('dashboard.spentOf', { total: formatCurrency(stats.budgetLimit) }) : t('dashboard.spent') %></span>
+                <span class="stat-value"><%= formatCurrency(stats.committed) %></span>
+                <span class="stat-label"><%= stats.budgetLimit > 0 ? t('dashboard.committedOf', { total: formatCurrency(stats.budgetLimit) }) : t('dashboard.committed') %></span>
+                <% if (stats.owed > 0) { %><span class="stat-label"><%= t('dashboard.stillOwed', { amount: formatCurrency(stats.owed) }) %></span><% } %>
             </a></li>
             <li><a class="stat-card stat-card--link" href="/guests">
                 <span class="stat-icon" aria-hidden="true">👥</span>

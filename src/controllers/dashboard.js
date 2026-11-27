@@ -1,5 +1,5 @@
-import { findBudgetLimit, findTotalSpent } from '../models/budget.js';
 import { countOpenDecisions } from '../models/decisions.js';
+import { findMoneySummary, findPaymentsDue } from '../models/payments.js';
 import { findTaskProgress } from '../models/checklist.js';
 import { findGuestStats } from '../models/guests.js';
 import { findPendingInvitesForEmail } from '../models/invites.js';
@@ -37,10 +37,10 @@ const gettingStartedSteps = (wedding, stats, memberCount) => {
 
 const showDashboard = async (req, res) => {
     const weddingId = req.wedding.id;
-    const [budgetLimit, spent, guests, tasks, vendors, tracks, photos, pendingInvites, memberCount, openDecisions] =
+    const [money, paymentsDue, guests, tasks, vendors, tracks, photos, pendingInvites, memberCount, openDecisions] =
         await Promise.all([
-            findBudgetLimit(weddingId),
-            findTotalSpent(weddingId),
+            findMoneySummary(weddingId),
+            findPaymentsDue(weddingId),
             findGuestStats(weddingId),
             findTaskProgress(weddingId),
             findVendorStats(weddingId),
@@ -50,12 +50,22 @@ const showDashboard = async (req, res) => {
             countMembers(weddingId),
             countOpenDecisions(weddingId)
         ]);
-    const stats = { budgetLimit, spent, guests, tasks, vendors, tracks, photos };
+    const stats = {
+        budgetLimit: money.limit,
+        committed: money.committed,
+        owed: money.owed,
+        guests,
+        tasks,
+        vendors,
+        tracks,
+        photos
+    };
     const steps = gettingStartedSteps(req.wedding, stats, memberCount);
 
     res.render('dashboard', {
         title: req.t('dashboard.title'),
         stats,
+        paymentsDue,
         steps: steps.every((step) => step.done) ? [] : steps,
         openDecisions,
         daysLeft: daysUntil(req.wedding.wedding_date),

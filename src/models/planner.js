@@ -1,5 +1,6 @@
 import db, { withTransaction } from './db.js';
 import { claimFoundingNumber } from './founding.js';
+import { findCommittedByWedding } from './payments.js';
 import { createWedding } from './weddings.js';
 
 /** Weddings a planner sees on the dashboard: every wedding they belong to. */
@@ -17,7 +18,7 @@ const likePattern = (text) => `%${text.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
  * The planner dashboard: one row per wedding with what needs attention.
  * @param {string} userId
  * @param {{q?: string, when?: 'upcoming'|'past'|'all'}} [filters] - Already validated.
- * @returns {Promise<Array<{id: string, name: string, wedding_date: Date|null, role: string, open_decisions: number, changes_requested: number, overdue_tasks: number, spent: number, budget_limit: number, guests_total: number, guests_confirmed: number, deadlines: Array<{kind: 'task'|'decision', title: string, due_date: Date, overdue: boolean}>}>>}
+ * @returns {Promise<Array<{id: string, name: string, wedding_date: Date|null, role: string, open_decisions: number, changes_requested: number, overdue_tasks: number, committed: number, budget_limit: number, guests_total: number, guests_confirmed: number, deadlines: Array<{kind: 'task'|'decision', title: string, due_date: Date, overdue: boolean}>}>>}
  */
 const findPlannerOverview = async (userId, { q = '', when = 'upcoming' } = {}) => {
     const whenSql = WHEN_FILTERS[when] ?? WHEN_FILTERS.upcoming;
@@ -28,7 +29,6 @@ const findPlannerOverview = async (userId, { q = '', when = 'upcoming' } = {}) =
                     AS changes_requested,
                 (SELECT COUNT(*) FROM checklist_tasks t
                   WHERE t.wedding_id = w.id AND NOT t.done AND t.due_date < CURRENT_DATE)::int AS overdue_tasks,
-                (SELECT COALESCE(SUM(amount), 0) FROM budget_items b WHERE b.wedding_id = w.id)::float AS spent,
                 (SELECT COALESCE(MAX(total), 0) FROM budget_limits l WHERE l.wedding_id = w.id)::float AS budget_limit,
                 (SELECT COUNT(*) FROM guests g WHERE g.wedding_id = w.id)::int AS guests_total,
                 (SELECT COUNT(*) FROM guests g WHERE g.wedding_id = w.id AND g.rsvp = 'Confirmed')::int AS guests_confirmed
@@ -57,8 +57,10 @@ const findPlannerOverview = async (userId, { q = '', when = 'upcoming' } = {}) =
          ORDER BY due_date, title;`,
         [weddings.rows.map((w) => w.id), DEADLINES_PER_WEDDING]
     );
+    const committed = await findCommittedByWedding(weddings.rows.map((w) => w.id));
     return weddings.rows.map((wedding) => ({
         ...wedding,
+        committed: committed.get(wedding.id) ?? 0,
         deadlines: deadlines.rows.filter((d) => d.wedding_id === wedding.id)
     }));
 };

@@ -46,6 +46,20 @@ describe('event-day schedule', { skip: skipWithoutDb }, () => {
         assert.match(page.body, /3:00\s?PM/);
     });
 
+    it("shows the vendor's included items, open in the print view", async () => {
+        await app.pool.query(
+            `UPDATE vendors SET contract_includes = 'Four hours of music and a ceremony mic' WHERE id = $1;`,
+            [vendorId]
+        );
+        const page = (await couple.get('/schedule')).body;
+        assert.match(page, /<details class="timeline__includes">\s*<summary>What&#39;s included<\/summary>/);
+        assert.match(page, /Four hours of music and a ceremony mic/);
+        assert.equal((page.match(/timeline__includes/g) ?? []).length, 1, 'only the item linked to the vendor');
+        const print = (await couple.get('/schedule?print=1')).body;
+        assert.match(print, /<details class="timeline__includes" open>/);
+        await app.pool.query('UPDATE vendors SET contract_includes = NULL WHERE id = $1;', [vendorId]);
+    });
+
     it('rejects bad times and vendors from another wedding', async () => {
         await couple.get('/schedule');
         assert.equal((await couple.post('/schedule', { starts_at: '25:00', title: 'Late' })).status, 400);

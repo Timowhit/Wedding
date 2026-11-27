@@ -6,6 +6,7 @@ import { isLocalPath, isSafeReturnPath } from '../../src/utils/session.js';
 import { daysUntil, formatCurrency, formatDate, toIsoDate } from '../../src/utils/format.js';
 import { emphasize, fieldState } from '../../src/utils/view-helpers.js';
 import { escapeHtml } from '../../src/services/email.js';
+import { isValidTimeZone, todayIso } from '../../src/utils/today.js';
 
 describe('password hashing', () => {
     it('round-trips scrypt hashes and salts each one', async () => {
@@ -82,5 +83,20 @@ describe('view helpers', () => {
 
     it('email escaping covers attribute-breaking characters', () => {
         assert.equal(escapeHtml(`"><img src=x onerror='a'>&`), '&quot;&gt;&lt;img src=x onerror=&#39;a&#39;&gt;&amp;');
+    });
+});
+
+describe('todayIso', () => {
+    it('uses the configured time zone', (t) => {
+        t.mock.timers.enable({ apis: ['Date'], now: new Date('2027-03-01T03:00:00Z') });
+        assert.equal(todayIso('America/New_York'), '2027-02-28');
+        assert.equal(todayIso('UTC'), '2027-03-01');
+    });
+
+    it('falls back to UTC on a bad zone', (t) => {
+        t.mock.timers.enable({ apis: ['Date'], now: new Date('2027-03-01T03:00:00Z') });
+        assert.equal(todayIso('Not/AZone'), '2027-03-01');
+        assert.equal(isValidTimeZone('Not/AZone'), false);
+        assert.equal(isValidTimeZone('Europe/Madrid'), true);
     });
 });

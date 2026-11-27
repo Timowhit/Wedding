@@ -17,6 +17,7 @@
             <li class="stat-card"><span class="stat-value"><%= workload.weddingsThisMonth %></span><span class="stat-label"><%= t('planner.weddingsThisMonth') %></span></li>
             <li class="stat-card"><span class="stat-value"><%= workload.openDecisions %></span><span class="stat-label"><%= t('planner.openDecisionsAll') %></span></li>
             <li class="stat-card"><span class="stat-value"><%= workload.overdueTasks %></span><span class="stat-label"><%= t('planner.overdueTasksAll') %></span></li>
+            <li class="stat-card"><span class="stat-value"><%= workload.overduePayments %></span><span class="stat-label"><%= t('planner.overduePaymentsAll') %></span></li>
         </ul>
     </section>
 
@@ -40,9 +41,39 @@
         </form>
     <%- include('partials/add-panel-end') %>
 
+    <section class="card" aria-labelledby="planner-due-heading">
+        <h2 class="card-title" id="planner-due-heading"><%= t('paymentsDue.heading') %></h2>
+        <nav class="filter-tabs" aria-label="<%= t('paymentsDue.filterLabel') %>">
+            <% paymentFilters.forEach((option) => { %>
+                <% const query = new URLSearchParams({ q: filters.q, when: filters.when, pay: option }).toString(); %>
+                <a class="filter-tab" href="/planner?<%= query %>#planner-due-heading" <%- filters.pay === option ? 'aria-current="page"' : '' %>><%= t(`paymentsDue.filter.${option}`) %></a>
+            <% }); %>
+        </nav>
+        <% if (paymentsDue.length === 0) { %>
+            <p class="empty-state"><%= t('paymentsDue.none') %></p>
+        <% } else { %>
+            <ul class="due-list">
+                <% paymentsDue.forEach((p) => { %>
+                    <li class="due <%= p.overdue ? 'due--overdue' : '' %>">
+                        <form method="post" action="/planner/weddings/<%= p.wedding_id %>/open" class="due__open">
+                            <%- include('partials/csrf-field') %>
+                            <input type="hidden" name="return_to" value="/vendors/<%= p.vendor_id %>">
+                            <button type="submit" class="link-button" aria-label="<%= t('paymentsDue.openNamed', { vendor: p.vendor_name, wedding: p.wedding_name }) %>"><%= p.vendor_name %></button>
+                        </form>
+                        <span class="due__wedding"><%= p.wedding_name %></span>
+                        <span class="due__label"><%= p.label || t('payments.payment') %></span>
+                        <span class="due__amount"><%= formatCurrency(p.amount) %></span>
+                        <span class="due__when"><%= t('payments.dueOn', { date: formatDate(p.due_date) }) %><% if (p.overdue) { %> · <strong><%= t('payments.overdue') %></strong><% } %></span>
+                    </li>
+                <% }); %>
+            </ul>
+        <% } %>
+    </section>
+
     <section aria-labelledby="weddings-heading">
         <h2 class="section-heading" id="weddings-heading"><%= t('planner.weddings') %></h2>
         <form method="get" action="/planner" class="filter-bar" role="search">
+            <input type="hidden" name="pay" value="<%= filters.pay %>">
             <div class="filter-select">
                 <label for="planner-q"><%= t('field.q') %></label>
                 <input type="search" id="planner-q" name="q" maxlength="100" value="<%= filters.q %>" placeholder="<%= t('planner.searchPlaceholder') %>">
@@ -63,7 +94,7 @@
         <% } else { %>
             <ul class="wedding-cards">
                 <% weddings.forEach((w) => { %>
-                    <% const overBudget = w.budget_limit > 0 && w.spent > w.budget_limit; %>
+                    <% const overBudget = w.budget_limit > 0 && w.committed > w.budget_limit; %>
                     <li class="card wedding-card">
                         <div class="wedding-card__header">
                             <h3 class="card-title"><%= w.name %></h3>
@@ -74,7 +105,7 @@
                         </div>
                         <dl class="wedding-card__facts">
                             <div><dt><%= t('nav.budget') %></dt><dd class="<%= overBudget ? 'text-danger' : '' %>">
-                                <% if (w.budget_limit > 0) { %><%= t('planner.spentOf', { spent: formatCurrency(w.spent), total: formatCurrency(w.budget_limit) }) %><% if (overBudget) { %> · <%= t('planner.overBudget') %><% } %><% } else { %><%= t('planner.spent', { spent: formatCurrency(w.spent) }) %><% } %>
+                                <% if (w.budget_limit > 0) { %><%= t('planner.spentOf', { spent: formatCurrency(w.committed), total: formatCurrency(w.budget_limit) }) %><% if (overBudget) { %> · <%= t('planner.overBudget') %><% } %><% } else { %><%= t('planner.spent', { spent: formatCurrency(w.committed) }) %><% } %>
                             </dd></div>
                             <div><dt><%= t('nav.guests') %></dt><dd><%= t('planner.guestsConfirmed', { confirmed: w.guests_confirmed, total: w.guests_total }) %></dd></div>
                             <div><dt><%= t('nav.decisions') %></dt><dd>
