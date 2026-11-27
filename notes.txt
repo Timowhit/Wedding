@@ -24,4 +24,4 @@ Wedding-planner UX and feature ideas
 - redo logo
 - settings > appearance should be able to change the colors without scrolling back down or having to hit save; should be live and the background should be configurable too (three color level: primary,secondary,accent).
 - improve look of wedding selector dropdown in header
-- 
+- Gamify task completion with a banner in the top right with tasks and an animation for completion to motivate usage.
