@@ -36,6 +36,12 @@ Success means a planner can stop keeping a separate spreadsheet of vendor paymen
 
 ## Decisions made with the product owner
 
+- **Only Booked vendors count.** Vendor status decides whether its money counts:
+  - **Booked:** its contract and payments count everywhere (budget, Payments due, dashboards).
+  - **Researching / Contacted:** a contract total is shown as a quote ("Quote $4,800") on the vendor list and page. It adds nothing to the budget, and its payments do not appear in Payments due.
+  - **Declined:** payments already marked paid still count, as both committed and paid, because that money is gone. Unpaid payments and the contract total drop out of everything.
+  - Changing a vendor's status moves its money in or out at once, with nothing stored twice.
+
 - **Both questions matter equally:** payments due and contract terms.
 - **Contracts: option A.** A link plus key terms written in the app. No file storage service in this release.
 - **Budget: option 1.** Contract totals feed the budget automatically. The budget shows Committed / Paid / Still owed. Existing expenses stay; the planner deletes any that duplicate a contract.
@@ -119,7 +125,7 @@ Other expenses
   ...
 ```
 
-- Figures are worked out **per vendor, then summed** _(builder's call, from the builder check)_:
+- Only vendors that count (see the status rule above) take part. Figures are worked out **per vendor, then summed** _(builder's call, from the builder check)_:
   - vendor committed = the larger of its contract total and the sum of its payments (a vendor with no total commits the sum of its payments)
   - vendor paid = the sum of its paid payments
   - vendor still owed = vendor committed − vendor paid, never below zero
