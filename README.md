@@ -39,6 +39,7 @@ There is no frontend framework, bundler or TypeScript. `public/js/app.js` is a s
 - **Calendar** (`/calendar`): a month of wedding days, open tasks, unpaid booked-vendor payments and open decisions across all your weddings (planners can pick one); a Monday-first grid plus an agenda, agenda only on phones
 - **Search** (`/search`): guests, vendors, tasks, decisions and event-day items across all your weddings; each result opens in its wedding
 - **Wrap-up**: after the wedding day, the dashboard shows what is still owed, booked vendors to rate (1-5 stars and notes) and a button that adds dated wrap-up tasks. The owner can archive the wedding: it leaves active lists, the calendar and reminders, and can be brought back
+- **Progress badge and celebrations**: a ring at the top right shows the wedding's checklist progress and opens to the next three tasks. Ticking a task off brings a short confetti burst and a message, with a bigger one at 25%, 50%, 75% and 100% (CSS only; still for people who prefer reduced motion)
 - **Notices**: confirmations fade after a few seconds (paused while hovered or focused); errors stay until dismissed
 - **Dashboard**: countdown to the wedding date, a getting-started list for new weddings, totals for every section, pending invitations
 - **Budget**: total budget, expenses, spending per category, spent/remaining with an over-budget warning

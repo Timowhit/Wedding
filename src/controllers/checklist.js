@@ -16,6 +16,7 @@ import { setFlash } from '../utils/flash.js';
 import { backTo } from '../utils/redirect.js';
 import { toIsoDate } from '../utils/format.js';
 import { todayIso } from '../utils/today.js';
+import { celebrationFor } from '../utils/celebrate.js';
 import { isUuid, readChoice } from '../validators/common.js';
 import { validateTask } from '../validators/planning.js';
 
@@ -135,6 +136,21 @@ const processEditTask = async (req, res, next) => {
 const processToggleTask = async (req, res, next) => {
     const task = isUuid(req.params.id) ? await toggleTask(req.params.id, req.wedding.id) : null;
     if (!task) return next();
+    // Ticking a task off is celebrated on the next page: confetti (partials/celebrate.ejs) and a
+    // notice, which fades, can be dismissed and is announced like every other notice.
+    if (task.done) {
+        const celebration = celebrationFor(await findTaskProgress(req.wedding.id));
+        req.session.celebrate = { ...celebration, weddingId: req.wedding.id };
+        const headline = req.t(
+            celebration.milestone ? `celebrate.milestone${celebration.milestone}` : 'celebrate.nice'
+        );
+        setFlash(req, 'success', 'celebrate.flash', {
+            headline,
+            done: celebration.done,
+            total: celebration.total,
+            pct: celebration.pct
+        });
+    }
     res.redirect(backTo(req, '/checklist'));
 };
 

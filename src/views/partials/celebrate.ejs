@@ -1,0 +1,7 @@
+<%# Confetti after a task is ticked off (utils/celebrate.js); the words are in the notice (flash).
+    Decorative only: hidden from screen readers and not shown to people who prefer reduced motion. %>
+<% if (locals.celebration) { %>
+    <div class="celebrate<%= celebration.milestone ? ' celebrate--milestone' : '' %>" data-celebrate aria-hidden="true">
+        <div class="celebrate__confetti"><% for (let i = 0; i < 18; i += 1) { %><span></span><% } %></div>
+    </div>
+<% } %>

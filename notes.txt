@@ -2,10 +2,10 @@ Wedding-planner UX and feature ideas
 Status checked against the code on 2026-11-27. [x] done, [~] partly done (what's missing is listed), [ ] not started.
 
 Next up
-- [ ] Gamify task completion with a banner in the top right with tasks and an animation for completion to motivate usage.
 - [ ] Store inspiration boards, floor plans, contracts, and other files in each event workspace (file uploads). Waiting on the storage choice in ACTIONS.md.
 
 Done
+- [x] Gamify task completion with a banner in the top right with tasks and an animation for completion. (Progress badge and celebrations, PR #12)
 - [x] Customizable checklists with due dates, priorities, and task owners. (Priorities and owners, PR #11)
 - [x] Guest lists, RSVPs, meal choices, accessibility needs, plus-ones, and seating assignments. (Meals and access needs, PR #11)
 - [x] Multiple concurrent weddings with calendar views, search, filters, and workload summaries. (/calendar and /search, PR #11)
@@ -40,6 +40,8 @@ Small follow-ups (from the review of PR #11)
 - [ ] Planner dashboard date filters still use the database's date; switch them to APP_TIME_ZONE like the rest.
 - [ ] Let a vendor rating be cleared.
 - [ ] Wrap-up tasks: stop a second member who uses another language from adding them again.
+- [ ] Progress badge: close its panel with Escape or a click outside, like the menu.
+- [ ] Celebrations: remember the highest milestone per wedding so unticking and ticking again doesn't repeat the big confetti.
 
 Not started
 - [ ] Reusable questionnaires, proposals, email messages, and follow-up templates.

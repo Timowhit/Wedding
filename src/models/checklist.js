@@ -47,6 +47,29 @@ const findTaskProgress = async (weddingId) => {
     return { total, done, pct: total === 0 ? 0 : Math.round((done / total) * 100) };
 };
 
+// Open tasks shown in the header's progress badge.
+const BADGE_NEXT_TASKS = 3;
+
+/**
+ * The header's progress badge: checklist totals and the next few open tasks (soonest due first,
+ * then high priority).
+ * @param {string} weddingId
+ * @returns {Promise<{total: number, done: number, pct: number, next: Array<{id: string, text: string, due_date: Date|null}>}>}
+ */
+const findTaskBadge = async (weddingId) => {
+    const [progress, next] = await Promise.all([
+        findTaskProgress(weddingId),
+        db.query(
+            `SELECT t.id, t.text, t.due_date FROM checklist_tasks t
+             WHERE t.wedding_id = $1 AND NOT t.done
+             ORDER BY t.due_date ASC NULLS LAST, ${PRIORITY_ORDER}, t.sort_order, t.created_at
+             LIMIT $2;`,
+            [weddingId, BADGE_NEXT_TASKS]
+        )
+    ]);
+    return { ...progress, next: next.rows };
+};
+
 /**
  * @param {string} id
  * @param {string} weddingId
@@ -133,4 +156,14 @@ const createTasksIfMissing = async (weddingId, tasks) => {
     return result.rowCount;
 };
 
-export { findTasks, findTaskProgress, findTask, createTask, updateTask, toggleTask, deleteTask, createTasksIfMissing };
+export {
+    findTasks,
+    findTaskProgress,
+    findTask,
+    createTask,
+    updateTask,
+    toggleTask,
+    deleteTask,
+    createTasksIfMissing,
+    findTaskBadge
+};

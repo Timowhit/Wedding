@@ -10,7 +10,7 @@
 (function () {
     'use strict';
 
-    const VERSION = 'v2';
+    const VERSION = 'v3';
     const STATIC_CACHE = `fp-static-${VERSION}`;
     const PAGE_CACHE = `fp-pages-${VERSION}`;
     const STATIC_PRECACHE = ['/css/main.css', '/css/themes.css', '/js/app.js'];
@@ -174,7 +174,11 @@
             const url = new URL(path, self.location.origin);
             if (routeFor(url, self.location.origin) !== 'event') continue;
             try {
-                const response = await fetch(url.href, { credentials: 'same-origin' });
+                // Marked as a background save, so it never uses up a one-time celebration (utils/celebrate.js).
+                const response = await fetch(url.href, {
+                    credentials: 'same-origin',
+                    headers: { 'X-FP-Background': '1' }
+                });
                 await noteWedding(response);
                 if (shouldStore(response)) {
                     await cache.put(url.href, response);

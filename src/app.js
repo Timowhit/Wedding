@@ -13,6 +13,8 @@ import { configureGoogle } from './services/google.js';
 import { UNSPLASH_IMAGE_HOSTS, isUnsplashConfigured } from './services/unsplash.js';
 import { isSpotifyConfigured } from './services/spotify.js';
 import { resolveTheme } from './themes.js';
+import { takeCelebration } from './utils/celebrate.js';
+import { findTaskBadge } from './models/checklist.js';
 import { takeFlash } from './utils/flash.js';
 import { emphasize, fieldState } from './utils/view-helpers.js';
 import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES, translate } from './i18n/index.js';
@@ -105,7 +107,8 @@ const createApp = (env = process.env) => {
     app.use((req, res, next) => {
         res.locals.currentPath = req.path;
         res.locals.currentUrl = req.originalUrl;
-        res.locals.flash = takeFlash(req);
+        // The offline worker's background saves (X-FP-Background) must not use up a notice.
+        res.locals.flash = req.get('x-fp-background') ? null : takeFlash(req);
         res.locals.languages = SUPPORTED_LANGUAGES;
         res.locals.errors = [];
         res.locals.emphasize = emphasize;
@@ -119,10 +122,21 @@ const createApp = (env = process.env) => {
         // Every rendered page names its wedding ("none" when signed out or without one). The
         // service worker drops its saved pages when this changes, so an offline copy never
         // outlives a wedding switch, a sign-in as someone else or an expired session.
+        // Pages also get the header's checklist badge and any celebration, loaded only here, so
+        // redirects, JSON and stylesheets never pay for them.
         const render = res.render.bind(res);
         res.render = (view, options, callback) => {
             if (!res.headersSent) res.set('X-FP-Wedding', res.locals.wedding?.id ?? 'none');
-            return render(view, options, callback);
+            const weddingId = res.locals.wedding?.id;
+            // Error pages skip both, so a failing database can't turn one error into a loop.
+            if (!weddingId || view.startsWith('errors/')) return render(view, options, callback);
+            res.locals.celebration = takeCelebration(req, weddingId);
+            findTaskBadge(weddingId)
+                .then((badge) => {
+                    res.locals.taskBadge = badge;
+                    render(view, options, callback);
+                })
+                .catch((error) => req.next(error));
         };
         next();
     });

@@ -1143,5 +1143,15 @@ export default {
     'planner.when.archived': 'Archived',
     'wrapup.ratingSaved': 'Saved your rating of {name}.',
     'wrapup.starsOne': '1 star',
-    'wrapup.notYet': 'Wrap-up tasks are for after the wedding day.'
+    'wrapup.notYet': 'Wrap-up tasks are for after the wedding day.',
+    'celebrate.badgeLabel': '{done} of {total} tasks done',
+    'celebrate.nextUp': 'Next up',
+    'celebrate.allDone': 'Every task is done.',
+    'celebrate.openChecklist': 'Open the checklist',
+    'celebrate.nice': 'Nice work!',
+    'celebrate.milestone25': 'A quarter of the way!',
+    'celebrate.milestone50': 'Halfway there!',
+    'celebrate.milestone75': 'Three quarters done!',
+    'celebrate.milestone100': 'Every task is done. Time to celebrate!',
+    'celebrate.flash': '{headline} {done} of {total} done ({pct}%).'
 };
