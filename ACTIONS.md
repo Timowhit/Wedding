@@ -65,6 +65,19 @@ Without this nothing is sent, and nothing breaks.
 
 Cron Jobs are a paid Render instance type.
 
-## Coming up: the appearance and venue layout release
+## 5. Merge the appearance and venue layout release
 
-I'm building the six ideas you added to `notes.txt` on the branch `appearance-and-layout`. When it's ready, a merge step will appear here.
+[Timowhit/Wedding#9](https://github.com/Timowhit/Wedding/pull/9) adds:
+
+- the live Appearance settings with your own colours
+- the Wedding colours page
+- the Venue layout page
+- the new logo and the fading notices
+
+I'm finishing its final review. When this step says "ready", do the following:
+
+1. Open the PR, click **Ready for review**, wait for the green check, then **Merge pull request**. Squash is fine.
+2. Repeat step 1 of this file (`git pull origin main`, then `npm run migrate`). It applies `012_appearance_and_layout.sql`, which only adds columns and tables.
+3. Delete the `appearance-and-layout` branch on GitHub.
+
+Status: **not ready yet** (review in progress).

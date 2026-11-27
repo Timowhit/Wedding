@@ -1,19 +1,18 @@
 Wedding-planner UX and feature ideas
 Status checked against the code on 2026-11-27. [x] done, [~] partly done (what's missing is listed), [ ] not started.
 
-In progress (branch appearance-and-layout)
-- [ ] Notification flags like "10 example tasks added." or "Successfully Logged In." should only show for a couple seconds.
-- [ ] Wedding color palette page that allows the option to make the actual app match the theme; should have the option for taking a picture, upload image, or hexcode color selector.
-- [ ] Venue layout design page.
-- [ ] Redo logo.
-- [ ] Settings > Appearance should be able to change the colors without scrolling back down or having to hit save; should be live, and the background should be configurable too (three color levels: primary, secondary, accent).
-- [ ] Improve the look of the wedding selector dropdown in the header.
-
 Done
+- [x] Notification flags like "10 example tasks added." or "Successfully Logged In." only show for a few seconds. (Success notices fade after 4 seconds; errors stay. Branch appearance-and-layout, PR #9)
+- [x] Wedding color palette page, with taking a picture, uploading an image, or a hex code color selector, and the option to make the app match it. (/colors, PR #9)
+- [x] Venue layout design page. (/layout: to-scale floor plan, drag and drop, PR #9)
+- [x] Redo logo. (Two interlocking rings in the theme's colours, also the favicon, PR #9)
+- [x] Settings > Appearance changes colors live without scrolling or saving, and the background is configurable (custom main, second and accent colours, background tinted with any of them). (PR #9)
+- [x] Improve the look of the wedding selector dropdown in the header. (PR #9)
 - [x] Track budgets, quotes, contracts, deposits, payment schedules, and final costs. (Payments and contracts release)
 - [x] Build editable event-day schedules with vendor arrival times, contacts, setup notes, and contingency plans.
 - [x] Make essential schedules and contacts easy to access on mobile, including offline on event day.
 - [x] Let users choose a color theme for the app, and let planners set a brand palette their clients see.
+- [x] A visual seating-chart editor with table sizes and guest grouping. (Seating chart plus the venue layout page, PR #9)
 
 Partly done
 - [~] Wedding-specific templates for timelines, task lists, budgets, and vendor coordination.
@@ -30,8 +29,6 @@ Partly done
       Done: client role and decisions to approve. Missing: uploads.
 - [~] Role-based collaboration for planners, assistants, couples, and vendors.
       Done: owner, editor (assistant), client and viewer. Missing: a vendor role.
-- [~] A visual seating-chart editor with table sizes and guest grouping.
-      Done: tables with sizes, guest groups, seat assignment. Missing: the visual room layout (in progress above).
 - [~] Configurable reminders for meetings, deadlines, payments, and unanswered questions.
       Done: daily email digest of tasks, payments and decisions, with a switch and unsubscribe. Missing: meetings (needs a calendar) and choosing what or when.
 - [~] Multiple concurrent weddings with calendar views, search, filters, and workload summaries.
