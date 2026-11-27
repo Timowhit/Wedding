@@ -1,16 +1,6 @@
 import db from './db.js';
 
 /**
- * The wedding's total budget (0 when none has been set).
- * @param {string} weddingId
- * @returns {Promise<number>}
- */
-const findBudgetLimit = async (weddingId) => {
-    const result = await db.query('SELECT total FROM budget_limits WHERE wedding_id = $1;', [weddingId]);
-    return Number(result.rows[0]?.total ?? 0);
-};
-
-/**
  * @param {string} weddingId
  * @param {number} total - Already validated (>= 0).
  * @returns {Promise<number>} The saved total.
@@ -45,17 +35,6 @@ const findExpenses = async (weddingId, category = null) => {
 
 /**
  * @param {string} weddingId
- * @returns {Promise<number>} Sum of every expense (all categories).
- */
-const findTotalSpent = async (weddingId) => {
-    const result = await db.query('SELECT COALESCE(SUM(amount), 0) AS total FROM budget_items WHERE wedding_id = $1;', [
-        weddingId
-    ]);
-    return Number(result.rows[0].total);
-};
-
-/**
- * @param {string} weddingId
  * @param {{name: string, category: string, amount: number}} values - Already validated.
  * @returns {Promise<{id: string, name: string}>}
  */
@@ -79,29 +58,4 @@ const deleteExpense = async (id, weddingId) => {
     return result.rowCount > 0;
 };
 
-/**
- * Spending per category, largest first (only categories with expenses).
- * @param {string} weddingId
- * @returns {Promise<Array<{category: string, total: number, count: number}>>}
- */
-const findCategoryTotals = async (weddingId) => {
-    const result = await db.query(
-        `SELECT category, SUM(amount) AS total, COUNT(*) AS count
-         FROM budget_items
-         WHERE wedding_id = $1
-         GROUP BY category
-         ORDER BY SUM(amount) DESC, category ASC;`,
-        [weddingId]
-    );
-    return result.rows.map((row) => ({ category: row.category, total: Number(row.total), count: Number(row.count) }));
-};
-
-export {
-    findCategoryTotals,
-    findBudgetLimit,
-    saveBudgetLimit,
-    findExpenses,
-    findTotalSpent,
-    createExpense,
-    deleteExpense
-};
+export { saveBudgetLimit, findExpenses, createExpense, deleteExpense };

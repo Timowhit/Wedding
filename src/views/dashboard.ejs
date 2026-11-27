@@ -89,8 +89,8 @@
         <ul class="stats-grid">
             <li><a class="stat-card stat-card--link" href="/budget">
                 <span class="stat-icon" aria-hidden="true">💰</span>
-                <span class="stat-value"><%= formatCurrency(stats.spent) %></span>
-                <span class="stat-label"><%= stats.budgetLimit > 0 ? t('dashboard.spentOf', { total: formatCurrency(stats.budgetLimit) }) : t('dashboard.spent') %></span>
+                <span class="stat-value"><%= formatCurrency(stats.committed) %></span>
+                <span class="stat-label"><%= stats.budgetLimit > 0 ? t('dashboard.committedOf', { total: formatCurrency(stats.budgetLimit) }) : t('dashboard.committed') %></span>
             </a></li>
             <li><a class="stat-card stat-card--link" href="/guests">
                 <span class="stat-icon" aria-hidden="true">👥</span>

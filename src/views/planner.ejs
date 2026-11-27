@@ -63,7 +63,7 @@
         <% } else { %>
             <ul class="wedding-cards">
                 <% weddings.forEach((w) => { %>
-                    <% const overBudget = w.budget_limit > 0 && w.spent > w.budget_limit; %>
+                    <% const overBudget = w.budget_limit > 0 && w.committed > w.budget_limit; %>
                     <li class="card wedding-card">
                         <div class="wedding-card__header">
                             <h3 class="card-title"><%= w.name %></h3>
@@ -74,7 +74,7 @@
                         </div>
                         <dl class="wedding-card__facts">
                             <div><dt><%= t('nav.budget') %></dt><dd class="<%= overBudget ? 'text-danger' : '' %>">
-                                <% if (w.budget_limit > 0) { %><%= t('planner.spentOf', { spent: formatCurrency(w.spent), total: formatCurrency(w.budget_limit) }) %><% if (overBudget) { %> · <%= t('planner.overBudget') %><% } %><% } else { %><%= t('planner.spent', { spent: formatCurrency(w.spent) }) %><% } %>
+                                <% if (w.budget_limit > 0) { %><%= t('planner.spentOf', { spent: formatCurrency(w.committed), total: formatCurrency(w.budget_limit) }) %><% if (overBudget) { %> · <%= t('planner.overBudget') %><% } %><% } else { %><%= t('planner.spent', { spent: formatCurrency(w.committed) }) %><% } %>
                             </dd></div>
                             <div><dt><%= t('nav.guests') %></dt><dd><%= t('planner.guestsConfirmed', { confirmed: w.guests_confirmed, total: w.guests_total }) %></dd></div>
                             <div><dt><%= t('nav.decisions') %></dt><dd>

@@ -1,13 +1,11 @@
 import { BUDGET_CATEGORIES } from '../constants.js';
+import { createExpense, deleteExpense, findExpenses, saveBudgetLimit } from '../models/budget.js';
 import {
-    createExpense,
-    deleteExpense,
-    findBudgetLimit,
-    findCategoryTotals,
-    findExpenses,
-    findTotalSpent,
-    saveBudgetLimit
-} from '../models/budget.js';
+    findBudgetCategoryTotals,
+    findContractRows,
+    findDuplicateExpenseHints,
+    findMoneySummary
+} from '../models/payments.js';
 import { setFlash } from '../utils/flash.js';
 import { backTo } from '../utils/redirect.js';
 import { isUuid, readChoice } from '../validators/common.js';
@@ -23,22 +21,26 @@ const EMPTY_EXPENSE = { name: '', category: BUDGET_CATEGORIES[0], amount: '' };
 const renderBudget = async (req, res, { status = 200, limitForm, expenseForm } = {}) => {
     const weddingId = req.wedding.id;
     const category = readChoice(req.query.category, BUDGET_CATEGORIES);
-    const [limit, spent, expenses, categoryTotals] = await Promise.all([
-        findBudgetLimit(weddingId),
-        findTotalSpent(weddingId),
+    const [money, expenses, categoryTotals, contracts, duplicateHint] = await Promise.all([
+        findMoneySummary(weddingId),
         findExpenses(weddingId, category),
-        findCategoryTotals(weddingId)
+        findBudgetCategoryTotals(weddingId),
+        findContractRows(weddingId),
+        findDuplicateExpenseHints(weddingId)
     ]);
+    const { limit, committed } = money;
+    const percentOf = (amount) => (limit > 0 ? Math.min(Math.round((amount / limit) * 100), 100) : 0);
 
     res.status(status).render('budget', {
         title: req.t('budget.title'),
         summary: {
-            limit,
-            spent,
-            remaining: limit - spent,
-            pct: limit > 0 ? Math.min(Math.round((spent / limit) * 100), 100) : 0,
-            over: limit > 0 && spent > limit
+            ...money,
+            remaining: limit - committed,
+            pct: percentOf(committed),
+            paidPct: percentOf(money.paid)
         },
+        contracts,
+        duplicateHint,
         expenses,
         categoryTotals,
         categories: BUDGET_CATEGORIES,

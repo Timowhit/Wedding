@@ -14,17 +14,20 @@ import { todayIso } from '../utils/today.js';
 
 const PAYMENT_COLUMNS = 'id, vendor_id, label, amount::float AS amount, due_date, paid_on, note';
 
-/** Per-vendor figures for one wedding. $1 wedding, $2 today, $3 counted status, $4 paid-only status. */
-const VENDOR_MONEY_SQL = `
+/**
+ * Per-vendor figures. `scope` picks the weddings ('= $1' for one id, '= ANY($1)' for an array);
+ * $2 today, $3 counted status, $4 paid-only status.
+ */
+const vendorMoneySql = (scope) => `
     WITH pay AS (
         SELECT vendor_id,
                SUM(amount) AS scheduled,
                COALESCE(SUM(amount) FILTER (WHERE paid_on IS NOT NULL), 0) AS paid,
                BOOL_OR(paid_on IS NULL AND due_date < $2::date) AS overdue,
                MIN(due_date) FILTER (WHERE paid_on IS NULL) AS next_due
-        FROM vendor_payments WHERE wedding_id = $1 GROUP BY vendor_id
+        FROM vendor_payments WHERE wedding_id ${scope} GROUP BY vendor_id
     ), figures AS (
-        SELECT v.id, v.name, v.category, v.status, v.contract_total,
+        SELECT v.id, v.wedding_id, v.name, v.category, v.status, v.contract_total,
                COALESCE(p.scheduled, 0) AS scheduled,
                COALESCE(p.overdue, FALSE) AS overdue, p.next_due,
                CASE WHEN v.status = $3 THEN GREATEST(COALESCE(v.contract_total, 0), COALESCE(p.scheduled, 0))
@@ -32,9 +35,9 @@ const VENDOR_MONEY_SQL = `
                     ELSE 0 END AS committed,
                CASE WHEN v.status IN ($3, $4) THEN COALESCE(p.paid, 0) ELSE 0 END AS paid
         FROM vendors v LEFT JOIN pay p ON p.vendor_id = v.id
-        WHERE v.wedding_id = $1
+        WHERE v.wedding_id ${scope}
     )
-    SELECT id, name, category, status,
+    SELECT id, wedding_id, name, category, status,
            contract_total::float AS contract_total, scheduled::float AS scheduled,
            committed::float AS committed, paid::float AS paid,
            GREATEST(committed - paid, 0)::float AS owed,
@@ -42,7 +45,7 @@ const VENDOR_MONEY_SQL = `
     FROM figures`;
 
 const vendorMoneyRows = async (weddingId, today) =>
-    (await db.query(VENDOR_MONEY_SQL, [weddingId, today, COUNTED_STATUS, PAID_ONLY_STATUS])).rows;
+    (await db.query(vendorMoneySql('= $1'), [weddingId, today, COUNTED_STATUS, PAID_ONLY_STATUS])).rows;
 
 /**
  * Money figures for every vendor of a wedding.
@@ -83,7 +86,7 @@ const findVendorMoney = async (weddingId, today = todayIso()) => {
  */
 const findMoneySummary = async (weddingId) => {
     const result = await db.query(
-        `WITH v AS (${VENDOR_MONEY_SQL})
+        `WITH v AS (${vendorMoneySql('= $1')})
          SELECT (SELECT COALESCE(MAX(total), 0) FROM budget_limits WHERE wedding_id = $1)::float AS limit_total,
                 (SELECT COALESCE(SUM(amount), 0) FROM budget_items WHERE wedding_id = $1)::float AS expenses,
                 COALESCE(SUM(v.committed), 0)::float AS committed,
@@ -105,6 +108,26 @@ const findMoneySummary = async (weddingId) => {
 };
 
 /**
+ * Committed totals (counting vendors plus ordinary expenses) for several weddings at once, for
+ * the planner's wedding cards.
+ * @param {string[]} weddingIds
+ * @returns {Promise<Map<string, number>>} Weddings with nothing committed are absent.
+ */
+const findCommittedByWedding = async (weddingIds) => {
+    if (weddingIds.length === 0) return new Map();
+    const result = await db.query(
+        `WITH v AS (${vendorMoneySql('= ANY($1)')}),
+              amounts AS (
+                  SELECT wedding_id, committed FROM v
+                  UNION ALL
+                  SELECT wedding_id, amount FROM budget_items WHERE wedding_id = ANY($1))
+         SELECT wedding_id, SUM(committed)::float AS committed FROM amounts GROUP BY wedding_id;`,
+        [weddingIds, todayIso(), COUNTED_STATUS, PAID_ONLY_STATUS]
+    );
+    return new Map(result.rows.map((row) => [row.wedding_id, row.committed]));
+};
+
+/**
  * Vendors whose money counts in the budget (booked, or declined with paid payments).
  * @param {string} weddingId
  * @returns {Promise<Array<{id: string, name: string, category: string, budgetCategory: string, committed: number, paid: number, owed: number}>>}
@@ -123,6 +146,56 @@ const findContractRows = async (weddingId) => {
             paid,
             owed
         }));
+};
+
+/**
+ * Budget totals per category: ordinary expenses plus counting vendors' committed amounts under
+ * their mapped budget category. Largest first.
+ * @param {string} weddingId
+ * @returns {Promise<Array<{category: string, total: number}>>}
+ */
+const findBudgetCategoryTotals = async (weddingId) => {
+    const [expenses, contracts] = await Promise.all([
+        db.query(
+            'SELECT category, SUM(amount)::float AS total FROM budget_items WHERE wedding_id = $1 GROUP BY category;',
+            [weddingId]
+        ),
+        findContractRows(weddingId)
+    ]);
+    const totals = new Map(expenses.rows.map((row) => [row.category, row.total]));
+    for (const row of contracts) totals.set(row.budgetCategory, (totals.get(row.budgetCategory) ?? 0) + row.committed);
+    return [...totals]
+        .map(([category, total]) => ({ category, total }))
+        .sort((a, b) => b.total - a.total || a.category.localeCompare(b.category));
+};
+
+/**
+ * True when an ordinary expense looks like it duplicates a booked vendor's contract: its name
+ * contains the vendor's name, or it is in the vendor's (mapped) budget category with the same
+ * amount as the contract total or one of its payments. Only used to show a warning.
+ * @param {string} weddingId
+ * @returns {Promise<boolean>}
+ */
+const findDuplicateExpenseHints = async (weddingId) => {
+    const categoryPairs = Object.entries(VENDOR_BUDGET_CATEGORY);
+    const result = await db.query(
+        `WITH mapping (vendor_category, budget_category) AS (SELECT * FROM UNNEST($3::text[], $4::text[])),
+              counted AS (
+                  SELECT v.id, v.name, v.contract_total, m.budget_category
+                  FROM vendors v JOIN mapping m ON m.vendor_category = v.category
+                  WHERE v.wedding_id = $1 AND v.status = $2)
+         SELECT EXISTS (
+             SELECT 1 FROM budget_items b JOIN counted c ON TRUE
+             WHERE b.wedding_id = $1
+               AND (POSITION(LOWER(c.name) IN LOWER(b.name)) > 0
+                    OR (b.category = c.budget_category
+                        AND (b.amount = c.contract_total
+                             OR b.amount IN (SELECT amount FROM vendor_payments p
+                                             WHERE p.vendor_id = c.id AND p.wedding_id = $1))))
+         ) AS found;`,
+        [weddingId, COUNTED_STATUS, categoryPairs.map(([vendor]) => vendor), categoryPairs.map(([, budget]) => budget)]
+    );
+    return result.rows[0].found;
 };
 
 /** Unpaid, dated payments of booked vendors, with their wedding. $1 counted status, $2 today. */
@@ -283,6 +356,9 @@ export {
     findVendorMoney,
     findMoneySummary,
     findContractRows,
+    findCommittedByWedding,
+    findBudgetCategoryTotals,
+    findDuplicateExpenseHints,
     findPaymentsDue,
     findPlannerPaymentsDue,
     countPlannerOverdue,

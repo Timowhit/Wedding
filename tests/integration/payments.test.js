@@ -458,4 +458,99 @@ describe('payments', { skip: skipWithoutDb }, () => {
             assert.deepEqual(await paymentsOf(vendorId), []);
         });
     });
+
+    describe('budget', () => {
+        const textOf = (html) =>
+            html
+                .replace(/<[^>]+>/g, ' ')
+                .replace(/&amp;/g, '&')
+                .replace(/\s+/g, ' ');
+        let couple;
+        let weddingId;
+        let florist;
+
+        before(async () => {
+            couple = await registeredClient(app.baseUrl, 'Bea', 'bea@example.com');
+            weddingId = (
+                await app.pool.query(
+                    `SELECT wm.wedding_id FROM wedding_members wm JOIN users u ON u.id = wm.user_id WHERE u.email = 'bea@example.com';`
+                )
+            ).rows[0].wedding_id;
+        });
+
+        it('empty wedding shows zeros', async () => {
+            const budget = textOf((await couple.get('/budget')).body);
+            assert.match(budget, /Committed \$0\.00/);
+            assert.match(budget, /Paid \$0\.00/);
+            assert.match(budget, /Still owed \$0\.00/);
+            const dashboard = (await couple.get('/')).body;
+            assert.doesNotMatch(dashboard, /NaN/);
+            assert.doesNotMatch(dashboard, /Payments due/);
+        });
+
+        it('budget shows committed, paid and still owed', async () => {
+            florist = await newVendor(weddingId, { name: 'Bloom & Blossom', category: 'Florist', total: 4800 });
+            await pay(weddingId, florist, 1200, { paid: '2027-01-01' });
+            await app.pool.query(
+                `INSERT INTO budget_items (wedding_id, name, category, amount) VALUES ($1, 'Dress alterations', 'Attire', 450);
+                 INSERT INTO budget_limits (wedding_id, total) VALUES ($1, 32000);`.replaceAll('$1', `'${weddingId}'`)
+            );
+            const html = (await couple.get('/budget')).body;
+            const budget = textOf(html);
+            assert.match(budget, /Committed \$5,250\.00/);
+            assert.match(budget, /Paid \$1,650\.00/);
+            assert.match(budget, /Still owed \$3,600\.00/);
+            assert.match(budget, /Vendor contracts/);
+            assert.match(html, new RegExp(`href="/vendors/${florist}"`));
+        });
+
+        it('category totals include booked contracts', async () => {
+            const budget = textOf((await couple.get('/budget')).body);
+            assert.match(budget, /Flowers \$4,800\.00/);
+        });
+
+        it('warns about expenses that may duplicate a contract', async () => {
+            assert.doesNotMatch(textOf((await couple.get('/budget')).body), /may duplicate/);
+            await app.pool.query(
+                `INSERT INTO budget_items (wedding_id, name, category, amount) VALUES ($1, 'Bloom & Blossom deposit', 'Flowers', 1200);`,
+                [weddingId]
+            );
+            assert.match(textOf((await couple.get('/budget')).body), /may duplicate/);
+            await app.pool.query(`DELETE FROM budget_items WHERE name = 'Bloom & Blossom deposit';`);
+            await app.pool.query(
+                `INSERT INTO budget_items (wedding_id, name, category, amount) VALUES ($1, 'Buttonholes', 'Flowers', 80);`,
+                [weddingId]
+            );
+            assert.doesNotMatch(textOf((await couple.get('/budget')).body), /may duplicate/);
+            await app.pool.query(
+                `INSERT INTO budget_items (wedding_id, name, category, amount) VALUES ($1, 'Flowers', 'Flowers', 4800);`,
+                [weddingId]
+            );
+            assert.match(textOf((await couple.get('/budget')).body), /may duplicate/);
+            await app.pool.query(`DELETE FROM budget_items WHERE name IN ('Buttonholes', 'Flowers');`);
+        });
+
+        it('over budget uses committed', async () => {
+            await app.pool.query('UPDATE budget_limits SET total = 4000 WHERE wedding_id = $1;', [weddingId]);
+            assert.match((await couple.get('/budget')).body, /notice--error/);
+            await app.pool.query('UPDATE budget_limits SET total = 32000 WHERE wedding_id = $1;', [weddingId]);
+        });
+
+        it('the dashboard budget stat uses committed', async () => {
+            assert.match(textOf((await couple.get('/')).body), /\$5,250\.00 committed of \$32,000\.00/);
+        });
+
+        it('the planner card uses committed', async () => {
+            const { rows } = await app.pool.query(`SELECT id FROM users WHERE email = 'pia@example.com';`);
+            await app.pool.query(`INSERT INTO wedding_members (wedding_id, user_id, role) VALUES ($1, $2, 'viewer');`, [
+                weddingId,
+                rows[0].id
+            ]);
+            const planner = new TestClient(app.baseUrl);
+            await planner.get('/login');
+            await planner.post('/login', { email: 'pia@example.com', password: 'correct horse battery' });
+            const page = textOf((await planner.get('/planner?when=all')).body);
+            assert.match(page, /\$5,250\.00 of \$32,000\.00/);
+        });
+    });
 });
