@@ -115,6 +115,11 @@ const MAX_TEMPLATES_PER_USER = 100;
 /** Per template; more than any real checklist or timeline. */
 const MAX_TEMPLATE_ITEMS = 300;
 
+/** The daily summary lists what is overdue or due within this many days. */
+const REMINDER_WINDOW_DAYS = 7;
+/** Roles that get the daily summary for a wedding (a viewer can't act on anything). */
+const REMINDER_ROLES = Object.freeze(['owner', 'editor', 'client']);
+
 export {
     ACCOUNT_TYPES,
     FOUNDING_SPOTS,
@@ -136,5 +141,7 @@ export {
     PLANNER_PAYMENT_FILTERS,
     TEMPLATE_KINDS,
     MAX_TEMPLATES_PER_USER,
-    MAX_TEMPLATE_ITEMS
+    MAX_TEMPLATE_ITEMS,
+    REMINDER_WINDOW_DAYS,
+    REMINDER_ROLES
 };

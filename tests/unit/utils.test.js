@@ -100,3 +100,18 @@ describe('todayIso', () => {
         assert.equal(isValidTimeZone('Europe/Madrid'), true);
     });
 });
+
+describe('unsubscribe tokens', () => {
+    it('verify only for their user', async () => {
+        process.env.SESSION_SECRET ??= 'unit-test-secret-0123456789abcdef0123';
+        const { isUnsubscribeToken, unsubscribeToken } = await import('../../src/utils/unsubscribe.js');
+        const a = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+        const b = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+        const token = unsubscribeToken(a);
+        assert.match(token, /^[0-9a-f]{64}$/);
+        assert.equal(isUnsubscribeToken(a, token), true);
+        assert.equal(isUnsubscribeToken(b, token), false);
+        assert.equal(isUnsubscribeToken(a, token.slice(0, 63)), false);
+        assert.equal(isUnsubscribeToken(a, undefined), false);
+    });
+});
