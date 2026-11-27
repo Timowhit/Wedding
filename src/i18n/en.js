@@ -940,5 +940,6 @@ export default {
     'unsubscribe.confirm': 'Stop the daily summary emails for this account?',
     'unsubscribe.submit': 'Unsubscribe',
     'unsubscribe.done': "Done. You won't get daily summaries any more.",
-    'unsubscribe.later': 'You can switch them back on in Settings at any time.'
+    'unsubscribe.later': 'You can switch them back on in Settings at any time.',
+    'action.dismiss': 'Dismiss'
 };

@@ -949,5 +949,6 @@ export default {
     'unsubscribe.confirm': '¿Dejar de recibir los resúmenes diarios en esta cuenta?',
     'unsubscribe.submit': 'Darse de baja',
     'unsubscribe.done': 'Hecho. Ya no recibirás resúmenes diarios.',
-    'unsubscribe.later': 'Puedes volver a activarlos en Ajustes cuando quieras.'
+    'unsubscribe.later': 'Puedes volver a activarlos en Ajustes cuando quieras.',
+    'action.dismiss': 'Cerrar'
 };

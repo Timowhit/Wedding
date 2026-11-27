@@ -211,6 +211,7 @@ button {
     align-items: center;
     gap: var(--space-2);
     flex: none;
+    line-height: 1;
     font-family: var(--font-display);
     font-size: 1.5rem;
     font-weight: 600;
@@ -227,7 +228,97 @@ button {
     min-width: 0;
 }
 
-.wedding-switcher select,
+.brand em {
+    color: var(--primary);
+    font-style: italic;
+}
+
+.brand__mark {
+    flex: none;
+    width: 2.25rem;
+    height: auto;
+}
+
+.brand__ring {
+    fill: none;
+    stroke-width: 2.6;
+    stroke-linecap: round;
+}
+
+.brand__ring--a {
+    stroke: var(--primary);
+}
+
+.brand__ring--b {
+    stroke: var(--accent);
+}
+
+.brand__gem {
+    fill: var(--accent);
+}
+
+/* The active wedding: a pill with a small ring, as text (one wedding) or as a selector. */
+.wedding-current,
+.wedding-switcher select {
+    max-width: 16rem;
+    min-height: 2.25rem;
+    padding: var(--space-1) var(--space-4) var(--space-1) 2rem;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    background-color: var(--primary-soft);
+    color: var(--primary-hover);
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.6;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.wedding-current {
+    position: relative;
+    display: block;
+    min-width: 0;
+    margin: 0;
+}
+
+.wedding-switcher {
+    position: relative;
+}
+
+.wedding-current::before,
+.wedding-switcher::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0.75rem;
+    width: 0.7rem;
+    height: 0.7rem;
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.wedding-switcher select {
+    padding-right: 2.25rem;
+    appearance: none;
+    cursor: pointer;
+    /* A chevron drawn with gradients, so it follows the theme colour. */
+    background-image:
+        linear-gradient(45deg, transparent 50%, currentColor 50%),
+        linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position:
+        calc(100% - 1.15rem) 55%,
+        calc(100% - 0.8rem) 55%;
+    background-size: 0.35rem 0.35rem;
+    background-repeat: no-repeat;
+}
+
+.wedding-switcher select:hover {
+    border-color: var(--primary);
+}
+
 .language-form select {
     width: auto;
     max-width: 14rem;
@@ -339,8 +430,9 @@ button {
         font-size: 1.25rem;
     }
 
+    .wedding-current,
     .wedding-switcher select {
-        max-width: 9.5rem;
+        max-width: 11rem;
     }
 
     /* Without JS the "Switch" button is visible too, so the bar may wrap onto a second line. */
@@ -507,6 +599,49 @@ main > * + * {
     border-left-width: 4px;
     border-radius: var(--radius-sm);
     background: var(--info-soft);
+}
+
+.flash {
+    position: relative;
+    transition:
+        opacity 0.4s ease,
+        transform 0.4s ease;
+}
+
+.flash:has(.flash__close:not([hidden])) {
+    padding-right: 3rem;
+}
+
+.flash--hiding {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+}
+
+.flash__close {
+    position: absolute;
+    top: 50%;
+    right: var(--space-2);
+    width: 2rem;
+    height: 2rem;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    transform: translateY(-50%);
+}
+
+.flash__close:hover {
+    background: var(--surface);
+    color: var(--text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .flash {
+        transition: none;
+    }
 }
 
 .flash--success {

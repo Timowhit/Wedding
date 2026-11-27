@@ -1,5 +1,7 @@
 <% if (locals.flash) { %>
-    <div class="flash flash--<%= flash.type %>" role="<%= flash.type === 'error' ? 'alert' : 'status' %>">
+    <%# Success and info notices fade after a few seconds (public/js/app.js); errors stay until dismissed. %>
+    <div class="flash flash--<%= flash.type %>" role="<%= flash.type === 'error' ? 'alert' : 'status' %>"<%- flash.type === 'error' ? '' : ' data-autohide' %>>
         <p><%= t(flash.key, flash.vars) %></p>
+        <button type="button" class="flash__close" data-dismiss hidden aria-label="<%= t('action.dismiss') %>"><span aria-hidden="true">×</span></button>
     </div>
 <% } %>

@@ -1,6 +1,7 @@
 /**
  * Progressive enhancement only. Every feature works without JavaScript: forms post normally
  * and the server renders the result. This file adds conveniences on top:
+ * - success and info notices fade after a few seconds; every notice gets a close button
  * - selects marked [data-autosubmit] submit their form on change (their button is then hidden)
  * - forms marked [data-confirm] ask for confirmation before submitting
  * - buttons marked [data-copy] copy the value of the input they name
@@ -22,6 +23,38 @@
     });
     document.querySelectorAll('[data-hide-with-js]').forEach(function (element) {
         element.hidden = true;
+    });
+
+    // Notices: success and info fade after a few seconds (paused while hovered or focused);
+    // every notice gets a close button. Errors never fade, because people need them to fix a form.
+    const FLASH_VISIBLE_MS = 4000;
+    const FLASH_FADE_MS = 400;
+    document.querySelectorAll('.flash').forEach(function (flash) {
+        const close = flash.querySelector('[data-dismiss]');
+        const hide = function () {
+            flash.classList.add('flash--hiding');
+            setTimeout(function () {
+                flash.remove();
+            }, FLASH_FADE_MS);
+        };
+        if (close) {
+            close.hidden = false;
+            close.addEventListener('click', hide);
+        }
+        if (!flash.hasAttribute('data-autohide')) return;
+        let timer = setTimeout(hide, FLASH_VISIBLE_MS);
+        const pause = function () {
+            clearTimeout(timer);
+        };
+        const resume = function () {
+            if (flash.matches(':hover') || flash.contains(document.activeElement)) return;
+            clearTimeout(timer);
+            timer = setTimeout(hide, FLASH_VISIBLE_MS);
+        };
+        flash.addEventListener('mouseenter', pause);
+        flash.addEventListener('focusin', pause);
+        flash.addEventListener('mouseleave', resume);
+        flash.addEventListener('focusout', resume);
     });
 
     document.addEventListener('submit', function (event) {
