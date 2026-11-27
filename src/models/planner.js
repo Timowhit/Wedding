@@ -2,11 +2,12 @@ import db, { withTransaction } from './db.js';
 import { claimFoundingNumber } from './founding.js';
 import { findCommittedByWedding } from './payments.js';
 import { createWedding } from './weddings.js';
+import { todayIso } from '../utils/today.js';
 
 /** Weddings a planner sees on the dashboard: every wedding they belong to. */
 const WHEN_FILTERS = Object.freeze({
-    upcoming: '(w.wedding_date IS NULL OR w.wedding_date >= CURRENT_DATE) AND w.archived_at IS NULL',
-    past: 'w.wedding_date < CURRENT_DATE AND w.archived_at IS NULL',
+    upcoming: '(w.wedding_date IS NULL OR w.wedding_date >= $4::date) AND w.archived_at IS NULL',
+    past: 'w.wedding_date < $4::date AND w.archived_at IS NULL',
     archived: 'w.archived_at IS NOT NULL',
     all: 'TRUE'
 });
@@ -19,9 +20,10 @@ const likePattern = (text) => `%${text.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
  * The planner dashboard: one row per wedding with what needs attention.
  * @param {string} userId
  * @param {{q?: string, when?: 'upcoming'|'past'|'all'}} [filters] - Already validated.
+ * @param {string} [today] - YYYY-MM-DD in the app's time zone (see todayIso).
  * @returns {Promise<Array<{id: string, name: string, wedding_date: Date|null, role: string, open_decisions: number, changes_requested: number, overdue_tasks: number, committed: number, budget_limit: number, guests_total: number, guests_confirmed: number, deadlines: Array<{kind: 'task'|'decision', title: string, due_date: Date, overdue: boolean}>}>>}
  */
-const findPlannerOverview = async (userId, { q = '', when = 'upcoming' } = {}) => {
+const findPlannerOverview = async (userId, { q = '', when = 'upcoming' } = {}, today = todayIso()) => {
     const whenSql = WHEN_FILTERS[when] ?? WHEN_FILTERS.upcoming;
     const weddings = await db.query(
         `SELECT w.id, w.name, w.wedding_date, wm.role,
@@ -29,7 +31,7 @@ const findPlannerOverview = async (userId, { q = '', when = 'upcoming' } = {}) =
                 (SELECT COUNT(*) FROM decisions d WHERE d.wedding_id = w.id AND d.status = 'changes_requested')::int
                     AS changes_requested,
                 (SELECT COUNT(*) FROM checklist_tasks t
-                  WHERE t.wedding_id = w.id AND NOT t.done AND t.due_date < CURRENT_DATE)::int AS overdue_tasks,
+                  WHERE t.wedding_id = w.id AND NOT t.done AND t.due_date < $4::date)::int AS overdue_tasks,
                 (SELECT COALESCE(MAX(total), 0) FROM budget_limits l WHERE l.wedding_id = w.id)::float AS budget_limit,
                 (SELECT COUNT(*) FROM guests g WHERE g.wedding_id = w.id)::int AS guests_total,
                 (SELECT COUNT(*) FROM guests g WHERE g.wedding_id = w.id AND g.rsvp = 'Confirmed')::int AS guests_confirmed
@@ -37,13 +39,13 @@ const findPlannerOverview = async (userId, { q = '', when = 'upcoming' } = {}) =
          JOIN wedding_members wm ON wm.wedding_id = w.id AND wm.user_id = $1
          WHERE ${whenSql} AND ($2 = '' OR w.name ILIKE $3)
          ORDER BY w.wedding_date ASC NULLS LAST, LOWER(w.name) ASC, w.id ASC;`,
-        [userId, q, likePattern(q)]
+        [userId, q, likePattern(q), today]
     );
     if (weddings.rows.length === 0) return [];
 
     // The next few dated items per wedding, tasks and decisions together, soonest first.
     const deadlines = await db.query(
-        `SELECT wedding_id, kind, title, due_date, due_date < CURRENT_DATE AS overdue
+        `SELECT wedding_id, kind, title, due_date, due_date < $3::date AS overdue
          FROM (
              SELECT x.*, ROW_NUMBER() OVER (PARTITION BY x.wedding_id ORDER BY x.due_date, x.title) AS position
              FROM (
@@ -56,7 +58,7 @@ const findPlannerOverview = async (userId, { q = '', when = 'upcoming' } = {}) =
          ) ranked
          WHERE position <= $2
          ORDER BY due_date, title;`,
-        [weddings.rows.map((w) => w.id), DEADLINES_PER_WEDDING]
+        [weddings.rows.map((w) => w.id), DEADLINES_PER_WEDDING, today]
     );
     const committed = await findCommittedByWedding(weddings.rows.map((w) => w.id));
     return weddings.rows.map((wedding) => ({
@@ -70,20 +72,21 @@ const findPlannerOverview = async (userId, { q = '', when = 'upcoming' } = {}) =
  * Totals across all of a planner's weddings, for the top of the dashboard. Decisions count only
  * those waiting on couples, like the per-wedding cards; sent-back ones are shown on each card.
  * @param {string} userId
+ * @param {string} [today] - YYYY-MM-DD in the app's time zone (see todayIso).
  * @returns {Promise<{weddingsThisMonth: number, openDecisions: number, overdueTasks: number}>}
  */
-const findPlannerWorkload = async (userId) => {
+const findPlannerWorkload = async (userId, today = todayIso()) => {
     const result = await db.query(
         `WITH mine AS (SELECT wm.wedding_id FROM wedding_members wm JOIN weddings aw ON aw.id = wm.wedding_id
                        WHERE wm.user_id = $1 AND aw.archived_at IS NULL)
          SELECT
            (SELECT COUNT(*) FROM weddings w JOIN mine ON mine.wedding_id = w.id
-             WHERE date_trunc('month', w.wedding_date) = date_trunc('month', CURRENT_DATE))::int AS weddings_this_month,
+             WHERE date_trunc('month', w.wedding_date) = date_trunc('month', $2::date))::int AS weddings_this_month,
            (SELECT COUNT(*) FROM decisions d JOIN mine ON mine.wedding_id = d.wedding_id
              WHERE d.status = 'open')::int AS open_decisions,
            (SELECT COUNT(*) FROM checklist_tasks t JOIN mine ON mine.wedding_id = t.wedding_id
-             WHERE NOT t.done AND t.due_date < CURRENT_DATE)::int AS overdue_tasks;`,
-        [userId]
+             WHERE NOT t.done AND t.due_date < $2::date)::int AS overdue_tasks;`,
+        [userId, today]
     );
     const row = result.rows[0];
     return {

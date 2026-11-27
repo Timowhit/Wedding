@@ -349,4 +349,34 @@ describe('planner accounts and founding spots', { skip: skipWithoutDb }, () => {
             'one number per planner'
         );
     });
+
+    it("the dashboard's past/upcoming split follows APP_TIME_ZONE, not the database's date", async () => {
+        const { todayIso } = await import('../../src/utils/today.js');
+        const dbToday = (await app.pool.query('SELECT CURRENT_DATE::text AS d;')).rows[0].d;
+        // One of these zones is on another date than the database at any moment (26 hours apart).
+        const zone = ['Pacific/Kiritimati', 'Etc/GMT+12'].find((name) => todayIso(name) !== dbToday);
+        const appToday = todayIso(zone);
+        // The earlier of the two dates is in the past for one clock and today for the other.
+        const date = appToday < dbToday ? appToday : dbToday;
+        await app.pool.query(
+            `WITH w AS (INSERT INTO weddings (name, wedding_date, planner_managed) VALUES ('Zone Couple', $1, true) RETURNING id)
+             INSERT INTO wedding_members (wedding_id, user_id, role) SELECT w.id, u.id, 'owner' FROM w, users u WHERE u.email = 'paula@example.com';`,
+            [date]
+        );
+        const planner = new TestClient(app.baseUrl);
+        await planner.get('/login');
+        await planner.post('/login', { email: 'paula@example.com', password: PASSWORD });
+        const saved = process.env.APP_TIME_ZONE;
+        process.env.APP_TIME_ZONE = zone;
+        try {
+            const upcoming = (await planner.get('/planner?when=upcoming')).body;
+            const isUpcoming = date >= appToday;
+            assert.equal(/<h3 class="card-title">Zone Couple<\/h3>/.test(upcoming), isUpcoming, `${zone} ${appToday} vs db ${dbToday}`);
+            const past = (await planner.get('/planner?when=past')).body;
+            assert.equal(/<h3 class="card-title">Zone Couple<\/h3>/.test(past), !isUpcoming);
+        } finally {
+            if (saved === undefined) delete process.env.APP_TIME_ZONE;
+            else process.env.APP_TIME_ZONE = saved;
+        }
+    });
 });
