@@ -6,6 +6,7 @@ import {
     createTasksIfMissing,
     deleteTask,
     findTask,
+    claimMilestone,
     findTaskProgress,
     findTasks,
     toggleTask,
@@ -139,7 +140,9 @@ const processToggleTask = async (req, res, next) => {
     // Ticking a task off is celebrated on the next page: confetti (partials/celebrate.ejs) and a
     // notice, which fades, can be dismissed and is announced like every other notice.
     if (task.done) {
-        const celebration = celebrationFor(await findTaskProgress(req.wedding.id));
+        const reached = celebrationFor(await findTaskProgress(req.wedding.id));
+        const isNew = reached.milestone !== null && (await claimMilestone(req.wedding.id, reached.milestone));
+        const celebration = { ...reached, milestone: isNew ? reached.milestone : null };
         req.session.celebrate = { ...celebration, weddingId: req.wedding.id };
         const headline = req.t(
             celebration.milestone ? `celebrate.milestone${celebration.milestone}` : 'celebrate.nice'

@@ -170,7 +170,23 @@ const findExistingTaskTexts = async (weddingId, texts) => {
     return new Set(result.rows.map((row) => row.text));
 };
 
+/**
+ * Records that a wedding reached a checklist milestone. Only the first time counts, so
+ * unticking a task and ticking it again doesn't replay the big celebration.
+ * @param {string} weddingId
+ * @param {number} milestone - A percentage from MILESTONES.
+ * @returns {Promise<boolean>} True when this milestone is new for the wedding.
+ */
+const claimMilestone = async (weddingId, milestone) => {
+    const result = await db.query(
+        `UPDATE weddings SET celebrated_milestone = $2 WHERE id = $1 AND celebrated_milestone < $2;`,
+        [weddingId, milestone]
+    );
+    return result.rowCount > 0;
+};
+
 export {
+    claimMilestone,
     findExistingTaskTexts,
     findTasks,
     findTaskProgress,
