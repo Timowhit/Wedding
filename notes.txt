@@ -47,5 +47,6 @@ Small follow-ups (from the review of PR #11)
 - [ ] Celebrations: remember the highest milestone per wedding so unticking and ticking again doesn't repeat the big confetti.
 - [ ] Files: re-show the vendor page (not /files) when an upload from it fails; check .docx/.xlsx contents, not just that they're zip files.
 - [ ] Files: check by hand that PDFs open in Chrome, Firefox and Safari under the download sandbox.
+- [ ] Library: case-insensitive unique names; cap questionnaires sent per wedding; clear a chosen answer; warn when two partners save answers at once; long messages may be cut off in some email apps (suggest Copy).
 
 Not started

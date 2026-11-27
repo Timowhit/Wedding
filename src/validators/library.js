@@ -1,4 +1,11 @@
-import { LIBRARY_LIMITS, MAX_CHOICE_OPTIONS, MAX_QUESTIONS, MESSAGE_KINDS, QUESTION_TYPES } from '../constants.js';
+import {
+    LIBRARY_LIMITS,
+    MAX_CHOICE_OPTIONS,
+    MAX_QUESTIONS,
+    MESSAGE_KINDS,
+    QUESTION_TYPES,
+    SPARE_QUESTION_ROWS
+} from '../constants.js';
 import { checkText, collectErrors, readChoice, readText } from './common.js';
 
 /**
@@ -23,11 +30,11 @@ const validateMessage = (body = {}) => {
     return { values, data: { kind, name: values.name, subject: values.subject || null, body: values.body }, errors };
 };
 
-const splitOptions = (text) =>
-    String(text ?? '')
-        .split(/\r?\n/)
-        .map((option) => option.trim())
-        .filter(Boolean);
+// Trimmed and without repeats, so every stored option can be chosen (answers are trimmed too).
+const cleanOptions = (options) => [...new Set(options.map((option) => String(option).trim()).filter(Boolean))];
+const splitOptions = (text) => cleanOptions(String(text ?? '').split(/\r?\n/));
+// The builder reads rows q0…q{MAX_BUILDER_ROWS - 1}: the most questions plus the spare empty rows.
+const MAX_BUILDER_ROWS = MAX_QUESTIONS + SPARE_QUESTION_ROWS;
 
 /**
  * The questionnaire builder: a title, an intro and numbered rows q0_text/q0_type/q0_options…
@@ -37,7 +44,11 @@ const splitOptions = (text) =>
  */
 const validateQuestionnaire = (body = {}) => {
     const rows = [];
-    for (let i = 0; i < MAX_QUESTIONS + 10; i += 1) {
+    const beyondLimit = Object.keys(body).some((key) => {
+        const match = /^q(\d+)_text$/.exec(key);
+        return match && Number(match[1]) >= MAX_BUILDER_ROWS && readText(body[key]);
+    });
+    for (let i = 0; i < MAX_BUILDER_ROWS; i += 1) {
         if (!(`q${i}_text` in body)) continue;
         rows.push({
             text: readText(body[`q${i}_text`]),
@@ -66,7 +77,8 @@ const validateQuestionnaire = (body = {}) => {
         questions.push({ text: row.text, type, options });
     });
     if (questions.length === 0) fail('q0_text', 'library.needQuestion');
-    if (questions.length > MAX_QUESTIONS) fail('q0_text', 'library.tooManyQuestions', { max: MAX_QUESTIONS });
+    if (questions.length > MAX_QUESTIONS || beyondLimit)
+        fail('q0_text', 'library.tooManyQuestions', { max: MAX_QUESTIONS });
     return { values, data: { title: values.title, intro: values.intro || null, questions }, errors };
 };
 
@@ -81,7 +93,9 @@ const normaliseQuestions = (raw) =>
         .filter((q) => q && typeof q.text === 'string' && q.text.trim())
         .slice(0, MAX_QUESTIONS)
         .map((q) => {
-            const options = Array.isArray(q.options) ? q.options.filter((o) => typeof o === 'string' && o.trim()) : [];
+            const options = Array.isArray(q.options)
+                ? cleanOptions(q.options.filter((o) => typeof o === 'string'))
+                : [];
             const type =
                 QUESTION_TYPES.includes(q.type) && !(q.type === 'choice' && options.length < 2) ? q.type : 'short';
             return { text: q.text.trim(), type, options: type === 'choice' ? options : [] };

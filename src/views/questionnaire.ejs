@@ -46,7 +46,7 @@
                 <% }); %>
             </dl>
         <% } %>
-        <% if (canEdit) { %>
+        <% if (canAskDecisions) { %>
             <form method="post" action="/questionnaires/<%= sent.id %>/delete" class="print-hide" data-confirm="<%= t('library.confirmDelete', { name: sent.title }) %>">
                 <%- include('partials/csrf-field') %>
                 <button type="submit" class="link-action link-action--danger"><%= t('questionnaires.remove') %></button>

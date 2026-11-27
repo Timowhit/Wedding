@@ -47,7 +47,7 @@ It applies `013_planning_details.sql` and `014_wrap_up.sql`, which only add colu
 
 ## 4. Merge the messages and questionnaires library (after step 3)
 
-[Timowhit/Wedding#15](https://github.com/Timowhit/Wedding/pull/15) adds your message templates and questionnaires (`/library`) and the Questionnaires page couples answer. It is built on top of the file uploads PR, so merge that first; if GitHub then shows a conflict here, tell me and I'll update it.
+[Timowhit/Wedding#15](https://github.com/Timowhit/Wedding/pull/15) adds your message templates and questionnaires (`/library`) and the Questionnaires page couples answer. It has been reviewed and the review's fixes are in. It is built on top of the file uploads PR, so merge that first; if GitHub then shows a conflict here, tell me and I'll update it.
 
 1. Merge the PR once its CI check is green.
 2. Pull `main` and run `npm run migrate` (adds `016_library.sql`).

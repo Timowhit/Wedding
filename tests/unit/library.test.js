@@ -54,4 +54,23 @@ describe('library helpers', () => {
             ['a1']
         );
     });
+
+    it('trims and de-duplicates choice options, so every stored option can be chosen', () => {
+        assert.deepEqual(normaliseQuestions([{ text: 'Pick', type: 'choice', options: [' y ', 'y', 'n'] }]), [
+            { text: 'Pick', type: 'choice', options: ['y', 'n'] }
+        ]);
+        const built = validateQuestionnaire({ title: 'T', q0_text: 'Pick', q0_type: 'choice', q0_options: 'a\na\nb' });
+        assert.deepEqual(built.data.questions[0].options, ['a', 'b']);
+    });
+
+    it('rows past the builder limit are reported, not silently dropped', () => {
+        const result = validateQuestionnaire({
+            title: 'T',
+            q0_text: 'One',
+            q0_type: 'short',
+            q45_text: 'Lost?',
+            q45_type: 'short'
+        });
+        assert.ok(result.errors.some((e) => e.key === 'library.tooManyQuestions'));
+    });
 });

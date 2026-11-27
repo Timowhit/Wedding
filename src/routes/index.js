@@ -305,7 +305,8 @@ router.post('/vendors/:id/rating', editor, processRating);
 /* Templates (a person's own; see models/templates.js) ------------------------------------------- */
 router.get('/templates', account, showTemplates);
 
-/* Messages and questionnaires library (account: a person's own; using one needs a wedding) ---- */
+/* Messages and questionnaires library (account: a person's own; using one needs a wedding).
+   Sending and removing questionnaires is asking (the planner); answering is the couple's. ---- */
 router.get('/library', account, showLibrary);
 router.post('/library/messages', account, processNewMessage);
 router.get('/library/messages/:id/edit', account, showEditMessage);
@@ -318,10 +319,10 @@ router.get('/library/questionnaires/:id/edit', account, showEditQuestionnaire);
 router.post('/library/questionnaires/:id/edit', account, processEditQuestionnaire);
 router.post('/library/questionnaires/:id/delete', account, processDeleteQuestionnaire);
 router.get('/questionnaires', member, showQuestionnaires);
-router.post('/questionnaires/send', editor, processSendQuestionnaire);
+router.post('/questionnaires/send', asker, processSendQuestionnaire);
 router.get('/questionnaires/:id', member, showSentQuestionnaire);
 router.post('/questionnaires/:id/answers', answerer, processAnswers);
-router.post('/questionnaires/:id/delete', editor, processDeleteSent);
+router.post('/questionnaires/:id/delete', asker, processDeleteSent);
 router.get('/calendar', account, showCalendar);
 router.get('/search', account, searchLimiter, showSearch);
 router.post('/templates/:id/rename', account, processRenameTemplate);

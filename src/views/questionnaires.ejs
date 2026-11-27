@@ -5,7 +5,7 @@
     <%- include('partials/page-header', { heading: 'questionnaires.heading', subtitle: 'questionnaires.subtitle' }) %>
     <%- include('partials/flash') %>
 
-    <% if (canEdit) { %>
+    <% if (canAskDecisions) { %>
         <section class="card" aria-labelledby="send-heading">
             <h2 class="card-title" id="send-heading"><%= t('questionnaires.send') %></h2>
             <% if (mine.length === 0) { %>

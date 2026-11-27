@@ -126,7 +126,8 @@ const showUseMessage = async (req, res, next) => {
     const body = fillPlaceholders(message.body, fields);
     const recipients = (await findMembers(req.wedding.id))
         .filter((member) => member.user_id !== req.session.user.id)
-        .map((member) => member.email);
+        // Encoded, so an unusual address can never add mailto fields of its own.
+        .map((member) => encodeURIComponent(member.email).replace(/%40/g, '@'));
     const mailto = `mailto:${recipients.join(',')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     res.render('use-message', { title: message.name, message, subject, body, mailto });
 };
@@ -203,7 +204,7 @@ const processDeleteQuestionnaire = async (req, res, next) => {
 const showQuestionnaires = async (req, res) => {
     const [sent, mine] = await Promise.all([
         findSentQuestionnaires(req.wedding.id),
-        res.locals.canEdit ? findQuestionnaires(req.session.user.id) : []
+        res.locals.canAskDecisions ? findQuestionnaires(req.session.user.id) : []
     ]);
     res.render('questionnaires', { title: req.t('questionnaires.title'), sent, mine });
 };

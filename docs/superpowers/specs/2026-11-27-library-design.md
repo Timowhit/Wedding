@@ -25,7 +25,7 @@ This covers the notes item "Reusable questionnaires, proposals, email messages, 
 
 - **The template:** a person's own questionnaire has a title, an introduction and up to 30 questions. Each question is short text, long text or a choice of options (one per line).
 - **The editing form:** shows the saved questions plus 3 empty rows, and works without JavaScript. Empty rows are dropped.
-- **Sending:** "Send to this wedding" (needs at least editor rights) copies the questions into `wedding_questionnaires`. Later edits to the template don't change what was sent.
+- **Sending:** "Send to this wedding" copies the questions into `wedding_questionnaires`. Only the person who asks decisions in that wedding can send or remove a questionnaire (the planner; editors in a couple's own wedding), so a client can't delete their own answers. Later edits to the template don't change what was sent.
 - **Answering:**
   - Everyone in the wedding sees it under Questionnaires (`/questionnaires`).
   - The people who answer decisions answer it (`decisionPermissions(wedding).canAnswer`): the couple in planner weddings, editors in couples' own weddings.
@@ -33,11 +33,17 @@ This covers the notes item "Reusable questionnaires, proposals, email messages, 
   - Planners see the answers on the same page.
 - **Validation:** text answers are up to 2000 characters. A choice answer must be one of the question's options.
 
+## Navigation
+
+- Library is listed for planners only; couples rarely need it, though the route works for any account.
+- Questionnaires is listed in planner weddings, and for planners in any wedding they belong to.
+
 ## Limits
 
 - 100 message templates and 50 questionnaires per person
 - message bodies up to 10,000 characters
 - names and titles up to 120 characters
+- library and questionnaire forms may be up to 256 KB (other forms 20 KB), so long accented text fits
 
 ## Data
 

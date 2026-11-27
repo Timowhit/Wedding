@@ -68,7 +68,7 @@
                 <% }); %>
             </ul>
         <% } %>
-        <% if (locals.wedding) { %><p class="hint"><a href="/questionnaires"><%= t('library.sendHint', { wedding: wedding.name }) %></a></p><% } %>
+        <% if (locals.wedding && canAskDecisions) { %><p class="hint"><a href="/questionnaires"><%= t('library.sendHint', { wedding: wedding.name }) %></a></p><% } %>
     </section>
 </main>
 

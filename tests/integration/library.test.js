@@ -196,4 +196,44 @@ describe('messages and questionnaires library', { skip: skipWithoutDb }, () => {
             );
         });
     });
+
+    describe('review fixes', () => {
+        it('clients cannot send or remove questionnaires in a planner wedding', async () => {
+            const page = await cal.get('/questionnaires');
+            assert.doesNotMatch(page.body, /action="\/questionnaires\/send"/);
+            const before = (
+                await q(`SELECT COUNT(*)::int AS n FROM wedding_questionnaires WHERE wedding_id = $1;`, [weddingId])
+            ).rows[0].n;
+            const sent = (await q(`SELECT id FROM wedding_questionnaires WHERE wedding_id = $1 LIMIT 1;`, [weddingId]))
+                .rows[0].id;
+            const sentPage = await cal.get(`/questionnaires/${sent}`);
+            assert.doesNotMatch(sentPage.body, /questionnaires\/[0-9a-f-]+\/delete/);
+            await cal.post(`/questionnaires/${sent}/delete`, {});
+            const calsOwn = await q(
+                `INSERT INTO questionnaires (user_id, title, questions) SELECT id, 'Cal list', '[{"text":"Q","type":"short","options":[]}]' FROM users WHERE email = 'cal@example.com' RETURNING id;`
+            );
+            await cal.post('/questionnaires/send', { questionnaire_id: calsOwn.rows[0].id });
+            const after = (
+                await q(`SELECT COUNT(*)::int AS n FROM wedding_questionnaires WHERE wedding_id = $1;`, [weddingId])
+            ).rows[0].n;
+            assert.equal(after, before);
+        });
+
+        it('long messages in any language fit (no 413)', async () => {
+            await pia.get('/library');
+            const body = 'áéíóú ñ¿¡ '.repeat(1000).slice(0, 10000);
+            const saved = await pia.post('/library/messages', {
+                kind: 'proposal',
+                name: 'Long Spanish',
+                subject: '',
+                body
+            });
+            assert.equal(saved.location, '/library');
+        });
+
+        it('questionnaires are in the navigation for planners in any wedding they belong to', async () => {
+            assert.match((await pia.get('/')).body, /href="\/questionnaires"/);
+            assert.match((await cal.get('/')).body, /href="\/questionnaires"/);
+        });
+    });
 });
