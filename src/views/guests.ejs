@@ -61,6 +61,7 @@
                                     <% if (guest.plus_one) { %><span><%= t('guests.plusOneLabel', { name: guest.plus_one }) %></span><% } %>
                                 </p>
                             <% } %>
+                            <%- include('partials/custom-field-values', { fields: customFields, custom: guest.custom }) %>
                         </div>
                         <div class="item-side">
                             <%- include('partials/status-form', { action: `/guests/${guest.id}/rsvp`, field: 'rsvp', value: guest.rsvp, options: statuses, prefix: 'rsvp', label: t('guests.rsvpFor', { name: guest.name }), id: `rsvp-${guest.id}` }) %>

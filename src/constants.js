@@ -187,6 +187,13 @@ const TRIAL_IDLE_HOURS = 24;
 const TRIAL_TOUCH_MINUTES = 5;
 // A trial wedding is dated this many days ahead, so its countdown and deadlines look real.
 const TRIAL_WEDDING_DAYS_AHEAD = 180;
+// Custom fields: what they belong to, their types, and limits.
+const CUSTOM_FIELD_ENTITIES = Object.freeze(['guest', 'vendor', 'task']);
+const CUSTOM_FIELD_TYPES = Object.freeze(['text', 'number', 'yesno', 'choice']);
+const MAX_CUSTOM_FIELDS = 10; // per entity per wedding
+const CUSTOM_FIELD_LABEL_MAX = 60;
+const CUSTOM_FIELD_OPTIONS_MAX = 20;
+const CUSTOM_VALUE_MAX = 500;
 const MAX_LAYOUT_ITEMS = 200;
 // Rooms (or floors) per venue.
 const MAX_ROOMS = 10;
@@ -277,6 +284,12 @@ export {
     TRIAL_IDLE_HOURS,
     TRIAL_TOUCH_MINUTES,
     TRIAL_WEDDING_DAYS_AHEAD,
+    CUSTOM_FIELD_ENTITIES,
+    CUSTOM_FIELD_TYPES,
+    MAX_CUSTOM_FIELDS,
+    CUSTOM_FIELD_LABEL_MAX,
+    CUSTOM_FIELD_OPTIONS_MAX,
+    CUSTOM_VALUE_MAX,
     MAX_LAYOUT_ITEMS,
     MAX_ROOMS,
     ROOM_NAME_MAX,

@@ -92,6 +92,7 @@ import {
     requireRealAccount
 } from '../middleware/auth.js';
 import { processTry, showTry } from '../controllers/trial.js';
+import { processDeleteField, processNewField, showFields } from '../controllers/custom-fields.js';
 import { processNewClientWedding, processOpenWedding, showPlannerDashboard } from '../controllers/planner.js';
 import {
     inviteLimiter,
@@ -342,6 +343,11 @@ router.post('/vendors/:id/contract', editor, processContract);
 router.post('/vendors/:id/payments', editor, processNewPayment);
 router.post('/vendors/:id/rating', editor, processRating);
 router.post('/vendors/:id/rating/clear', editor, processClearRating);
+
+/* Custom fields on guests, vendors and tasks (member reads, editor changes) --------------------- */
+router.get('/fields', member, showFields);
+router.post('/fields', editor, processNewField);
+router.post('/fields/:id/delete', editor, processDeleteField);
 
 /* Templates (a person's own; see models/templates.js) ------------------------------------------- */
 router.get('/templates', account, showTemplates);

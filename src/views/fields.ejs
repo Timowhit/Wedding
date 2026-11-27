@@ -1,0 +1,65 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content">
+    <%- include('partials/page-header', { heading: 'fields.heading', subtitle: 'fields.subtitle' }) %>
+    <%- include('partials/flash') %>
+    <%- include('partials/read-only-notice') %>
+
+    <% groups.forEach((group) => { %>
+        <section class="card" aria-labelledby="fields-<%= group.entity %>">
+            <h2 class="card-title" id="fields-<%= group.entity %>"><%= t(`fields.entity.${group.entity}`) %></h2>
+            <% if (group.fields.length === 0) { %>
+                <p class="hint"><%= t('fields.none') %></p>
+            <% } else { %>
+                <ul class="item-list">
+                    <% group.fields.forEach((field) => { %>
+                        <li class="item-card">
+                            <div class="item-info">
+                                <p class="item-name"><%= field.label %> <span class="tag"><%= t(`fields.type.${field.type}`) %></span></p>
+                                <% if (field.type === 'choice') { %><p class="item-meta"><%= field.options.join(' · ') %></p><% } %>
+                            </div>
+                            <% if (canEdit) { %>
+                                <%- include('partials/row-actions', { deleteAction: `/fields/${field.id}/delete`, name: field.label, confirm: t('fields.confirmDelete', { label: field.label }) }) %>
+                            <% } %>
+                        </li>
+                    <% }); %>
+                </ul>
+            <% } %>
+        </section>
+    <% }); %>
+
+    <% if (canEdit) { %>
+        <%- include('partials/add-panel-start', { id: 'add-field', labelKey: 'fields.add', open: fieldForm.errors.length > 0 }) %>
+            <%- include('partials/form-errors', { errors: fieldForm.errors, id: 'field-errors' }) %>
+            <form method="post" action="/fields" class="form-grid">
+                <%- include('partials/csrf-field') %>
+                <div class="field">
+                    <label for="field-entity"><%= t('fields.for') %></label>
+                    <select id="field-entity" name="entity" <%- fieldState(fieldForm.errors, 'entity', 'field-errors') %>>
+                        <% entities.forEach((entity) => { %><option value="<%= entity %>" <%= entity === fieldForm.values.entity ? 'selected' : '' %>><%= t(`fields.entity.${entity}`) %></option><% }); %>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="field-label"><%= t('field.label') %></label>
+                    <input type="text" id="field-label" name="label" required maxlength="60" value="<%= fieldForm.values.label %>"
+                           placeholder="<%= t('fields.labelPlaceholder') %>" <%- fieldState(fieldForm.errors, 'label', 'field-errors') %>>
+                </div>
+                <div class="field">
+                    <label for="field-type"><%= t('field.type') %></label>
+                    <select id="field-type" name="type" <%- fieldState(fieldForm.errors, 'type', 'field-errors') %>>
+                        <% types.forEach((type) => { %><option value="<%= type %>" <%= type === fieldForm.values.type ? 'selected' : '' %>><%= t(`fields.type.${type}`) %></option><% }); %>
+                    </select>
+                </div>
+                <div class="field field--wide">
+                    <label for="field-options"><%= t('field.options') %> <span class="optional"><%= t('form.optional') %></span></label>
+                    <textarea id="field-options" name="options" rows="3" <%- fieldState(fieldForm.errors, 'options', 'field-errors', 'options-hint') %>><%= fieldForm.values.options %></textarea>
+                    <p class="hint" id="options-hint"><%= t('fields.optionsHint') %></p>
+                </div>
+                <div class="form-actions"><button type="submit" class="btn btn-primary"><%= t('fields.addSubmit') %></button></div>
+            </form>
+        <%- include('partials/add-panel-end') %>
+    <% } %>
+</main>
+
+<%- include('partials/footer') %>

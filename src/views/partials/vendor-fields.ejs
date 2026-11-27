@@ -36,3 +36,4 @@
     <textarea id="notes" name="notes" rows="3" maxlength="2000" placeholder="<%= t('vendors.notesPlaceholder') %>"
               <%- fieldState(errors, 'notes', errorsId) %>><%= values.notes %></textarea>
 </div>
+<%- include('custom-field-inputs', { fields: locals.customFields || [], values: values.custom || {}, errors, errorsId }) %>

@@ -1,0 +1,20 @@
+<%# A form's custom fields. Expects fields, values (by field id), errors and errorsId. %>
+<% fields.forEach((field) => { const name = `cf_${field.id}`; const value = values[field.id] ?? ''; %>
+    <div class="field">
+        <label for="cf-<%= field.id %>"><%= field.label %> <span class="optional"><%= t('form.optional') %></span></label>
+        <% if (field.type === 'yesno' || field.type === 'choice') { %>
+            <select id="cf-<%= field.id %>" name="<%= name %>" <%- fieldState(errors, name, errorsId) %>>
+                <option value="">—</option>
+                <% if (field.type === 'yesno') { %>
+                    <option value="yes" <%= value === 'yes' ? 'selected' : '' %>><%= t('fields.yes') %></option>
+                    <option value="no" <%= value === 'no' ? 'selected' : '' %>><%= t('fields.no') %></option>
+                <% } else { %>
+                    <% field.options.forEach((option) => { %><option value="<%= option %>" <%= value === option ? 'selected' : '' %>><%= option %></option><% }); %>
+                <% } %>
+            </select>
+        <% } else { %>
+            <input type="text" id="cf-<%= field.id %>" name="<%= name %>" maxlength="500" value="<%= value %>"
+                   <%- field.type === 'number' ? 'inputmode="decimal"' : '' %> <%- fieldState(errors, name, errorsId) %>>
+        <% } %>
+    </div>
+<% }); %>

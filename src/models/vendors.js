@@ -2,7 +2,7 @@ import db from './db.js';
 
 const VENDOR_COLUMNS = `id, name, category, phone, email, website, status, notes, created_at,
     contract_total::float AS contract_total, contract_signed_on, contract_url, contract_includes, contract_cancellation,
-    rating, review`;
+    rating, review, custom`;
 
 /**
  * Vendors alphabetically, optionally only one booking status.

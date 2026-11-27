@@ -9,7 +9,10 @@ import {
     updateVendor,
     updateVendorStatus
 } from '../models/vendors.js';
+import { findCustomFields, saveCustomValues } from '../models/custom-fields.js';
 import { setFlash } from '../utils/flash.js';
+import { readCustomForm } from './custom-fields.js';
+import { customFormValues } from '../validators/custom-fields.js';
 import { backTo } from '../utils/redirect.js';
 import { isUuid, readChoice } from '../validators/common.js';
 import { validateVendor } from '../validators/planning.js';
@@ -30,10 +33,11 @@ const toFormValues = (vendor) =>
 
 const renderVendors = async (req, res, { status = 200, vendorForm } = {}) => {
     const activeStatus = readChoice(req.query.status, VENDOR_STATUSES);
-    const [vendors, money, paymentCounts] = await Promise.all([
+    const [vendors, money, paymentCounts, customFields] = await Promise.all([
         findVendors(req.wedding.id, activeStatus),
         findVendorMoney(req.wedding.id),
-        countVendorPayments(req.wedding.id)
+        countVendorPayments(req.wedding.id),
+        findCustomFields(req.wedding.id, 'vendor')
     ]);
 
     res.status(status).render('vendors', {
@@ -45,16 +49,18 @@ const renderVendors = async (req, res, { status = 200, vendorForm } = {}) => {
         statuses: VENDOR_STATUSES,
         ratingMax: RATING_MAX,
         activeStatus,
+        customFields,
         vendorForm: vendorForm ?? { values: EMPTY_VENDOR, errors: [] }
     });
 };
 
-const renderEditVendor = (req, res, { status = 200, id, values, errors = [] }) =>
+const renderEditVendor = async (req, res, { status = 200, id, values, errors = [] }) =>
     res.status(status).render('edit-vendor', {
         title: req.t('vendors.editTitle'),
         formAction: `/vendors/${id}/edit`,
         categories: VENDOR_CATEGORIES,
         statuses: VENDOR_STATUSES,
+        customFields: await findCustomFields(req.wedding.id, 'vendor'),
         values,
         errors
     });
@@ -63,9 +69,16 @@ const showVendors = (req, res) => renderVendors(req, res);
 
 const processNewVendor = async (req, res) => {
     const { values, data, errors } = validateVendor(req.body);
-    if (errors.length > 0) return renderVendors(req, res, { status: 400, vendorForm: { values, errors } });
+    const custom = await readCustomForm(req, 'vendor');
+    errors.push(...custom.errors);
+    if (errors.length > 0)
+        return renderVendors(req, res, {
+            status: 400,
+            vendorForm: { values: { ...values, custom: custom.values }, errors }
+        });
 
     const vendor = await createVendor(req.wedding.id, data);
+    await saveCustomValues('vendor', vendor.id, req.wedding.id, custom.data);
     setFlash(req, 'success', 'vendors.added', { name: vendor.name });
     res.redirect(backTo(req, '/vendors'));
 };
@@ -73,16 +86,28 @@ const processNewVendor = async (req, res) => {
 const showEditVendor = async (req, res, next) => {
     const vendor = isUuid(req.params.id) ? await findVendor(req.params.id, req.wedding.id) : null;
     if (!vendor) return next();
-    renderEditVendor(req, res, { id: vendor.id, values: toFormValues(vendor) });
+    renderEditVendor(req, res, {
+        id: vendor.id,
+        values: { ...toFormValues(vendor), custom: customFormValues(vendor.custom) }
+    });
 };
 
 const processEditVendor = async (req, res, next) => {
     if (!isUuid(req.params.id)) return next();
     const { values, data, errors } = validateVendor(req.body);
-    if (errors.length > 0) return renderEditVendor(req, res, { status: 400, id: req.params.id, values, errors });
+    const custom = await readCustomForm(req, 'vendor');
+    errors.push(...custom.errors);
+    if (errors.length > 0)
+        return renderEditVendor(req, res, {
+            status: 400,
+            id: req.params.id,
+            values: { ...values, custom: custom.values },
+            errors
+        });
 
     const updated = await updateVendor(req.params.id, req.wedding.id, data);
     if (!updated) return next();
+    await saveCustomValues('vendor', updated.id, req.wedding.id, custom.data);
     setFlash(req, 'success', 'vendors.saved', { name: updated.name });
     res.redirect(backTo(req, '/vendors'));
 };

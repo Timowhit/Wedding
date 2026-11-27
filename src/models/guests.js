@@ -1,6 +1,6 @@
 import db from './db.js';
 
-const GUEST_COLUMNS = 'id, name, rsvp, diet, plus_one, group_name, table_id, meal, accessibility, created_at';
+const GUEST_COLUMNS = 'id, name, rsvp, diet, plus_one, group_name, table_id, meal, accessibility, custom, created_at';
 
 /**
  * Guests alphabetically, optionally only one RSVP status.

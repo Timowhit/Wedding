@@ -8,6 +8,8 @@ import { COMING_NEXT, FEATURES } from '../../src/controllers/home.js';
 import { MILESTONES } from '../../src/utils/celebrate.js';
 import {
     BUDGET_CATEGORIES,
+    CUSTOM_FIELD_ENTITIES,
+    CUSTOM_FIELD_TYPES,
     EXAMPLE_TASKS,
     PALETTES,
     PLANNER_PAYMENT_FILTERS,
@@ -56,6 +58,8 @@ const findUsedKeys = () => {
 /** Keys built at runtime from option lists, e.g. t(`rsvp.${guest.rsvp}`). */
 const dynamicKeys = () => [
     ...BUDGET_CATEGORIES.map((v) => `budgetCategory.${v}`),
+    ...CUSTOM_FIELD_ENTITIES.map((v) => `fields.entity.${v}`),
+    ...CUSTOM_FIELD_TYPES.map((v) => `fields.type.${v}`),
     ...TASK_CATEGORIES.map((v) => `taskCategory.${v}`),
     ...VENDOR_CATEGORIES.map((v) => `vendorCategory.${v}`),
     ...VENDOR_STATUSES.map((v) => `vendorStatus.${v}`),

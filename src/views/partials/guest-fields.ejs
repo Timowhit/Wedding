@@ -38,3 +38,4 @@
     <input type="text" id="accessibility" name="accessibility" maxlength="300" value="<%= values.accessibility %>"
            placeholder="<%= t('guests.accessibilityPlaceholder') %>" <%- fieldState(errors, 'accessibility', errorsId) %>>
 </div>
+<%- include('custom-field-inputs', { fields: locals.customFields || [], values: values.custom || {}, errors, errorsId }) %>
