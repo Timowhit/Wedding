@@ -39,3 +39,8 @@ Not started
 - [ ] Reusable questionnaires, proposals, email messages, and follow-up templates.
 - [ ] Let planners customize fields and workflows for different budgets, traditions, and planning styles.
 - [ ] Post-event wrap-up tasks for final payments, rentals, feedback, and archiving.
+
+Planned follow-ups (small, from the review of PR #9)
+- [ ] Accent colour used as text (role "Owner" tag) is 3:1 in every palette; make it pass 4.5:1, and check primary on its soft background in custom dark themes.
+- [ ] Venue layout: say "already full" instead of "added" when two quick adds race past the 200-piece limit; ignore out-of-order drag responses.
+- [ ] Header: show the wedding date next to the name when there is only one wedding.
