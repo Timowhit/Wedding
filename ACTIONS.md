@@ -45,11 +45,4 @@ git pull origin main
 npm run migrate
 ```
 
-It applies `013_planning_details.sql` and `014_wrap_up.sql`, which only add columns. Then delete the `planning-details` branch on GitHub.
-
-## 4. Merge the task celebrations release
-
-[Timowhit/Wedding#12](https://github.com/Timowhit/Wedding/pull/12) adds the progress badge at the top right and the confetti when tasks are ticked off. It has been reviewed and the review's fixes are in, and I've brought it up to date with `main`. There are no database changes.
-
-1. Open the PR, click **Ready for review**, wait for the CI check, then **Merge pull request**.
-2. Delete the `task-celebrations` branch on GitHub.
+It applies `013_planning_details.sql` and `014_wrap_up.sql`, which only add columns. Then delete the `planning-details` and `task-celebrations` branches on GitHub.
