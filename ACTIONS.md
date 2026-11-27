@@ -19,9 +19,11 @@ Without this nothing is sent, and nothing breaks.
 
 Cron Jobs are a paid Render instance type.
 
-## 2. Update the Render database for #11
+## 2. Update the Render database
 
-[Timowhit/Wedding#11](https://github.com/Timowhit/Wedding/pull/11) is merged. Its new columns still need adding on Render. On your computer, in the project folder, with `.env` pointing at Render:
+Releases #11, #14 and #15 are merged, and their new columns and tables still need adding on Render: migrations `013` to `016`, which only add things. If you've already run some of them, those are skipped.
+
+On your computer, in the project folder, with `.env` pointing at Render:
 
 ```bash
 git checkout main
@@ -35,17 +37,8 @@ git pull origin main
 npm run migrate
 ```
 
-It applies `013_planning_details.sql` and `014_wrap_up.sql`, which only add columns. Then delete the `planning-details` and `task-celebrations` branches on GitHub.
+Then delete the merged branches on GitHub: `planning-details`, `task-celebrations`, `file-uploads` and `library`.
 
-## 3. Update the Render database for file uploads
+## 3. Keep an eye on file storage
 
-[Timowhit/Wedding#14](https://github.com/Timowhit/Wedding/pull/14) is merged. Pull `main` and run `npm run migrate` as in step 2 (it adds `015_files.sql`).
-
-Keep an eye on your Render database's storage. Each wedding can use up to 250 MB of files, and each person can upload up to 1 GB in total across their weddings. Render shows the database size on the database's page. If you get close to your plan's limit, tell me and I'll move files to cheaper storage.
-
-## 4. Merge the messages and questionnaires library
-
-[Timowhit/Wedding#15](https://github.com/Timowhit/Wedding/pull/15) adds your message templates and questionnaires (`/library`) and the Questionnaires page couples answer. It has been reviewed and the review's fixes are in. I've brought it up to date with `main`.
-
-1. Merge the PR once its CI check is green.
-2. Pull `main` and run `npm run migrate` (adds `016_library.sql`).
+Uploaded files are stored in your Render database. Each wedding can use up to 250 MB, and each person can upload up to 1 GB in total. Render shows the database size on the database's page. If you get close to your plan's limit, tell me and I'll move files to cheaper storage.
