@@ -25,4 +25,4 @@ Uploaded files are stored in your Render database. Each wedding can use up to 25
 
 ## Merge the venue rooms and inventory
 
-When [Timowhit/Wedding#22](https://github.com/Timowhit/Wedding/pull/22) passes its checks, merge it, then run `npm run migrate` against Render (it adds migration `019`: each wedding's current floor plan becomes its "Main room", with its pieces in it). Then delete the `layout-rooms` branch.
+When [Timowhit/Wedding#22](https://github.com/Timowhit/Wedding/pull/22) passes its checks, merge it, then run `npm run migrate` against Render straight away: the venue layout page shows an error until it has run. It adds migration `019`, which turns each wedding's current floor plan into its "Main room", with its pieces in it. Then delete the `layout-rooms` branch.

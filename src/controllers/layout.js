@@ -68,10 +68,11 @@ const renderLayout = async (
     rooms,
     { status = 200, roomForm, newRoomForm, fixtureForm, pieceForm } = {}
 ) => {
-    const [items, inventory, unplaced] = await Promise.all([
+    const [items, inventory, unplaced, venueCount] = await Promise.all([
         findLayoutItems(req.wedding.id, room.id),
         findLayoutItems(req.wedding.id, null),
-        findUnplacedTables(req.wedding.id)
+        findUnplacedTables(req.wedding.id),
+        countLayoutItems(req.wedding.id)
     ]);
     const label = roomLabel(req, rooms);
     res.status(status).render('layout', {
@@ -81,6 +82,7 @@ const renderLayout = async (
         items,
         inventory,
         unplaced,
+        venueCount,
         grid: GRID[room.unit],
         fixtures: Object.keys(LAYOUT_FIXTURES),
         shapes: LAYOUT_SHAPES,
@@ -128,7 +130,7 @@ const processRoom = async (req, res, next) => {
         const converted = { ...item, ...convertPiece(item, room.unit, data.unit) };
         const piece = { ...converted, ...clampToRoom(converted, data) };
         const changed = ['x', 'y', 'width', 'depth'].some((key) => piece[key] !== item[key]);
-        if (changed) await updateLayoutItem(item.id, req.wedding.id, piece);
+        if (changed) await updateLayoutItem(item.id, req.wedding.id, piece, room.id);
     }
     setFlash(req, 'success', 'layout.roomSaved');
     res.redirect(roomUrl(room, rooms));
@@ -154,7 +156,8 @@ const processNewRoom = async (req, res) => {
 const processDeleteRoom = async (req, res, next) => {
     const room = isUuid(req.params.id) ? await findRoom(req.params.id, req.wedding.id) : null;
     if (!room) return next();
-    if (await deleteRoom(room.id, req.wedding.id)) setFlash(req, 'success', 'layout.roomDeleted');
+    const toInventory = (piece, unit) => convertPiece(piece, unit, INVENTORY_UNIT);
+    if (await deleteRoom(room.id, req.wedding.id, toInventory)) setFlash(req, 'success', 'layout.roomDeleted');
     else setFlash(req, 'error', 'layout.lastRoom');
     res.redirect('/layout');
 };
@@ -235,7 +238,12 @@ const processPlaceAllTables = async (req, res, next) => {
     if (!room) return next();
     let count = 0;
     for (const table of await findUnplacedTables(req.wedding.id)) {
-        if (!(await placeTable(req, room, table))) break;
+        if (await placeTable(req, room, table)) count += 1; // false: placed a moment ago, or the plan is full
+    }
+    // Tables kept in the inventory (taken off a plan, or from a deleted room) come along too.
+    for (const piece of await findLayoutItems(req.wedding.id, null)) {
+        if (piece.kind !== 'table') continue;
+        await setItemRoom(piece.id, req.wedding.id, room.id, await placeIn(req, room, piece, INVENTORY_UNIT));
         count += 1;
     }
     if (count > 0) setFlash(req, 'success', 'layout.tablesPlaced', { count });
@@ -254,7 +262,7 @@ const processEditPiece = async (req, res, next) => {
     const { values, data, errors } = validatePiece(req.body, room);
     if (errors.length > 0)
         return renderLayout(req, res, room, rooms, { status: 400, pieceForm: { id: item.id, values, errors } });
-    await updateLayoutItem(item.id, req.wedding.id, data);
+    await updateLayoutItem(item.id, req.wedding.id, data, room.id);
     setFlash(req, 'success', 'layout.pieceSaved');
     res.redirect(roomUrl(room, rooms));
 };

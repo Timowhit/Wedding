@@ -28,12 +28,23 @@ const ROOM_COLUMNS = 'id, name, width, depth, unit';
  * @returns {Promise<Array<{id: string, name: string|null, width: number, depth: number, unit: string}>>}
  *   The first room's name is null: it is shown as "Main room" in the reader's language.
  */
+// Room changes for one wedding happen one at a time (first room, adds, deletes).
+const lockRooms = (client, weddingId) =>
+    client.query(`SELECT pg_advisory_xact_lock(hashtext('venue_rooms:' || $1));`, [weddingId]);
+
 const findRooms = async (weddingId) => {
-    await db.query(
-        `INSERT INTO venue_rooms (wedding_id, width, depth, unit)
-         SELECT $1, $2, $3, $4 WHERE NOT EXISTS (SELECT 1 FROM venue_rooms WHERE wedding_id = $1);`,
-        [weddingId, DEFAULT_ROOM.width, DEFAULT_ROOM.depth, DEFAULT_ROOM.unit]
-    );
+    const exists = await db.query(`SELECT 1 FROM venue_rooms WHERE wedding_id = $1 LIMIT 1;`, [weddingId]);
+    if (exists.rowCount === 0) {
+        // Two first visits at once (a page and the offline worker) must not make two first rooms.
+        await withTransaction(async (client) => {
+            await lockRooms(client, weddingId);
+            await client.query(
+                `INSERT INTO venue_rooms (wedding_id, width, depth, unit)
+                 SELECT $1, $2, $3, $4 WHERE NOT EXISTS (SELECT 1 FROM venue_rooms WHERE wedding_id = $1);`,
+                [weddingId, DEFAULT_ROOM.width, DEFAULT_ROOM.depth, DEFAULT_ROOM.unit]
+            );
+        });
+    }
     const result = await db.query(
         `SELECT ${ROOM_COLUMNS} FROM venue_rooms WHERE wedding_id = $1 ORDER BY created_at, id;`,
         [weddingId]
@@ -60,15 +71,17 @@ const findRoom = async (id, weddingId) => {
  * @param {{name: string, width: number, depth: number, unit: string}} room - Already validated.
  * @returns {Promise<{id: string}|null>}
  */
-const addRoom = async (weddingId, { name, width, depth, unit }) => {
-    const result = await db.query(
-        `INSERT INTO venue_rooms (wedding_id, name, width, depth, unit)
-         SELECT $1, $2, $3, $4, $5 WHERE (SELECT COUNT(*) FROM venue_rooms WHERE wedding_id = $1) < $6
-         RETURNING id;`,
-        [weddingId, name, width, depth, unit, MAX_ROOMS]
-    );
-    return result.rows[0] ?? null;
-};
+const addRoom = async (weddingId, { name, width, depth, unit }) =>
+    withTransaction(async (client) => {
+        await lockRooms(client, weddingId);
+        const result = await client.query(
+            `INSERT INTO venue_rooms (wedding_id, name, width, depth, unit)
+             SELECT $1, $2, $3, $4, $5 WHERE (SELECT COUNT(*) FROM venue_rooms WHERE wedding_id = $1) < $6
+             RETURNING id;`,
+            [weddingId, name, width, depth, unit, MAX_ROOMS]
+        );
+        return result.rows[0] ?? null;
+    });
 
 /**
  * @param {string} id
@@ -85,22 +98,32 @@ const saveRoom = async (id, weddingId, { name, width, depth, unit }) => {
 };
 
 /**
- * Deletes a room; its pieces go to the inventory (room_id is set null by the foreign key). The
- * wedding's last room stays.
+ * Deletes a room and puts its pieces in the inventory, resized by `toInventory` (the inventory
+ * keeps sizes in feet). The wedding's last room stays.
  * @param {string} id
  * @param {string} weddingId
+ * @param {(piece: {x: number, y: number, width: number, depth: number}, unit: string) => {width: number, depth: number}} toInventory
  * @returns {Promise<boolean>} False when there is no such room, or it is the last one.
  */
-const deleteRoom = async (id, weddingId) =>
+const deleteRoom = async (id, weddingId, toInventory) =>
     withTransaction(async (client) => {
-        // Counted under a lock, so two deletes at once can't remove the last two rooms.
-        await client.query(`SELECT pg_advisory_xact_lock(hashtext('venue_rooms:' || $1));`, [weddingId]);
-        const result = await client.query(
-            `DELETE FROM venue_rooms WHERE id = $1 AND wedding_id = $2
-               AND (SELECT COUNT(*) FROM venue_rooms WHERE wedding_id = $2) > 1;`,
+        await lockRooms(client, weddingId);
+        const rooms = await client.query(`SELECT id, unit FROM venue_rooms WHERE wedding_id = $1;`, [weddingId]);
+        const room = rooms.rows.find((row) => row.id === id);
+        if (!room || rooms.rows.length <= 1) return false;
+        const pieces = await client.query(
+            `SELECT id, x, y, width, depth FROM layout_items WHERE room_id = $1 AND wedding_id = $2;`,
             [id, weddingId]
         );
-        return result.rowCount > 0;
+        for (const row of pieces.rows) {
+            const { width, depth } = toInventory(toItem(row), room.unit);
+            await client.query(
+                `UPDATE layout_items SET room_id = NULL, x = 0, y = 0, width = $3, depth = $4 WHERE id = $1 AND wedding_id = $2;`,
+                [row.id, weddingId, width, depth]
+            );
+        }
+        await client.query(`DELETE FROM venue_rooms WHERE id = $1 AND wedding_id = $2;`, [id, weddingId]);
+        return true;
     });
 
 // A placed table brings its name, seats and how many guests sit there; both joins are scoped to the wedding.
@@ -213,13 +236,14 @@ const addLayoutItem = async (weddingId, piece) => {
  * @param {string} id
  * @param {string} weddingId
  * @param {{label: string|null, shape: string, x: number, y: number, width: number, depth: number, rotation: number}} piece - Already validated and inside the room.
+ * @param {string} roomId - The room it was read from: if it has moved since, nothing changes.
  * @returns {Promise<boolean>}
  */
-const updateLayoutItem = async (id, weddingId, piece) => {
+const updateLayoutItem = async (id, weddingId, piece, roomId) => {
     const result = await db.query(
         `UPDATE layout_items SET label = $3, shape = $4, x = $5, y = $6, width = $7, depth = $8, rotation = $9
-         WHERE id = $1 AND wedding_id = $2;`,
-        [id, weddingId, piece.label, piece.shape, piece.x, piece.y, piece.width, piece.depth, piece.rotation]
+         WHERE id = $1 AND wedding_id = $2 AND room_id = $10;`,
+        [id, weddingId, piece.label, piece.shape, piece.x, piece.y, piece.width, piece.depth, piece.rotation, roomId]
     );
     return result.rowCount > 0;
 };

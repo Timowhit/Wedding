@@ -2,6 +2,7 @@
 <%- include('partials/header') %>
 <%
     const fmt = (n) => String(Number(n));
+    const waitingTables = unplaced.length + inventory.filter((item) => item.kind === 'table').length;
     const unitLabel = t(`layoutUnit.${room.unit}`);
     const nameOf = (item) => (item.kind === 'table' ? item.table_name : item.label || t(`layoutKind.${item.kind}`));
     // Label size in room units: readable on a phone, never larger than a small table.
@@ -80,13 +81,6 @@
                     </li>
                 <% }); %>
             </ul>
-            <% if (canEdit && unplaced.length > 1) { %>
-                <form method="post" action="/layout/tables/all">
-                    <%- include('partials/csrf-field') %>
-                    <input type="hidden" name="room_id" value="<%= room.id %>">
-                    <button type="submit" class="btn btn-ghost btn-small"><%= t('layout.placeAllTables', { room: room.label }) %></button>
-                </form>
-            <% } %>
         <% } %>
         <% if (inventory.length > 0) { %>
             <h3 class="subheading"><%= t('layout.inventoryPieces') %></h3>
@@ -111,7 +105,14 @@
                 <% }); %>
             </ul>
         <% } %>
-        <% if (unplaced.length === 0 && canEdit) { %>
+        <% if (canEdit && waitingTables > 1) { %>
+            <form method="post" action="/layout/tables/all">
+                <%- include('partials/csrf-field') %>
+                <input type="hidden" name="room_id" value="<%= room.id %>">
+                <button type="submit" class="btn btn-ghost btn-small"><%= t('layout.placeAllTables', { room: room.label }) %></button>
+            </form>
+        <% } %>
+        <% if (waitingTables === 0 && canEdit) { %>
             <p class="hint"><%= t('layout.noTables') %> <a href="/seating"><%= t('layout.toSeating') %></a></p>
         <% } %>
     </aside>
@@ -206,7 +207,7 @@
 
     <section aria-labelledby="pieces-heading">
         <h2 class="section-heading" id="pieces-heading"><%= t('layout.pieces') %></h2>
-        <p class="hint"><%= t('layout.count', { count: items.length, max: maxItems }) %></p>
+        <p class="hint"><%= t('layout.count', { count: venueCount, max: maxItems }) %></p>
         <% if (items.length === 0) { %>
             <p class="empty-state"><%= t('layout.empty') %></p>
         <% } else { %>

@@ -134,11 +134,26 @@ describe('venue layout: rooms and the inventory', { skip: skipWithoutDb }, () =>
 
     it('deleting a room sends its pieces to the inventory; the last room stays', async () => {
         const [main, terrace] = await rooms();
+        const metres = (await piece('Table A')).width;
         const deleted = await owner.post(`/layout/rooms/${terrace.id}/delete`, {});
         assert.equal(deleted.location, '/layout');
         assert.equal((await rooms()).length, 1);
         assert.equal((await piece('Table A')).room_id, null, 'its tables wait in the inventory');
         assert.equal((await piece('Band stage')).room_id, null);
+        // The inventory is in feet: a 1.5 m table waits there as about 5 ft.
+        const waiting = await piece('Table A');
+        assert.ok(Math.abs(waiting.width - metres * 3.281) <= 0.5, `${metres} m became ${waiting.width} ft`);
+        // Tables in the inventory are placed by "Place all" too, and the page doesn't claim they're all placed.
+        const page = (await owner.get('/layout')).body;
+        assert.doesNotMatch(page, /Every seating table is on a plan/);
+        assert.match(page, /action="\/layout\/tables\/all"/);
+        await owner.post('/layout/tables/all', { room_id: main.id });
+        for (const name of ['Table A', 'Table B', 'Table C']) {
+            const table = await piece(name);
+            assert.equal(table.room_id, main.id, name);
+            assert.ok(Math.abs(table.width - metres * 3.281) <= 0.5, `${name}: back at its real size`);
+        }
+        assert.match((await owner.get('/layout')).body, /5 of 200 pieces in the venue/, 'counted across the venue');
         await owner.post(`/layout/rooms/${main.id}/delete`, {});
         assert.equal((await rooms()).length, 1, 'the last room stays');
         assert.match((await owner.get('/layout')).body, /The last room can’t be deleted/);
@@ -167,5 +182,17 @@ describe('venue layout: rooms and the inventory', { skip: skipWithoutDb }, () =>
         ).rows[0].id;
         assert.equal((await owner.post(`/layout/items/${bar.id}/room`, { room_id: otherRoom })).status, 404);
         assert.equal((await owner.post('/layout/items', { room_id: otherRoom, kind: 'bar', label: 'x' })).status, 404);
+    });
+
+    it('"Save for offline" on the schedule saves every room, not only the first', async () => {
+        await owner.post('/layout/rooms', { name: 'Garden', width: '30', depth: '30', unit: 'ft' });
+        const garden = (await rooms()).at(-1);
+        const schedule = (await owner.get('/schedule')).body;
+        assert.match(
+            schedule,
+            new RegExp(
+                `data-offline-page[^>]*href="/layout\\?room=${garden.id}"|href="/layout\\?room=${garden.id}"[^>]*data-offline-page`
+            )
+        );
     });
 });
