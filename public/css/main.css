@@ -1767,6 +1767,34 @@ select.status-select {
     cursor: pointer;
 }
 
+/* Offline event day ------------------------------------------------------------------------------ */
+
+.offline-banner {
+    margin: 0;
+    padding: var(--space-2) var(--space-4);
+    background: var(--surface-2);
+    color: var(--text);
+    font-size: 0.875rem;
+    text-align: center;
+}
+
+.offline-save {
+    margin-bottom: var(--space-4);
+}
+
+.offline-save .hint {
+    margin: var(--space-1) 0 0;
+}
+
+.link-list {
+    margin: 0 0 var(--space-3);
+    padding-left: var(--space-4);
+}
+
+.link-list li {
+    padding: var(--space-1) 0;
+}
+
 @media print {
     .site-header,
     .site-footer,

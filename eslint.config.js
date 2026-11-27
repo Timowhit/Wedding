@@ -29,6 +29,10 @@ export default [
     },
     {
         // Browser scripts: progressive enhancement only, no modules shared with the server.
+        files: ['public/sw.js'],
+        languageOptions: { sourceType: 'script', globals: globals.serviceworker }
+    },
+    {
         files: ['public/js/**/*.js'],
         languageOptions: { sourceType: 'script', globals: globals.browser }
     }

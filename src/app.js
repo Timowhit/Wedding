@@ -114,6 +114,8 @@ const createApp = (env = process.env) => {
         res.locals.features = { music: isSpotifyConfigured(), inspiration: isUnsplashConfigured() };
         // A function, because the wedding is only loaded later by the route's own middleware.
         res.locals.currentTheme = () => resolveTheme({ user: res.locals.user, wedding: res.locals.wedding });
+        // Offline copies of pages show when they were saved (see public/sw.js).
+        res.locals.renderedAt = new Date().toISOString();
         next();
     });
     app.use(setCurrentUser);

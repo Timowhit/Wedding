@@ -98,6 +98,7 @@ import {
     showEditItem,
     showSchedule
 } from '../controllers/schedule.js';
+import { showOffline } from '../controllers/offline.js';
 import {
     processContract,
     processDeletePayment,
@@ -132,6 +133,7 @@ const planner = [requireLogin, requirePlanner, loadOptionalWedding];
 router.get('/login', redirectIfLoggedIn, showLoginForm);
 router.post('/login', redirectIfLoggedIn, loginLimiter, processLogin);
 router.get('/start', redirectIfLoggedIn, showStart);
+router.get('/offline', showOffline);
 router.get('/register', redirectIfLoggedIn, showRegisterForm);
 router.post('/register', redirectIfLoggedIn, registerLimiter, processRegister);
 router.post('/logout', processLogout);
