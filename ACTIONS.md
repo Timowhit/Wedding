@@ -31,7 +31,7 @@ Until you answer, I'll keep building the other items.
 
 ## 3. Merge the planning details release
 
-[PR link added when it opens] adds:
+[Timowhit/Wedding#11](https://github.com/Timowhit/Wedding/pull/11) adds:
 
 - task priorities and owners
 - guest meals and access needs
