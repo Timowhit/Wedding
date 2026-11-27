@@ -3,7 +3,7 @@ import db from './db.js';
 // The vendor join is also scoped to the wedding, so a link can never show another wedding's vendor.
 const ITEM_SELECT = `SELECT s.id, to_char(s.starts_at, 'HH24:MI') AS starts_at, to_char(s.ends_at, 'HH24:MI') AS ends_at,
                             s.title, s.location, s.vendor_id, s.contact, s.notes, s.contingency,
-                            v.name AS vendor_name, v.phone AS vendor_phone
+                            v.name AS vendor_name, v.phone AS vendor_phone, v.contract_includes AS vendor_includes
                      FROM schedule_items s
                      LEFT JOIN vendors v ON v.id = s.vendor_id AND v.wedding_id = s.wedding_id`;
 

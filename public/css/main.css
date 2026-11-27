@@ -1690,6 +1690,23 @@ select.status-select {
     color: inherit;
 }
 
+.timeline__includes {
+    margin-top: var(--space-2);
+    font-size: 0.875rem;
+}
+
+.timeline__includes summary {
+    display: flex;
+    align-items: center;
+    min-height: var(--target);
+    color: var(--primary);
+    cursor: pointer;
+}
+
+.timeline__includes p {
+    margin: 0 0 var(--space-2);
+}
+
 /* Payments due (wedding and planner dashboards) ----------------------------------------------- */
 
 .due-list {
