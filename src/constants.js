@@ -91,6 +91,18 @@ const EXAMPLE_TASKS = Object.freeze([
     { key: 'examples.arrangeTransport', category: 'Other' }
 ]);
 
+// Wrap-up tasks added after the wedding, due this many days after the day itself.
+const WRAPUP_TASKS = Object.freeze([
+    { key: 'wrapup.returnRentals', daysAfter: 2 },
+    { key: 'wrapup.payBalances', daysAfter: 7 },
+    { key: 'wrapup.sendThanks', daysAfter: 21 },
+    { key: 'wrapup.reviewVendors', daysAfter: 21 },
+    { key: 'wrapup.collectPhotos', daysAfter: 30 },
+    { key: 'wrapup.preserveKeepsakes', daysAfter: 30 }
+]);
+const RATING_MAX = 5;
+const REVIEW_MAX = 2000;
+
 /** Which budget category a booked vendor's contract counts under (the two lists use different names). */
 const VENDOR_BUDGET_CATEGORY = Object.freeze({
     Photographer: 'Photography',
@@ -168,6 +180,9 @@ export {
     TASK_CATEGORIES,
     TASK_STATUSES,
     TASK_PRIORITIES,
+    WRAPUP_TASKS,
+    RATING_MAX,
+    REVIEW_MAX,
     DEFAULT_TASK_PRIORITY,
     RSVP_STATUSES,
     VENDOR_CATEGORIES,

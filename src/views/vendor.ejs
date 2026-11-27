@@ -50,6 +50,38 @@
         <% } %>
     </section>
 
+<% if (vendor.status === 'Booked' || vendor.rating) { %>
+    <section class="card" aria-labelledby="rating-heading">
+        <h2 class="card-title" id="rating-heading"><%= t('wrapup.ratingHeading') %></h2>
+        <% if (vendor.rating) { %>
+            <p class="stars" aria-label="<%= t('wrapup.rated', { rating: vendor.rating, max: ratingMax }) %>"><span aria-hidden="true"><%= '★'.repeat(vendor.rating) + '☆'.repeat(ratingMax - vendor.rating) %></span></p>
+            <% if (vendor.review) { %><p class="preserve-lines"><%= vendor.review %></p><% } %>
+        <% } else { %>
+            <p class="hint"><%= t('wrapup.ratingHint') %></p>
+        <% } %>
+        <% if (canEdit) { %>
+            <%- include('partials/form-errors', { errors: ratingForm.errors, id: 'rating-errors' }) %>
+            <form method="post" action="/vendors/<%= vendor.id %>/rating" class="form-stack">
+                <%- include('partials/csrf-field') %>
+                <fieldset class="choice-group star-choice" <%- fieldState(ratingForm.errors, 'rating', 'rating-errors') %>>
+                    <legend><%= t('field.rating') %></legend>
+                    <% for (let n = 1; n <= ratingMax; n += 1) { %>
+                        <label class="choice">
+                            <input type="radio" name="rating" value="<%= n %>" <%= String(n) === ratingForm.values.rating ? 'checked' : '' %>>
+                            <span aria-hidden="true"><%= '★'.repeat(n) %></span><span class="visually-hidden"><%= t('wrapup.stars', { count: n }) %></span>
+                        </label>
+                    <% } %>
+                </fieldset>
+                <div class="field">
+                    <label for="review"><%= t('field.review') %> <span class="optional"><%= t('form.optional') %></span></label>
+                    <textarea id="review" name="review" rows="3" maxlength="2000" <%- fieldState(ratingForm.errors, 'review', 'rating-errors') %>><%= ratingForm.values.review %></textarea>
+                </div>
+                <div class="form-actions"><button type="submit" class="btn btn-primary btn-small"><%= t('wrapup.saveRating') %></button></div>
+            </form>
+        <% } %>
+    </section>
+<% } %>
+
     <section class="card" aria-labelledby="payments-heading">
         <div class="card-header">
             <h2 class="card-title" id="payments-heading"><%= t('payments.heading') %></h2>

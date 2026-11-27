@@ -11,7 +11,7 @@ import { todayIso } from '../utils/today.js';
 import { isUuid, readChoice, readText } from '../validators/common.js';
 import { validateWedding } from '../validators/weddings.js';
 
-const WHEN_OPTIONS = Object.freeze(['upcoming', 'past', 'all']);
+const WHEN_OPTIONS = Object.freeze(['upcoming', 'past', 'archived', 'all']);
 const SEARCH_MAX = 100;
 
 const EMPTY_WEDDING = { name: '', wedding_date: '' };

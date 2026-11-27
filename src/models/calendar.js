@@ -5,6 +5,8 @@ import db from './db.js';
 const MY_WEDDINGS = `SELECT w.id, w.name, w.wedding_date
                      FROM weddings w JOIN wedding_members wm ON wm.wedding_id = w.id
                      WHERE wm.user_id = $1 AND ($4::uuid IS NULL OR w.id = $4)`;
+// The calendar leaves archived weddings out unless one is picked; search still finds them.
+const ACTIVE = `AND (w.archived_at IS NULL OR w.id = $4)`;
 
 /**
  * Everything dated between two days (inclusive) across the person's weddings: wedding days, open
@@ -17,7 +19,7 @@ const MY_WEDDINGS = `SELECT w.id, w.name, w.wedding_date
  */
 const findCalendarEntries = async (userId, from, to, weddingId = null) => {
     const result = await db.query(
-        `WITH mine AS (${MY_WEDDINGS})
+        `WITH mine AS (${MY_WEDDINGS} ${ACTIVE})
          SELECT 'wedding' AS kind, to_char(m.wedding_date, 'YYYY-MM-DD') AS day, m.name AS title,
                 m.id AS wedding_id, m.name AS wedding_name, NULL::numeric AS amount, 0 AS ord
          FROM mine m WHERE m.wedding_date BETWEEN $2 AND $3

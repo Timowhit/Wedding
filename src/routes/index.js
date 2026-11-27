@@ -100,6 +100,7 @@ import {
     showSchedule
 } from '../controllers/schedule.js';
 import { showCustomCss } from '../controllers/themes.js';
+import { processArchive, processWrapUpTasks } from '../controllers/wrapup.js';
 import { showCalendar, showSearch } from '../controllers/calendar.js';
 import {
     processDeletePiece,
@@ -134,7 +135,8 @@ import {
     processPaid,
     showEditContract,
     showEditPayment,
-    showVendor
+    showVendor,
+    processRating
 } from '../controllers/payments.js';
 import {
     processAnswer,
@@ -188,6 +190,8 @@ router.post('/planner/weddings/:id/open', planner, processOpenWedding);
 router.get('/', showLanding);
 router.get('/', member, showDashboard);
 router.post('/wedding/date', owner, processWeddingDate);
+router.post('/wedding/archive', owner, processArchive(true));
+router.post('/wedding/unarchive', owner, processArchive(false));
 
 /* Decisions ----------------------------------------------------------------------------------- */
 const asker = [...member, requireDecisionRight('ask')];
@@ -242,6 +246,7 @@ router.post('/budget/expenses/:id/delete', editor, processDeleteExpense);
 router.get('/checklist', member, showChecklist);
 router.post('/checklist', editor, processNewTask);
 router.post('/checklist/examples', editor, processExampleTasks);
+router.post('/checklist/wrap-up', editor, processWrapUpTasks);
 router.post('/checklist/template', editor, processSaveTemplate('checklist'));
 router.post('/checklist/from-template', editor, processApplyTemplate('checklist'));
 router.get('/checklist/:id/edit', editor, showEditTask);
@@ -268,6 +273,7 @@ router.get('/vendors/:id', member, showVendor);
 router.get('/vendors/:id/contract', editor, showEditContract);
 router.post('/vendors/:id/contract', editor, processContract);
 router.post('/vendors/:id/payments', editor, processNewPayment);
+router.post('/vendors/:id/rating', editor, processRating);
 
 /* Templates (a person's own; see models/templates.js) ------------------------------------------- */
 router.get('/templates', account, showTemplates);

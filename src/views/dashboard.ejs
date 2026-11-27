@@ -38,6 +38,18 @@
         </section>
     <% } %>
 
+    <% if (archived) { %>
+        <div class="notice archived-notice" role="status">
+            <p><%= t('wrapup.archivedNotice') %></p>
+            <% if (isOwner) { %>
+                <form method="post" action="/wedding/unarchive">
+                    <%- include('partials/csrf-field') %>
+                    <button type="submit" class="btn btn-secondary btn-small"><%= t('wrapup.unarchive') %></button>
+                </form>
+            <% } %>
+        </div>
+    <% } %>
+
     <section class="card countdown" aria-labelledby="countdown-heading">
         <h2 class="visually-hidden" id="countdown-heading"><%= t('dashboard.countdown') %></h2>
         <% if (daysLeft === null) { %>
@@ -64,6 +76,38 @@
             <% } %>
         <% } %>
     </section>
+
+    <% if (wrapUp) { %>
+        <section class="card wrapup" aria-labelledby="wrapup-heading">
+            <h2 class="card-title" id="wrapup-heading"><%= t('wrapup.heading') %></h2>
+            <ul class="wrapup__list">
+                <li>
+                    <% if (wrapUp.owed > 0) { %>
+                        <a href="/budget"><%= t('wrapup.owed', { amount: formatCurrency(wrapUp.owed) }) %></a>
+                    <% } else { %>
+                        <%= t('wrapup.allPaid') %>
+                    <% } %>
+                </li>
+                <% wrapUp.unrated.forEach((vendor) => { %>
+                    <li><a href="/vendors/<%= vendor.id %>#rating-heading"><%= t('wrapup.rate', { name: vendor.name }) %></a></li>
+                <% }); %>
+            </ul>
+            <% if (canEdit) { %>
+                <form method="post" action="/checklist/wrap-up" class="wrapup__action">
+                    <%- include('partials/csrf-field') %>
+                    <button type="submit" class="btn btn-secondary btn-small"><%= t('wrapup.addTasks') %></button>
+                    <p class="hint"><%= t('wrapup.addTasksHint') %></p>
+                </form>
+            <% } %>
+            <% if (isOwner && !archived) { %>
+                <form method="post" action="/wedding/archive" class="wrapup__action" data-confirm="<%= t('wrapup.archiveConfirm', { name: wedding.name }) %>">
+                    <%- include('partials/csrf-field') %>
+                    <button type="submit" class="btn btn-ghost btn-small"><%= t('wrapup.archive') %></button>
+                    <p class="hint"><%= t('wrapup.archiveHint') %></p>
+                </form>
+            <% } %>
+        </section>
+    <% } %>
 
     <% if (paymentsDue.length > 0) { %>
         <section class="card" aria-labelledby="payments-due-heading">

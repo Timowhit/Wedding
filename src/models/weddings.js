@@ -25,11 +25,11 @@ const DEFAULT_WEDDING_NAME = 'Our Wedding';
 /**
  * Every wedding the user belongs to, owned weddings first, then by join date.
  * @param {string} userId
- * @returns {Promise<Array<{id: string, name: string, wedding_date: Date|null, planner_managed: boolean, theme_colors: string|null, role: string, owner_brand_palette: string|null}>>}
+ * @returns {Promise<Array<{id: string, name: string, wedding_date: Date|null, planner_managed: boolean, theme_colors: string|null, archived_at: Date|null, role: string, owner_brand_palette: string|null}>>}
  */
 const findWeddingsForUser = async (userId) => {
     const result = await db.query(
-        `SELECT w.id, w.name, w.wedding_date, w.planner_managed, w.theme_colors, wm.role,
+        `SELECT w.id, w.name, w.wedding_date, w.planner_managed, w.theme_colors, w.archived_at, wm.role,
                 ${OWNER_BRAND_PALETTE} AS owner_brand_palette
          FROM weddings w
          JOIN wedding_members wm ON wm.wedding_id = w.id
@@ -45,11 +45,11 @@ const findWeddingsForUser = async (userId) => {
  * This is the access check every wedding page relies on.
  * @param {string} weddingId
  * @param {string} userId
- * @returns {Promise<{id: string, name: string, wedding_date: Date|null, planner_managed: boolean, theme_colors: string|null, role: string, owner_brand_palette: string|null}|null>}
+ * @returns {Promise<{id: string, name: string, wedding_date: Date|null, planner_managed: boolean, theme_colors: string|null, archived_at: Date|null, role: string, owner_brand_palette: string|null}|null>}
  */
 const findWeddingForMember = async (weddingId, userId) => {
     const result = await db.query(
-        `SELECT w.id, w.name, w.wedding_date, w.planner_managed, w.theme_colors, wm.role,
+        `SELECT w.id, w.name, w.wedding_date, w.planner_managed, w.theme_colors, w.archived_at, wm.role,
                 ${OWNER_BRAND_PALETTE} AS owner_brand_palette
          FROM weddings w
          JOIN wedding_members wm ON wm.wedding_id = w.id
@@ -182,7 +182,22 @@ const removeMember = async (weddingId, userId) => {
     return result.rowCount > 0;
 };
 
+/**
+ * Archives a wedding (archived = true) or brings it back. Archived weddings leave the planner's
+ * active lists, the calendar and the reminder emails; nothing is deleted.
+ * @param {string} weddingId
+ * @param {boolean} archived
+ * @returns {Promise<void>}
+ */
+const setWeddingArchived = async (weddingId, archived) => {
+    await db.query(
+        `UPDATE weddings SET archived_at = CASE WHEN $2 THEN COALESCE(archived_at, NOW()) END WHERE id = $1;`,
+        [weddingId, archived]
+    );
+};
+
 export {
+    setWeddingArchived,
     MEMBER_ROLES,
     ASSIGNABLE_ROLES,
     assignableRoles,

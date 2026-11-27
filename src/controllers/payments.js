@@ -1,4 +1,4 @@
-import { VENDOR_STATUSES } from '../constants.js';
+import { RATING_MAX, VENDOR_STATUSES } from '../constants.js';
 import {
     createPayment,
     deletePayment,
@@ -8,12 +8,13 @@ import {
     setPaymentPaid,
     updatePayment
 } from '../models/payments.js';
-import { findVendor, updateContract } from '../models/vendors.js';
+import { findVendor, rateVendor, updateContract } from '../models/vendors.js';
 import { setFlash } from '../utils/flash.js';
 import { toIsoDate } from '../utils/format.js';
 import { todayIso } from '../utils/today.js';
 import { isUuid } from '../validators/common.js';
 import { validateContract, validatePayment } from '../validators/payments.js';
+import { validateRating } from '../validators/wrapup.js';
 
 const EMPTY_PAYMENT = { label: '', amount: '', due_date: '', paid_on: '', note: '' };
 
@@ -39,7 +40,7 @@ const paymentValues = (payment) => ({
     note: payment.note ?? ''
 });
 
-const renderVendorPage = async (req, res, vendor, { status = 200, paymentForm } = {}) => {
+const renderVendorPage = async (req, res, vendor, { status = 200, paymentForm, ratingForm } = {}) => {
     const today = todayIso();
     const [payments, money] = await Promise.all([
         findPayments(vendor.id, req.wedding.id),
@@ -52,8 +53,24 @@ const renderVendorPage = async (req, res, vendor, { status = 200, paymentForm } 
         payments,
         money: money.get(vendor.id),
         today,
-        paymentForm: paymentForm ?? { values: EMPTY_PAYMENT, errors: [] }
+        paymentForm: paymentForm ?? { values: EMPTY_PAYMENT, errors: [] },
+        ratingForm: ratingForm ?? {
+            values: { rating: vendor.rating ? String(vendor.rating) : '', review: vendor.review ?? '' },
+            errors: []
+        },
+        ratingMax: RATING_MAX
     });
+};
+
+/** POST /vendors/:id/rating: stars and a note after the wedding. */
+const processRating = async (req, res, next) => {
+    const vendor = await routeVendor(req);
+    if (!vendor) return next();
+    const { values, data, errors } = validateRating(req.body);
+    if (errors.length > 0) return renderVendorPage(req, res, vendor, { status: 400, ratingForm: { values, errors } });
+    await rateVendor(vendor.id, req.wedding.id, data);
+    setFlash(req, 'success', 'wrapup.rated', { name: vendor.name });
+    res.redirect(`/vendors/${vendor.id}`);
 };
 
 /** GET /vendors/:id: the vendor with its contract and payments. */
@@ -147,6 +164,7 @@ const processDeletePayment = async (req, res, next) => {
 
 export {
     showVendor,
+    processRating,
     showEditContract,
     processContract,
     processNewPayment,

@@ -5,8 +5,9 @@ import { createWedding } from './weddings.js';
 
 /** Weddings a planner sees on the dashboard: every wedding they belong to. */
 const WHEN_FILTERS = Object.freeze({
-    upcoming: '(w.wedding_date IS NULL OR w.wedding_date >= CURRENT_DATE)',
-    past: 'w.wedding_date < CURRENT_DATE',
+    upcoming: '(w.wedding_date IS NULL OR w.wedding_date >= CURRENT_DATE) AND w.archived_at IS NULL',
+    past: 'w.wedding_date < CURRENT_DATE AND w.archived_at IS NULL',
+    archived: 'w.archived_at IS NOT NULL',
     all: 'TRUE'
 });
 const DEADLINES_PER_WEDDING = 3;

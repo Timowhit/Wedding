@@ -2462,6 +2462,54 @@ input[type='color'] {
     }
 }
 
+/* ---------- Wrap-up ---------- */
+.wrapup__list {
+    display: grid;
+    gap: var(--space-1);
+    margin: 0 0 var(--space-3);
+    padding-left: var(--space-5);
+}
+
+.wrapup__action {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    margin-top: var(--space-3);
+}
+
+.wrapup__action .hint {
+    margin: 0;
+}
+
+.archived-notice {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+}
+
+.archived-notice p {
+    margin: 0;
+}
+
+.stars {
+    margin: 0 0 var(--space-2);
+    color: var(--primary-hover);
+    font-size: 1.25rem;
+    letter-spacing: 0.1em;
+}
+
+.stars--small {
+    font-size: 0.9375rem;
+}
+
+.star-choice .choice span[aria-hidden] {
+    color: var(--primary-hover);
+}
+
 /* ---------- Guests: meals and access needs ---------- */
 .meal-summary {
     margin: 0 0 var(--space-3);

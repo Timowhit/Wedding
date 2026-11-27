@@ -36,7 +36,7 @@
                 <% vendors.forEach((vendor) => { %>
                     <li class="item-card">
                         <div class="item-info">
-                            <p class="item-name"><a class="item-link" href="/vendors/<%= vendor.id %>"><%= vendor.name %></a> <span class="tag"><%= t(`vendorCategory.${vendor.category}`) %></span></p>
+                            <p class="item-name"><a class="item-link" href="/vendors/<%= vendor.id %>"><%= vendor.name %></a> <span class="tag"><%= t(`vendorCategory.${vendor.category}`) %></span><% if (vendor.rating) { %> <span class="stars stars--small" aria-label="<%= t('wrapup.rated', { rating: vendor.rating, max: 5 }) %>"><span aria-hidden="true"><%= '★'.repeat(vendor.rating) + '☆'.repeat(5 - vendor.rating) %></span></span><% } %></p>
                             <%# Rows saved by older versions were validated less strictly: only http(s) becomes a link. %>
                             <% const website = vendor.website && /^https?:\/\//i.test(vendor.website) ? vendor.website : null; %>
                             <% if (vendor.phone || vendor.email || website) { %>

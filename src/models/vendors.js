@@ -1,7 +1,8 @@
 import db from './db.js';
 
 const VENDOR_COLUMNS = `id, name, category, phone, email, website, status, notes, created_at,
-    contract_total::float AS contract_total, contract_signed_on, contract_url, contract_includes, contract_cancellation`;
+    contract_total::float AS contract_total, contract_signed_on, contract_url, contract_includes, contract_cancellation,
+    rating, review`;
 
 /**
  * Vendors alphabetically, optionally only one booking status.
@@ -134,7 +135,40 @@ const countVendorPayments = async (weddingId) => {
     return new Map(result.rows.map((row) => [row.vendor_id, row.count]));
 };
 
+/**
+ * Saves a vendor's rating (1-5) and review after the wedding.
+ * @param {string} id
+ * @param {string} weddingId
+ * @param {{rating: number, review: string|null}} values - Already validated.
+ * @returns {Promise<boolean>} False when no such vendor exists in this wedding.
+ */
+const rateVendor = async (id, weddingId, { rating, review }) => {
+    const result = await db.query(`UPDATE vendors SET rating = $3, review = $4 WHERE id = $1 AND wedding_id = $2;`, [
+        id,
+        weddingId,
+        rating,
+        review
+    ]);
+    return result.rowCount > 0;
+};
+
+/**
+ * Booked vendors nobody has rated yet (the wrap-up list).
+ * @param {string} weddingId
+ * @param {string} bookedStatus - COUNTED_STATUS.
+ * @returns {Promise<Array<{id: string, name: string}>>}
+ */
+const findUnratedBookedVendors = async (weddingId, bookedStatus) => {
+    const result = await db.query(
+        `SELECT id, name FROM vendors WHERE wedding_id = $1 AND status = $2 AND rating IS NULL ORDER BY LOWER(name), id;`,
+        [weddingId, bookedStatus]
+    );
+    return result.rows;
+};
+
 export {
+    rateVendor,
+    findUnratedBookedVendors,
     findVendors,
     findVendorStats,
     findVendor,
