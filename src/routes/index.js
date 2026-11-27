@@ -125,9 +125,13 @@ import { processArchive, processWrapUpTasks } from '../controllers/wrapup.js';
 import { showCalendar, showSearch } from '../controllers/calendar.js';
 import {
     processDeletePiece,
+    processDeleteRoom,
     processEditPiece,
     processMovePiece,
     processNewFixture,
+    processNewRoom,
+    processPieceRoom,
+    processPlaceAllTables,
     processPlaceTable,
     processRoom,
     showLayout
@@ -237,6 +241,10 @@ router.get('/layout', member, showLayout);
 router.post('/layout/room', editor, processRoom);
 router.post('/layout/items', editor, processNewFixture);
 router.post('/layout/tables', editor, processPlaceTable);
+router.post('/layout/tables/all', editor, processPlaceAllTables);
+router.post('/layout/rooms', editor, processNewRoom);
+router.post('/layout/rooms/:id/delete', editor, processDeleteRoom);
+router.post('/layout/items/:id/room', editor, processPieceRoom);
 router.post('/layout/items/:id', editor, processEditPiece);
 router.post('/layout/items/:id/move', editor, processMovePiece);
 router.post('/layout/items/:id/delete', editor, processDeletePiece);
