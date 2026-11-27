@@ -82,6 +82,21 @@
     </section>
 <% } %>
 
+<section class="card" aria-labelledby="vendor-files-heading">
+        <h2 class="card-title" id="vendor-files-heading"><%= t('files.vendorHeading') %></h2>
+        <% if (vendorFiles.length === 0) { %>
+            <p class="hint"><%= t('files.vendorEmpty') %></p>
+        <% } else { %>
+            <%- include('partials/file-list', { files: vendorFiles }) %>
+        <% } %>
+        <% if (canEdit) { %>
+            <details class="disclosure">
+                <summary><%= t('files.add') %></summary>
+                <%- include('partials/file-upload-form', { form: { values: { kind: 'contract', note: '', vendor_id: vendor.id }, errors: [] }, vendor, kinds: fileKinds, fileMaxMb, noteMax }) %>
+            </details>
+        <% } %>
+    </section>
+
     <section class="card" aria-labelledby="payments-heading">
         <div class="card-header">
             <h2 class="card-title" id="payments-heading"><%= t('payments.heading') %></h2>

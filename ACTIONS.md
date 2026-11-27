@@ -2,7 +2,7 @@
 
 Things only you can do. I remove each one once it's done, so everything here is still open. Follow this file, not older instructions in the chat.
 
-Nothing here stops me building; step 2 only holds back file uploads.
+Nothing here stops me building.
 
 ## 1. (Optional) Turn on reminder emails
 
@@ -19,17 +19,7 @@ Without this nothing is sent, and nothing breaks.
 
 Cron Jobs are a paid Render instance type.
 
-## 2. Choose where uploaded files are stored (needed before I build file uploads)
-
-The next big item in `notes.txt` is uploading contracts, floor plans and inspiration photos. Render's own disk is wiped on every deploy, so files must live somewhere else. Pick one and tell me in the chat:
-
-- **A. In your PostgreSQL database (my recommendation to start).** Nothing new to sign up for. I'd cap files at 10 MB each and 250 MB per wedding. The catch: files count toward your Render database's storage, and a bigger database plan costs more once you have many weddings.
-- **B. Cloudflare R2 (best for growth).** Cheap object storage with a free tier of 10 GB. You create an account and a bucket and give me the keys through the secure form I'd send. I'd set it up so files can be moved there later from option A.
-- **C. Skip uploads for now.** Keep using links to Google Drive or Dropbox, as contracts already do.
-
-Until you answer, I'll keep building the other items.
-
-## 3. Update the Render database for #11
+## 2. Update the Render database for #11
 
 [Timowhit/Wedding#11](https://github.com/Timowhit/Wedding/pull/11) is merged. Its new columns still need adding on Render. On your computer, in the project folder, with `.env` pointing at Render:
 
@@ -46,3 +36,11 @@ npm run migrate
 ```
 
 It applies `013_planning_details.sql` and `014_wrap_up.sql`, which only add columns. Then delete the `planning-details` and `task-celebrations` branches on GitHub.
+
+## 3. Merge the file uploads release
+
+[Timowhit/Wedding#14](https://github.com/Timowhit/Wedding/pull/14) adds the Files page and files on vendor pages, stored in your PostgreSQL database as you chose. It has had a security review and the fixes are in. Ready to merge.
+
+1. Open the PR, click **Ready for review**, wait for the CI check, then **Merge pull request**.
+2. Pull `main` and run `npm run migrate` again, as in step 2. It adds `015_files.sql`.
+3. Keep an eye on your Render database's storage. Each wedding can use up to 250 MB of files, and each person can upload up to 1 GB in total across their weddings. Render shows the database size on the database's page. If you get close to your plan's limit, tell me and I'll move files to cheaper storage.

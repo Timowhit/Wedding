@@ -1,0 +1,44 @@
+<%# Files as a photo grid (images) and a list (everything else). Expects files; canEdit decides the delete buttons. %>
+<% const isImage = (f) => f.content_type.startsWith('image/'); const kb = (bytes) => Math.max(1, Math.round(bytes / 1024)); %>
+<% const images = files.filter(isImage); const others = files.filter((f) => !isImage(f)); %>
+<% if (images.length > 0) { %>
+    <ul class="photo-grid">
+        <% images.forEach((file) => { %>
+            <li class="photo-card">
+                <a href="/files/<%= file.id %>" target="_blank" rel="noopener"><img src="/files/<%= file.id %>" alt="<%= file.note || file.name %>" loading="lazy"></a>
+                <p class="item-meta"><%= file.name %></p>
+                <% if (canEdit) { %>
+                    <form method="post" action="/files/<%= file.id %>/delete" data-confirm="<%= t('files.confirmDelete', { name: file.name }) %>">
+                        <%- include('csrf-field') %>
+                        <input type="hidden" name="return_to" value="<%= currentUrl %>">
+                        <button type="submit" class="link-action link-action--danger" aria-label="<%= t('action.deleteNamed', { name: file.name }) %>"><%= t('action.delete') %></button>
+                    </form>
+                <% } %>
+            </li>
+        <% }); %>
+    </ul>
+<% } %>
+<% if (others.length > 0) { %>
+    <ul class="item-list">
+        <% others.forEach((file) => { %>
+            <li class="item-card file-card">
+                <div class="item-info">
+                    <p class="item-name"><a href="/files/<%= file.id %>"><%= file.name %></a> <span class="tag"><%= t(`fileKind.${file.kind}`) %></span></p>
+                    <p class="item-meta">
+                        <span><%= t('files.size', { kb: kb(file.size) }) %></span>
+                        <% if (file.vendor_name) { %><span><%= file.vendor_name %></span><% } %>
+                        <span><%= formatShortDate(file.created_at) %><% if (file.uploaded_by_name) { %> · <%= file.uploaded_by_name %><% } %></span>
+                    </p>
+                    <% if (file.note) { %><p class="item-meta"><%= file.note %></p><% } %>
+                </div>
+                <% if (canEdit) { %>
+                    <form method="post" action="/files/<%= file.id %>/delete" data-confirm="<%= t('files.confirmDelete', { name: file.name }) %>">
+                        <%- include('csrf-field') %>
+                        <input type="hidden" name="return_to" value="<%= currentUrl %>">
+                        <button type="submit" class="link-action link-action--danger" aria-label="<%= t('action.deleteNamed', { name: file.name }) %>"><%= t('action.delete') %></button>
+                    </form>
+                <% } %>
+            </li>
+        <% }); %>
+    </ul>
+<% } %>

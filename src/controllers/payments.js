@@ -1,4 +1,5 @@
-import { RATING_MAX, VENDOR_STATUSES } from '../constants.js';
+import { FILE_KINDS, FILE_NOTE_MAX, MAX_FILE_MB, RATING_MAX, VENDOR_STATUSES } from '../constants.js';
+import { findFiles } from '../models/files.js';
 import {
     createPayment,
     deletePayment,
@@ -42,9 +43,10 @@ const paymentValues = (payment) => ({
 
 const renderVendorPage = async (req, res, vendor, { status = 200, paymentForm, ratingForm } = {}) => {
     const today = todayIso();
-    const [payments, money] = await Promise.all([
+    const [payments, money, vendorFiles] = await Promise.all([
         findPayments(vendor.id, req.wedding.id),
-        findVendorMoney(req.wedding.id, today)
+        findVendorMoney(req.wedding.id, today),
+        findFiles(req.wedding.id, { vendorId: vendor.id })
     ]);
     res.status(status).render('vendor', {
         title: vendor.name,
@@ -58,7 +60,11 @@ const renderVendorPage = async (req, res, vendor, { status = 200, paymentForm, r
             values: { rating: vendor.rating ? String(vendor.rating) : '', review: vendor.review ?? '' },
             errors: []
         },
-        ratingMax: RATING_MAX
+        ratingMax: RATING_MAX,
+        vendorFiles,
+        fileKinds: FILE_KINDS,
+        fileMaxMb: MAX_FILE_MB,
+        noteMax: FILE_NOTE_MAX
     });
 };
 

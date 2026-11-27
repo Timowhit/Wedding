@@ -53,4 +53,12 @@ const searchLimiter = createLimiter({
     messageKey: 'errors.tooManySearches'
 });
 
-export { loginLimiter, registerLimiter, passwordLimiter, inviteLimiter, searchLimiter };
+/** Uploads: 60 per person per hour (each can be 10 MB). Keyed by account, so a shared office address doesn't share the limit. */
+const uploadLimiter = createLimiter({
+    windowMs: 60 * MINUTE,
+    limit: 60,
+    keyGenerator: (req) => `user:${req.session.user.id}`,
+    messageKey: 'files.tooMany'
+});
+
+export { uploadLimiter, loginLimiter, registerLimiter, passwordLimiter, inviteLimiter, searchLimiter };

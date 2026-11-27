@@ -2,9 +2,10 @@ Wedding-planner UX and feature ideas
 Status checked against the code on 2026-11-27. [x] done, [~] partly done (what's missing is listed), [ ] not started.
 
 Next up
-- [ ] Store inspiration boards, floor plans, contracts, and other files in each event workspace (file uploads). Waiting on the storage choice in ACTIONS.md.
+- [ ] Reusable questionnaires, proposals, email messages, and follow-up templates (proposed next).
 
 Done
+- [x] Store inspiration boards, floor plans, contracts, and other files in each event workspace. (/files, stored in PostgreSQL, PR #14)
 - [x] Gamify task completion with a banner in the top right with tasks and an animation for completion. (Progress badge and celebrations, PR #12, merged)
 - [x] Customizable checklists with due dates, priorities, and task owners. (Priorities and owners, PR #11)
 - [x] Guest lists, RSVPs, meal choices, accessibility needs, plus-ones, and seating assignments. (Meals and access needs, PR #11)
@@ -28,9 +29,9 @@ Partly done
 - [~] A dashboard showing each wedding's next deadlines, appointments, outstanding decisions, and budget status.
       Done: deadlines, decisions, payments due, budget, and a calendar. Missing: appointments (meetings with a time).
 - [~] Vendor contacts, availability, proposals, notes, and key documents together.
-      Done: contacts, notes, contract link and key terms, ratings after the wedding. Missing: availability, proposals, file uploads.
+      Done: contacts, notes, contract link and key terms, ratings after the wedding. Missing: availability and proposals.
 - [~] A shared client portal for couples to review plans, upload details, and approve decisions.
-      Done: client role and decisions to approve. Missing: uploads.
+      Done: client role, decisions to approve, and file uploads (editors and clients).
 - [~] Role-based collaboration for planners, assistants, couples, and vendors.
       Done: owner, editor (assistant), client and viewer. Missing: a vendor role.
 - [~] Configurable reminders for meetings, deadlines, payments, and unanswered questions.
@@ -42,7 +43,8 @@ Small follow-ups (from the review of PR #11)
 - [ ] Wrap-up tasks: stop a second member who uses another language from adding them again.
 - [ ] Progress badge: close its panel with Escape or a click outside, like the menu.
 - [ ] Celebrations: remember the highest milestone per wedding so unticking and ticking again doesn't repeat the big confetti.
+- [ ] Files: re-show the vendor page (not /files) when an upload from it fails; check .docx/.xlsx contents, not just that they're zip files.
+- [ ] Files: check by hand that PDFs open in Chrome, Firefox and Safari under the download sandbox.
 
 Not started
-- [ ] Reusable questionnaires, proposals, email messages, and follow-up templates.
 - [ ] Let planners customize fields and workflows for different budgets, traditions, and planning styles.

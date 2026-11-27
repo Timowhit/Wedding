@@ -10,6 +10,10 @@ const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 // Unsubscribe links are proven by their own signed token (utils/unsubscribe.js), and mail
 // clients' one-click unsubscribe POSTs can't carry a CSRF token.
 const EXEMPT_PATHS = new Set(['/reminders/unsubscribe']);
+// Upload forms (multipart) can't be read here; these routes check the token themselves, after
+// parsing (middleware/upload.js). Any other multipart POST is refused.
+const UPLOAD_PATHS = new Set(['/files']);
+const isMultipart = (req) => /^multipart\/form-data/i.test(req.get('content-type') ?? '');
 
 /** Returns the session's token, creating it the first time a form needs one. */
 const getToken = (req) => {
@@ -36,6 +40,7 @@ const csrfProtection = (req, res, next) => {
     res.locals.csrfToken = () => getToken(req);
 
     if (SAFE_METHODS.has(req.method) || EXEMPT_PATHS.has(req.path)) return next();
+    if (isMultipart(req) && UPLOAD_PATHS.has(req.path)) return next();
 
     const expected = req.session.csrfToken;
     const submitted = req.body?.[FIELD_NAME];
@@ -50,4 +55,4 @@ const csrfProtection = (req, res, next) => {
     });
 };
 
-export { csrfProtection, FIELD_NAME as CSRF_FIELD_NAME };
+export { csrfProtection, tokensMatch, FIELD_NAME as CSRF_FIELD_NAME };
