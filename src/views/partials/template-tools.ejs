@@ -25,7 +25,7 @@
                 <label for="<%= kind %>-template-id"><%= t('templates.pick') %></label>
                 <select id="<%= kind %>-template-id" name="template_id">
                     <% templates.forEach((template) => { %>
-                        <option value="<%= template.id %>"><%= t(`templates.option.${kind}`, { name: template.name, count: template.item_count }) %></option>
+                        <option value="<%= template.id %>"><%= t(template.item_count === 1 ? `templates.optionOne.${kind}` : `templates.option.${kind}`, { name: template.name, count: template.item_count }) %></option>
                     <% }); %>
                 </select>
                 <button type="submit" class="btn btn-secondary"><%= t('templates.addSubmit') %></button>

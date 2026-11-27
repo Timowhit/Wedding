@@ -909,5 +909,9 @@ export default {
     'templates.deleted': 'Template deleted.',
     'templates.nameTaken': 'You already have a template of this kind with that name.',
     'confirm.deleteTemplate': 'Delete the template {name}?',
-    'nav.templates': 'Templates'
+    'nav.templates': 'Templates',
+    'templates.countOne.checklist': '1 task',
+    'templates.countOne.schedule': '1 item',
+    'templates.optionOne.checklist': '{name} (1 task)',
+    'templates.optionOne.schedule': '{name} (1 item)'
 };

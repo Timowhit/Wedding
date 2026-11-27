@@ -67,7 +67,7 @@ const dynamicKeys = () => [
     ...THEME_MODES.map((m) => `themeMode.${m}`),
     ...PLANNER_PAYMENT_FILTERS.map((f) => `paymentsDue.filter.${f}`),
     ...TEMPLATE_KINDS.flatMap((k) =>
-        ['kind', 'empty', 'count', 'namePlaceholder', 'saveHint', 'option', 'addHint'].map(
+        ['kind', 'empty', 'count', 'countOne', 'namePlaceholder', 'saveHint', 'option', 'optionOne', 'addHint'].map(
             (part) => `templates.${part}.${k}`
         )
     )

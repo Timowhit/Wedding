@@ -918,5 +918,9 @@ export default {
     'templates.deleted': 'Plantilla eliminada.',
     'templates.nameTaken': 'Ya tienes una plantilla de este tipo con ese nombre.',
     'confirm.deleteTemplate': '¿Eliminar la plantilla {name}?',
-    'nav.templates': 'Plantillas'
+    'nav.templates': 'Plantillas',
+    'templates.countOne.checklist': '1 tarea',
+    'templates.countOne.schedule': '1 elemento',
+    'templates.optionOne.checklist': '{name} (1 tarea)',
+    'templates.optionOne.schedule': '{name} (1 elemento)'
 };

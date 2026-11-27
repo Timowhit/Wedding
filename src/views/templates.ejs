@@ -17,7 +17,7 @@
                         <li class="item-card">
                             <div class="item-info">
                                 <p class="item-name"><%= template.name %></p>
-                                <p class="item-meta"><%= t(`templates.count.${kind}`, { count: template.item_count }) %> · <%= t('templates.savedOn', { date: formatDate(template.updated_at) }) %></p>
+                                <p class="item-meta"><%= t(template.item_count === 1 ? `templates.countOne.${kind}` : `templates.count.${kind}`, { count: template.item_count }) %> · <%= t('templates.savedOn', { date: formatDate(template.updated_at) }) %></p>
                                 <details class="disclosure" <%= editing ? 'open' : '' %>>
                                     <summary aria-label="<%= t('templates.renameNamed', { name: template.name }) %>"><%= t('templates.rename') %></summary>
                                     <% if (editing) { %><%- include('partials/form-errors', { errors: renameForm.errors, id: `rename-errors-${template.id}` }) %><% } %>

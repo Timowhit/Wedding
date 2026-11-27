@@ -27,6 +27,7 @@ There is no frontend framework, bundler or TypeScript. `public/js/app.js` is a s
 - **Decisions**: the planner asks, the couple approve or send back with a note
 - **Event-day schedule**: times, places, vendors with tap-to-call numbers, setup notes and a plan B per item; printable
 - **Seating chart**: tables with seat counts (plus-ones included), guest groups, a table picker per guest and drag and drop
+- **Templates**: save a wedding's checklist or event-day timeline as your own template, then add it to another wedding in two taps. Checklist due dates are stored as days before the wedding and worked out again from each wedding's date; tasks already on the list are skipped. Timeline templates keep times, places, notes and plan B, but not the vendor or contact. Manage them at `/templates`
 - **Offline event day**: once the event-day schedule has been opened online, the schedule (and its print view), the vendor list and the vendors on the schedule keep working with no connection, with tap-to-call numbers and a banner showing when the copy was saved. Other pages show a friendly offline page. Signing out removes everything saved on the device
 - **Contracts and payments**: each vendor has a page with its contract (total, signed date, a link to the signed document, what's included, cancellation terms) and a payment schedule with "Mark paid". The budget counts booked vendors' contracts and shows Committed · Paid · Still owed; overdue and upcoming payments appear on each wedding's dashboard and, across all weddings, on the planner dashboard. The event-day schedule shows what each vendor's contract includes
 - **Themes**: Rose, Sage, Navy, Champagne and Slate palettes, each in light, dark or automatic mode
@@ -129,6 +130,10 @@ All `POST` routes require the session's CSRF token (see Security Notes).
 | Method | Path                                                      | Access   | Description                                                      |
 | ------ | --------------------------------------------------------- | -------- | ---------------------------------------------------------------- |
 | GET    | `/`                                                       | Public   | Landing page when signed out; dashboard when signed in           |
+| POST   | `/checklist/template`, `/schedule/template`               | Editor   | Save the list as one of your templates (same name replaces)      |
+| POST   | `/checklist/from-template`, `/schedule/from-template`     | Editor   | Add one of your templates to the active wedding                  |
+| GET    | `/templates`                                              | Account  | Your templates                                                   |
+| POST   | `/templates/:id/rename`, `/templates/:id/delete`          | Account  | Rename / delete one of your templates                            |
 | GET    | `/offline`                                                | Public   | Shown by the service worker when a page isn't saved for offline  |
 | GET    | `/start`                                                  | Public   | "Start now": choose planner or couple                            |
 | GET    | `/register?as=planner\|couple`                            | Public   | Sign-up form for a planner or a couple                           |
@@ -272,6 +277,8 @@ checklist_tasks    (id PK, wedding_id, text, category, due_date, done, sort_orde
 guests             (id PK, wedding_id, name, rsvp CHECK, diet, plus_one, group_name, table_id FK NULL)
 vendors            (id PK, wedding_id, name, category, phone, email, website, status CHECK, notes,
                     contract_total >= 0 NULL, contract_signed_on, contract_url, contract_includes, contract_cancellation)
+templates          (id PK, user_id FK CASCADE, kind checklist|schedule, name 1..120, items JSONB,
+                    UNIQUE (user_id, kind, name))  -- a person's own; never shared with the wedding
 vendor_payments    (id PK, wedding_id FK, vendor_id FK CASCADE, label, amount > 0, due_date, paid_on NULL = unpaid, note)
 music_tracks       (id PK, wedding_id, section, track_id, track_name, artist_name, artwork_url, UNIQUE (wedding_id, section, track_id))
 inspiration_photos (id PK, wedding_id, photo_id, thumb_url, full_url, alt_desc, source_link, UNIQUE (wedding_id, photo_id))
