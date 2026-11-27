@@ -1070,5 +1070,13 @@ export default {
     'checklist.filterWho': 'Whose tasks',
     'checklist.everyone': 'Everyone’s',
     'checklist.mine': 'Mine',
-    'checklist.highOnly': 'High priority'
+    'checklist.highOnly': 'High priority',
+    'field.meal': 'Meal',
+    'field.accessibility': 'Accessibility needs',
+    'guests.mealPlaceholder': 'e.g. Fish',
+    'guests.accessibilityPlaceholder': 'e.g. Wheelchair user, seat near the exit',
+    'guests.mealLabel': 'Meal: {meal}',
+    'guests.accessibilityLabel': 'Access needs: {needs}',
+    'guests.mealsHeading': 'Meals:',
+    'guests.mealNotChosen': 'Not chosen {count}'
 };

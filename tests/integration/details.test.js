@@ -132,4 +132,55 @@ describe('planning details', { skip: skipWithoutDb }, () => {
             await outsider.get('/');
         });
     });
+
+    describe('guest meals and accessibility needs', () => {
+        const addGuest = (fields) =>
+            ana.post('/guests', { name: '', rsvp: 'Confirmed', diet: '', plus_one: '', group_name: '', ...fields });
+
+        it('a guest has a meal choice and accessibility needs, shown on the list', async () => {
+            await ana.get('/guests');
+            const added = await addGuest({ name: 'Grandma Rose', meal: 'Fish', accessibility: 'Wheelchair user' });
+            assert.equal(added.location, '/guests');
+            const page = textOf((await ana.get('/guests')).body);
+            assert.match(page, /Grandma Rose.*Meal: Fish.*Access needs: Wheelchair user/);
+        });
+
+        it('a meal summary counts everyone not declined, with the meals already used as suggestions', async () => {
+            await addGuest({ name: 'Uncle Tom', rsvp: 'Pending', meal: 'Beef', accessibility: '' });
+            await addGuest({ name: 'Cousin Sam', rsvp: 'Declined', meal: 'Fish', accessibility: '' });
+            await addGuest({ name: 'Aunt May', rsvp: 'Confirmed', meal: '', accessibility: '' });
+            const html = (await ana.get('/guests')).body;
+            assert.match(textOf(html), /Meals: Beef 1 · Fish 1 · Not chosen 1/);
+            assert.match(html, /<datalist id="meal-options">[^]*<option value="Beef">[^]*<option value="Fish">/);
+        });
+
+        it('the seating chart flags guests with accessibility needs', async () => {
+            const page = (await ana.get('/seating')).body;
+            assert.match(page, /Grandma Rose[^]{0,400}class="access-flag"/);
+            assert.match(textOf(page), /Access needs: Wheelchair user/);
+        });
+
+        it('limits: a meal is up to 60 characters, needs up to 300', async () => {
+            await ana.get('/guests');
+            assert.equal((await addGuest({ name: 'Long', meal: 'x'.repeat(61), accessibility: '' })).status, 400);
+            assert.equal((await addGuest({ name: 'Long', meal: '', accessibility: 'x'.repeat(301) })).status, 400);
+        });
+
+        it('editing keeps and changes both fields', async () => {
+            const { rows } = await app.pool.query(`SELECT id FROM guests WHERE name = 'Grandma Rose';`);
+            const form = await ana.get(`/guests/${rows[0].id}/edit`);
+            assert.match(form.body, /name="meal"[^>]*value="Fish"/);
+            await ana.post(`/guests/${rows[0].id}/edit`, {
+                name: 'Grandma Rose',
+                rsvp: 'Confirmed',
+                diet: '',
+                plus_one: '',
+                group_name: '',
+                meal: 'Vegetarian',
+                accessibility: 'Step-free seat near the door'
+            });
+            const saved = await app.pool.query(`SELECT meal, accessibility FROM guests WHERE id = $1;`, [rows[0].id]);
+            assert.deepEqual(saved.rows[0], { meal: 'Vegetarian', accessibility: 'Step-free seat near the door' });
+        });
+    });
 });

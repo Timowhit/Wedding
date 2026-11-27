@@ -27,6 +27,8 @@ const LIMITS = Object.freeze({
     diet: 300,
     plusOne: 200,
     group: 80,
+    meal: 60,
+    accessibility: 300,
     vendorName: 200,
     phone: 50,
     notes: 2000,
@@ -100,7 +102,7 @@ const validateTask = (body = {}, memberIds = []) => {
 
 /**
  * @param {object} [body] - req.body
- * @returns {{values: object, data: {name: string, rsvp: string, diet: string|null, plusOne: string|null, groupName: string|null}, errors: Array}}
+ * @returns {{values: object, data: {name: string, rsvp: string, diet: string|null, plusOne: string|null, groupName: string|null, meal: string|null, accessibility: string|null}, errors: Array}}
  */
 const validateGuest = (body = {}) => {
     const values = {
@@ -108,11 +110,15 @@ const validateGuest = (body = {}) => {
         rsvp: readText(body.rsvp),
         diet: readText(body.diet),
         plus_one: readText(body.plus_one),
-        group_name: readText(body.group_name)
+        group_name: readText(body.group_name),
+        meal: readText(body.meal),
+        accessibility: readText(body.accessibility)
     };
     const { errors, fail } = collectErrors();
 
     checkText(fail, 'name', values.name, { required: true, max: LIMITS.guestName });
+    checkText(fail, 'meal', values.meal, { max: LIMITS.meal });
+    checkText(fail, 'accessibility', values.accessibility, { max: LIMITS.accessibility });
     const rsvp = readChoice(values.rsvp, RSVP_STATUSES);
     if (!rsvp) fail('rsvp', 'validation.choice');
     checkText(fail, 'diet', values.diet, { max: LIMITS.diet });
@@ -126,7 +132,9 @@ const validateGuest = (body = {}) => {
             rsvp,
             diet: optional(values.diet),
             plusOne: optional(values.plus_one),
-            groupName: optional(values.group_name)
+            groupName: optional(values.group_name),
+            meal: optional(values.meal),
+            accessibility: optional(values.accessibility)
         },
         errors
     };

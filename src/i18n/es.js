@@ -1079,5 +1079,13 @@ export default {
     'checklist.filterWho': 'Tareas de quién',
     'checklist.everyone': 'De todos',
     'checklist.mine': 'Mías',
-    'checklist.highOnly': 'Prioridad alta'
+    'checklist.highOnly': 'Prioridad alta',
+    'field.meal': 'Menú',
+    'field.accessibility': 'Necesidades de accesibilidad',
+    'guests.mealPlaceholder': 'p. ej. Pescado',
+    'guests.accessibilityPlaceholder': 'p. ej. Silla de ruedas, sentarse cerca de la salida',
+    'guests.mealLabel': 'Menú: {meal}',
+    'guests.accessibilityLabel': 'Accesibilidad: {needs}',
+    'guests.mealsHeading': 'Menús:',
+    'guests.mealNotChosen': 'Sin elegir {count}'
 };
