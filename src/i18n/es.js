@@ -89,6 +89,7 @@ export default {
     'validation.tooLong': 'Debe tener {max} caracteres o menos.',
     'validation.email': 'Ingresa un correo electrónico válido.',
     'validation.date': 'Ingresa una fecha real entre 1900 y 2100.',
+    'validation.httpsUrl': 'Escribe un enlace completo que empiece por https://.',
     'validation.url': 'Ingresa una dirección web completa que empiece con https:// o http://.',
     'validation.amount': 'Ingresa un monto de 0 o más, como 2500 o 2500.50.',
     'validation.positiveAmount': 'Ingresa un monto mayor que 0, como 120 o 120.50.',

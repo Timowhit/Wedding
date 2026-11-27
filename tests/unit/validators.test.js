@@ -8,6 +8,7 @@ import {
     validateRegistration
 } from '../../src/validators/auth.js';
 import { extractInviteToken, validateInvite, validateWedding } from '../../src/validators/weddings.js';
+import { validateContract, validatePayment } from '../../src/validators/payments.js';
 import {
     validateExpense,
     validateGuest,
@@ -168,5 +169,103 @@ describe('planning validators', () => {
         const long = validateSearch('x'.repeat(101));
         assert.equal(long.query, '');
         assert.deepEqual(fields(long), ['q']);
+    });
+});
+
+describe('validateContract', () => {
+    const empty = {
+        contract_total: '',
+        contract_signed_on: '',
+        contract_url: '',
+        contract_includes: '',
+        contract_cancellation: ''
+    };
+
+    it('accepts an all-empty contract as "no contract"', () => {
+        const { data, errors } = validateContract(empty);
+        assert.deepEqual(errors, []);
+        assert.deepEqual(data, { total: null, signedOn: null, url: null, includes: null, cancellation: null });
+    });
+
+    it('reads money with symbols and keeps the text fields', () => {
+        const { data, errors } = validateContract({
+            ...empty,
+            contract_total: '$4,800',
+            contract_signed_on: '2027-03-12',
+            contract_url: 'https://drive.example/c.pdf',
+            contract_includes: '12 centrepieces'
+        });
+        assert.deepEqual(errors, []);
+        assert.equal(data.total, 4800);
+        assert.equal(data.signedOn, '2027-03-12');
+        assert.equal(data.url, 'https://drive.example/c.pdf');
+        assert.equal(data.includes, '12 centrepieces');
+    });
+
+    it('only takes https links of a sane length', () => {
+        for (const url of [
+            'http://x.com/c.pdf',
+            'javascript:alert(1)',
+            'not a link',
+            `https://x.com/${'a'.repeat(2000)}`
+        ]) {
+            const { errors } = validateContract({ ...empty, contract_url: url });
+            assert.deepEqual(errors, [{ field: 'contract_url', key: 'validation.httpsUrl' }], url);
+        }
+    });
+
+    it('rejects a bad date, a negative total and over-long text', () => {
+        const { errors } = validateContract({
+            ...empty,
+            contract_total: '-5',
+            contract_signed_on: '2027-02-30',
+            contract_includes: 'x'.repeat(2001),
+            contract_cancellation: 'x'.repeat(1001)
+        });
+        assert.deepEqual(
+            errors.map((e) => [e.field, e.key]),
+            [
+                ['contract_total', 'validation.amount'],
+                ['contract_signed_on', 'validation.date'],
+                ['contract_includes', 'validation.tooLong'],
+                ['contract_cancellation', 'validation.tooLong']
+            ]
+        );
+    });
+});
+
+describe('validatePayment', () => {
+    const base = { label: '', amount: '100', due_date: '', paid_on: '', note: '' };
+
+    it('needs an amount greater than 0', () => {
+        for (const amount of ['', '0', '-5', 'abc', '1,200.555']) {
+            const { errors } = validatePayment({ ...base, amount });
+            assert.deepEqual(errors, [{ field: 'amount', key: 'validation.positiveAmount' }], amount);
+        }
+    });
+
+    it('accepts "$1,200" and treats empty optional fields as null', () => {
+        const { data, errors } = validatePayment({ ...base, amount: '$1,200' });
+        assert.deepEqual(errors, []);
+        assert.deepEqual(data, { label: null, amount: 1200, dueDate: null, paidOn: null, note: null });
+    });
+
+    it('checks dates and lengths', () => {
+        const { errors } = validatePayment({
+            ...base,
+            label: 'x'.repeat(121),
+            due_date: 'soon',
+            paid_on: '2027-13-01',
+            note: 'x'.repeat(501)
+        });
+        assert.deepEqual(
+            errors.map((e) => [e.field, e.key]),
+            [
+                ['label', 'validation.tooLong'],
+                ['due_date', 'validation.date'],
+                ['paid_on', 'validation.date'],
+                ['note', 'validation.tooLong']
+            ]
+        );
     });
 });
