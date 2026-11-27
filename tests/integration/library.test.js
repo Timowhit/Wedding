@@ -238,49 +238,60 @@ describe('messages and questionnaires library', { skip: skipWithoutDb }, () => {
     });
 
     describe('adding and removing questions', () => {
-        it('"Add a question" shows one more row without saving', async () => {
+        const twoRows = (extra) => ({
+            title: 'Draft',
+            intro: '',
+            q0_text: 'First?',
+            q0_type: 'short',
+            q0_options: '',
+            q1_text: 'Second?',
+            q1_type: 'short',
+            q1_options: '',
+            ...extra
+        });
+        const rowValues = (body) => [...body.matchAll(/name="q\d+_text"[^>]*value="([^"]*)"/g)].map((m) => m[1]);
+
+        it('+ on a question adds an empty one just under it, without saving', async () => {
             await pia.get('/library/questionnaires/new');
-            const page = await pia.post('/library/questionnaires', {
-                title: 'Draft',
-                intro: '',
-                q0_text: 'First?',
-                q0_type: 'short',
-                q0_options: '',
-                q1_text: '',
-                q1_type: 'short',
-                q1_options: '',
-                add_row: '1'
-            });
+            const page = await pia.post('/library/questionnaires', twoRows({ row_action: 'add:0' }));
             assert.equal(page.status, 200);
-            assert.equal((page.body.match(/class="question-row"/g) || []).length, 3);
-            assert.match(page.body, /value="First\?"/);
+            assert.deepEqual(rowValues(page.body), ['First?', '', 'Second?']);
+            assert.match(page.body, /id="q1-text"[^>]*autofocus/, 'the new question is focused');
             assert.equal(await questionnaireId('Draft'), undefined, 'nothing saved yet');
         });
 
-        it('a question marked for removal is left out', async () => {
-            const saved = await pia.post('/library/questionnaires', {
-                title: 'Trimmed',
-                intro: '',
-                q0_text: 'Keep me',
-                q0_type: 'short',
-                q0_options: '',
-                q1_text: 'Drop me',
-                q1_type: 'short',
-                q1_options: '',
-                q1_remove: 'on'
-            });
-            assert.equal(saved.location, '/library');
-            const row = (await q(`SELECT questions FROM questionnaires WHERE title = 'Trimmed';`)).rows[0];
-            assert.deepEqual(
-                row.questions.map((question) => question.text),
-                ['Keep me']
-            );
+        it('− on a question removes it, without saving', async () => {
+            const page = await pia.post('/library/questionnaires', twoRows({ row_action: 'remove:0' }));
+            assert.equal(page.status, 200);
+            assert.deepEqual(rowValues(page.body), ['Second?']);
+            assert.equal(await questionnaireId('Draft'), undefined, 'nothing saved yet');
         });
 
-        it('each row has a remove control and the builder an add button', async () => {
+        it('the last question cannot be removed, and its − is disabled', async () => {
+            const page = await pia.post('/library/questionnaires', {
+                title: 'Draft',
+                q0_text: 'Only?',
+                q0_type: 'short',
+                row_action: 'remove:0'
+            });
+            assert.deepEqual(rowValues(page.body), ['Only?']);
+            assert.match(page.body, /<button[^>]*value="remove:0"[^>]*disabled/);
+        });
+
+        it('each question has a −/+ pill naming it, and Enter still saves', async () => {
             const page = await pia.get('/library/questionnaires/new');
-            assert.match(page.body, /name="q0_remove"/);
-            assert.match(page.body, /<button type="submit" name="add_row" value="1"/);
+            assert.match(page.body, /value="remove:0"[^>]*aria-label="Remove question 1"/);
+            assert.match(page.body, /value="add:0"[^>]*aria-label="Add a question under question 1"/);
+            // Pressing Enter in a field clicks the form's first submit button: it must be Save.
+            const form = page.body.slice(page.body.indexOf('data-question-builder'));
+            const firstSubmit = /<button type="submit"[^>]*>/.exec(form)[0];
+            assert.doesNotMatch(firstSubmit, /row_action/);
+            assert.doesNotMatch(page.body, /_remove"/, 'no tick boxes any more');
+        });
+
+        it('ignores a made-up row action', async () => {
+            const page = await pia.post('/library/questionnaires', twoRows({ row_action: 'add:99' }));
+            assert.deepEqual(rowValues(page.body), ['First?', 'Second?']);
         });
     });
 });

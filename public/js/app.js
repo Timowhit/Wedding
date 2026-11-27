@@ -184,66 +184,66 @@
         });
     });
 
-    // Questionnaire builder: add and remove questions in place. Without JavaScript the same
-    // buttons post the form (add_row) or a tick box drops a row on save.
+    // Questionnaire builder: each question's −/+ pill removes it or adds an empty one under it, in
+    // place. Without JavaScript the same buttons post the form and the server sends it back changed.
     const builder = document.querySelector('[data-question-builder]');
     if (builder) {
         const list = builder.querySelector('.question-rows');
-        const addButton = builder.querySelector('[data-add-question]');
         const maxRows = Number(builder.getAttribute('data-max-rows'));
-        const rowIndex = (row) => Number((/^q(\d+)_/.exec(row.querySelector('[name$="_text"]').name) || [])[1]);
+        const label = (attr, n) => list.getAttribute(attr).replace('{n}', n);
+        const rows = () => Array.from(list.querySelectorAll('[data-question-row]'));
+        // Fields are numbered in page order, because the server reads q0, q1… in that order.
         const renumber = function () {
-            Array.from(list.querySelectorAll('[data-question-row]')).forEach(function (row, i) {
-                row.querySelector('[data-question-legend]').textContent = addButton
-                    .getAttribute('data-legend')
-                    .replace('{n}', i + 1);
-                row.querySelector('[data-remove-question]').setAttribute(
-                    'aria-label',
-                    addButton.getAttribute('data-remove-label').replace('{n}', i + 1)
-                );
-            });
-            addButton.hidden = list.querySelectorAll('[data-question-row]').length >= maxRows;
-        };
-        const wireRemove = function (row) {
-            const button = row.querySelector('[data-remove-question]');
-            button.hidden = false;
-            button.addEventListener('click', function () {
-                if (list.querySelectorAll('[data-question-row]').length <= 1) return;
-                const next = row.nextElementSibling || row.previousElementSibling;
-                row.remove();
-                renumber();
-                if (next) next.querySelector('input[type="text"]').focus();
-            });
-        };
-        list.querySelectorAll('[data-question-row]').forEach(wireRemove);
-        addButton.addEventListener('click', function (event) {
-            event.preventDefault();
-            const rows = Array.from(list.querySelectorAll('[data-question-row]'));
-            if (rows.length >= maxRows) return;
-            const next = Math.max.apply(null, rows.map(rowIndex)) + 1;
-            const row = rows[0].cloneNode(true);
-            row.querySelectorAll('[name],[id],[for],[aria-describedby]').forEach(function (el) {
-                ['name', 'id', 'for'].forEach(function (attr) {
-                    const value = el.getAttribute(attr);
-                    if (value) el.setAttribute(attr, value.replace(/^q\d+([_-])/, 'q' + next + '$1'));
+            const all = rows();
+            all.forEach(function (row, i) {
+                row.querySelector('[data-question-legend]').textContent = label('data-legend', i + 1);
+                row.querySelectorAll('[name^="q"],[id^="q"],[for^="q"]').forEach(function (el) {
+                    ['name', 'id', 'for'].forEach(function (attr) {
+                        const value = el.getAttribute(attr);
+                        if (value) el.setAttribute(attr, value.replace(/^q\d+([_-])/, 'q' + i + '$1'));
+                    });
                 });
-                el.removeAttribute('aria-invalid');
+                const remove = row.querySelector('[data-remove-question]');
+                const add = row.querySelector('[data-add-question]');
+                remove.setAttribute('aria-label', label('data-remove-label', i + 1));
+                remove.title = remove.getAttribute('aria-label');
+                remove.disabled = all.length <= 1;
+                add.setAttribute('aria-label', label('data-add-label', i + 1));
+                add.title = add.getAttribute('aria-label');
+                add.disabled = all.length >= maxRows;
             });
+        };
+        const blank = function (template) {
+            const row = template.cloneNode(true);
             row.querySelectorAll('input[type="text"], textarea').forEach(function (el) {
                 el.value = '';
+                el.removeAttribute('aria-invalid');
+                el.removeAttribute('autofocus');
             });
             row.querySelectorAll('select').forEach(function (el) {
                 el.selectedIndex = 0;
             });
-            row.querySelectorAll('input[type="checkbox"]').forEach(function (el) {
-                el.checked = false;
-            });
-            const fresh = row.querySelector('[data-remove-question]').cloneNode(true);
-            row.querySelector('[data-remove-question]').replaceWith(fresh);
-            list.appendChild(row);
-            wireRemove(row);
+            return row;
+        };
+        list.addEventListener('click', function (event) {
+            const button = event.target.closest('[data-remove-question], [data-add-question]');
+            if (!button || button.disabled) return;
+            event.preventDefault();
+            const row = button.closest('[data-question-row]');
+            let focus;
+            if (button.hasAttribute('data-add-question')) {
+                focus = blank(row);
+                row.after(focus);
+            } else {
+                focus = row.nextElementSibling || row.previousElementSibling;
+                row.remove();
+            }
             renumber();
-            row.querySelector('input[type="text"]').focus();
+            focus.querySelector('input[type="text"]').focus();
+        });
+        // Buttons in place now, so Enter in a field saves rather than pressing a row's pill.
+        list.querySelectorAll('[data-row-tools] button').forEach(function (button) {
+            button.type = 'button';
         });
         renumber();
     }
