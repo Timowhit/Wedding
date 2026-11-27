@@ -214,7 +214,6 @@ export default {
     'budget.byCategoryEmpty': 'Nothing spent or planned yet. Give a category a planned amount to follow it here.',
     'budget.manageCategories': 'Edit categories and planned amounts',
     'budget.plannedPlaceholder': 'Planned',
-    'budget.plannedFor': 'Planned amount for {name}',
     'budget.savePlanned': 'Save',
     'budget.savePlannedFor': 'Save the planned amount for {name}',
     'budget.categoriesHint':
@@ -229,7 +228,8 @@ export default {
     'budget.plannedSaved': 'Planned amount saved.',
     'budget.categoryDeleted': 'Deleted {name}. Its expenses are now under {other}.',
     'budget.suggestedAdded': 'Suggested categories added back: {count}.',
-    'confirm.deleteCategory': 'Delete the category {name}? Its expenses move to {other}.',
+    'confirm.deleteCategory':
+        'Delete the category {name}? Its expenses move to {other}; vendor contracts keep their own category.',
     'field.planned': 'Planned amount',
     'budget.addExpense': 'Add an expense',
     'budget.addExpenseSubmit': 'Add expense',
@@ -680,7 +680,6 @@ export default {
     'schedule.editHeading': 'Edit *schedule* item',
     'schedule.subtitle': 'Who arrives when, where everything happens, and the plan B.',
     'schedule.printable': 'Printable version',
-    'schedule.printableColour': 'In colour',
     'schedule.printMono': 'Black and white',
     'schedule.printColour': 'In colour',
     'schedule.printNow': 'Print',

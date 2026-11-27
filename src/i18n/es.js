@@ -213,7 +213,6 @@ export default {
         'Aún no hay gastos ni montos previstos. Pon un monto previsto a una categoría para seguirla aquí.',
     'budget.manageCategories': 'Editar categorías y montos previstos',
     'budget.plannedPlaceholder': 'Previsto',
-    'budget.plannedFor': 'Monto previsto para {name}',
     'budget.savePlanned': 'Guardar',
     'budget.savePlannedFor': 'Guardar el monto previsto para {name}',
     'budget.categoriesHint':
@@ -228,7 +227,8 @@ export default {
     'budget.plannedSaved': 'Monto previsto guardado.',
     'budget.categoryDeleted': 'Se eliminó {name}. Sus gastos están ahora en {other}.',
     'budget.suggestedAdded': 'Categorías sugeridas añadidas de nuevo: {count}.',
-    'confirm.deleteCategory': '¿Eliminar la categoría {name}? Sus gastos pasan a {other}.',
+    'confirm.deleteCategory':
+        '¿Eliminar la categoría {name}? Sus gastos pasan a {other}; los contratos con proveedores mantienen su categoría.',
     'field.planned': 'Monto previsto',
     'budget.addExpense': 'Agregar un gasto',
     'budget.addExpenseSubmit': 'Agregar gasto',
@@ -686,7 +686,6 @@ export default {
     'schedule.editHeading': 'Editar *programa*',
     'schedule.subtitle': 'Quién llega y cuándo, dónde ocurre todo y el plan B.',
     'schedule.printable': 'Versión para imprimir',
-    'schedule.printableColour': 'En color',
     'schedule.printMono': 'Blanco y negro',
     'schedule.printColour': 'En color',
     'schedule.printNow': 'Imprimir',

@@ -70,10 +70,9 @@
                                 <form method="post" action="/budget/categories/<%= category.id %>/plan" class="inline-form category-manage__plan">
                                     <%- include('partials/csrf-field') %>
                                     <%- include('partials/return-to') %>
-                                    <label for="plan-<%= category.id %>" class="category-manage__name"><%= category.label %></label>
+                                    <label for="plan-<%= category.id %>" class="category-manage__name"><%= category.label %><span class="visually-hidden"> · <%= t('field.planned') %></span></label>
                                     <input type="text" inputmode="decimal" id="plan-<%= category.id %>" name="planned" maxlength="16"
                                            value="<%= failed ? planForm.values.planned : (category.planned ?? '') %>" placeholder="<%= t('budget.plannedPlaceholder') %>"
-                                           aria-label="<%= t('budget.plannedFor', { name: category.label }) %>"
                                            <%- failed ? fieldState(planForm.errors, 'planned', 'plan-errors') : '' %>>
                                     <button type="submit" class="btn btn-secondary btn-small" aria-label="<%= t('budget.savePlannedFor', { name: category.label }) %>"><%= t('budget.savePlanned') %></button>
                                 </form>
@@ -96,7 +95,7 @@
                         <%- include('partials/return-to') %>
                         <div class="field">
                             <label for="category-name"><%= t('field.name') %></label>
-                            <input type="text" id="category-name" name="name" required maxlength="60" value="<%= categoryForm.values.name %>"
+                            <input type="text" id="category-name" name="name" required maxlength="<%= categoryNameMax %>" value="<%= categoryForm.values.name %>"
                                    placeholder="<%= t('budget.categoryPlaceholder') %>" <%- fieldState(categoryForm.errors, 'name', 'category-errors') %>>
                         </div>
                         <div class="field">

@@ -101,8 +101,15 @@ const findBudgetCategories = async (weddingId) => {
  * @param {{builtinKey: string|null, name: string|null, planned: number|null}} values - Already validated; exactly one of builtinKey and name.
  * @returns {Promise<'added'|'exists'|'full'>}
  */
-const addBudgetCategory = async (weddingId, { builtinKey, name, planned }) => {
-    const result = await db.query(
+const addBudgetCategory = async (weddingId, { builtinKey, name, planned }) =>
+    withTransaction(async (client) => {
+        // Counted under a lock, so two adds at once can't pass the limit.
+        await client.query(`SELECT pg_advisory_xact_lock(hashtext('budget_categories:' || $1));`, [weddingId]);
+        return insertCategory(client, weddingId, { builtinKey, name, planned });
+    });
+
+const insertCategory = async (client, weddingId, { builtinKey, name, planned }) => {
+    const result = await client.query(
         `INSERT INTO budget_categories (wedding_id, builtin_key, name, planned)
          SELECT $1, $2, $3, $4
          WHERE (SELECT COUNT(*) FROM budget_categories WHERE wedding_id = $1) < $5
@@ -111,7 +118,7 @@ const addBudgetCategory = async (weddingId, { builtinKey, name, planned }) => {
         [weddingId, builtinKey, name, planned, MAX_BUDGET_CATEGORIES]
     );
     if (result.rowCount > 0) return 'added';
-    const exists = await db.query(
+    const exists = await client.query(
         `SELECT 1 FROM budget_categories WHERE wedding_id = $1 AND LOWER(COALESCE(builtin_key, name)) = LOWER($2);`,
         [weddingId, builtinKey ?? name]
     );

@@ -1,4 +1,9 @@
-import { BUDGET_CATEGORIES, FALLBACK_BUDGET_CATEGORY, MAX_BUDGET_CATEGORIES } from '../constants.js';
+import {
+    BUDGET_CATEGORIES,
+    BUDGET_CATEGORY_NAME_MAX,
+    FALLBACK_BUDGET_CATEGORY,
+    MAX_BUDGET_CATEGORIES
+} from '../constants.js';
 import { SUPPORTED_LANGUAGES, translate } from '../i18n/index.js';
 import {
     addBudgetCategory,
@@ -109,6 +114,7 @@ const renderBudget = async (req, res, { status = 200, limitForm, expenseForm, ca
             deletable: row.value !== FALLBACK_BUDGET_CATEGORY
         })),
         categoryLabel: label,
+        categoryNameMax: BUDGET_CATEGORY_NAME_MAX,
         missingSuggested: BUDGET_CATEGORIES.some((key) => !values.includes(key)),
         activeCategory: category,
         limitForm: limitForm ?? { values: { total: limit > 0 ? String(limit) : '' }, errors: [] },
@@ -170,7 +176,7 @@ const processNewCategory = async (req, res) => {
                 : { field: 'name', key: 'budget.categoryLimit', vars: { max: MAX_BUDGET_CATEGORIES } }
         );
     }
-    renderBudget(req, res, { status: 400, categoryForm: { values, errors } });
+    return renderBudget(req, res, { status: 400, categoryForm: { values, errors } });
 };
 
 /** POST /budget/categories/suggested: brings back the suggested categories that were deleted. */
