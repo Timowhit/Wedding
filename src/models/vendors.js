@@ -1,6 +1,7 @@
 import db from './db.js';
 
-const VENDOR_COLUMNS = 'id, name, category, phone, email, website, status, notes, created_at';
+const VENDOR_COLUMNS = `id, name, category, phone, email, website, status, notes, created_at,
+    contract_total::float AS contract_total, contract_signed_on, contract_url, contract_includes, contract_cancellation`;
 
 /**
  * Vendors alphabetically, optionally only one booking status.
@@ -103,4 +104,44 @@ const deleteVendor = async (id, weddingId) => {
     return result.rowCount > 0;
 };
 
-export { findVendors, findVendorStats, findVendor, createVendor, updateVendor, updateVendorStatus, deleteVendor };
+/**
+ * Saves a vendor's contract details. All-null values clear the contract.
+ * @param {string} id
+ * @param {string} weddingId
+ * @param {{total: number|null, signedOn: string|null, url: string|null, includes: string|null, cancellation: string|null}} contract - Already validated.
+ * @returns {Promise<boolean>} False when the vendor is not in this wedding.
+ */
+const updateContract = async (id, weddingId, { total, signedOn, url, includes, cancellation }) => {
+    const result = await db.query(
+        `UPDATE vendors SET contract_total = $3, contract_signed_on = $4, contract_url = $5,
+                contract_includes = $6, contract_cancellation = $7
+         WHERE id = $1 AND wedding_id = $2;`,
+        [id, weddingId, total, signedOn, url, includes, cancellation]
+    );
+    return result.rowCount > 0;
+};
+
+/**
+ * Number of payments per vendor, for the delete confirmation on the vendor list.
+ * @param {string} weddingId
+ * @returns {Promise<Map<string, number>>}
+ */
+const countVendorPayments = async (weddingId) => {
+    const result = await db.query(
+        'SELECT vendor_id, COUNT(*)::int AS count FROM vendor_payments WHERE wedding_id = $1 GROUP BY vendor_id;',
+        [weddingId]
+    );
+    return new Map(result.rows.map((row) => [row.vendor_id, row.count]));
+};
+
+export {
+    findVendors,
+    findVendorStats,
+    findVendor,
+    createVendor,
+    updateVendor,
+    updateVendorStatus,
+    deleteVendor,
+    updateContract,
+    countVendorPayments
+};
