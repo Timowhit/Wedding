@@ -1,0 +1,58 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content">
+    <p class="print-hide"><a href="/questionnaires"><%= t('questionnaires.back') %></a></p>
+    <header class="page-header">
+        <h1><%= sent.title %></h1>
+        <% if (sent.intro) { %><p class="subtitle preserve-lines"><%= sent.intro %></p><% } %>
+    </header>
+    <%- include('partials/flash') %>
+    <% if (sent.answered_at) { %>
+        <p class="hint"><%= t('questionnaires.answeredBy', { name: sent.answered_by_name || '—', date: formatShortDate(sent.answered_at) }) %></p>
+    <% } %>
+
+    <section class="card">
+        <% if (canAnswerDecisions) { %>
+            <%- include('partials/form-errors', { errors, id: 'answer-errors' }) %>
+            <form method="post" action="/questionnaires/<%= sent.id %>/answers" class="form-stack">
+                <%- include('partials/csrf-field') %>
+                <% sent.questions.forEach((question, i) => { %>
+                    <% if (question.type === 'choice') { %>
+                        <fieldset class="choice-group" <%- fieldState(errors, `a${i}`, 'answer-errors') %>>
+                            <legend><%= question.text %></legend>
+                            <% question.options.forEach((option, j) => { %>
+                                <label class="choice"><input type="radio" name="a<%= i %>" value="<%= option %>" <%= values[i] === option ? 'checked' : '' %>> <%= option %></label>
+                            <% }); %>
+                        </fieldset>
+                    <% } else { %>
+                        <div class="field">
+                            <label for="a<%= i %>"><%= question.text %></label>
+                            <% if (question.type === 'long') { %>
+                                <textarea id="a<%= i %>" name="a<%= i %>" rows="4" maxlength="2000" <%- fieldState(errors, `a${i}`, 'answer-errors') %>><%= values[i] %></textarea>
+                            <% } else { %>
+                                <input type="text" id="a<%= i %>" name="a<%= i %>" maxlength="2000" value="<%= values[i] %>" <%- fieldState(errors, `a${i}`, 'answer-errors') %>>
+                            <% } %>
+                        </div>
+                    <% } %>
+                <% }); %>
+                <div class="form-actions"><button type="submit" class="btn btn-primary"><%= t('questionnaires.saveAnswers') %></button></div>
+            </form>
+        <% } else { %>
+            <dl class="answers">
+                <% sent.questions.forEach((question, i) => { %>
+                    <dt><%= question.text %></dt>
+                    <dd class="preserve-lines"><%= values[i] || t('questionnaires.noAnswer') %></dd>
+                <% }); %>
+            </dl>
+        <% } %>
+        <% if (canAskDecisions) { %>
+            <form method="post" action="/questionnaires/<%= sent.id %>/delete" class="print-hide" data-confirm="<%= t('library.confirmDelete', { name: sent.title }) %>">
+                <%- include('partials/csrf-field') %>
+                <button type="submit" class="link-action link-action--danger"><%= t('questionnaires.remove') %></button>
+            </form>
+        <% } %>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

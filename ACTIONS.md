@@ -37,10 +37,15 @@ npm run migrate
 
 It applies `013_planning_details.sql` and `014_wrap_up.sql`, which only add columns. Then delete the `planning-details` and `task-celebrations` branches on GitHub.
 
-## 3. Merge the file uploads release
+## 3. Update the Render database for file uploads
 
-[Timowhit/Wedding#14](https://github.com/Timowhit/Wedding/pull/14) adds the Files page and files on vendor pages, stored in your PostgreSQL database as you chose. It has had a security review and the fixes are in. Ready to merge.
+[Timowhit/Wedding#14](https://github.com/Timowhit/Wedding/pull/14) is merged. Pull `main` and run `npm run migrate` as in step 2 (it adds `015_files.sql`).
 
-1. Open the PR, click **Ready for review**, wait for the CI check, then **Merge pull request**.
-2. Pull `main` and run `npm run migrate` again, as in step 2. It adds `015_files.sql`.
-3. Keep an eye on your Render database's storage. Each wedding can use up to 250 MB of files, and each person can upload up to 1 GB in total across their weddings. Render shows the database size on the database's page. If you get close to your plan's limit, tell me and I'll move files to cheaper storage.
+Keep an eye on your Render database's storage. Each wedding can use up to 250 MB of files, and each person can upload up to 1 GB in total across their weddings. Render shows the database size on the database's page. If you get close to your plan's limit, tell me and I'll move files to cheaper storage.
+
+## 4. Merge the messages and questionnaires library
+
+[Timowhit/Wedding#15](https://github.com/Timowhit/Wedding/pull/15) adds your message templates and questionnaires (`/library`) and the Questionnaires page couples answer. It has been reviewed and the review's fixes are in. I've brought it up to date with `main`.
+
+1. Merge the PR once its CI check is green.
+2. Pull `main` and run `npm run migrate` (adds `016_library.sql`).

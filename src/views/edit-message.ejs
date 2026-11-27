@@ -1,0 +1,19 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content">
+    <%- include('partials/page-header', { heading: 'library.editMessage' }) %>
+    <section class="card">
+        <%- include('partials/form-errors', { errors, id: 'message-errors' }) %>
+        <form method="post" action="/library/messages/<%= id %>/edit" class="form-grid">
+            <%- include('partials/csrf-field') %>
+            <%- include('partials/message-fields', { values, errors, errorsId: 'message-errors' }) %>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"><%= t('action.save') %></button>
+                <a class="btn btn-ghost" href="/library"><%= t('action.cancel') %></a>
+            </div>
+        </form>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

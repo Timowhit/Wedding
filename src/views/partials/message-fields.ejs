@@ -1,0 +1,20 @@
+<%# Fields of a message template. Expects values, errors, errorsId, kinds. %>
+<div class="field">
+    <label for="message-kind"><%= t('library.kind') %></label>
+    <select id="message-kind" name="kind" <%- fieldState(errors, 'kind', errorsId) %>>
+        <%- include('options', { options: kinds, selected: values.kind, prefix: 'messageKind' }) %>
+    </select>
+</div>
+<div class="field">
+    <label for="message-name"><%= t('library.name') %></label>
+    <input type="text" id="message-name" name="name" required maxlength="120" value="<%= values.name %>" <%- fieldState(errors, 'name', errorsId) %>>
+</div>
+<div class="field field--wide">
+    <label for="message-subject"><%= t('library.subject') %> <span class="optional"><%= t('form.optional') %></span></label>
+    <input type="text" id="message-subject" name="subject" maxlength="200" value="<%= values.subject %>" <%- fieldState(errors, 'subject', errorsId) %>>
+</div>
+<div class="field field--wide">
+    <label for="message-body"><%= t('library.body') %></label>
+    <textarea id="message-body" name="body" rows="8" required maxlength="10000" <%- fieldState(errors, 'body', errorsId, 'message-placeholders') %>><%= values.body %></textarea>
+    <p class="hint" id="message-placeholders"><%= t('library.placeholders') %></p>
+</div>

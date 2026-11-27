@@ -1,0 +1,75 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content">
+    <%- include('partials/page-header', { heading: 'library.heading', subtitle: 'library.subtitle' }) %>
+    <%- include('partials/flash') %>
+
+    <%- include('partials/add-panel-start', { id: 'add-message', labelKey: 'library.addMessage', open: messageForm.errors.length > 0 }) %>
+        <%- include('partials/form-errors', { errors: messageForm.errors, id: 'message-errors' }) %>
+        <form method="post" action="/library/messages" class="form-grid">
+            <%- include('partials/csrf-field') %>
+            <%- include('partials/message-fields', { values: messageForm.values, errors: messageForm.errors, errorsId: 'message-errors' }) %>
+            <div class="form-actions"><button type="submit" class="btn btn-primary"><%= t('library.saveMessage') %></button></div>
+        </form>
+    <%- include('partials/add-panel-end') %>
+
+    <% groups.forEach((group) => { %>
+        <section aria-labelledby="messages-<%= group.kind %>">
+            <h2 class="section-heading" id="messages-<%= group.kind %>"><%= t(`messageKindPlural.${group.kind}`) %></h2>
+            <% if (group.messages.length === 0) { %>
+                <p class="hint"><%= t(`library.empty.${group.kind}`) %></p>
+            <% } else { %>
+                <ul class="item-list">
+                    <% group.messages.forEach((message) => { %>
+                        <li class="item-card">
+                            <div class="item-info">
+                                <p class="item-name"><%= message.name %></p>
+                                <% if (message.subject) { %><p class="item-meta"><%= message.subject %></p><% } %>
+                                <div class="row-actions">
+                                    <% if (locals.wedding && canEdit) { %>
+                                        <a class="link-action" href="/library/messages/<%= message.id %>/use" aria-label="<%= t('library.useNamed', { name: message.name, wedding: wedding.name }) %>"><%= t('library.use', { wedding: wedding.name }) %></a>
+                                    <% } %>
+                                    <a class="link-action" href="/library/messages/<%= message.id %>/edit" aria-label="<%= t('action.editNamed', { name: message.name }) %>"><%= t('action.edit') %></a>
+                                    <form method="post" action="/library/messages/<%= message.id %>/delete" data-confirm="<%= t('library.confirmDelete', { name: message.name }) %>">
+                                        <%- include('partials/csrf-field') %>
+                                        <button type="submit" class="link-action link-action--danger" aria-label="<%= t('action.deleteNamed', { name: message.name }) %>"><%= t('action.delete') %></button>
+                                    </form>
+                                </div>
+                            </div>
+                        </li>
+                    <% }); %>
+                </ul>
+            <% } %>
+        </section>
+    <% }); %>
+
+    <section aria-labelledby="questionnaires-heading">
+        <h2 class="section-heading" id="questionnaires-heading"><%= t('library.questionnaires') %></h2>
+        <p><a class="btn btn-secondary btn-small" href="/library/questionnaires/new"><%= t('library.newQuestionnaire') %></a></p>
+        <% if (questionnaires.length === 0) { %>
+            <p class="hint"><%= t('library.noQuestionnaires') %></p>
+        <% } else { %>
+            <ul class="item-list">
+                <% questionnaires.forEach((questionnaire) => { %>
+                    <li class="item-card">
+                        <div class="item-info">
+                            <p class="item-name"><%= questionnaire.title %></p>
+                            <p class="item-meta"><%= t(questionnaire.question_count === 1 ? 'library.questionCountOne' : 'library.questionCount', { count: questionnaire.question_count }) %></p>
+                            <div class="row-actions">
+                                <a class="link-action" href="/library/questionnaires/<%= questionnaire.id %>/edit" aria-label="<%= t('action.editNamed', { name: questionnaire.title }) %>"><%= t('action.edit') %></a>
+                                <form method="post" action="/library/questionnaires/<%= questionnaire.id %>/delete" data-confirm="<%= t('library.confirmDelete', { name: questionnaire.title }) %>">
+                                    <%- include('partials/csrf-field') %>
+                                    <button type="submit" class="link-action link-action--danger" aria-label="<%= t('action.deleteNamed', { name: questionnaire.title }) %>"><%= t('action.delete') %></button>
+                                </form>
+                            </div>
+                        </div>
+                    </li>
+                <% }); %>
+            </ul>
+        <% } %>
+        <% if (locals.wedding && canAskDecisions) { %><p class="hint"><a href="/questionnaires"><%= t('library.sendHint', { wedding: wedding.name }) %></a></p><% } %>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

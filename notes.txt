@@ -2,10 +2,12 @@ Wedding-planner UX and feature ideas
 Status checked against the code on 2026-11-27. [x] done, [~] partly done (what's missing is listed), [ ] not started.
 
 Next up
-- [ ] Reusable questionnaires, proposals, email messages, and follow-up templates (proposed next).
+- [ ] Let planners customize fields and workflows for different budgets, traditions, and planning styles (the last idea not started).
+- [ ] The navigation has grown to two rows for planners: group Templates, Library and Calendar under one menu.
 
 Done
-- [x] Store inspiration boards, floor plans, contracts, and other files in each event workspace. (/files, stored in PostgreSQL, PR #14)
+- [x] Reusable questionnaires, proposals, email messages, and follow-up templates. (/library and /questionnaires, PR #15; proposals are text templates for now)
+- [x] Store inspiration boards, floor plans, contracts, and other files in each event workspace. (/files, stored in PostgreSQL, PR #14, merged)
 - [x] Gamify task completion with a banner in the top right with tasks and an animation for completion. (Progress badge and celebrations, PR #12, merged)
 - [x] Customizable checklists with due dates, priorities, and task owners. (Priorities and owners, PR #11)
 - [x] Guest lists, RSVPs, meal choices, accessibility needs, plus-ones, and seating assignments. (Meals and access needs, PR #11)
@@ -45,6 +47,6 @@ Small follow-ups (from the review of PR #11)
 - [ ] Celebrations: remember the highest milestone per wedding so unticking and ticking again doesn't repeat the big confetti.
 - [ ] Files: re-show the vendor page (not /files) when an upload from it fails; check .docx/.xlsx contents, not just that they're zip files.
 - [ ] Files: check by hand that PDFs open in Chrome, Firefox and Safari under the download sandbox.
+- [ ] Library: case-insensitive unique names; cap questionnaires sent per wedding; clear a chosen answer; warn when two partners save answers at once; long messages may be cut off in some email apps (suggest Copy).
 
 Not started
-- [ ] Let planners customize fields and workflows for different budgets, traditions, and planning styles.

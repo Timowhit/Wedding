@@ -1,0 +1,48 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content">
+    <%- include('partials/page-header', { heading: 'questionnaires.heading', subtitle: 'questionnaires.subtitle' }) %>
+    <%- include('partials/flash') %>
+
+    <% if (canAskDecisions) { %>
+        <section class="card" aria-labelledby="send-heading">
+            <h2 class="card-title" id="send-heading"><%= t('questionnaires.send') %></h2>
+            <% if (mine.length === 0) { %>
+                <p class="hint"><%= t('questionnaires.noneToSend') %> <a href="/library/questionnaires/new"><%= t('library.newQuestionnaire') %></a></p>
+            <% } else { %>
+                <form method="post" action="/questionnaires/send" class="form-inline">
+                    <%- include('partials/csrf-field') %>
+                    <div class="field">
+                        <label for="send-questionnaire"><%= t('questionnaires.which') %></label>
+                        <select id="send-questionnaire" name="questionnaire_id">
+                            <% mine.forEach((q) => { %><option value="<%= q.id %>"><%= q.title %></option><% }); %>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary"><%= t('questionnaires.sendSubmit', { wedding: wedding.name }) %></button>
+                </form>
+            <% } %>
+        </section>
+    <% } %>
+
+    <section aria-labelledby="sent-heading">
+        <h2 class="section-heading" id="sent-heading"><%= t('questionnaires.list') %></h2>
+        <% if (sent.length === 0) { %>
+            <p class="empty-state"><%= t('questionnaires.empty') %></p>
+        <% } else { %>
+            <ul class="item-list">
+                <% sent.forEach((item) => { %>
+                    <li class="item-card">
+                        <div class="item-info">
+                            <p class="item-name"><a href="/questionnaires/<%= item.id %>"><%= item.title %></a>
+                                <span class="tag<%= item.answered_at ? ' tag--done' : '' %>"><%= t(item.answered_at ? 'questionnaires.answeredTag' : 'questionnaires.waitingTag') %></span></p>
+                            <p class="item-meta"><%= t('questionnaires.sentBy', { name: item.sent_by_name || '—', date: formatShortDate(item.sent_at) }) %></p>
+                        </div>
+                    </li>
+                <% }); %>
+            </ul>
+        <% } %>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

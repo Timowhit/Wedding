@@ -20,7 +20,11 @@ import { emphasize, fieldState } from './utils/view-helpers.js';
 import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES, translate } from './i18n/index.js';
 
 const SESSION_MAX_AGE_MS = 8 * 60 * 60 * 1000; // a login lasts 8 hours of inactivity
-const BODY_LIMIT = '20kb'; // the largest form (vendor notes) is far below this
+const BODY_LIMIT = '20kb'; // the largest ordinary form (vendor notes) is far below this
+// Library forms hold long text: a 10,000-character message or a 30-question builder, and accented
+// text is up to 9 bytes per character once form-encoded.
+const LIBRARY_BODY_LIMIT = '256kb';
+const LIBRARY_PATHS = /^\/(library|questionnaires)(\/|$)/;
 const rootDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 /**
@@ -82,7 +86,10 @@ const createApp = (env = process.env) => {
 
     app.use(express.static(path.join(rootDir, 'public'), { maxAge: isProduction ? '1d' : 0 }));
     app.get('/favicon.ico', (req, res) => res.status(204).end()); // keeps favicon requests from consuming the flash
-    app.use(express.urlencoded({ extended: false, limit: BODY_LIMIT })); // HTML form bodies only
+    // HTML form bodies only; the library's long-text forms get a larger limit.
+    const formParser = express.urlencoded({ extended: false, limit: BODY_LIMIT });
+    const libraryFormParser = express.urlencoded({ extended: false, limit: LIBRARY_BODY_LIMIT });
+    app.use((req, res, next) => (LIBRARY_PATHS.test(req.path) ? libraryFormParser : formParser)(req, res, next));
 
     // Only the session id lives in the cookie; the data stays in the `session` table
     // (migration 007). The default in-memory store leaks memory and loses logins on restart.
