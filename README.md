@@ -34,6 +34,11 @@ There is no frontend framework, bundler or TypeScript. `public/js/app.js` is a s
 - **Themes**: Rose, Sage, Navy, Champagne and Slate palettes, or your own colours (main, second, accent and a background tint, adjusted where needed to stay readable), each in light, dark or automatic mode. Settings > Appearance shows every change at once and saves it by itself
 - **Wedding colours** (`/colors`): the wedding's palette of up to 12 named swatches, added with a colour picker, a hex code, or a photo (uploaded or taken with the camera): the browser suggests the photo's main colours and the photo never leaves the device. Editors can apply the palette to the app for everyone in that wedding
 - **Venue layout** (`/layout`): the room drawn to scale (feet or metres) with the seating tables (showing how many are seated) and fixtures such as the dance floor, stage, bar and entrance. Drag pieces or move them with the arrow keys; every piece has a form for its position, size and rotation, and pieces always stay inside the room. Saved for offline use with the event-day pages
+- **Checklist priorities and owners**: each task can be high, normal or low priority and assigned to a member of the wedding ("For Ana"); filters for Mine and High priority
+- **Meals and access needs**: each guest has a meal choice (the wedding's meals are suggested) and accessibility needs; the guest list counts meals for everyone not declined, and the seating chart flags guests with access needs
+- **Calendar** (`/calendar`): a month of wedding days, open tasks, unpaid booked-vendor payments and open decisions across all your weddings (planners can pick one); a Monday-first grid plus an agenda, agenda only on phones
+- **Search** (`/search`): guests, vendors, tasks, decisions and event-day items across all your weddings; each result opens in its wedding
+- **Wrap-up**: after the wedding day, the dashboard shows what is still owed, booked vendors to rate (1-5 stars and notes) and a button that adds dated wrap-up tasks. The owner can archive the wedding: it leaves active lists, the calendar and reminders, and can be brought back
 - **Notices**: confirmations fade after a few seconds (paused while hovered or focused); errors stay until dismissed
 - **Dashboard**: countdown to the wedding date, a getting-started list for new weddings, totals for every section, pending invitations
 - **Budget**: total budget, expenses, spending per category, spent/remaining with an over-budget warning
@@ -204,6 +209,11 @@ All `POST` routes require the session's CSRF token (see Security Notes).
 | GET    | `/colors`                                                 | Member               | The wedding's colour palette                                             |
 | POST   | `/colors`, `/colors/:id/delete`                           | Editor               | Add or remove a swatch                                                   |
 | POST   | `/colors/app`, `/colors/app/off`                          | Editor               | Apply the wedding's colours to the app, or stop                          |
+| GET    | `/calendar?month=&wedding=`                               | Account              | Month calendar across your weddings                                      |
+| GET    | `/search?q=`                                              | Account              | Search guests, vendors, tasks, decisions, event-day items                |
+| POST   | `/checklist/wrap-up`                                      | Editor               | Add the wrap-up tasks (after the wedding)                                |
+| POST   | `/vendors/:id/rating`                                     | Editor               | Rate a vendor 1-5 with notes                                             |
+| POST   | `/wedding/archive`, `/wedding/unarchive`                  | Owner                | Archive the wedding or bring it back                                     |
 | GET    | `/layout`                                                 | Member               | The venue floor plan                                                     |
 | POST   | `/layout/room`                                            | Editor               | Room size and unit (pieces are moved back inside)                        |
 | POST   | `/layout/tables`, `/layout/items`                         | Editor               | Place a seating table / add a fixture                                    |
@@ -304,6 +314,9 @@ wedding_colors     (id PK, wedding_id FK CASCADE, hex #rrggbb, name NULL, sort_o
 venue_layouts      (wedding_id PK FK CASCADE, width, depth, unit ft|m)
 layout_items       (id PK, wedding_id FK CASCADE, kind, label NULL, table_id UNIQUE FK seating_tables CASCADE NULL,
                     shape rect|round, x, y (centre), width, depth, rotation 0..359)
+checklist (013)    priority high|normal|low, assignee_id FK users NULL (shown only while a member)
+guests (013)       meal NULL, accessibility NULL
+weddings (014)     archived_at NULL   vendors (014) rating 1..5 NULL, review NULL
 vendor_payments    (id PK, wedding_id FK, vendor_id FK CASCADE, label, amount > 0, due_date, paid_on NULL = unpaid, note)
 music_tracks       (id PK, wedding_id, section, track_id, track_name, artist_name, artwork_url, UNIQUE (wedding_id, section, track_id))
 inspiration_photos (id PK, wedding_id, photo_id, thumb_url, full_url, alt_desc, source_link, UNIQUE (wedding_id, photo_id))
