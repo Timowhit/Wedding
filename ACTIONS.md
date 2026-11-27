@@ -22,3 +22,7 @@ Cron Jobs are a paid Render instance type.
 ## 3. Keep an eye on file storage
 
 Uploaded files are stored in your Render database. Each wedding can use up to 250 MB, and each person can upload up to 1 GB in total. Render shows the database size on the database's page. If you get close to your plan's limit, tell me and I'll move files to cheaper storage.
+
+## Merge the budget categories and printable schedule
+
+When [Timowhit/Wedding#21](https://github.com/Timowhit/Wedding/pull/21) passes its checks, merge it, then run `npm run migrate` against Render as in the step above (it adds migration `018`, each wedding's budget categories). Then delete the `budget-print` branch.
