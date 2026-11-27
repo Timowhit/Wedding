@@ -1,27 +1,44 @@
 Wedding-planner UX and feature ideas
+Status checked against the code on 2026-11-27. [x] done, [~] partly done (what's missing is listed), [ ] not started.
 
-- Offer wedding-specific templates for timelines, task lists, budgets, and vendor coordination.
-- Provide a dashboard showing each wedding's next deadlines, appointments, outstanding decisions, and budget status.
-- Add customizable checklists with due dates, priorities, and task owners.
-- Manage guest lists, RSVPs, meal choices, accessibility needs, plus-ones, and seating assignments.
-- Track budgets, quotes, contracts, deposits, payment schedules, and final costs.
-- Keep vendor contacts, availability, proposals, notes, and key documents together.
-- Give couples a shared client portal to review plans, upload details, and approve decisions.
-- Support role-based collaboration for planners, assistants, couples, and vendors.
-- Build editable event-day schedules with vendor arrival times, contacts, setup notes, and contingency plans.
-- Add a visual seating-chart editor with table sizes and guest grouping.
-- Store inspiration boards, floor plans, contracts, and other files in each event workspace.
-- Send configurable reminders for meetings, deadlines, payments, and unanswered questions.
-- Include reusable questionnaires, proposals, email messages, and follow-up templates.
-- Make essential schedules and contacts easy to access on mobile, including offline on event day.
-- Support multiple concurrent weddings with calendar views, search, filters, and workload summaries.
-- Let planners customize fields and workflows for different budgets, traditions, and planning styles.
-- Add post-event wrap-up tasks for final payments, rentals, feedback, and archiving.
-- Let users choose a color theme for the app, and let planners set a brand palette their clients see.
-- Notification flags like "10 example tasks added." or "Successfully Logged In." should only show for a couple seconds.
-- Wedding Color palette page that allows the option to make the actual app match the theme; should have the option for taking a picture, upload image, or hexcode color selector.
-- Venue layout design page
-- redo logo
-- settings > appearance should be able to change the colors without scrolling back down or having to hit save; should be live and the background should be configurable too (three color level: primary,secondary,accent).
-- improve look of wedding selector dropdown in header
-- 
+In progress (branch appearance-and-layout)
+- [ ] Notification flags like "10 example tasks added." or "Successfully Logged In." should only show for a couple seconds.
+- [ ] Wedding color palette page that allows the option to make the actual app match the theme; should have the option for taking a picture, upload image, or hexcode color selector.
+- [ ] Venue layout design page.
+- [ ] Redo logo.
+- [ ] Settings > Appearance should be able to change the colors without scrolling back down or having to hit save; should be live, and the background should be configurable too (three color levels: primary, secondary, accent).
+- [ ] Improve the look of the wedding selector dropdown in the header.
+
+Done
+- [x] Track budgets, quotes, contracts, deposits, payment schedules, and final costs. (Payments and contracts release)
+- [x] Build editable event-day schedules with vendor arrival times, contacts, setup notes, and contingency plans.
+- [x] Make essential schedules and contacts easy to access on mobile, including offline on event day.
+- [x] Let users choose a color theme for the app, and let planners set a brand palette their clients see.
+
+Partly done
+- [~] Wedding-specific templates for timelines, task lists, budgets, and vendor coordination.
+      Done: checklist and event-day timeline templates. Missing: budget and vendor templates.
+- [~] A dashboard showing each wedding's next deadlines, appointments, outstanding decisions, and budget status.
+      Done: planner dashboard with deadlines, decisions, payments due and budget. Missing: appointments (needs a calendar).
+- [~] Customizable checklists with due dates, priorities, and task owners.
+      Done: categories and due dates. Missing: priorities and task owners.
+- [~] Guest lists, RSVPs, meal choices, accessibility needs, plus-ones, and seating assignments.
+      Done: RSVPs, dietary notes, plus-ones, groups, seating. Missing: meal choices and accessibility needs as their own fields.
+- [~] Vendor contacts, availability, proposals, notes, and key documents together.
+      Done: contacts, notes, contract link and key terms. Missing: availability, proposals, file uploads.
+- [~] A shared client portal for couples to review plans, upload details, and approve decisions.
+      Done: client role and decisions to approve. Missing: uploads.
+- [~] Role-based collaboration for planners, assistants, couples, and vendors.
+      Done: owner, editor (assistant), client and viewer. Missing: a vendor role.
+- [~] A visual seating-chart editor with table sizes and guest grouping.
+      Done: tables with sizes, guest groups, seat assignment. Missing: the visual room layout (in progress above).
+- [~] Configurable reminders for meetings, deadlines, payments, and unanswered questions.
+      Done: daily email digest of tasks, payments and decisions, with a switch and unsubscribe. Missing: meetings (needs a calendar) and choosing what or when.
+- [~] Multiple concurrent weddings with calendar views, search, filters, and workload summaries.
+      Done: planner dashboard with filters and workload. Missing: calendar view and search.
+
+Not started
+- [ ] Store inspiration boards, floor plans, contracts, and other files in each event workspace (file uploads).
+- [ ] Reusable questionnaires, proposals, email messages, and follow-up templates.
+- [ ] Let planners customize fields and workflows for different budgets, traditions, and planning styles.
+- [ ] Post-event wrap-up tasks for final payments, rentals, feedback, and archiving.
