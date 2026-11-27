@@ -45,7 +45,7 @@ Uploaded files are stored in your Render database. Each wedding can use up to 25
 
 ## 4. Merge the navigation and builder polish
 
-[PR link added when it opens] groups the navigation into dropdowns, restyles the wedding menu, moves the progress badge under the header, lets you add and remove questionnaire questions, and fixes the badge looking different between pages. No database changes.
+[Timowhit/Wedding#17](https://github.com/Timowhit/Wedding/pull/17) groups the navigation into dropdowns, restyles the wedding menu, moves the progress badge under the header, lets you add and remove questionnaire questions, and fixes the badge looking different between pages. No database changes.
 
 1. Merge the PR once its CI check is green.
 2. After it deploys, reload the site once. Browsers that still hold the old stylesheet pick up the new one, and from then on every release updates on its own.
