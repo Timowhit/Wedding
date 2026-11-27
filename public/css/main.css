@@ -1795,6 +1795,23 @@ select.status-select {
     padding: var(--space-1) 0;
 }
 
+/* Templates -------------------------------------------------------------------------------------- */
+
+.template-tools {
+    margin-bottom: var(--space-4);
+}
+
+.template-tools .disclosure + .disclosure {
+    margin-top: var(--space-2);
+}
+
+/* A long template name must not push the picker wider than a phone screen. */
+.template-tools select {
+    max-width: 100%;
+    min-width: 0;
+    text-overflow: ellipsis;
+}
+
 @media print {
     .site-header,
     .site-footer,

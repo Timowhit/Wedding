@@ -869,5 +869,60 @@ export default {
     'offline.saveHint':
         'El programa, la lista de proveedores y los proveedores de este programa se guardan en este dispositivo para el día de la boda. Vuelve a abrir el programa después de cambiar de boda.',
     'offline.saveFailed':
-        'No se pudo guardar sin conexión: la conexión no funciona. Inténtalo de nuevo antes de perder la señal.'
+        'No se pudo guardar sin conexión: la conexión no funciona. Inténtalo de nuevo antes de perder la señal.',
+    'templates.title': 'Plantillas',
+    'templates.heading': 'Tus *plantillas*',
+    'templates.subtitle': 'Listas de tareas y programas del día que puedes reutilizar en cada boda.',
+    'templates.kind.checklist': 'Listas de tareas',
+    'templates.kind.schedule': 'Programas del día',
+    'templates.empty.checklist':
+        'Aún no hay plantillas de tareas. En la lista de tareas de una boda, abre «Guardar como plantilla».',
+    'templates.empty.schedule':
+        'Aún no hay plantillas de programa. En el programa del día de una boda, abre «Guardar como plantilla».',
+    'templates.count.checklist': '{count} tareas',
+    'templates.count.schedule': '{count} elementos',
+    'templates.savedOn': 'guardada el {date}',
+    'templates.rename': 'Cambiar nombre',
+    'templates.renameNamed': 'Cambiar nombre de {name}',
+    'templates.newName': 'Nombre nuevo',
+    'templates.saveAs': 'Guardar como plantilla',
+    'templates.name': 'Nombre de la plantilla',
+    'templates.saveSubmit': 'Guardar plantilla',
+    'templates.namePlaceholder.checklist': 'p. ej. Servicio completo, 12 meses',
+    'templates.namePlaceholder.schedule': 'p. ej. Ceremonia en jardín',
+    'templates.saveHint.checklist':
+        'Guarda cada tarea con cuántos días antes de la boda vence. Guardar con un nombre existente reemplaza esa plantilla.',
+    'templates.saveHint.schedule':
+        'Guarda cada elemento con su horario, lugar, notas y plan B (sin el proveedor ni el contacto). Guardar con un nombre existente reemplaza esa plantilla.',
+    'templates.addFrom': 'Añadir desde plantilla',
+    'templates.pick': 'Plantilla',
+    'templates.addSubmit': 'Añadir',
+    'templates.option.checklist': '{name} ({count} tareas)',
+    'templates.option.schedule': '{name} ({count} elementos)',
+    'templates.addHint.checklist':
+        'Las fechas se calculan a partir de la fecha de esta boda. Las tareas que ya están en la lista se omiten.',
+    'templates.addHint.schedule': 'Los elementos se añaden al programa de esta boda.',
+    'templates.noneYet': 'Aún no tienes plantillas de este tipo.',
+    'templates.manage': 'Gestionar plantillas',
+    'templates.saved': '«{name}» guardada como plantilla.',
+    'templates.replaced': '«{name}» reemplazada con esta lista.',
+    'templates.nothingToSave': 'Aún no hay nada que guardar: añade algunos elementos primero.',
+    'templates.tooManyItems': 'Una plantilla puede tener como máximo {max} elementos.',
+    'templates.limit': 'Puedes tener hasta {max} plantillas. Elimina una en la página de plantillas primero.',
+    'templates.applied': 'Se añadieron {count} tareas de «{name}».',
+    'templates.appliedSkipped': 'Se añadieron {count} tareas de «{name}». {skipped} ya estaban en la lista.',
+    'templates.appliedNoDate':
+        'Se añadieron {count} tareas de «{name}» sin fechas. Define la fecha de la boda para calcularlas.',
+    'templates.appliedSchedule': 'Se añadieron {count} elementos de «{name}».',
+    'templates.renamed': 'Nombre cambiado a «{name}».',
+    'templates.deleted': 'Plantilla eliminada.',
+    'templates.nameTaken': 'Ya tienes una plantilla de este tipo con ese nombre.',
+    'confirm.deleteTemplate': '¿Eliminar la plantilla {name}?',
+    'nav.templates': 'Plantillas',
+    'templates.countOne.checklist': '1 tarea',
+    'templates.countOne.schedule': '1 elemento',
+    'templates.optionOne.checklist': '{name} (1 tarea)',
+    'templates.optionOne.schedule': '{name} (1 elemento)',
+    'templates.appliedOne': 'Se añadió 1 tarea de «{name}».',
+    'templates.appliedScheduleOne': 'Se añadió 1 elemento de «{name}».'
 };

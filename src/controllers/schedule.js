@@ -6,6 +6,7 @@ import {
     findScheduleItems,
     updateScheduleItem
 } from '../models/schedule.js';
+import { findTemplates } from '../models/templates.js';
 import { setFlash } from '../utils/flash.js';
 import { isUuid } from '../validators/common.js';
 import { validateScheduleItem } from '../validators/schedule.js';
@@ -24,8 +25,12 @@ const EMPTY_ITEM = {
 /** Turns a schedule row into form values (nulls become empty strings). */
 const toFormValues = (item) => Object.fromEntries(Object.keys(EMPTY_ITEM).map((field) => [field, item[field] ?? '']));
 
-const renderSchedule = async (req, res, { status = 200, itemForm } = {}) => {
-    const [items, vendors] = await Promise.all([findScheduleItems(req.wedding.id), findVendors(req.wedding.id)]);
+const renderSchedule = async (req, res, { status = 200, itemForm, templateForm } = {}) => {
+    const [items, vendors, templates] = await Promise.all([
+        findScheduleItems(req.wedding.id),
+        findVendors(req.wedding.id),
+        findTemplates(req.session.user.id, 'schedule')
+    ]);
     const print = req.query.print === '1';
     res.status(status).render('schedule', {
         title: req.t('schedule.title'),
@@ -33,7 +38,9 @@ const renderSchedule = async (req, res, { status = 200, itemForm } = {}) => {
         print,
         items,
         vendors,
-        itemForm: itemForm ?? { values: EMPTY_ITEM, errors: [] }
+        itemForm: itemForm ?? { values: EMPTY_ITEM, errors: [] },
+        templates,
+        templateForm: templateForm ?? { values: { name: '' }, errors: [] }
     });
 };
 
@@ -89,4 +96,4 @@ const processDeleteItem = async (req, res, next) => {
     res.redirect('/schedule');
 };
 
-export { showSchedule, processNewItem, showEditItem, processEditItem, processDeleteItem };
+export { renderSchedule, showSchedule, processNewItem, showEditItem, processEditItem, processDeleteItem };

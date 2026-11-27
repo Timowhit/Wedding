@@ -108,6 +108,13 @@ const PAYMENT_DUE_WINDOW_DAYS = 30;
 /** Filters for the planner's cross-wedding "Payments due" list; the first is the default. */
 const PLANNER_PAYMENT_FILTERS = Object.freeze(['month', 'next30', 'overdue']);
 
+/** What can be saved as a template. */
+const TEMPLATE_KINDS = Object.freeze(['checklist', 'schedule']);
+/** Per account, so one person can't fill the database with templates. */
+const MAX_TEMPLATES_PER_USER = 100;
+/** Per template; more than any real checklist or timeline. */
+const MAX_TEMPLATE_ITEMS = 300;
+
 export {
     ACCOUNT_TYPES,
     FOUNDING_SPOTS,
@@ -126,5 +133,8 @@ export {
     COUNTED_STATUS,
     PAID_ONLY_STATUS,
     PAYMENT_DUE_WINDOW_DAYS,
-    PLANNER_PAYMENT_FILTERS
+    PLANNER_PAYMENT_FILTERS,
+    TEMPLATE_KINDS,
+    MAX_TEMPLATES_PER_USER,
+    MAX_TEMPLATE_ITEMS
 };

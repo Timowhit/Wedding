@@ -219,6 +219,7 @@
     <div class="card-row">
         <section class="card" aria-labelledby="appearance-heading">
             <h2 class="card-title" id="appearance-heading"><%= t('settings.appearance') %></h2>
+            <p class="hint"><a href="/templates"><%= t('templates.manage') %></a></p>
             <%- include('partials/form-errors', { errors: appearanceForm.errors, id: 'appearance-errors' }) %>
             <form method="post" action="/settings/appearance" class="form-stack">
                 <%- include('partials/csrf-field') %>

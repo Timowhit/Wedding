@@ -1,0 +1,38 @@
+<%#
+    "Save as template" and "Add from template" for the checklist or schedule page.
+    Expects: kind ('checklist' | 'schedule'), action (the page path), templates, templateForm.
+%>
+<div class="template-tools">
+    <details class="disclosure" <%= templateForm.errors.length > 0 ? 'open' : '' %>>
+        <summary><%= t('templates.saveAs') %></summary>
+        <%- include('form-errors', { errors: templateForm.errors, id: `${kind}-template-errors` }) %>
+        <form method="post" action="<%= action %>/template" class="inline-form inline-form--start">
+            <%- include('csrf-field') %>
+            <%- include('return-to') %>
+            <label for="<%= kind %>-template-name"><%= t('templates.name') %></label>
+            <input type="text" id="<%= kind %>-template-name" name="name" required maxlength="120" value="<%= templateForm.values.name %>"
+                   placeholder="<%= t(`templates.namePlaceholder.${kind}`) %>" <%- fieldState(templateForm.errors, 'name', `${kind}-template-errors`, `${kind}-template-hint`) %>>
+            <button type="submit" class="btn btn-secondary"><%= t('templates.saveSubmit') %></button>
+        </form>
+        <p class="hint" id="<%= kind %>-template-hint"><%= t(`templates.saveHint.${kind}`) %></p>
+    </details>
+    <details class="disclosure">
+        <summary><%= t('templates.addFrom') %></summary>
+        <% if (templates.length === 0) { %>
+            <p class="hint"><%= t('templates.noneYet') %> <a href="/templates"><%= t('templates.manage') %></a></p>
+        <% } else { %>
+            <form method="post" action="<%= action %>/from-template" class="inline-form inline-form--start">
+                <%- include('csrf-field') %>
+                <%- include('return-to') %>
+                <label for="<%= kind %>-template-id"><%= t('templates.pick') %></label>
+                <select id="<%= kind %>-template-id" name="template_id">
+                    <% templates.forEach((template) => { %>
+                        <option value="<%= template.id %>"><%= t(template.item_count === 1 ? `templates.optionOne.${kind}` : `templates.option.${kind}`, { name: template.name, count: template.item_count }) %></option>
+                    <% }); %>
+                </select>
+                <button type="submit" class="btn btn-secondary"><%= t('templates.addSubmit') %></button>
+            </form>
+            <p class="hint"><%= t(`templates.addHint.${kind}`) %> <a href="/templates"><%= t('templates.manage') %></a></p>
+        <% } %>
+    </details>
+</div>
