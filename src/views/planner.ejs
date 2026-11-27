@@ -17,6 +17,7 @@
             <li class="stat-card"><span class="stat-value"><%= workload.weddingsThisMonth %></span><span class="stat-label"><%= t('planner.weddingsThisMonth') %></span></li>
             <li class="stat-card"><span class="stat-value"><%= workload.openDecisions %></span><span class="stat-label"><%= t('planner.openDecisionsAll') %></span></li>
             <li class="stat-card"><span class="stat-value"><%= workload.overdueTasks %></span><span class="stat-label"><%= t('planner.overdueTasksAll') %></span></li>
+            <li class="stat-card"><span class="stat-value"><%= workload.overduePayments %></span><span class="stat-label"><%= t('planner.overduePaymentsAll') %></span></li>
         </ul>
     </section>
 
@@ -40,9 +41,39 @@
         </form>
     <%- include('partials/add-panel-end') %>
 
+    <section class="card" aria-labelledby="planner-due-heading">
+        <h2 class="card-title" id="planner-due-heading"><%= t('paymentsDue.heading') %></h2>
+        <nav class="filter-tabs" aria-label="<%= t('paymentsDue.filterLabel') %>">
+            <% paymentFilters.forEach((option) => { %>
+                <% const query = new URLSearchParams({ q: filters.q, when: filters.when, pay: option }).toString(); %>
+                <a class="filter-tab" href="/planner?<%= query %>#planner-due-heading" <%- filters.pay === option ? 'aria-current="page"' : '' %>><%= t(`paymentsDue.filter.${option}`) %></a>
+            <% }); %>
+        </nav>
+        <% if (paymentsDue.length === 0) { %>
+            <p class="empty-state"><%= t('paymentsDue.none') %></p>
+        <% } else { %>
+            <ul class="due-list">
+                <% paymentsDue.forEach((p) => { %>
+                    <li class="due <%= p.overdue ? 'due--overdue' : '' %>">
+                        <form method="post" action="/planner/weddings/<%= p.wedding_id %>/open" class="due__open">
+                            <%- include('partials/csrf-field') %>
+                            <input type="hidden" name="return_to" value="/vendors/<%= p.vendor_id %>">
+                            <button type="submit" class="link-button" aria-label="<%= t('paymentsDue.openNamed', { vendor: p.vendor_name, wedding: p.wedding_name }) %>"><%= p.vendor_name %></button>
+                        </form>
+                        <span class="due__wedding"><%= p.wedding_name %></span>
+                        <span class="due__label"><%= p.label || t('payments.payment') %></span>
+                        <span class="due__amount"><%= formatCurrency(p.amount) %></span>
+                        <span class="due__when"><%= t('payments.dueOn', { date: formatDate(p.due_date) }) %><% if (p.overdue) { %> · <strong><%= t('payments.overdue') %></strong><% } %></span>
+                    </li>
+                <% }); %>
+            </ul>
+        <% } %>
+    </section>
+
     <section aria-labelledby="weddings-heading">
         <h2 class="section-heading" id="weddings-heading"><%= t('planner.weddings') %></h2>
         <form method="get" action="/planner" class="filter-bar" role="search">
+            <input type="hidden" name="pay" value="<%= filters.pay %>">
             <div class="filter-select">
                 <label for="planner-q"><%= t('field.q') %></label>
                 <input type="search" id="planner-q" name="q" maxlength="100" value="<%= filters.q %>" placeholder="<%= t('planner.searchPlaceholder') %>">

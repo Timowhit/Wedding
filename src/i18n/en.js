@@ -839,5 +839,13 @@ export default {
     'budget.reviewExpenses': 'Review expenses',
     'budget.vendorContracts': 'Vendor contracts',
     'budget.otherExpenses': 'Other expenses',
-    'budget.contractPaid': 'Paid {paid} · {owed} still owed'
+    'budget.contractPaid': 'Paid {paid} · {owed} still owed',
+    'paymentsDue.heading': 'Payments due',
+    'paymentsDue.filterLabel': 'Which payments',
+    'paymentsDue.filter.month': 'This month',
+    'paymentsDue.filter.next30': 'Next 30 days',
+    'paymentsDue.filter.overdue': 'Overdue',
+    'paymentsDue.none': 'Nothing due here. Overdue payments always show up too.',
+    'paymentsDue.openNamed': 'Open {vendor} in {wedding}',
+    'planner.overduePaymentsAll': 'payments overdue'
 };

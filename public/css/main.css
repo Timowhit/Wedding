@@ -1690,6 +1690,67 @@ select.status-select {
     color: inherit;
 }
 
+/* Payments due (wedding and planner dashboards) ----------------------------------------------- */
+
+.due-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.due {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0 var(--space-3);
+    align-items: baseline;
+    padding: var(--space-2) 0;
+    border-top: 1px solid var(--border);
+}
+
+.due:first-child {
+    border-top: 0;
+}
+
+.due__vendor,
+.due__open {
+    font-weight: 600;
+}
+
+.due__amount {
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+.due__wedding,
+.due__label,
+.due__when {
+    grid-column: 1 / -1;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.due__wedding {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+.due--overdue .due__when {
+    color: var(--danger);
+}
+
+/* A form button that reads as a link (POST actions such as "open this wedding"). */
+.link-button {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--primary);
+    font: inherit;
+    font-weight: inherit;
+    text-align: left;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
 @media print {
     .site-header,
     .site-footer,

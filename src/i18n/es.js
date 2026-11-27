@@ -845,5 +845,13 @@ export default {
     'budget.reviewExpenses': 'Revisar gastos',
     'budget.vendorContracts': 'Contratos de proveedores',
     'budget.otherExpenses': 'Otros gastos',
-    'budget.contractPaid': 'Pagado {paid} · {owed} pendiente'
+    'budget.contractPaid': 'Pagado {paid} · {owed} pendiente',
+    'paymentsDue.heading': 'Pagos pendientes',
+    'paymentsDue.filterLabel': 'Qué pagos',
+    'paymentsDue.filter.month': 'Este mes',
+    'paymentsDue.filter.next30': 'Próximos 30 días',
+    'paymentsDue.filter.overdue': 'Vencidos',
+    'paymentsDue.none': 'Nada pendiente aquí. Los pagos vencidos también aparecen siempre.',
+    'paymentsDue.openNamed': 'Abrir {vendor} en {wedding}',
+    'planner.overduePaymentsAll': 'pagos vencidos'
 };

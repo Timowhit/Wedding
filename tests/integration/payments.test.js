@@ -553,4 +553,105 @@ describe('payments', { skip: skipWithoutDb }, () => {
             assert.match(page, /\$5,250\.00 of \$32,000\.00/);
         });
     });
+
+    describe('payments due', () => {
+        const textOf = (html) =>
+            html
+                .replace(/<[^>]+>/g, ' ')
+                .replace(/&amp;/g, '&')
+                .replace(/\s+/g, ' ');
+        const shift = (days) => {
+            const date = new Date(`${todayIso()}T12:00:00Z`);
+            date.setUTCDate(date.getUTCDate() + days);
+            return date.toISOString().slice(0, 10);
+        };
+        let planner;
+        let plannerId;
+        let ana;
+        let mia;
+        let anaVendor;
+
+        before(async () => {
+            planner = new TestClient(app.baseUrl);
+            await planner.get('/register?as=planner');
+            await planner.post('/register', {
+                as: 'planner',
+                name: 'Dora',
+                email: 'dora@example.com',
+                password: 'correct horse battery',
+                confirm_password: 'correct horse battery'
+            });
+            await planner.get('/planner');
+            await planner.post('/planner/weddings', { name: 'Ana & Luis', wedding_date: '' });
+            await planner.post('/planner/weddings', { name: 'Mia & Theo', wedding_date: '' });
+            plannerId = (await app.pool.query(`SELECT id FROM users WHERE email = 'dora@example.com';`)).rows[0].id;
+            ana = (await app.pool.query(`SELECT id FROM weddings WHERE name = 'Ana & Luis';`)).rows[0].id;
+            mia = (await app.pool.query(`SELECT id FROM weddings WHERE name = 'Mia & Theo';`)).rows[0].id;
+            anaVendor = await newVendor(ana, { name: 'Golden Hour', total: 3000 });
+            await pay(ana, anaVendor, 300, { due: shift(-5) });
+            await pay(ana, anaVendor, 200, { due: shift(10) });
+            await pay(ana, anaVendor, 100, { due: shift(40) });
+            const unbooked = await newVendor(ana, { name: 'Maybe Band', status: 'Contacted', total: 900 });
+            await pay(ana, unbooked, 900, { due: shift(3) });
+            const miaVendor = await newVendor(mia, { name: 'Sweet Cakes', category: 'Cake', total: 800 });
+            await pay(mia, miaVendor, 80, { due: shift(-1) });
+            await pay(mia, miaVendor, 60, { due: shift(20) });
+        });
+
+        it('wedding dashboard lists overdue then upcoming payments', async () => {
+            await planner.post(`/planner/weddings/${ana}/open`);
+            const page = (await planner.get('/')).body;
+            const text = textOf(page);
+            assert.match(text, /Payments due/);
+            const overdueAt = text.indexOf('$300.00');
+            const upcomingAt = text.indexOf('$200.00');
+            assert.ok(overdueAt > 0 && upcomingAt > overdueAt, 'overdue first');
+            assert.doesNotMatch(text, /\$100\.00/, 'beyond 30 days');
+            assert.match(text, /\$300\.00[^$]*overdue/);
+            assert.match(page, new RegExp(`href="/vendors/${anaVendor}"`));
+        });
+
+        it("unbooked vendors' payments are not due", async () => {
+            assert.doesNotMatch(textOf((await planner.get('/')).body), /Maybe Band/);
+        });
+
+        it('planner sees payments due across weddings with filters', async () => {
+            const month = textOf((await planner.get('/planner')).body);
+            assert.match(month, /Payments due/);
+            assert.match(month, /Ana & Luis/);
+            assert.match(month, /\$300\.00/);
+            assert.match(month, /\$80\.00/);
+            assert.doesNotMatch(month, /\$100\.00/);
+
+            const overdue = textOf((await planner.get('/planner?pay=overdue')).body);
+            assert.match(overdue, /\$300\.00/);
+            assert.match(overdue, /\$80\.00/);
+            assert.doesNotMatch(overdue, /\$200\.00/);
+            assert.doesNotMatch(overdue, /\$60\.00/);
+
+            const next30 = textOf((await planner.get('/planner?pay=next30')).body);
+            for (const amount of ['$300.00', '$200.00', '$80.00', '$60.00']) assert.ok(next30.includes(amount), amount);
+            assert.doesNotMatch(next30, /\$100\.00/);
+
+            assert.equal(textOf((await planner.get('/planner?pay=bogus')).body), month);
+        });
+
+        it('workload counts overdue payments', async () => {
+            assert.match(textOf((await planner.get('/planner')).body), /2 payments overdue/);
+        });
+
+        it('opening a payment row goes to the vendor in that wedding', async () => {
+            await planner.post(`/planner/weddings/${mia}/open`);
+            const opened = await planner.post(`/planner/weddings/${ana}/open`, { return_to: `/vendors/${anaVendor}` });
+            assert.equal(opened.location, `/vendors/${anaVendor}`);
+            assert.equal((await planner.get(`/vendors/${anaVendor}`)).status, 200);
+            const evil = await planner.post(`/planner/weddings/${ana}/open`, {
+                return_to: 'https://evil.com/vendors/x'
+            });
+            assert.equal(evil.location, '/');
+            const other = await planner.post(`/planner/weddings/${ana}/open`, { return_to: '/settings' });
+            assert.equal(other.location, '/');
+            assert.ok(plannerId);
+        });
+    });
 });
