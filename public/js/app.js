@@ -158,6 +158,96 @@
         });
     }
 
+    // Dropdowns (navigation groups, the wedding menu, the task badge): <details> elements that
+    // already work without JavaScript. Here only one is open at a time, and a click elsewhere or
+    // Escape closes it (focus goes back to its summary).
+    const dropdowns = Array.from(document.querySelectorAll('[data-dropdown], .task-badge'));
+    dropdowns.forEach(function (dropdown) {
+        dropdown.addEventListener('toggle', function () {
+            if (!dropdown.open) return;
+            dropdowns.forEach(function (other) {
+                if (other !== dropdown) other.open = false;
+            });
+        });
+    });
+    document.addEventListener('click', function (event) {
+        dropdowns.forEach(function (dropdown) {
+            if (dropdown.open && !dropdown.contains(event.target)) dropdown.open = false;
+        });
+    });
+    document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Escape') return;
+        dropdowns.forEach(function (dropdown) {
+            if (!dropdown.open) return;
+            dropdown.open = false;
+            dropdown.querySelector('summary').focus();
+        });
+    });
+
+    // Questionnaire builder: add and remove questions in place. Without JavaScript the same
+    // buttons post the form (add_row) or a tick box drops a row on save.
+    const builder = document.querySelector('[data-question-builder]');
+    if (builder) {
+        const list = builder.querySelector('.question-rows');
+        const addButton = builder.querySelector('[data-add-question]');
+        const maxRows = Number(builder.getAttribute('data-max-rows'));
+        const rowIndex = (row) => Number((/^q(\d+)_/.exec(row.querySelector('[name$="_text"]').name) || [])[1]);
+        const renumber = function () {
+            Array.from(list.querySelectorAll('[data-question-row]')).forEach(function (row, i) {
+                row.querySelector('[data-question-legend]').textContent = addButton
+                    .getAttribute('data-legend')
+                    .replace('{n}', i + 1);
+                row.querySelector('[data-remove-question]').setAttribute(
+                    'aria-label',
+                    addButton.getAttribute('data-remove-label').replace('{n}', i + 1)
+                );
+            });
+            addButton.hidden = list.querySelectorAll('[data-question-row]').length >= maxRows;
+        };
+        const wireRemove = function (row) {
+            const button = row.querySelector('[data-remove-question]');
+            button.hidden = false;
+            button.addEventListener('click', function () {
+                if (list.querySelectorAll('[data-question-row]').length <= 1) return;
+                const next = row.nextElementSibling || row.previousElementSibling;
+                row.remove();
+                renumber();
+                if (next) next.querySelector('input[type="text"]').focus();
+            });
+        };
+        list.querySelectorAll('[data-question-row]').forEach(wireRemove);
+        addButton.addEventListener('click', function (event) {
+            event.preventDefault();
+            const rows = Array.from(list.querySelectorAll('[data-question-row]'));
+            if (rows.length >= maxRows) return;
+            const next = Math.max.apply(null, rows.map(rowIndex)) + 1;
+            const row = rows[0].cloneNode(true);
+            row.querySelectorAll('[name],[id],[for],[aria-describedby]').forEach(function (el) {
+                ['name', 'id', 'for'].forEach(function (attr) {
+                    const value = el.getAttribute(attr);
+                    if (value) el.setAttribute(attr, value.replace(/^q\d+([_-])/, 'q' + next + '$1'));
+                });
+                el.removeAttribute('aria-invalid');
+            });
+            row.querySelectorAll('input[type="text"], textarea').forEach(function (el) {
+                el.value = '';
+            });
+            row.querySelectorAll('select').forEach(function (el) {
+                el.selectedIndex = 0;
+            });
+            row.querySelectorAll('input[type="checkbox"]').forEach(function (el) {
+                el.checked = false;
+            });
+            const fresh = row.querySelector('[data-remove-question]').cloneNode(true);
+            row.querySelector('[data-remove-question]').replaceWith(fresh);
+            list.appendChild(row);
+            wireRemove(row);
+            renumber();
+            row.querySelector('input[type="text"]').focus();
+        });
+        renumber();
+    }
+
     document.addEventListener('submit', function (event) {
         const message = event.target.getAttribute('data-confirm');
         if (message && !window.confirm(message)) event.preventDefault();

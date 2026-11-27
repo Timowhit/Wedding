@@ -10,7 +10,7 @@
 (function () {
     'use strict';
 
-    const VERSION = 'v3';
+    const VERSION = 'v4';
     const STATIC_CACHE = `fp-static-${VERSION}`;
     const PAGE_CACHE = `fp-pages-${VERSION}`;
     const STATIC_PRECACHE = ['/css/main.css', '/css/themes.css', '/js/app.js'];

@@ -5,7 +5,7 @@
     <header class="page-header"><h1><%= title %></h1></header>
     <section class="card">
         <%- include('partials/form-errors', { errors, id: 'questionnaire-errors' }) %>
-        <form method="post" action="<%= id ? `/library/questionnaires/${id}/edit` : '/library/questionnaires' %>" class="form-stack">
+        <form method="post" action="<%= id ? `/library/questionnaires/${id}/edit` : '/library/questionnaires' %>" class="form-stack" data-question-builder data-max-rows="<%= maxRows %>">
             <%- include('partials/csrf-field') %>
             <div class="field">
                 <label for="q-title"><%= t('library.qTitle') %></label>
@@ -17,9 +17,9 @@
             </div>
             <ol class="question-rows">
                 <% values.rows.forEach((row, i) => { %>
-                    <li class="question-row">
+                    <li class="question-row" data-question-row>
                         <fieldset>
-                            <legend><%= t('library.questionN', { n: i + 1 }) %></legend>
+                            <legend data-question-legend><%= t('library.questionN', { n: i + 1 }) %></legend>
                             <div class="field">
                                 <label for="q<%= i %>-text"><%= t('library.questionText') %></label>
                                 <input type="text" id="q<%= i %>-text" name="q<%= i %>_text" maxlength="300" value="<%= row.text %>" <%- fieldState(errors, `q${i}_text`, 'questionnaire-errors') %>>
@@ -34,10 +34,18 @@
                                 <label for="q<%= i %>-options"><%= t('library.questionOptions') %></label>
                                 <textarea id="q<%= i %>-options" name="q<%= i %>_options" rows="3" <%- fieldState(errors, `q${i}_options`, 'questionnaire-errors', 'options-hint') %>><%= row.options %></textarea>
                             </div>
+                            <%# Without JavaScript: tick to drop the question on save. With it: a button removes the row. %>
+                            <label class="choice question-row__remove" data-hide-with-js>
+                                <input type="checkbox" name="q<%= i %>_remove" value="on"> <%= t('library.removeQuestion') %>
+                            </label>
+                            <button type="button" class="link-action link-action--danger question-row__remove" data-remove-question hidden
+                                    aria-label="<%= t('library.removeQuestionN', { n: i + 1 }) %>"><%= t('library.removeQuestion') %></button>
                         </fieldset>
                     </li>
                 <% }); %>
             </ol>
+            <p><button type="submit" name="add_row" value="1" class="btn btn-secondary btn-small" data-add-question
+                       data-legend="<%= t('library.questionN', { n: '{n}' }) %>" data-remove-label="<%= t('library.removeQuestionN', { n: '{n}' }) %>"><%= t('library.addQuestion') %></button></p>
             <p class="hint" id="options-hint"><%= t('library.builderHint') %></p>
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary"><%= t('library.saveQuestionnaire') %></button>

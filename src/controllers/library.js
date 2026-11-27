@@ -1,4 +1,4 @@
-import { MESSAGE_KINDS, QUESTION_TYPES, SPARE_QUESTION_ROWS } from '../constants.js';
+import { MAX_QUESTIONS, MESSAGE_KINDS, QUESTION_TYPES, SPARE_QUESTION_ROWS } from '../constants.js';
 import { PG_ERRORS } from '../models/db.js';
 import {
     createMessage,
@@ -145,6 +145,7 @@ const renderBuilder = (req, res, { status = 200, id = null, values, errors = [] 
         title: req.t(id ? 'library.editQuestionnaire' : 'library.newQuestionnaire'),
         id,
         types: QUESTION_TYPES,
+        maxRows: MAX_QUESTIONS + SPARE_QUESTION_ROWS,
         values: { ...values, rows: values.rows.length > 0 ? values.rows : builderRows([]) },
         errors
     });
@@ -153,8 +154,18 @@ const renderBuilder = (req, res, { status = 200, id = null, values, errors = [] 
 const showNewQuestionnaire = (req, res) =>
     renderBuilder(req, res, { values: { title: '', intro: '', rows: builderRows([]) } });
 
+/**
+ * "Add a question" without JavaScript posts the form with add_row: show it again with one more
+ * empty row, saving nothing and showing no errors yet.
+ */
+const addRow = (req, res, id = null) => {
+    const { values } = validateQuestionnaire(req.body);
+    renderBuilder(req, res, { id, values: { ...values, rows: [...values.rows, blankRow()] } });
+};
+
 /** POST /library/questionnaires */
 const processNewQuestionnaire = async (req, res) => {
+    if (req.body?.add_row) return addRow(req, res);
     const { values, data, errors } = validateQuestionnaire(req.body);
     if (errors.length > 0) return renderBuilder(req, res, { status: 400, values, errors });
     const created = await createQuestionnaire(req.session.user.id, data);
@@ -184,6 +195,7 @@ const showEditQuestionnaire = async (req, res, next) => {
 const processEditQuestionnaire = async (req, res, next) => {
     const questionnaire = await loadQuestionnaire(req);
     if (!questionnaire) return next();
+    if (req.body?.add_row) return addRow(req, res, questionnaire.id);
     const { values, data, errors } = validateQuestionnaire(req.body);
     if (errors.length > 0) return renderBuilder(req, res, { status: 400, id: questionnaire.id, values, errors });
     await updateQuestionnaire(questionnaire.id, req.session.user.id, data);

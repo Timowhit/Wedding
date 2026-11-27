@@ -62,7 +62,7 @@ describe('wedding colours', { skip: skipWithoutDb }, () => {
 
     it('the photo tools are there for JavaScript, and say the photo stays on the device', async () => {
         const page = await owner.get('/colors');
-        assert.match(page.body, /<script src="\/js\/palette.js" defer><\/script>/);
+        assert.match(page.body, /<script src="\/js\/palette.js\?v=[0-9a-f]{10}" defer><\/script>/);
         assert.match(page.body, /type="file"[^>]*accept="image\/\*"[^>]*capture="environment"/);
         assert.match(page.body, /data-palette-photo/);
     });

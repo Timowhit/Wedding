@@ -199,7 +199,10 @@ describe('planner accounts and founding spots', { skip: skipWithoutDb }, () => {
 
         const opened = await planner.post(`/planner/weddings/${ana}/open`);
         assert.equal(opened.location, '/');
-        assert.match((await planner.get('/')).body, /<option value="[^"]+" selected>Ana &amp; Luis/);
+        assert.match(
+            (await planner.get('/')).body,
+            /aria-current="true">\s*<span class="wedding-menu__name">Ana &amp; Luis/
+        );
     });
 
     describe('handover', () => {

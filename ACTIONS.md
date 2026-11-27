@@ -42,3 +42,10 @@ Then delete the merged branches on GitHub: `planning-details`, `task-celebration
 ## 3. Keep an eye on file storage
 
 Uploaded files are stored in your Render database. Each wedding can use up to 250 MB, and each person can upload up to 1 GB in total. Render shows the database size on the database's page. If you get close to your plan's limit, tell me and I'll move files to cheaper storage.
+
+## 4. Merge the navigation and builder polish
+
+[Timowhit/Wedding#17](https://github.com/Timowhit/Wedding/pull/17) groups the navigation into dropdowns, restyles the wedding menu, moves the progress badge under the header, lets you add and remove questionnaire questions, and fixes the badge looking different between pages. No database changes.
+
+1. Merge the PR once its CI check is green.
+2. After it deploys, reload the site once. Browsers that still hold the old stylesheet pick up the new one, and from then on every release updates on its own.

@@ -49,7 +49,8 @@ const validateQuestionnaire = (body = {}) => {
         return match && Number(match[1]) >= MAX_BUILDER_ROWS && readText(body[key]);
     });
     for (let i = 0; i < MAX_BUILDER_ROWS; i += 1) {
-        if (!(`q${i}_text` in body)) continue;
+        // A missing row was removed in the browser; a ticked "remove" box drops it without JavaScript.
+        if (!(`q${i}_text` in body) || body[`q${i}_remove`]) continue;
         rows.push({
             text: readText(body[`q${i}_text`]),
             type: readText(body[`q${i}_type`]),

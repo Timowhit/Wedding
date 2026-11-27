@@ -31,9 +31,14 @@ describe('appearance', { skip: skipWithoutDb }, () => {
 
             await couple.post('/weddings', { name: 'Second wedding', wedding_date: '2027-06-12' });
             const two = await couple.get('/');
-            assert.match(two.body, /id="wedding-switcher"/);
+            assert.match(two.body, /<details class="wedding-menu"/);
             assert.doesNotMatch(two.body, /class="wedding-current"/);
-            assert.match(two.body, /<option value="[0-9a-f-]+" selected>Second wedding · [^<]*2027<\/option>/);
+            // Each wedding is its own small switch form (works without JavaScript); the active one is marked.
+            assert.match(
+                two.body,
+                /aria-current="true"[^>]*>\s*<span class="wedding-menu__name">Second wedding<\/span>\s*<span class="wedding-menu__date">[^<]*2027<\/span>/
+            );
+            assert.equal((two.body.match(/action="\/wedding\/switch"/g) || []).length, 2);
         });
     });
 
@@ -128,6 +133,23 @@ describe('appearance', { skip: skipWithoutDb }, () => {
             });
             assert.equal(invalid.status, 400);
             assert.ok(JSON.parse(invalid.body).errors.length > 0);
+        });
+    });
+
+    describe('grouped navigation', () => {
+        it('groups the pages into dropdowns, opens the current group, and puts the badge under the header', async () => {
+            const couple = await registeredClient(app.baseUrl, 'Gia', 'gia@example.com');
+            const page = await couple.get('/seating');
+            const groups = page.body.match(/<details class="nav-group[^"]*"/g) || [];
+            assert.ok(groups.length >= 4, `found ${groups.length} groups`);
+            assert.match(page.body, /<details class="nav-group nav-group--current"[^>]*>\s*<summary[^>]*>[^<]*Guests/);
+            assert.match(page.body, /href="\/seating" aria-current="page"/);
+            assert.match(page.body, /<a href="\/settings"/, 'Settings stays on its own');
+            const bar = page.body.slice(
+                page.body.indexOf('class="site-header__bar"'),
+                page.body.indexOf('id="site-nav"')
+            );
+            assert.doesNotMatch(bar, /class="task-badge"/, 'not inside the header bar');
         });
     });
 });
