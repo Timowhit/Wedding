@@ -266,4 +266,35 @@ describe('reminders', { skip: skipWithoutDb }, () => {
             assert.equal(await remindersOn('couple@example.com'), true);
         });
     });
+    describe('review fixes', () => {
+        it('weddings that ended more than 30 days ago stop sending', async () => {
+            const person = await newUser('past@example.com');
+            const ended = await newWedding('Long done');
+            const recent = await newWedding('Just married');
+            await q(`UPDATE weddings SET wedding_date = '2027-01-01' WHERE id = $1;`, [ended]);
+            await q(`UPDATE weddings SET wedding_date = '2027-03-01' WHERE id = $1;`, [recent]);
+            await join(ended, person, 'owner');
+            await join(recent, person, 'owner');
+            await task(ended, 'Old thank-you cards', '2027-01-20');
+            await task(recent, 'Thank-you cards', '2027-03-10');
+            const names = (await m.findReminderDigest(person, TODAY)).map((w) => w.name);
+            assert.deepEqual(names, ['Just married']);
+        });
+
+        it("in a couple's own wedding nobody is asked to answer their own question", async () => {
+            const asker = await newUser('asker@example.com');
+            const partner = await newUser('partner@example.com');
+            const own = await newWedding('Our own wedding');
+            await join(own, asker, 'owner');
+            await join(own, partner, 'editor');
+            await q(
+                `INSERT INTO decisions (wedding_id, title, status, created_by) VALUES ($1, 'Pick the cake', 'open', $2);`,
+                [own, asker]
+            );
+            const titles = async (user) =>
+                (await m.findReminderDigest(user, TODAY)).flatMap((w) => w.decisions.map((d) => d.title));
+            assert.deepEqual(await titles(asker), []);
+            assert.deepEqual(await titles(partner), ['Pick the cake']);
+        });
+    });
 });

@@ -115,3 +115,21 @@ describe('unsubscribe tokens', () => {
         assert.equal(isUnsubscribeToken(a, undefined), false);
     });
 });
+
+describe('reminder job settings', () => {
+    it('lists what is missing before anything is sent', async () => {
+        const { reminderConfigProblems, exitCodeFor } = await import('../../src/services/reminder-config.js');
+        assert.deepEqual(
+            reminderConfigProblems({ SESSION_SECRET: 'x'.repeat(32), APP_URL: 'https://planner.example.com' }),
+            []
+        );
+        assert.deepEqual(reminderConfigProblems({ SESSION_SECRET: 'short', APP_URL: '' }), [
+            'SESSION_SECRET',
+            'APP_URL'
+        ]);
+        assert.deepEqual(reminderConfigProblems({}), ['SESSION_SECRET', 'APP_URL']);
+        assert.equal(exitCodeFor({ sent: 5, failed: 1 }), 0, 'one bad address is not a failed job');
+        assert.equal(exitCodeFor({ sent: 0, failed: 3 }), 1, 'nothing could be sent');
+        assert.equal(exitCodeFor({ sent: 0, failed: 0 }), 0);
+    });
+});

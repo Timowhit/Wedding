@@ -117,6 +117,8 @@ const MAX_TEMPLATE_ITEMS = 300;
 
 /** The daily summary lists what is overdue or due within this many days. */
 const REMINDER_WINDOW_DAYS = 7;
+/** A wedding that ended longer ago than this stops appearing in summaries (unticked leftovers would repeat forever). */
+const REMINDER_PAST_WEDDING_DAYS = 30;
 /** Roles that get the daily summary for a wedding (a viewer can't act on anything). */
 const REMINDER_ROLES = Object.freeze(['owner', 'editor', 'client']);
 
@@ -143,5 +145,6 @@ export {
     MAX_TEMPLATES_PER_USER,
     MAX_TEMPLATE_ITEMS,
     REMINDER_WINDOW_DAYS,
-    REMINDER_ROLES
+    REMINDER_ROLES,
+    REMINDER_PAST_WEDDING_DAYS
 };

@@ -1,5 +1,5 @@
 import db from './db.js';
-import { COUNTED_STATUS, REMINDER_ROLES, REMINDER_WINDOW_DAYS } from '../constants.js';
+import { COUNTED_STATUS, REMINDER_PAST_WEDDING_DAYS, REMINDER_ROLES, REMINDER_WINDOW_DAYS } from '../constants.js';
 import { decisionPermissions } from '../middleware/wedding.js';
 
 /**
@@ -25,7 +25,8 @@ const findReminderCandidates = async (today) => {
  * What needs attention for one person: per wedding where they are owner, editor or client,
  * booked vendors' unpaid payments and open tasks that are overdue or due within the window,
  * and the decisions waiting on them (open ones for whoever answers, sent-back ones for whoever
- * asks, as decisionPermissions decides).
+ * asks, as decisionPermissions decides). Weddings that ended more than REMINDER_PAST_WEDDING_DAYS
+ * ago are left out.
  * @param {string} userId
  * @param {string} today - YYYY-MM-DD in APP_TIME_ZONE.
  * @returns {Promise<Array<{id: string, name: string, payments: Array<{vendor_name: string, label: string|null, amount: number, due_date: Date, overdue: boolean}>, tasks: Array<{text: string, due_date: Date, overdue: boolean}>, decisions: Array<{title: string, status: string}>}>>}
@@ -37,8 +38,9 @@ const findReminderDigest = async (userId, today) => {
             `SELECT w.id, w.name, w.planner_managed, wm.role
              FROM weddings w JOIN wedding_members wm ON wm.wedding_id = w.id
              WHERE wm.user_id = $1 AND wm.role = ANY($2)
+               AND (w.wedding_date IS NULL OR w.wedding_date >= $3::date - $4::int)
              ORDER BY LOWER(w.name) ASC, w.id ASC;`,
-            [userId, REMINDER_ROLES]
+            [userId, REMINDER_ROLES, today, REMINDER_PAST_WEDDING_DAYS]
         )
     ).rows;
     if (weddings.length === 0) return [];
@@ -62,7 +64,7 @@ const findReminderDigest = async (userId, today) => {
             [ids, today, REMINDER_WINDOW_DAYS]
         ),
         db.query(
-            `SELECT wedding_id, title, status FROM decisions
+            `SELECT wedding_id, title, status, created_by FROM decisions
              WHERE wedding_id = ANY($1) AND status IN ('open', 'changes_requested')
              ORDER BY due_date ASC NULLS LAST, created_at ASC;`,
             [ids]
@@ -78,9 +80,17 @@ const findReminderDigest = async (userId, today) => {
                 name: wedding.name,
                 payments: mine(payments.rows),
                 tasks: mine(tasks.rows),
-                decisions: mine(decisions.rows).filter(
-                    (d) => (d.status === 'open' && canAnswer) || (d.status === 'changes_requested' && canAsk)
-                )
+                // In a couple's own wedding both partners can answer, but nobody is reminded to
+                // answer a question they asked themselves.
+                decisions: mine(decisions.rows)
+                    .filter(
+                        (d) =>
+                            (d.status === 'open' &&
+                                canAnswer &&
+                                (wedding.planner_managed || d.created_by !== userId)) ||
+                            (d.status === 'changes_requested' && canAsk)
+                    )
+                    .map(({ title, status }) => ({ title, status }))
             };
         })
         .filter((w) => w.payments.length + w.tasks.length + w.decisions.length > 0);
