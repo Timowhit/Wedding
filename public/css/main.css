@@ -1795,6 +1795,16 @@ select.status-select {
     padding: var(--space-1) 0;
 }
 
+/* Templates -------------------------------------------------------------------------------------- */
+
+.template-tools {
+    margin-bottom: var(--space-4);
+}
+
+.template-tools .disclosure + .disclosure {
+    margin-top: var(--space-2);
+}
+
 @media print {
     .site-header,
     .site-footer,

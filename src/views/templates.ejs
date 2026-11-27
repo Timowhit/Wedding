@@ -1,0 +1,43 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content" class="narrow">
+    <%- include('partials/page-header', { heading: 'templates.heading', subtitle: 'templates.subtitle' }) %>
+    <%- include('partials/flash') %>
+
+    <% groups.forEach(({ kind, templates }) => { %>
+        <section class="card" aria-labelledby="<%= kind %>-templates-heading">
+            <h2 class="card-title" id="<%= kind %>-templates-heading"><%= t(`templates.kind.${kind}`) %></h2>
+            <% if (templates.length === 0) { %>
+                <p class="empty-state"><%= t(`templates.empty.${kind}`) %></p>
+            <% } else { %>
+                <ul class="item-list">
+                    <% templates.forEach((template) => { %>
+                        <% const editing = renameForm && renameForm.id === template.id; %>
+                        <li class="item-card">
+                            <div class="item-info">
+                                <p class="item-name"><%= template.name %></p>
+                                <p class="item-meta"><%= t(`templates.count.${kind}`, { count: template.item_count }) %> · <%= t('templates.savedOn', { date: formatDate(template.updated_at) }) %></p>
+                                <details class="disclosure" <%= editing ? 'open' : '' %>>
+                                    <summary aria-label="<%= t('templates.renameNamed', { name: template.name }) %>"><%= t('templates.rename') %></summary>
+                                    <% if (editing) { %><%- include('partials/form-errors', { errors: renameForm.errors, id: `rename-errors-${template.id}` }) %><% } %>
+                                    <form method="post" action="/templates/<%= template.id %>/rename" class="inline-form inline-form--start">
+                                        <%- include('partials/csrf-field') %>
+                                        <label for="rename-<%= template.id %>"><%= t('templates.newName') %></label>
+                                        <input type="text" id="rename-<%= template.id %>" name="name" required maxlength="120"
+                                               value="<%= editing ? renameForm.values.name : template.name %>"
+                                               <%- editing ? fieldState(renameForm.errors, 'name', `rename-errors-${template.id}`) : '' %>>
+                                        <button type="submit" class="btn btn-secondary btn-small"><%= t('action.save') %></button>
+                                    </form>
+                                </details>
+                            </div>
+                            <%- include('partials/row-actions', { deleteAction: `/templates/${template.id}/delete`, name: template.name, confirm: t('confirm.deleteTemplate', { name: template.name }) }) %>
+                        </li>
+                    <% }); %>
+                </ul>
+            <% } %>
+        </section>
+    <% }); %>
+</main>
+
+<%- include('partials/footer') %>

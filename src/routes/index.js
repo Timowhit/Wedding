@@ -100,6 +100,13 @@ import {
 } from '../controllers/schedule.js';
 import { showOffline } from '../controllers/offline.js';
 import {
+    processApplyTemplate,
+    processDeleteTemplate,
+    processRenameTemplate,
+    processSaveTemplate,
+    showTemplates
+} from '../controllers/templates.js';
+import {
     processContract,
     processDeletePayment,
     processEditPayment,
@@ -175,6 +182,8 @@ router.post('/decisions/:id/answer', answerer, processAnswer);
 /* Event-day schedule ---------------------------------------------------------------------------- */
 router.get('/schedule', member, showSchedule);
 router.post('/schedule', editor, processNewItem);
+router.post('/schedule/template', editor, processSaveTemplate('schedule'));
+router.post('/schedule/from-template', editor, processApplyTemplate('schedule'));
 router.get('/schedule/:id/edit', editor, showEditItem);
 router.post('/schedule/:id/edit', editor, processEditItem);
 router.post('/schedule/:id/delete', editor, processDeleteItem);
@@ -196,6 +205,8 @@ router.post('/budget/expenses/:id/delete', editor, processDeleteExpense);
 router.get('/checklist', member, showChecklist);
 router.post('/checklist', editor, processNewTask);
 router.post('/checklist/examples', editor, processExampleTasks);
+router.post('/checklist/template', editor, processSaveTemplate('checklist'));
+router.post('/checklist/from-template', editor, processApplyTemplate('checklist'));
 router.get('/checklist/:id/edit', editor, showEditTask);
 router.post('/checklist/:id/edit', editor, processEditTask);
 router.post('/checklist/:id/toggle', editor, processToggleTask);
@@ -220,6 +231,11 @@ router.get('/vendors/:id', member, showVendor);
 router.get('/vendors/:id/contract', editor, showEditContract);
 router.post('/vendors/:id/contract', editor, processContract);
 router.post('/vendors/:id/payments', editor, processNewPayment);
+
+/* Templates (a person's own; see models/templates.js) ------------------------------------------- */
+router.get('/templates', account, showTemplates);
+router.post('/templates/:id/rename', account, processRenameTemplate);
+router.post('/templates/:id/delete', account, processDeleteTemplate);
 
 /* Vendor payments --------------------------------------------------------------------------------- */
 router.get('/payments/:id/edit', editor, showEditPayment);

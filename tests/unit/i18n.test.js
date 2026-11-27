@@ -10,6 +10,7 @@ import {
     EXAMPLE_TASKS,
     PALETTES,
     PLANNER_PAYMENT_FILTERS,
+    TEMPLATE_KINDS,
     THEME_MODES,
     MUSIC_SECTIONS,
     RSVP_STATUSES,
@@ -64,7 +65,12 @@ const dynamicKeys = () => [
     ...FEATURES.flatMap(({ key }) => ['title', 'body', 'alt'].map((part) => `landing.feature.${key}.${part}`)),
     ...COMING_NEXT.map((item) => `landing.coming.${item}`),
     ...THEME_MODES.map((m) => `themeMode.${m}`),
-    ...PLANNER_PAYMENT_FILTERS.map((f) => `paymentsDue.filter.${f}`)
+    ...PLANNER_PAYMENT_FILTERS.map((f) => `paymentsDue.filter.${f}`),
+    ...TEMPLATE_KINDS.flatMap((k) =>
+        ['kind', 'empty', 'count', 'namePlaceholder', 'saveHint', 'option', 'addHint'].map(
+            (part) => `templates.${part}.${k}`
+        )
+    )
 ];
 
 describe('translations', () => {

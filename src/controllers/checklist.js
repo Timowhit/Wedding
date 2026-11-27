@@ -10,6 +10,7 @@ import {
     toggleTask,
     updateTask
 } from '../models/checklist.js';
+import { findTemplates } from '../models/templates.js';
 import { setFlash } from '../utils/flash.js';
 import { backTo } from '../utils/redirect.js';
 import { toIsoDate } from '../utils/format.js';
@@ -19,13 +20,17 @@ import { validateTask } from '../validators/planning.js';
 const EMPTY_TASK = { text: '', category: TASK_CATEGORIES[0], due_date: '' };
 const DUPLICATE_ERROR = { field: 'text', key: 'checklist.duplicate' };
 
-const renderChecklist = async (req, res, { status = 200, taskForm } = {}) => {
+const renderChecklist = async (req, res, { status = 200, taskForm, templateForm } = {}) => {
     const weddingId = req.wedding.id;
     const filters = {
         category: readChoice(req.query.category, TASK_CATEGORIES),
         status: readChoice(req.query.status, TASK_STATUSES)
     };
-    const [tasks, progress] = await Promise.all([findTasks(weddingId, filters), findTaskProgress(weddingId)]);
+    const [tasks, progress, templates] = await Promise.all([
+        findTasks(weddingId, filters),
+        findTaskProgress(weddingId),
+        findTemplates(req.session.user.id, 'checklist')
+    ]);
 
     res.status(status).render('checklist', {
         title: req.t('checklist.title'),
@@ -34,7 +39,9 @@ const renderChecklist = async (req, res, { status = 200, taskForm } = {}) => {
         filters,
         categories: TASK_CATEGORIES,
         today: toIsoDate(new Date()),
-        taskForm: taskForm ?? { values: EMPTY_TASK, errors: [] }
+        taskForm: taskForm ?? { values: EMPTY_TASK, errors: [] },
+        templates,
+        templateForm: templateForm ?? { values: { name: '' }, errors: [] }
     });
 };
 
@@ -112,6 +119,7 @@ const processExampleTasks = async (req, res) => {
 };
 
 export {
+    renderChecklist,
     showChecklist,
     processNewTask,
     showEditTask,
