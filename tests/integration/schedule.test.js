@@ -100,7 +100,7 @@ describe('event-day schedule', { skip: skipWithoutDb }, () => {
     it('has a printable version without navigation', async () => {
         const print = await couple.get('/schedule?print=1');
         assert.equal(print.status, 200);
-        assert.match(print.body, /<body class="print-view">/);
+        assert.match(print.body, /<body class="print-view"[ >]/);
         assert.doesNotMatch(print.body, /id="site-nav"/);
         assert.match(print.body, /Ceremony/);
     });

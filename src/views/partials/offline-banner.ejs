@@ -1,0 +1,4 @@
+<%# Shown by public/js/app.js on an offline or saved copy of a page (see public/sw.js). %>
+<% if (locals.user && !locals.hideOfflineBanner) { %>
+    <p class="offline-banner" data-offline-banner role="status" hidden><%= t('offline.banner') %> <time data-saved-time></time></p>
+<% } %>

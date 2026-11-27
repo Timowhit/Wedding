@@ -848,5 +848,18 @@ export default {
     'paymentsDue.none': 'Nothing due here. Overdue payments always show up too.',
     'paymentsDue.openNamed': 'Open {vendor} in {wedding}',
     'planner.overduePaymentsAll': 'payments overdue',
-    'dashboard.stillOwed': '{amount} still owed'
+    'dashboard.stillOwed': '{amount} still owed',
+    'offline.title': 'Offline',
+    'offline.heading': 'You are *offline*',
+    'offline.subtitle': 'This page needs a connection. What you saved for the wedding day still works.',
+    'offline.savedHeading': 'Saved for offline',
+    'offline.schedule': 'Event-day schedule',
+    'offline.vendors': 'Vendors and their phone numbers',
+    'offline.howTo': 'Pages are saved when you open the event-day schedule while online. Changes need a connection.',
+    'offline.banner': "You're offline. This copy was saved at",
+    'offline.save': 'Save for offline',
+    'offline.saved': 'Saved for offline at',
+    'offline.saveHint':
+        'The schedule, vendor list and the vendors on this schedule are saved on this device for the wedding day. Open the schedule again after switching weddings.',
+    'offline.saveFailed': "Couldn't save for offline: the connection isn't working. Try again before you lose signal."
 };

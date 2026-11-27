@@ -123,6 +123,8 @@ const processLogout = async (req, res) => {
     await regenerateSession(req); // drops the user and issues a new session id
     req.session.language = lang; // keep the page language the visitor was using
     setFlash(req, 'info', 'auth.loggedOut');
+    // Removes the offline copies of wedding pages and the service worker from this device.
+    res.set('Clear-Site-Data', '"cache", "storage"');
     res.redirect('/login');
 };
 

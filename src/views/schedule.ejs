@@ -1,5 +1,5 @@
 <%- include('partials/head') %>
-<% if (!print) { %><%- include('partials/header') %><% } %>
+<% if (!print) { %><%- include('partials/header') %><% } else { %><%- include('partials/offline-banner') %><% } %>
 
 <main id="main-content">
     <% if (print) { %>
@@ -13,6 +13,12 @@
         <%- include('partials/flash') %>
         <%- include('partials/read-only-notice') %>
         <p class="schedule__print"><a href="/schedule?print=1"><%= t('schedule.printable') %></a></p>
+        <div class="offline-save">
+            <button type="button" class="btn btn-secondary btn-small" data-save-offline hidden><%= t('offline.save') %></button>
+            <p class="hint" data-save-offline-status role="status" hidden><%= t('offline.saved') %> <time></time></p>
+            <p class="hint text-danger" data-save-offline-failed role="status" hidden><%= t('offline.saveFailed') %></p>
+            <p class="hint" data-save-offline-hint hidden><%= t('offline.saveHint') %></p>
+        </div>
 
         <% if (canEdit) { %>
             <%- include('partials/add-panel-start', { id: 'add-schedule-item', labelKey: 'schedule.add', open: items.length === 0 || itemForm.errors.length > 0 }) %>
@@ -44,7 +50,7 @@
                             <p class="item-name"><%= item.title %></p>
                             <p class="item-meta">
                                 <% if (item.location) { %><span><%= item.location %></span><% } %>
-                                <% if (item.vendor_name) { %><span><%= item.vendor_name %></span><% } %>
+                                <% if (item.vendor_name) { %><a href="/vendors/<%= item.vendor_id %>" data-offline-page><%= item.vendor_name %></a><% } %>
                                 <% if (phone) { %><a href="tel:<%= phone.replace(/[^\d+]/g, '') %>"><%= phone %></a><% } %>
                             </p>
                             <% if (item.notes) { %><p class="item-notes"><%= item.notes %></p><% } %>

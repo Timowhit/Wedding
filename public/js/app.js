@@ -6,6 +6,8 @@
  * - buttons marked [data-copy] copy the value of the input they name
  * - the mobile navigation toggle
  * - seating chart drag and drop (it sets the guest's table picker and submits the same form)
+ * - offline event day: registers /sw.js on signed-in pages, saves the event-day pages, shows the
+ *   offline banner (see public/sw.js)
  * Loaded as an external file because the Content-Security-Policy forbids inline scripts.
  */
 (function () {
@@ -89,4 +91,88 @@
             select.form.requestSubmit();
         });
     });
+    // Offline event day -------------------------------------------------------------------------
+    const body = document.body;
+    // A page older than this when it loads came from the saved copy, not the network.
+    const SAVED_COPY_AGE_MS = 10 * 60 * 1000;
+    const WORKER_REPLY_TIMEOUT_MS = 20000;
+    const renderedAt = new Date(body.getAttribute('data-rendered-at'));
+    const isSavedCopy =
+        body.hasAttribute('data-saved-copy') ||
+        (!Number.isNaN(renderedAt.getTime()) && Date.now() - renderedAt.getTime() > SAVED_COPY_AGE_MS);
+
+    const formatSavedTime = (date) => {
+        const time = { hour: '2-digit', minute: '2-digit' };
+        return date.toDateString() === new Date().toDateString()
+            ? date.toLocaleTimeString([], time)
+            : date.toLocaleString([], { weekday: 'short', day: 'numeric', month: 'short', ...time });
+    };
+
+    const banner = document.querySelector('[data-offline-banner]');
+    const showBanner = () => {
+        if (!banner) return;
+        banner.hidden = navigator.onLine && !isSavedCopy;
+        const time = banner.querySelector('[data-saved-time]');
+        if (time && !Number.isNaN(renderedAt.getTime())) {
+            time.dateTime = renderedAt.toISOString();
+            time.textContent = formatSavedTime(renderedAt);
+        }
+    };
+    showBanner();
+    window.addEventListener('online', showBanner);
+    window.addEventListener('offline', showBanner);
+
+    if (body.hasAttribute('data-offline') && 'serviceWorker' in navigator) {
+        /** Sends a message to the active worker; resolves with its reply, or null on timeout. */
+        const ask = (message) =>
+            navigator.serviceWorker.ready.then(
+                (registration) =>
+                    new Promise((resolve) => {
+                        if (!registration.active) return resolve(null);
+                        const channel = new MessageChannel();
+                        const timer = window.setTimeout(() => resolve(null), WORKER_REPLY_TIMEOUT_MS);
+                        channel.port1.onmessage = (event) => {
+                            window.clearTimeout(timer);
+                            resolve(event.data);
+                        };
+                        registration.active.postMessage(message, [channel.port2]);
+                    })
+            );
+
+        const saveButton = document.querySelector('[data-save-offline]');
+        navigator.serviceWorker
+            .register('/sw.js')
+            .then(() => {
+                if (!saveButton || isSavedCopy) return;
+                const status = document.querySelector('[data-save-offline-status]');
+                const failed = document.querySelector('[data-save-offline-failed]');
+                const hint = document.querySelector('[data-save-offline-hint]');
+                const pages = () => [
+                    '/schedule',
+                    '/schedule?print=1',
+                    '/vendors',
+                    ...Array.from(document.querySelectorAll('a[data-offline-page]'), (link) =>
+                        link.getAttribute('href')
+                    )
+                ];
+                const save = () => {
+                    saveButton.setAttribute('aria-busy', 'true');
+                    ask({ type: 'save', urls: pages() }).then((reply) => {
+                        saveButton.removeAttribute('aria-busy');
+                        // Only a stored schedule counts: Wi-Fi without internet "succeeds" with nothing saved.
+                        const saved = Boolean(reply && reply.type === 'saved' && reply.schedule);
+                        if (status) {
+                            status.querySelector('time').textContent = formatSavedTime(new Date());
+                            status.hidden = !saved;
+                        }
+                        if (failed) failed.hidden = saved;
+                    });
+                };
+                saveButton.hidden = false;
+                if (hint) hint.hidden = false;
+                saveButton.addEventListener('click', save);
+                save();
+            })
+            .catch(() => {});
+    }
 })();

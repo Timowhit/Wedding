@@ -1,0 +1,16 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content" class="narrow">
+    <%- include('partials/page-header', { heading: 'offline.heading', subtitle: 'offline.subtitle' }) %>
+    <section class="card" aria-labelledby="offline-links-heading">
+        <h2 class="card-title" id="offline-links-heading"><%= t('offline.savedHeading') %></h2>
+        <ul class="link-list">
+            <li><a href="/schedule"><%= t('offline.schedule') %></a></li>
+            <li><a href="/vendors"><%= t('offline.vendors') %></a></li>
+        </ul>
+        <p class="hint"><%= t('offline.howTo') %></p>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

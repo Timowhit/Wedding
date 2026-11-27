@@ -114,6 +114,16 @@ const createApp = (env = process.env) => {
         res.locals.features = { music: isSpotifyConfigured(), inspiration: isUnsplashConfigured() };
         // A function, because the wedding is only loaded later by the route's own middleware.
         res.locals.currentTheme = () => resolveTheme({ user: res.locals.user, wedding: res.locals.wedding });
+        // Offline copies of pages show when they were saved (see public/sw.js).
+        res.locals.renderedAt = new Date().toISOString();
+        // Every rendered page names its wedding ("none" when signed out or without one). The
+        // service worker drops its saved pages when this changes, so an offline copy never
+        // outlives a wedding switch, a sign-in as someone else or an expired session.
+        const render = res.render.bind(res);
+        res.render = (view, options, callback) => {
+            if (!res.headersSent) res.set('X-FP-Wedding', res.locals.wedding?.id ?? 'none');
+            return render(view, options, callback);
+        };
         next();
     });
     app.use(setCurrentUser);

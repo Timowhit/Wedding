@@ -854,5 +854,20 @@ export default {
     'paymentsDue.none': 'Nada pendiente aquí. Los pagos vencidos también aparecen siempre.',
     'paymentsDue.openNamed': 'Abrir {vendor} en {wedding}',
     'planner.overduePaymentsAll': 'pagos vencidos',
-    'dashboard.stillOwed': '{amount} pendiente'
+    'dashboard.stillOwed': '{amount} pendiente',
+    'offline.title': 'Sin conexión',
+    'offline.heading': 'Estás *sin conexión*',
+    'offline.subtitle': 'Esta página necesita conexión. Lo que guardaste para el día de la boda sigue funcionando.',
+    'offline.savedHeading': 'Guardado sin conexión',
+    'offline.schedule': 'Programa del día de la boda',
+    'offline.vendors': 'Proveedores y sus teléfonos',
+    'offline.howTo':
+        'Las páginas se guardan al abrir el programa del día de la boda con conexión. Los cambios necesitan conexión.',
+    'offline.banner': 'Estás sin conexión. Esta copia se guardó a las',
+    'offline.save': 'Guardar sin conexión',
+    'offline.saved': 'Guardado sin conexión a las',
+    'offline.saveHint':
+        'El programa, la lista de proveedores y los proveedores de este programa se guardan en este dispositivo para el día de la boda. Vuelve a abrir el programa después de cambiar de boda.',
+    'offline.saveFailed':
+        'No se pudo guardar sin conexión: la conexión no funciona. Inténtalo de nuevo antes de perder la señal.'
 };
