@@ -1162,5 +1162,5 @@ export default {
     'celebrate.milestone50': '¡A mitad de camino!',
     'celebrate.milestone75': '¡Tres cuartos hechos!',
     'celebrate.milestone100': 'Todas las tareas están hechas. ¡A celebrar!',
-    'celebrate.progress': '{done} de {total} hechas ({pct}%).'
+    'celebrate.flash': '{headline} {done} de {total} hechas ({pct}%).'
 };

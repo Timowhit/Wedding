@@ -61,7 +61,7 @@ It has been reviewed and the review's fixes are in. Ready to merge:
 
 ## 4. Merge the task celebrations release (after step 3)
 
-[Timowhit/Wedding#12](https://github.com/Timowhit/Wedding/pull/12) adds the progress badge at the top right and the confetti when tasks are ticked off. It is built on top of #11, so merge #11 first. If GitHub then shows a conflict on this PR, tell me and I'll update it. There are no database changes.
+[Timowhit/Wedding#12](https://github.com/Timowhit/Wedding/pull/12) adds the progress badge at the top right and the confetti when tasks are ticked off. It has been reviewed and the review's fixes are in. It is built on top of #11, so merge #11 first. If GitHub then shows a conflict on this PR, tell me and I'll update it. There are no database changes.
 
 1. Open the PR, click **Ready for review**, wait for the CI check, then **Merge pull request**.
 2. Delete the `task-celebrations` branch on GitHub.

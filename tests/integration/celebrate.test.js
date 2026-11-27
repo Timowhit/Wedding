@@ -44,10 +44,15 @@ describe('task progress badge and celebrations', { skip: skipWithoutDb }, () => 
     it('ticking a task off celebrates once, with the milestone reached', async () => {
         await ana.get('/checklist');
         await ana.post(`/checklist/${await taskId('Book venue')}/toggle`, {});
+        // A background request (the offline worker, another tab's fetch) must not use it up.
+        await ana.request('/schedule', { headers: { 'x-fp-background': '1' } });
         const first = await ana.get('/checklist');
         assert.match(first.body, /data-celebrate/);
-        assert.match(textOf(first.body), /1 of 4 done/);
-        assert.match(textOf(first.body), /25%/);
+        assert.match(
+            first.body,
+            /class="flash flash--success"[^>]*data-autohide[^]*?1 of 4 done \(25%\)/,
+            'the message is a fading notice'
+        );
         assert.doesNotMatch((await ana.get('/checklist')).body, /data-celebrate/, 'only once');
 
         await ana.post(`/checklist/${await taskId('Book band')}/toggle`, {});
@@ -66,5 +71,18 @@ describe('task progress badge and celebrations', { skip: skipWithoutDb }, () => 
         const page = textOf((await ana.get('/checklist')).body);
         assert.match(page, /Every task is done/);
         assert.match(page, /4 of 4 tasks done/);
+    });
+
+    it('the celebration belongs to its wedding', async () => {
+        await ana.post('/weddings', { name: 'Second wedding', wedding_date: '' });
+        await app.pool.query(`UPDATE checklist_tasks SET done = false WHERE wedding_id = $1 AND text = 'Buy rings';`, [
+            weddingId
+        ]);
+        await ana.post('/wedding/switch', { wedding_id: weddingId, return_to: '/' });
+        await ana.get('/checklist');
+        await ana.post(`/checklist/${await taskId('Buy rings')}/toggle`, {});
+        const other = (await app.pool.query(`SELECT id FROM weddings WHERE name = 'Second wedding';`)).rows[0].id;
+        await ana.post('/wedding/switch', { wedding_id: other, return_to: '/' });
+        assert.doesNotMatch((await ana.get('/')).body, /data-celebrate/, 'not shown in another wedding');
     });
 });
