@@ -13,8 +13,17 @@
     <%- include('partials/flash') %>
     <%- include('partials/read-only-notice') %>
 
+    <nav class="room-tabs" aria-label="<%= t('layout.rooms') %>">
+        <ul>
+            <% rooms.forEach((other) => { %>
+                <li><a href="<%= other.url %>" <%- other.id === room.id ? 'aria-current="page"' : '' %>><%= other.label %></a></li>
+            <% }); %>
+        </ul>
+    </nav>
+
+    <div class="layout-grid">
     <section class="card floor-plan-card" aria-labelledby="plan-heading">
-        <h2 class="card-title" id="plan-heading"><%= t('layout.planHeading', { width: fmt(room.width), depth: fmt(room.depth), unit: unitLabel }) %></h2>
+        <h2 class="card-title" id="plan-heading"><%= t('layout.planHeading', { name: room.label, width: fmt(room.width), depth: fmt(room.depth), unit: unitLabel }) %></h2>
         <%# Positions and sizes are SVG attributes in room units, so the CSP (no inline styles) is never in the way. %>
         <svg class="floor-plan" viewBox="0 0 <%= fmt(room.width) %> <%= fmt(room.depth) %>" role="<%= canEdit ? 'group' : 'img' %>" aria-labelledby="plan-title"
              <% if (canEdit) { %>data-layout-editable data-room-width="<%= fmt(room.width) %>" data-room-depth="<%= fmt(room.depth) %>"<% } %>>
@@ -48,29 +57,73 @@
         <p class="hint text-danger" data-layout-error role="status" hidden><%= t('layout.moveFailed') %></p>
     </section>
 
+    <aside class="card inventory" aria-labelledby="inventory-heading">
+        <h2 class="card-title" id="inventory-heading"><%= t('layout.inventory') %></h2>
+        <p class="hint"><%= t('layout.inventoryHint') %></p>
+        <% if (unplaced.length === 0 && inventory.length === 0) { %>
+            <p class="empty-state"><%= t('layout.inventoryEmpty') %></p>
+        <% } %>
+        <% if (unplaced.length > 0) { %>
+            <h3 class="subheading"><%= t('layout.inventoryTables') %></h3>
+            <ul class="inventory__list">
+                <% unplaced.forEach((table) => { %>
+                    <li class="inventory__item">
+                        <span><%= table.name %> <span class="hint">(<%= t('layout.seats', { count: table.seats }) %>)</span></span>
+                        <% if (canEdit) { %>
+                            <form method="post" action="/layout/tables">
+                                <%- include('partials/csrf-field') %>
+                                <input type="hidden" name="room_id" value="<%= room.id %>">
+                                <input type="hidden" name="table_id" value="<%= table.id %>">
+                                <button type="submit" class="btn btn-secondary btn-small" aria-label="<%= t('layout.placeNamed', { name: table.name, room: room.label }) %>"><%= t('layout.placeHere') %></button>
+                            </form>
+                        <% } %>
+                    </li>
+                <% }); %>
+            </ul>
+            <% if (canEdit && unplaced.length > 1) { %>
+                <form method="post" action="/layout/tables/all">
+                    <%- include('partials/csrf-field') %>
+                    <input type="hidden" name="room_id" value="<%= room.id %>">
+                    <button type="submit" class="btn btn-ghost btn-small"><%= t('layout.placeAllTables', { room: room.label }) %></button>
+                </form>
+            <% } %>
+        <% } %>
+        <% if (inventory.length > 0) { %>
+            <h3 class="subheading"><%= t('layout.inventoryPieces') %></h3>
+            <ul class="inventory__list">
+                <% inventory.forEach((item) => { %>
+                    <li class="inventory__item">
+                        <span><%= nameOf(item) %></span>
+                        <% if (canEdit) { %>
+                            <span class="inventory__actions">
+                                <form method="post" action="/layout/items/<%= item.id %>/room">
+                                    <%- include('partials/csrf-field') %>
+                                    <input type="hidden" name="room_id" value="<%= room.id %>">
+                                    <button type="submit" class="btn btn-secondary btn-small" aria-label="<%= t('layout.placeNamed', { name: nameOf(item), room: room.label }) %>"><%= t('layout.placeHere') %></button>
+                                </form>
+                                <form method="post" action="/layout/items/<%= item.id %>/delete" data-confirm="<%= t('layout.confirmDelete', { name: nameOf(item) }) %>">
+                                    <%- include('partials/csrf-field') %>
+                                    <button type="submit" class="link-action link-action--danger" aria-label="<%= t('action.deleteNamed', { name: nameOf(item) }) %>"><%= t('action.delete') %></button>
+                                </form>
+                            </span>
+                        <% } %>
+                    </li>
+                <% }); %>
+            </ul>
+        <% } %>
+        <% if (unplaced.length === 0 && canEdit) { %>
+            <p class="hint"><%= t('layout.noTables') %> <a href="/seating"><%= t('layout.toSeating') %></a></p>
+        <% } %>
+    </aside>
+    </div>
+
     <% if (canEdit) { %>
         <div class="layout-tools">
             <%- include('partials/add-panel-start', { id: 'add-piece', labelKey: 'layout.add', open: items.length === 0 || fixtureForm.errors.length > 0 }) %>
-                <% if (unplaced.length > 0) { %>
-                    <form method="post" action="/layout/tables" class="form-inline">
-                        <%- include('partials/csrf-field') %>
-                        <div class="field">
-                            <label for="place-table"><%= t('layout.placeTable') %></label>
-                            <select id="place-table" name="table_id">
-                                <% unplaced.forEach((table) => { %>
-                                    <option value="<%= table.id %>"><%= table.name %> (<%= t('layout.seats', { count: table.seats }) %>)</option>
-                                <% }); %>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-secondary"><%= t('layout.placeSubmit') %></button>
-                    </form>
-                <% } else { %>
-                    <p class="hint"><%= t('layout.noTables') %> <a href="/seating"><%= t('layout.toSeating') %></a></p>
-                <% } %>
-
                 <%- include('partials/form-errors', { errors: fixtureForm.errors, id: 'fixture-errors' }) %>
                 <form method="post" action="/layout/items" class="form-inline">
                     <%- include('partials/csrf-field') %>
+                    <input type="hidden" name="room_id" value="<%= room.id %>">
                     <div class="field">
                         <label for="fixture-kind"><%= t('layout.fixture') %></label>
                         <select id="fixture-kind" name="kind" <%- fieldState(fixtureForm.errors, 'kind', 'fixture-errors') %>>
@@ -81,7 +134,8 @@
                         <label for="fixture-label"><%= t('layout.label') %> <span class="optional"><%= t('form.optional') %></span></label>
                         <input type="text" id="fixture-label" name="label" maxlength="60" value="<%= fixtureForm.values.label %>" <%- fieldState(fixtureForm.errors, 'label', 'fixture-errors') %>>
                     </div>
-                    <button type="submit" class="btn btn-primary"><%= t('layout.addSubmit') %></button>
+                    <button type="submit" name="where" value="room" class="btn btn-primary"><%= t('layout.addSubmit', { room: room.label }) %></button>
+                    <button type="submit" name="where" value="inventory" class="btn btn-ghost"><%= t('layout.addToInventory') %></button>
                 </form>
             <%- include('partials/add-panel-end') %>
 
@@ -89,6 +143,11 @@
                 <%- include('partials/form-errors', { errors: roomForm.errors, id: 'room-errors' }) %>
                 <form method="post" action="/layout/room" class="form-inline">
                     <%- include('partials/csrf-field') %>
+                    <input type="hidden" name="room_id" value="<%= room.id %>">
+                    <div class="field">
+                        <label for="room-name"><%= t('layout.roomName') %> <span class="optional"><%= t('form.optional') %></span></label>
+                        <input type="text" id="room-name" name="name" maxlength="<%= roomNameMax %>" value="<%= roomForm.values.name %>" placeholder="<%= room.label %>" <%- fieldState(roomForm.errors, 'name', 'room-errors') %>>
+                    </div>
                     <div class="field">
                         <label for="room-width"><%= t('layout.width') %></label>
                         <input type="number" id="room-width" name="width" min="5" max="500" step="0.5" inputmode="decimal" required value="<%= roomForm.values.width %>" <%- fieldState(roomForm.errors, 'width', 'room-errors') %>>
@@ -106,7 +165,42 @@
                     <button type="submit" class="btn btn-secondary"><%= t('layout.roomSubmit') %></button>
                 </form>
                 <p class="hint"><%= t('layout.roomHint') %></p>
+                <% if (rooms.length > 1) { %>
+                    <form method="post" action="/layout/rooms/<%= room.id %>/delete" data-confirm="<%= t('layout.confirmDeleteRoom', { name: room.label }) %>">
+                        <%- include('partials/csrf-field') %>
+                        <button type="submit" class="link-action link-action--danger"><%= t('layout.deleteRoom', { name: room.label }) %></button>
+                    </form>
+                <% } %>
             <%- include('partials/add-panel-end') %>
+
+            <% if (rooms.length < maxRooms) { %>
+                <%- include('partials/add-panel-start', { id: 'new-room', labelKey: 'layout.addRoom', open: newRoomForm.errors.length > 0 }) %>
+                    <%- include('partials/form-errors', { errors: newRoomForm.errors, id: 'new-room-errors' }) %>
+                    <form method="post" action="/layout/rooms" class="form-inline">
+                        <%- include('partials/csrf-field') %>
+                        <input type="hidden" name="room_id" value="<%= room.id %>">
+                        <div class="field">
+                            <label for="new-room-name"><%= t('layout.roomName') %></label>
+                            <input type="text" id="new-room-name" name="name" required maxlength="<%= roomNameMax %>" value="<%= newRoomForm.values.name %>" placeholder="<%= t('layout.roomNamePlaceholder') %>" <%- fieldState(newRoomForm.errors, 'name', 'new-room-errors') %>>
+                        </div>
+                        <div class="field">
+                            <label for="new-room-width"><%= t('layout.width') %></label>
+                            <input type="number" id="new-room-width" name="width" min="5" max="500" step="0.5" inputmode="decimal" required value="<%= newRoomForm.values.width %>" <%- fieldState(newRoomForm.errors, 'width', 'new-room-errors') %>>
+                        </div>
+                        <div class="field">
+                            <label for="new-room-depth"><%= t('layout.depth') %></label>
+                            <input type="number" id="new-room-depth" name="depth" min="5" max="500" step="0.5" inputmode="decimal" required value="<%= newRoomForm.values.depth %>" <%- fieldState(newRoomForm.errors, 'depth', 'new-room-errors') %>>
+                        </div>
+                        <div class="field">
+                            <label for="new-room-unit"><%= t('layout.unitLabel') %></label>
+                            <select id="new-room-unit" name="unit" <%- fieldState(newRoomForm.errors, 'unit', 'new-room-errors') %>>
+                                <%- include('partials/options', { options: units, selected: newRoomForm.values.unit, prefix: 'layoutUnit' }) %>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-secondary"><%= t('layout.addRoomSubmit') %></button>
+                    </form>
+                <%- include('partials/add-panel-end') %>
+            <% } %>
         </div>
     <% } %>
 
@@ -163,6 +257,17 @@
                                     </div>
                                 </form>
                             </details>
+                            <form method="post" action="/layout/items/<%= item.id %>/room" class="inline-form piece-room">
+                                <%- include('partials/csrf-field') %>
+                                <label for="move-<%= item.id %>" class="visually-hidden"><%= t('layout.moveToNamed', { name: nameOf(item) }) %></label>
+                                <select id="move-<%= item.id %>" name="room_id">
+                                    <% rooms.forEach((other) => { %>
+                                        <option value="<%= other.id %>" <%= other.id === room.id ? 'selected' : '' %>><%= other.label %></option>
+                                    <% }); %>
+                                    <option value=""><%= t('layout.inventoryOption') %></option>
+                                </select>
+                                <button type="submit" class="btn btn-ghost btn-small" aria-label="<%= t('layout.moveToNamed', { name: nameOf(item) }) %>"><%= t('layout.moveSubmit') %></button>
+                            </form>
                             <form method="post" action="/layout/items/<%= item.id %>/delete" data-confirm="<%= t('layout.confirmDelete', { name: nameOf(item) }) %>">
                                 <%- include('partials/csrf-field') %>
                                 <button type="submit" class="link-action link-action--danger" aria-label="<%= t(item.kind === 'table' ? 'layout.removeTableNamed' : 'action.deleteNamed', { name: nameOf(item) }) %>"><%= t(item.kind === 'table' ? 'layout.removeTable' : 'action.delete') %></button>

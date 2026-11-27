@@ -1,4 +1,11 @@
-import { LAYOUT_FIXTURES, LAYOUT_SHAPES, LAYOUT_UNITS, MAX_LAYOUT_ITEMS, MAX_ROOMS } from '../constants.js';
+import {
+    LAYOUT_FIXTURES,
+    LAYOUT_SHAPES,
+    LAYOUT_UNITS,
+    MAX_LAYOUT_ITEMS,
+    MAX_ROOMS,
+    ROOM_NAME_MAX
+} from '../constants.js';
 import {
     addLayoutItem,
     addRoom,
@@ -54,7 +61,13 @@ const pickRoom = (rooms, id) => {
     return rooms.find((room) => room.id === id) ?? null;
 };
 
-const renderLayout = async (req, res, room, rooms, { status = 200, roomForm, newRoomForm, fixtureForm, pieceForm } = {}) => {
+const renderLayout = async (
+    req,
+    res,
+    room,
+    rooms,
+    { status = 200, roomForm, newRoomForm, fixtureForm, pieceForm } = {}
+) => {
     const [items, inventory, unplaced] = await Promise.all([
         findLayoutItems(req.wedding.id, room.id),
         findLayoutItems(req.wedding.id, null),
@@ -74,6 +87,7 @@ const renderLayout = async (req, res, room, rooms, { status = 200, roomForm, new
         units: LAYOUT_UNITS,
         maxItems: MAX_LAYOUT_ITEMS,
         maxRooms: MAX_ROOMS,
+        roomNameMax: ROOM_NAME_MAX,
         roomForm: roomForm ?? {
             values: { name: room.name ?? '', width: room.width, depth: room.depth, unit: room.unit },
             errors: []
@@ -257,7 +271,11 @@ const processPieceRoom = async (req, res, next) => {
     const fromUnit = from ? from.unit : INVENTORY_UNIT;
     const targetId = typeof req.body?.room_id === 'string' ? req.body.room_id : '';
     if (targetId === '') {
-        await setItemRoom(item.id, req.wedding.id, null, { ...convertPiece(item, fromUnit, INVENTORY_UNIT), x: 0, y: 0 });
+        await setItemRoom(item.id, req.wedding.id, null, {
+            ...convertPiece(item, fromUnit, INVENTORY_UNIT),
+            x: 0,
+            y: 0
+        });
         setFlash(req, 'success', 'layout.movedToInventory');
         return res.redirect(from ? roomUrl(from, rooms) : '/layout');
     }
