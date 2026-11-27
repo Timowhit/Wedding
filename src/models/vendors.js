@@ -166,7 +166,25 @@ const findUnratedBookedVendors = async (weddingId, bookedStatus) => {
     return result.rows;
 };
 
+/**
+ * Adds vendors from a whole-wedding template, skipping names the wedding already has.
+ * @param {string} weddingId
+ * @param {Array<{name: string, category: string}>} vendors - Already normalised.
+ * @param {string} status - The status new vendors start with.
+ * @returns {Promise<number>} How many were added.
+ */
+const addVendorsIfMissing = async (weddingId, vendors, status) => {
+    const result = await db.query(
+        `INSERT INTO vendors (wedding_id, name, category, status)
+         SELECT $1, v.name, v.category, $4 FROM UNNEST($2::text[], $3::text[]) AS v(name, category)
+         WHERE NOT EXISTS (SELECT 1 FROM vendors e WHERE e.wedding_id = $1 AND LOWER(e.name) = LOWER(v.name));`,
+        [weddingId, vendors.map((vendor) => vendor.name), vendors.map((vendor) => vendor.category), status]
+    );
+    return result.rowCount;
+};
+
 export {
+    addVendorsIfMissing,
     rateVendor,
     findUnratedBookedVendors,
     findVendors,

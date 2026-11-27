@@ -1,4 +1,7 @@
-import { MAX_TEMPLATE_ITEMS, MAX_TEMPLATES_PER_USER } from '../constants.js';
+import { MAX_TEMPLATE_ITEMS, MAX_TEMPLATES_PER_USER, VENDOR_STATUSES } from '../constants.js';
+import { addCategoriesWithPlans, findBudgetCategories } from '../models/budget.js';
+import { addCustomFieldsIfMissing, findCustomFields } from '../models/custom-fields.js';
+import { addVendorsIfMissing, findVendors } from '../models/vendors.js';
 import { findTasks } from '../models/checklist.js';
 import { PG_ERRORS } from '../models/db.js';
 import { findScheduleItems } from '../models/schedule.js';
@@ -21,8 +24,11 @@ import {
     dueDateFrom,
     normaliseChecklistItems,
     normaliseScheduleItems,
+    normaliseWeddingTemplate,
     scheduleItemsFrom,
-    validateTemplateName
+    validateTemplateName,
+    weddingTemplateFrom,
+    weddingTemplateSize
 } from '../validators/templates.js';
 import { renderChecklist } from './checklist.js';
 import { renderSchedule } from './schedule.js';
@@ -95,13 +101,84 @@ const processApplyTemplate = (kind) => async (req, res, next) => {
     res.redirect(backTo(req, KINDS[kind].page));
 };
 
-const renderTemplates = async (req, res, { status = 200, renameForm } = {}) => {
+const renderTemplates = async (req, res, { status = 200, renameForm, weddingForm } = {}) => {
     const templates = await findTemplates(req.session.user.id);
     res.status(status).render('templates', {
         title: req.t('templates.title'),
-        groups: Object.keys(KINDS).map((kind) => ({ kind, templates: templates.filter((t) => t.kind === kind) })),
-        renameForm: renameForm ?? null
+        groups: ['wedding', ...Object.keys(KINDS)].map((kind) => ({
+            kind,
+            templates: templates.filter((t) => t.kind === kind)
+        })),
+        renameForm: renameForm ?? null,
+        weddingForm: weddingForm ?? { values: { name: '' }, errors: [] }
     });
+};
+
+/** Everything a whole-wedding template keeps, read from a wedding. */
+const weddingItemsFrom = async (wedding) => {
+    const [tasks, schedule, categories, vendors, fields] = await Promise.all([
+        findTasks(wedding.id),
+        findScheduleItems(wedding.id),
+        findBudgetCategories(wedding.id),
+        findVendors(wedding.id),
+        findCustomFields(wedding.id)
+    ]);
+    return weddingTemplateFrom({
+        tasks,
+        weddingIso: toIsoDate(wedding.wedding_date) || null,
+        schedule,
+        categories,
+        vendors,
+        fields
+    });
+};
+
+/**
+ * Adds a whole-wedding template to a wedding: tasks dated from its day, the schedule, budget
+ * categories and plans, vendors (as Researching) and custom fields. Nothing is added twice.
+ * @param {{id: string, wedding_date: Date|string|null}} wedding
+ * @param {unknown} storedItems - The template's items as stored.
+ * @returns {Promise<void>}
+ */
+const applyWeddingTemplate = async (wedding, storedItems) => {
+    const items = normaliseWeddingTemplate(storedItems);
+    const weddingIso = toIsoDate(wedding.wedding_date) || null;
+    await addChecklistItems(
+        wedding.id,
+        items.tasks.map((item) => ({ ...item, dueDate: dueDateFrom(weddingIso, item.daysBefore) }))
+    );
+    // Schedule items have no natural key, so they are only added to an empty schedule.
+    if ((await findScheduleItems(wedding.id)).length === 0) await addScheduleItems(wedding.id, items.schedule);
+    await addCategoriesWithPlans(wedding.id, items.categories);
+    await addVendorsIfMissing(wedding.id, items.vendors, VENDOR_STATUSES[0]);
+    await addCustomFieldsIfMissing(wedding.id, items.fields);
+};
+
+/** POST /templates/wedding: saves the active wedding as a whole-wedding template. */
+const processSaveWeddingTemplate = async (req, res) => {
+    const { values, data, errors } = validateTemplateName(req.body);
+    if (errors.length > 0) return renderTemplates(req, res, { status: 400, weddingForm: { values, errors } });
+    const userId = req.session.user.id;
+    const items = await weddingItemsFrom(req.wedding);
+    const existing = (await findTemplates(userId, 'wedding')).some((template) => template.name === data.name);
+    if (weddingTemplateSize(items) === 0) {
+        setFlash(req, 'error', 'templates.nothingToSave');
+    } else if (!existing && (await countTemplates(userId)) >= MAX_TEMPLATES_PER_USER) {
+        setFlash(req, 'error', 'templates.limit', { max: MAX_TEMPLATES_PER_USER });
+    } else {
+        const { replaced } = await saveTemplate(userId, 'wedding', data.name, items);
+        setFlash(req, 'success', replaced ? 'templates.replaced' : 'templates.saved', { name: data.name });
+    }
+    res.redirect('/templates');
+};
+
+/** POST /templates/:id/apply: adds one of the person's whole-wedding templates to the active wedding. */
+const processApplyWeddingTemplate = async (req, res, next) => {
+    const template = isUuid(req.params.id) ? await findTemplate(req.params.id, req.session.user.id) : null;
+    if (!template || template.kind !== 'wedding') return next();
+    await applyWeddingTemplate(req.wedding, template.items);
+    setFlash(req, 'success', 'templates.appliedWedding', { name: template.name, wedding: req.wedding.name });
+    res.redirect('/');
 };
 
 /** GET /templates: the person's templates, by kind. */
@@ -132,4 +209,13 @@ const processDeleteTemplate = async (req, res, next) => {
     res.redirect('/templates');
 };
 
-export { processSaveTemplate, processApplyTemplate, showTemplates, processRenameTemplate, processDeleteTemplate };
+export {
+    processSaveTemplate,
+    processApplyTemplate,
+    showTemplates,
+    processRenameTemplate,
+    processDeleteTemplate,
+    processSaveWeddingTemplate,
+    processApplyWeddingTemplate,
+    applyWeddingTemplate
+};

@@ -1,5 +1,9 @@
 import db from './db.js';
 
+// A list template's items are an array; a whole wedding's are an object of lists.
+const ITEM_COUNT = `CASE WHEN jsonb_typeof(items) = 'array' THEN jsonb_array_length(items)
+    ELSE (SELECT COALESCE(SUM(jsonb_array_length(value)), 0)::int FROM jsonb_each(items) WHERE jsonb_typeof(value) = 'array') END`;
+
 /**
  * A person's templates, newest first, optionally of one kind.
  * @param {string} userId
@@ -8,7 +12,7 @@ import db from './db.js';
  */
 const findTemplates = async (userId, kind = null) => {
     const result = await db.query(
-        `SELECT id, kind, name, jsonb_array_length(items) AS item_count, updated_at
+        `SELECT id, kind, name, ${ITEM_COUNT} AS item_count, updated_at
          FROM templates
          WHERE user_id = $1 AND ($2::text IS NULL OR kind = $2)
          ORDER BY kind ASC, LOWER(name) ASC, id ASC;`,

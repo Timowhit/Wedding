@@ -897,7 +897,8 @@ export default {
     'offline.saveFailed': "Couldn't save for offline: the connection isn't working. Try again before you lose signal.",
     'templates.title': 'Templates',
     'templates.heading': 'Your *templates*',
-    'templates.subtitle': 'Checklists and event-day timelines you can reuse for every wedding.',
+    'templates.subtitle': 'Whole weddings, checklists and event-day timelines you can reuse for every wedding.',
+    'templates.templateName': 'Template name',
     'templates.kind.checklist': 'Checklists',
     'templates.kind.schedule': 'Event-day timelines',
     'templates.empty.checklist': 'No checklist templates yet. On a wedding’s checklist, open “Save as template”.',
@@ -1402,5 +1403,22 @@ export default {
     'fields.confirmDelete': 'Delete the field {label}? Its values are deleted too.',
     'fields.number': 'Enter a number.',
     'fields.yes': 'Yes',
-    'fields.no': 'No'
+    'fields.no': 'No',
+    'templates.kind.wedding': 'Whole weddings',
+    'templates.empty.wedding':
+        'No whole-wedding templates yet. Save a wedding you like as a starting point for the next ones.',
+    'templates.count.wedding': '{count} things',
+    'templates.countOne.wedding': '1 thing',
+    'templates.namePlaceholder.wedding': 'e.g. Garden wedding',
+    'templates.saveHint.wedding':
+        'Saves the active wedding’s tasks (dated from its day), schedule, budget categories and plans, vendors and custom fields.',
+    'templates.option.wedding': '{name} ({count} things)',
+    'templates.optionOne.wedding': '{name} (1 thing)',
+    'templates.addHint.wedding': 'Adds what the wedding doesn’t have yet; nothing is added twice.',
+    'templates.saveWedding': 'Save {name} as a template',
+    'templates.applyTo': 'Add to {wedding}',
+    'templates.confirmApply': 'Add everything in {name} to {wedding}? Things it already has stay as they are.',
+    'templates.appliedWedding': 'Added {name} to {wedding}.',
+    'planner.startFrom': 'Start from a template',
+    'planner.startEmpty': 'An empty wedding'
 };

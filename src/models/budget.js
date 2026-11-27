@@ -178,7 +178,32 @@ const deleteBudgetCategory = async (id, weddingId) =>
         return { value, moved: moved.rowCount };
     });
 
+/**
+ * Adds categories from a whole-wedding template (those the wedding lacks, up to the limit) and
+ * sets their planned amounts.
+ * @param {string} weddingId
+ * @param {Array<{key: string|null, name: string|null, planned: number|null}>} categories - Already normalised.
+ * @returns {Promise<void>}
+ */
+const addCategoriesWithPlans = async (weddingId, categories) => {
+    await findBudgetCategories(weddingId); // the suggested ones first, as on a first visit
+    await withTransaction(async (client) => {
+        await client.query(`SELECT pg_advisory_xact_lock(hashtext('budget_categories:' || $1));`, [weddingId]);
+        for (const { key, name, planned } of categories) {
+            await insertCategory(client, weddingId, { builtinKey: key, name: key ? null : name, planned });
+            if (planned !== null) {
+                await client.query(
+                    `UPDATE budget_categories SET planned = $3
+                     WHERE wedding_id = $1 AND LOWER(COALESCE(builtin_key, name)) = LOWER($2);`,
+                    [weddingId, key ?? name, planned]
+                );
+            }
+        }
+    });
+};
+
 export {
+    addCategoriesWithPlans,
     saveBudgetLimit,
     findExpenses,
     createExpense,

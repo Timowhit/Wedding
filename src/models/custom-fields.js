@@ -80,4 +80,14 @@ const saveCustomValues = async (entity, id, weddingId, values) => {
     ]);
 };
 
-export { findCustomFields, addCustomField, deleteCustomField, saveCustomValues };
+/**
+ * Adds fields from a whole-wedding template, skipping labels the wedding already has.
+ * @param {string} weddingId
+ * @param {Array<{entity: string, label: string, type: string, options: string[]}>} fields - Already validated.
+ * @returns {Promise<void>}
+ */
+const addCustomFieldsIfMissing = async (weddingId, fields) => {
+    for (const field of fields) await addCustomField(weddingId, field);
+};
+
+export { addCustomFieldsIfMissing, findCustomFields, addCustomField, deleteCustomField, saveCustomValues };

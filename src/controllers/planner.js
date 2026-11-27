@@ -2,6 +2,8 @@ import { PLANNER_PAYMENT_FILTERS } from '../constants.js';
 import { countFoundingSpotsLeft } from '../models/founding.js';
 import { countPlannerOverdue, findPlannerPaymentsDue } from '../models/payments.js';
 import { createClientWedding, findPlannerOverview, findPlannerWorkload } from '../models/planner.js';
+import { findTemplate, findTemplates } from '../models/templates.js';
+import { applyWeddingTemplate } from './templates.js';
 import { findUserById } from '../models/users.js';
 import { toSessionUser } from '../middleware/auth.js';
 import { switchActiveWedding } from '../middleware/wedding.js';
@@ -24,12 +26,13 @@ const renderDashboard = async (req, res, { status = 200, weddingForm } = {}) => 
     };
     const today = todayIso();
     const userId = req.session.user.id;
-    const [weddings, workload, spotsLeft, paymentsDue, overduePayments] = await Promise.all([
+    const [weddings, workload, spotsLeft, paymentsDue, overduePayments, weddingTemplates] = await Promise.all([
         findPlannerOverview(userId, filters, today),
         findPlannerWorkload(userId, today),
         countFoundingSpotsLeft(),
         findPlannerPaymentsDue(userId, { filter: filters.pay, today }),
-        countPlannerOverdue(userId, today)
+        countPlannerOverdue(userId, today),
+        findTemplates(userId, 'wedding')
     ]);
 
     res.status(status).render('planner', {
@@ -41,6 +44,7 @@ const renderDashboard = async (req, res, { status = 200, weddingForm } = {}) => 
         paymentsDue,
         whenOptions: WHEN_OPTIONS,
         spotsLeft,
+        weddingTemplates,
         weddingForm: weddingForm ?? { values: EMPTY_WEDDING, errors: [] }
     });
 };
@@ -52,7 +56,13 @@ const processNewClientWedding = async (req, res) => {
     const { values, data, errors } = validateWedding(req.body);
     if (errors.length > 0) return renderDashboard(req, res, { status: 400, weddingForm: { values, errors } });
 
+    const template = isUuid(req.body?.template_id)
+        ? await findTemplate(req.body.template_id, req.session.user.id)
+        : null;
     const { wedding, foundingNumber } = await createClientWedding(req.session.user.id, data);
+    if (template?.kind === 'wedding') {
+        await applyWeddingTemplate({ id: wedding.id, wedding_date: data.weddingDate }, template.items);
+    }
     const refreshed = await findUserById(req.session.user.id);
     if (refreshed) req.session.user = toSessionUser(refreshed);
 

@@ -1,4 +1,11 @@
-import { MAX_TEMPLATE_ITEMS, TASK_CATEGORIES } from '../constants.js';
+import {
+    BUDGET_CATEGORIES,
+    BUDGET_CATEGORY_NAME_MAX,
+    MAX_TEMPLATE_ITEMS,
+    TASK_CATEGORIES,
+    VENDOR_CATEGORIES
+} from '../constants.js';
+import { validateCustomField } from './custom-fields.js';
 import { toIsoDate } from '../utils/format.js';
 import { LIMITS } from './planning.js';
 import { checkText, collectErrors, isValidDate, readText } from './common.js';
@@ -105,6 +112,79 @@ const normaliseScheduleItems = (raw) =>
         .filter((item) => item.startsAt && item.title)
         .slice(0, MAX_TEMPLATE_ITEMS);
 
+const MONEY_MAX = 9_999_999_999.99;
+const readPlanned = (value) =>
+    typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= MONEY_MAX
+        ? Math.round(value * 100) / 100
+        : null;
+
+/**
+ * A whole wedding as a template: tasks (dated relative to the wedding), the schedule, budget
+ * categories with planned amounts, vendors (name and kind only) and custom fields.
+ * @param {{tasks: Array, weddingIso: string|null, schedule: Array, categories: Array<{builtin_key: string|null, name: string|null, planned: number|null}>, vendors: Array<{name: string, category: string}>, fields: Array<{entity: string, label: string, type: string, options: string[]}>}} wedding
+ * @returns {{tasks: Array, schedule: Array, categories: Array<{key: string|null, name: string|null, planned: number|null}>, vendors: Array<{name: string, category: string}>, fields: Array<{entity: string, label: string, type: string, options: string[]}>}}
+ */
+const weddingTemplateFrom = ({ tasks, weddingIso, schedule, categories, vendors, fields }) => ({
+    tasks: checklistItemsFrom(tasks, weddingIso),
+    schedule: scheduleItemsFrom(schedule),
+    // Only categories the wedding added or planned: the suggested ones come with every wedding.
+    categories: categories
+        .filter((category) => category.name || category.planned !== null)
+        .map((category) => ({ key: category.builtin_key, name: category.name, planned: category.planned })),
+    vendors: vendors.map((vendor) => ({ name: vendor.name, category: vendor.category })),
+    fields: fields.map(({ entity, label, type, options }) => ({ entity, label, type, options }))
+});
+
+/**
+ * Checks a stored whole-wedding template before it is applied: each part is cleaned like the
+ * forms would clean it, broken items are dropped, and each list keeps at most MAX_TEMPLATE_ITEMS.
+ * @param {unknown} raw - The template's items as stored.
+ * @returns {ReturnType<typeof weddingTemplateFrom>}
+ */
+const normaliseWeddingTemplate = (raw) => {
+    const items = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+    const list = (value) => (Array.isArray(value) ? value : []).filter((item) => item && typeof item === 'object');
+    return {
+        tasks: normaliseChecklistItems(items.tasks),
+        schedule: normaliseScheduleItems(items.schedule),
+        categories: list(items.categories)
+            .map((item) => ({
+                key: BUDGET_CATEGORIES.includes(item.key) ? item.key : null,
+                name: BUDGET_CATEGORIES.includes(item.key) ? null : text(item.name, BUDGET_CATEGORY_NAME_MAX),
+                planned: readPlanned(item.planned)
+            }))
+            .filter((item) => item.key || item.name)
+            .slice(0, MAX_TEMPLATE_ITEMS),
+        vendors: list(items.vendors)
+            .map((item) => ({
+                name: text(item.name, LIMITS.vendorName),
+                category: VENDOR_CATEGORIES.includes(item.category) ? item.category : 'Other'
+            }))
+            .filter((item) => item.name)
+            .slice(0, MAX_TEMPLATE_ITEMS),
+        fields: list(items.fields)
+            .map((item) =>
+                validateCustomField({
+                    entity: item.entity,
+                    label: item.label,
+                    type: item.type,
+                    options: Array.isArray(item.options) ? item.options.join('\n') : ''
+                })
+            )
+            .filter((result) => result.errors.length === 0)
+            .map((result) => result.data)
+            .slice(0, MAX_TEMPLATE_ITEMS)
+    };
+};
+
+/**
+ * How many things a whole-wedding template holds (for "nothing to save" and the list).
+ * @param {ReturnType<typeof weddingTemplateFrom>} items
+ * @returns {number}
+ */
+const weddingTemplateSize = (items) =>
+    ['tasks', 'schedule', 'categories', 'vendors', 'fields'].reduce((sum, part) => sum + items[part].length, 0);
+
 /**
  * @param {object} [body] - req.body
  * @returns {{values: {name: string}, data: {name: string}, errors: Array<{field: string, key: string, vars?: object}>}}
@@ -117,6 +197,9 @@ const validateTemplateName = (body = {}) => {
 };
 
 export {
+    weddingTemplateFrom,
+    normaliseWeddingTemplate,
+    weddingTemplateSize,
     daysBefore,
     dueDateFrom,
     checklistItemsFrom,

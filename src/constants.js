@@ -168,7 +168,7 @@ const PAYMENT_DUE_WINDOW_DAYS = 30;
 const PLANNER_PAYMENT_FILTERS = Object.freeze(['month', 'next30', 'overdue']);
 
 /** What can be saved as a template. */
-const TEMPLATE_KINDS = Object.freeze(['checklist', 'schedule']);
+const TEMPLATE_KINDS = Object.freeze(['checklist', 'schedule', 'wedding']);
 /** Per account, so one person can't fill the database with templates. */
 const MAX_TEMPLATES_PER_USER = 100;
 // Wedding colours page: swatches per wedding and the length of a swatch's name.

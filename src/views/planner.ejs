@@ -36,6 +36,15 @@
                 <input type="date" id="wedding_date" name="wedding_date" min="1900-01-01" max="2100-12-31" value="<%= weddingForm.values.wedding_date %>"
                        <%- fieldState(weddingForm.errors, 'wedding_date', 'wedding-errors') %>>
             </div>
+            <% if (weddingTemplates.length > 0) { %>
+                <div class="field">
+                    <label for="template_id"><%= t('planner.startFrom') %> <span class="optional"><%= t('form.optional') %></span></label>
+                    <select id="template_id" name="template_id">
+                        <option value=""><%= t('planner.startEmpty') %></option>
+                        <% weddingTemplates.forEach((template) => { %><option value="<%= template.id %>"><%= template.name %></option><% }); %>
+                    </select>
+                </div>
+            <% } %>
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary"><%= t('planner.addWeddingSubmit') %></button>
             </div>

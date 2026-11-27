@@ -172,9 +172,11 @@ import { showOffline } from '../controllers/offline.js';
 import { processUnsubscribe, showUnsubscribe } from '../controllers/reminders.js';
 import {
     processApplyTemplate,
+    processApplyWeddingTemplate,
     processDeleteTemplate,
     processRenameTemplate,
     processSaveTemplate,
+    processSaveWeddingTemplate,
     showTemplates
 } from '../controllers/templates.js';
 import {
@@ -351,6 +353,8 @@ router.post('/fields/:id/delete', editor, processDeleteField);
 
 /* Templates (a person's own; see models/templates.js) ------------------------------------------- */
 router.get('/templates', account, showTemplates);
+router.post('/templates/wedding', editor, processSaveWeddingTemplate);
+router.post('/templates/:id/apply', editor, processApplyWeddingTemplate);
 
 /* Messages and questionnaires library (account: a person's own; using one needs a wedding).
    Sending and removing questionnaires is asking (the planner); answering is the couple's. ---- */

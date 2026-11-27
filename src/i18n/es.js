@@ -906,7 +906,8 @@ export default {
         'No se pudo guardar sin conexión: la conexión no funciona. Inténtalo de nuevo antes de perder la señal.',
     'templates.title': 'Plantillas',
     'templates.heading': 'Tus *plantillas*',
-    'templates.subtitle': 'Listas de tareas y programas del día que puedes reutilizar en cada boda.',
+    'templates.subtitle': 'Bodas completas, listas de tareas y horarios del día que puedes reutilizar en cada boda.',
+    'templates.templateName': 'Nombre de la plantilla',
     'templates.kind.checklist': 'Listas de tareas',
     'templates.kind.schedule': 'Programas del día',
     'templates.empty.checklist':
@@ -1413,5 +1414,22 @@ export default {
     'fields.confirmDelete': '¿Eliminar el campo {label}? Sus valores también se eliminan.',
     'fields.number': 'Escribe un número.',
     'fields.yes': 'Sí',
-    'fields.no': 'No'
+    'fields.no': 'No',
+    'templates.kind.wedding': 'Bodas completas',
+    'templates.empty.wedding':
+        'Aún no hay plantillas de bodas completas. Guarda una boda que te guste como punto de partida para las siguientes.',
+    'templates.count.wedding': '{count} elementos',
+    'templates.countOne.wedding': '1 elemento',
+    'templates.namePlaceholder.wedding': 'p. ej. Boda en jardín',
+    'templates.saveHint.wedding':
+        'Guarda las tareas de la boda activa (con fechas desde su día), el horario, las categorías y montos previstos del presupuesto, los proveedores y los campos propios.',
+    'templates.option.wedding': '{name} ({count} elementos)',
+    'templates.optionOne.wedding': '{name} (1 elemento)',
+    'templates.addHint.wedding': 'Añade lo que la boda aún no tiene; nada se añade dos veces.',
+    'templates.saveWedding': 'Guardar {name} como plantilla',
+    'templates.applyTo': 'Añadir a {wedding}',
+    'templates.confirmApply': '¿Añadir todo lo de {name} a {wedding}? Lo que ya tiene se queda como está.',
+    'templates.appliedWedding': 'Se añadió {name} a {wedding}.',
+    'planner.startFrom': 'Empezar desde una plantilla',
+    'planner.startEmpty': 'Una boda vacía'
 };
