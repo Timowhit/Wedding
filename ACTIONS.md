@@ -6,7 +6,7 @@ Nothing here blocks me. I keep building while these wait.
 
 ## 1. Update the Render database
 
-The last four releases need new database columns. If you already ran this after merging #3 to #7, it prints "Database is up to date"; that's fine.
+The releases since #3 need new database columns, up to `012_appearance_and_layout.sql` from #9. Running this applies whichever ones are missing. If it prints "Database is up to date", they were already applied.
 
 On your computer, in the project folder, with your `.env` pointing at Render (`DB_URL=…` and `DB_SSL_INSECURE=true`):
 
@@ -36,7 +36,7 @@ This makes "today" your day for overdue payments and reminders; without it the a
 
 The releases are all merged into `main`, so these branches are no longer needed:
 
-`planner-release`, `payments-contracts`, `offline-event-day`, `templates`, `reminders`, `revamp/cse340-standards`, `ui/design-review`.
+`planner-release`, `payments-contracts`, `offline-event-day`, `templates`, `reminders`, `revamp/cse340-standards`, `ui/design-review`, `appearance-and-layout`.
 
 On GitHub, go to **Code → Branches** and click the bin icon next to each one.
 
@@ -47,7 +47,7 @@ git fetch --prune
 ```
 
 ```bash
-git branch -D planner-release payments-contracts offline-event-day templates reminders revamp/cse340-standards ui/design-review
+git branch -D planner-release payments-contracts offline-event-day templates reminders revamp/cse340-standards ui/design-review appearance-and-layout
 ```
 
 ## 4. (Optional) Turn on reminder emails
@@ -65,18 +65,6 @@ Without this nothing is sent, and nothing breaks.
 
 Cron Jobs are a paid Render instance type.
 
-## 5. Merge the appearance and venue layout release
+## 5. (Optional) Dismiss the GitGuardian warning on #9
 
-[Timowhit/Wedding#9](https://github.com/Timowhit/Wedding/pull/9) adds:
-
-- the live Appearance settings with your own colours
-- the Wedding colours page
-- the Venue layout page
-- the new logo and the fading notices
-
-It has been reviewed and the review's fixes are in. Ready to merge:
-
-1. GitGuardian marks the PR with "2 secrets uncovered". These are false positives: the flagged strings are colour codes in a test, not passwords or keys, and the check doesn't block merging. To clear it, open the two incidents from the GitGuardian comment on the PR and mark each as **False positive**. You can also ignore it.
-2. Open the PR, click **Ready for review**, wait for the "CI" check to turn green (GitGuardian may stay red; see 1), then **Merge pull request**. Squash is fine.
-3. Repeat step 1 of this file (`git pull origin main`, then `npm run migrate`). It applies `012_appearance_and_layout.sql`, which only adds columns and tables.
-4. Delete the `appearance-and-layout` branch on GitHub.
+GitGuardian flagged two "secrets" in [Timowhit/Wedding#9](https://github.com/Timowhit/Wedding/pull/9). Both are false positives: colour codes in a test, not passwords or keys. To clear them, open the two incidents from the GitGuardian comment on that PR and mark each as **False positive**. Ignoring them is also fine.
