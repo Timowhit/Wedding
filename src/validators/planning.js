@@ -1,5 +1,6 @@
 import {
     BUDGET_CATEGORIES,
+    BUDGET_CATEGORY_NAME_MAX,
     DEFAULT_TASK_PRIORITY,
     RSVP_STATUSES,
     TASK_CATEGORIES,
@@ -50,16 +51,50 @@ const validateBudgetLimit = (body = {}) => {
     return { values, data: { total }, errors };
 };
 
+/** An optional planned amount: empty clears it. */
+const readPlanned = (fail, text) => {
+    if (text === '') return null;
+    const planned = parseMoney(text);
+    if (planned === null) fail('planned', 'validation.amount');
+    return planned;
+};
+
+/**
+ * A budget category of the wedding's own: a name and an optional planned amount.
+ * @param {object} [body] - req.body
+ * @returns {{values: {name: string, planned: string}, data: {name: string, planned: number|null}, errors: Array}}
+ */
+const validateBudgetCategory = (body = {}) => {
+    const values = { name: readText(body.name), planned: readText(body.planned) };
+    const { errors, fail } = collectErrors();
+    checkText(fail, 'name', values.name, { required: true, max: BUDGET_CATEGORY_NAME_MAX });
+    const planned = readPlanned(fail, values.planned);
+    return { values, data: { name: values.name, planned }, errors };
+};
+
+/**
+ * A category's planned amount (empty clears it).
+ * @param {object} [body] - req.body
+ * @returns {{values: {planned: string}, data: {planned: number|null}, errors: Array}}
+ */
+const validatePlanned = (body = {}) => {
+    const values = { planned: readText(body.planned) };
+    const { errors, fail } = collectErrors();
+    const planned = readPlanned(fail, values.planned);
+    return { values, data: { planned }, errors };
+};
+
 /**
  * @param {object} [body] - req.body
+ * @param {string[]} [categories] - The wedding's category values (see findBudgetCategories).
  * @returns {{values: {name: string, category: string, amount: string}, data: {name: string, category: string, amount: number|null}, errors: Array}}
  */
-const validateExpense = (body = {}) => {
+const validateExpense = (body = {}, categories = BUDGET_CATEGORIES) => {
     const values = { name: readText(body.name), category: readText(body.category), amount: readText(body.amount) };
     const { errors, fail } = collectErrors();
 
     checkText(fail, 'name', values.name, { required: true, max: LIMITS.expenseName });
-    const category = readChoice(values.category, BUDGET_CATEGORIES);
+    const category = readChoice(values.category, categories);
     if (!category) fail('category', 'validation.choice');
     const amount = parseMoney(values.amount);
     if (amount === null || amount === 0) fail('amount', 'validation.positiveAmount');
@@ -192,4 +227,14 @@ const validateSearch = (value) => {
     return { query: errors.length === 0 ? query : '', errors };
 };
 
-export { LIMITS, validateBudgetLimit, validateExpense, validateTask, validateGuest, validateVendor, validateSearch };
+export {
+    LIMITS,
+    validateBudgetLimit,
+    validateBudgetCategory,
+    validatePlanned,
+    validateExpense,
+    validateTask,
+    validateGuest,
+    validateVendor,
+    validateSearch
+};

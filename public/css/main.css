@@ -3637,6 +3637,47 @@ input[type='color'] {
     height: 0.375rem;
 }
 
+.category-total__plan {
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+.category-total--over .category-total__amount {
+    color: var(--danger);
+}
+
+.category-manage {
+    display: grid;
+    gap: var(--space-2);
+    margin: var(--space-3) 0;
+    padding: 0;
+    list-style: none;
+}
+
+.category-manage__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-3);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border);
+}
+
+.category-manage__plan {
+    flex: 1 1 18rem;
+    justify-content: flex-start;
+}
+
+.category-manage__name {
+    flex: 1 1 8rem;
+    font-weight: 500;
+}
+
+.category-manage__plan input {
+    width: 8rem;
+}
+
 .inline-form--start {
     justify-content: flex-start;
 }
