@@ -59,6 +59,8 @@ describe('planning details', { skip: skipWithoutDb }, () => {
             assert.deepEqual([task.priority, task.assignee_id], ['high', ids['ben@example.com']]);
             const page = textOf((await ana.get('/checklist')).body);
             assert.match(page, /Book the florist.*High priority.*For Ben/);
+            assert.equal(page.match(/High priority/g).length, 2, 'once on the task, once on the filter tab');
+            assert.equal(page.match(/For Ben/g).length, 1);
         });
 
         it('only members can own a task; priority must be one of the options', async () => {

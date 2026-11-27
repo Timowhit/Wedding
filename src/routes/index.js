@@ -100,6 +100,7 @@ import {
     showSchedule
 } from '../controllers/schedule.js';
 import { showCustomCss } from '../controllers/themes.js';
+import { showCalendar, showSearch } from '../controllers/calendar.js';
 import {
     processDeletePiece,
     processEditPiece,
@@ -270,6 +271,8 @@ router.post('/vendors/:id/payments', editor, processNewPayment);
 
 /* Templates (a person's own; see models/templates.js) ------------------------------------------- */
 router.get('/templates', account, showTemplates);
+router.get('/calendar', account, showCalendar);
+router.get('/search', account, searchLimiter, showSearch);
 router.post('/templates/:id/rename', account, processRenameTemplate);
 router.post('/templates/:id/delete', account, processDeleteTemplate);
 

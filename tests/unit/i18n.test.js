@@ -70,6 +70,8 @@ const dynamicKeys = () => [
     ...[...PALETTES, CUSTOM_PALETTE].map((p) => `palette.${p}`),
     ...CUSTOM_BACKGROUNDS.map((b) => `background.${b}`),
     ...TASK_PRIORITIES.map((p) => `priority.${p}`),
+    ...['wedding', 'task', 'payment', 'decision'].map((k) => `calendar.kind.${k}`),
+    ...['guest', 'vendor', 'task', 'decision', 'schedule'].map((k) => `search.kind.${k}`),
     ...['high', 'low'].map((p) => `priorityTag.${p}`),
     ...Object.keys(LAYOUT_FIXTURES).map((k) => `layoutKind.${k}`),
     ...LAYOUT_UNITS.map((u) => `layoutUnit.${u}`),

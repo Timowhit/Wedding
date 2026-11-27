@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import bcrypt from 'bcryptjs';
 import { hashPassword, needsRehash, verifyPassword } from '../../src/utils/password.js';
 import { isLocalPath, isSafeReturnPath } from '../../src/utils/session.js';
-import { daysUntil, formatCurrency, formatDate, toIsoDate } from '../../src/utils/format.js';
+import { daysUntil, formatCurrency, formatDate, formatShortDate, toIsoDate } from '../../src/utils/format.js';
 import { emphasize, fieldState } from '../../src/utils/view-helpers.js';
 import { escapeHtml } from '../../src/services/email.js';
 import { isValidTimeZone, todayIso } from '../../src/utils/today.js';
@@ -53,6 +53,9 @@ describe('formatting', () => {
         assert.equal(toIsoDate(june13), '2026-06-13');
         assert.equal(formatDate(june13, 'en'), 'Saturday, June 13, 2026');
         assert.match(formatDate('2026-06-13', 'es'), /13 de junio de 2026/);
+        assert.equal(formatShortDate('2026-06-13', 'en'), 'Jun 13, 2026');
+        assert.equal(formatShortDate('2026-06-13', 'es'), '13 jun 2026');
+        assert.equal(formatShortDate(null, 'en'), '');
         assert.equal(formatDate(null, 'en'), '');
     });
 

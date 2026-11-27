@@ -94,8 +94,6 @@
                                 <span class="tag"><%= t(`taskCategory.${task.category}`) %></span>
                                 <% if (task.priority !== 'normal') { %><span class="tag priority priority--<%= task.priority %>"><%= t(`priorityTag.${task.priority}`) %></span><% } %>
                                 <% if (task.assignee_name) { %><span><%= t('checklist.for', { name: task.assignee_name }) %></span><% } %>
-                                <% if (task.priority !== 'normal') { %><span class="tag priority priority--<%= task.priority %>"><%= t(`priorityTag.${task.priority}`) %></span><% } %>
-                                <% if (task.assignee_name) { %><span><%= t('checklist.for', { name: task.assignee_name }) %></span><% } %>
                                 <% if (due) { %><span class="<%= overdue ? 'text-danger' : '' %>"><%= t(overdue ? 'checklist.overdue' : 'checklist.due', { date: formatDate(task.due_date) }) %></span><% } %>
                             </p>
                             <% if (canEdit) { %>

@@ -1,0 +1,81 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+<%
+    const kindKey = (kind) => `calendar.kind.${kind}`;
+    const dayLabel = (day) => formatDate(new Date(`${day}T12:00:00Z`));
+    const monthUrl = (m) => `/calendar?month=${m}${weddingFilter ? `&wedding=${weddingFilter}` : ''}`;
+%>
+
+<main id="main-content">
+    <%- include('partials/page-header', { heading: 'calendar.heading', subtitle: 'calendar.subtitle' }) %>
+    <%- include('partials/flash') %>
+
+    <div class="calendar-tools">
+        <nav class="calendar-nav" aria-label="<%= t('calendar.months') %>">
+            <a class="btn btn-ghost btn-small" href="<%= monthUrl(previous) %>" rel="prev"><span aria-hidden="true">‹</span> <%= t('calendar.previous') %></a>
+            <h2 class="calendar-nav__month" id="month-heading"><%= monthLabel %></h2>
+            <a class="btn btn-ghost btn-small" href="<%= monthUrl(next) %>" rel="next"><%= t('calendar.next') %> <span aria-hidden="true">›</span></a>
+        </nav>
+        <% if (weddings.length > 1) { %>
+            <form method="get" action="/calendar" class="filter-select">
+                <input type="hidden" name="month" value="<%= month %>">
+                <label for="calendar-wedding"><%= t('calendar.wedding') %></label>
+                <select id="calendar-wedding" name="wedding" data-autosubmit>
+                    <option value=""><%= t('calendar.allWeddings') %></option>
+                    <% weddings.forEach((w) => { %><option value="<%= w.id %>" <%= w.id === weddingFilter ? 'selected' : '' %>><%= w.name %></option><% }); %>
+                </select>
+                <button type="submit" class="btn btn-ghost btn-small" data-hide-with-js><%= t('filter.apply') %></button>
+            </form>
+        <% } %>
+        <%- include('partials/search-form', { query: '' }) %>
+    </div>
+
+    <table class="month-grid" aria-labelledby="month-heading">
+        <thead><tr><% weekdays.forEach((name) => { %><th scope="col"><%= name %></th><% }); %></tr></thead>
+        <tbody>
+            <% weeks.forEach((week) => { %>
+                <tr>
+                    <% week.forEach((cell) => { const count = counts[cell.day] || 0; %>
+                        <td class="month-grid__day<%= cell.inMonth ? '' : ' month-grid__day--outside' %><%= cell.day === today ? ' month-grid__day--today' : '' %>">
+                            <% if (count > 0 && cell.inMonth) { %>
+                                <a href="#day-<%= cell.day %>" aria-label="<%= t('calendar.dayCount', { date: dayLabel(cell.day), count }) %>">
+                                    <span class="month-grid__number"><%= Number(cell.day.slice(8)) %></span>
+                                    <span class="month-grid__count"><%= count %></span>
+                                </a>
+                            <% } else { %>
+                                <span class="month-grid__number"><%= Number(cell.day.slice(8)) %></span>
+                            <% } %>
+                        </td>
+                    <% }); %>
+                </tr>
+            <% }); %>
+        </tbody>
+    </table>
+
+    <section aria-labelledby="agenda-heading">
+        <h2 class="section-heading" id="agenda-heading"><%= t('calendar.agenda') %></h2>
+        <% if (days.length === 0) { %>
+            <p class="empty-state"><%= t('calendar.empty') %></p>
+        <% } else { %>
+            <ol class="agenda">
+                <% days.forEach(({ day, entries }) => { %>
+                    <li class="agenda__day" id="day-<%= day %>">
+                        <h3 class="agenda__date"><%= dayLabel(day) %></h3>
+                        <ul class="agenda__entries">
+                            <% entries.forEach((entry) => { %>
+                                <li class="agenda__entry agenda__entry--<%= entry.kind %>">
+                                    <span class="tag"><%= t(kindKey(entry.kind)) %></span>
+                                    <%- include('partials/open-in-wedding', { weddingId: entry.wedding_id, page: entry.page, label: entry.kind === 'wedding' ? t('calendar.weddingDay') : entry.title }) %>
+                                    <span class="agenda__wedding"><%= entry.wedding_name %></span>
+                                    <% if (entry.amount) { %><span class="agenda__amount"><%= formatCurrency(entry.amount) %></span><% } %>
+                                </li>
+                            <% }); %>
+                        </ul>
+                    </li>
+                <% }); %>
+            </ol>
+        <% } %>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

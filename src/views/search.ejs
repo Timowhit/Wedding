@@ -1,0 +1,28 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content">
+    <%- include('partials/page-header', { heading: 'search.heading', subtitle: 'search.subtitle' }) %>
+    <%- include('partials/search-form', { query }) %>
+
+    <% if (tooShort) { %>
+        <p class="hint" role="status"><%= t('search.tooShort', { min: minLength }) %></p>
+    <% } else if (query) { %>
+        <p class="hint" role="status"><%= t(total === 1 ? 'search.countOne' : 'search.count', { count: total, query }) %></p>
+        <% groups.forEach((group) => { %>
+            <section class="card search-group" aria-labelledby="results-<%= group.kind %>">
+                <h2 class="card-title" id="results-<%= group.kind %>"><%= t(`search.kind.${group.kind}`) %></h2>
+                <ul class="search-results">
+                    <% group.results.forEach((result) => { %>
+                        <li>
+                            <%- include('partials/open-in-wedding', { weddingId: result.wedding_id, page: group.page, label: result.title }) %>
+                            <span class="agenda__wedding"><%= result.wedding_name %></span>
+                        </li>
+                    <% }); %>
+                </ul>
+            </section>
+        <% }); %>
+    <% } %>
+</main>
+
+<%- include('partials/footer') %>

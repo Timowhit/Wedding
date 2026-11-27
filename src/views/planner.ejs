@@ -3,6 +3,7 @@
 
 <main id="main-content">
     <%- include('partials/page-header', { heading: 'planner.heading', subtitle: 'planner.subtitle' }) %>
+    <%- include('partials/search-form', { query: '' }) %>
     <%- include('partials/flash') %>
 
     <% if (!user.foundingNumber && spotsLeft > 0) { %>
