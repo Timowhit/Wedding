@@ -1,12 +1,13 @@
 import { MAX_TEMPLATE_ITEMS, TASK_CATEGORIES } from '../constants.js';
 import { toIsoDate } from '../utils/format.js';
 import { LIMITS } from './planning.js';
-import { checkText, collectErrors, readText } from './common.js';
+import { checkText, collectErrors, isValidDate, readText } from './common.js';
 
 const NAME_MAX = 120;
 const SCHEDULE_TEXT_MAX = Object.freeze({ title: 200, location: 200, notes: 2000, contingency: 2000 });
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 const DAY_MS = 24 * 60 * 60 * 1000;
+const MAX_DATE_MS = 8.64e15; // the largest time a JavaScript Date can hold
 
 const utcDay = (iso) => Date.UTC(Number(iso.slice(0, 4)), Number(iso.slice(5, 7)) - 1, Number(iso.slice(8, 10)));
 
@@ -24,12 +25,17 @@ const daysBefore = (weddingIso, dueIso) =>
  * The due date that lies `days` before the wedding.
  * @param {string|null} weddingIso - YYYY-MM-DD
  * @param {number|null} days
- * @returns {string|null} YYYY-MM-DD, or null when the wedding has no date or the item had none.
+ * @returns {string|null} YYYY-MM-DD, or null when the wedding has no date, the item had none, or
+ *   the result would fall outside the dates the app accepts (1900-2100).
  */
-const dueDateFrom = (weddingIso, days) =>
-    weddingIso && Number.isInteger(days)
-        ? new Date(utcDay(weddingIso) - days * DAY_MS).toISOString().slice(0, 10)
-        : null;
+const dueDateFrom = (weddingIso, days) => {
+    if (!weddingIso || !Number.isInteger(days)) return null;
+    const time = utcDay(weddingIso) - days * DAY_MS;
+    if (!Number.isFinite(time) || Math.abs(time) > MAX_DATE_MS) return null;
+    const due = new Date(time).toISOString().slice(0, 10);
+    // Corrupt or extreme day counts must not produce dates the rest of the app refuses.
+    return isValidDate(due) ? due : null;
+};
 
 const text = (value, max) => (typeof value === 'string' && value.trim() !== '' ? value.trim().slice(0, max) : null);
 

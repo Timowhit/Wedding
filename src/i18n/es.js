@@ -922,5 +922,7 @@ export default {
     'templates.countOne.checklist': '1 tarea',
     'templates.countOne.schedule': '1 elemento',
     'templates.optionOne.checklist': '{name} (1 tarea)',
-    'templates.optionOne.schedule': '{name} (1 elemento)'
+    'templates.optionOne.schedule': '{name} (1 elemento)',
+    'templates.appliedOne': 'Se añadió 1 tarea de «{name}».',
+    'templates.appliedScheduleOne': 'Se añadió 1 elemento de «{name}».'
 };

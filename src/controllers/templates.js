@@ -13,6 +13,7 @@ import {
     saveTemplate
 } from '../models/templates.js';
 import { setFlash } from '../utils/flash.js';
+import { backTo } from '../utils/redirect.js';
 import { toIsoDate } from '../utils/format.js';
 import { isUuid } from '../validators/common.js';
 import {
@@ -60,7 +61,7 @@ const processSaveTemplate = (kind) => async (req, res) => {
         const { replaced } = await saveTemplate(userId, kind, data.name, items);
         setFlash(req, 'success', replaced ? 'templates.replaced' : 'templates.saved', { name: data.name });
     }
-    res.redirect(page);
+    res.redirect(backTo(req, page));
 };
 
 /** POST /checklist/from-template and /schedule/from-template: add a template's items to the active wedding. */
@@ -82,13 +83,16 @@ const processApplyTemplate = (kind) => async (req, res, next) => {
             ? 'templates.appliedNoDate'
             : skipped > 0
               ? 'templates.appliedSkipped'
-              : 'templates.applied';
+              : added === 1
+                ? 'templates.appliedOne'
+                : 'templates.applied';
         setFlash(req, 'success', key, { count: added, skipped, name: template.name });
     } else {
         const added = await addScheduleItems(req.wedding.id, normaliseScheduleItems(template.items));
-        setFlash(req, 'success', 'templates.appliedSchedule', { count: added, name: template.name });
+        const key = added === 1 ? 'templates.appliedScheduleOne' : 'templates.appliedSchedule';
+        setFlash(req, 'success', key, { count: added, name: template.name });
     }
-    res.redirect(KINDS[kind].page);
+    res.redirect(backTo(req, KINDS[kind].page));
 };
 
 const renderTemplates = async (req, res, { status = 200, renameForm } = {}) => {

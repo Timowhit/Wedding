@@ -913,5 +913,7 @@ export default {
     'templates.countOne.checklist': '1 task',
     'templates.countOne.schedule': '1 item',
     'templates.optionOne.checklist': '{name} (1 task)',
-    'templates.optionOne.schedule': '{name} (1 item)'
+    'templates.optionOne.schedule': '{name} (1 item)',
+    'templates.appliedOne': 'Added 1 task from “{name}”.',
+    'templates.appliedScheduleOne': 'Added 1 item from “{name}”.'
 };

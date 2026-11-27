@@ -22,6 +22,12 @@ describe('template helpers', () => {
         assert.equal(dueDateFrom('2028-03-01', 1), '2028-02-29');
     });
 
+    it('dates outside 1900-2100 or absurd day counts give no due date', () => {
+        assert.equal(dueDateFrom('2026-06-01', 1e9), null);
+        assert.equal(dueDateFrom('2026-06-01', -3000000), null);
+        assert.equal(dueDateFrom('1900-06-01', 365), null, 'would land in 1899');
+    });
+
     it('null when either date is missing', () => {
         assert.equal(daysBefore(null, '2027-01-01'), null);
         assert.equal(daysBefore('2027-01-01', null), null);

@@ -258,6 +258,55 @@ describe('templates', { skip: skipWithoutDb }, () => {
             assert.ok(await templateId('Full service'));
         });
 
+        it('a corrupt template never breaks the page', async () => {
+            const user = (await app.pool.query(`SELECT id FROM users WHERE email = 'tara@example.com';`)).rows[0].id;
+            const { rows } = await app.pool.query(
+                `INSERT INTO templates (user_id, kind, name, items) VALUES ($1, 'checklist', 'Corrupt', $2::jsonb) RETURNING id;`,
+                [
+                    user,
+                    JSON.stringify([
+                        { text: 'Absurd date', category: 'Venue', daysBefore: 1e9 },
+                        { text: 'Gone category', category: 'Fireworks', daysBefore: 10 },
+                        'junk',
+                        null
+                    ])
+                ]
+            );
+            await open(ana);
+            await planner.get('/checklist');
+            const applied = await planner.post('/checklist/from-template', { template_id: rows[0].id });
+            assert.equal(applied.status, 302);
+            const tasks = await tasksOf(ana);
+            assert.deepEqual(
+                tasks.filter((t) => ['Absurd date', 'Gone category'].includes(t.text)),
+                [
+                    { text: 'Absurd date', due: null },
+                    { text: 'Gone category', due: '2027-06-02' }
+                ]
+            );
+        });
+
+        it('template actions keep the list filters, and counts read naturally', async () => {
+            await open(ana);
+            await planner.get('/checklist?category=Venue');
+            const page = (await planner.get('/checklist?category=Venue')).body;
+            assert.match(
+                page,
+                /action="\/checklist\/from-template"[\s\S]*?name="return_to" value="\/checklist\?category=Venue"/
+            );
+            const user = (await app.pool.query(`SELECT id FROM users WHERE email = 'tara@example.com';`)).rows[0].id;
+            const { rows } = await app.pool.query(
+                `INSERT INTO templates (user_id, kind, name, items) VALUES ($1, 'checklist', 'Just one', $2::jsonb) RETURNING id;`,
+                [user, JSON.stringify([{ text: 'Only task', category: 'Other', daysBefore: null }])]
+            );
+            const applied = await planner.post('/checklist/from-template', {
+                template_id: rows[0].id,
+                return_to: '/checklist?category=Venue'
+            });
+            assert.equal(applied.location, '/checklist?category=Venue');
+            assert.match((await planner.get('/checklist')).body, /Added 1 task from “Just one”\./);
+        });
+
         it('viewers cannot save or apply', async () => {
             await viewer.get('/checklist');
             assert.notEqual((await viewer.post('/checklist/template', { name: 'Peek' })).status, 200);
