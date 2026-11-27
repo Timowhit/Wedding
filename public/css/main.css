@@ -1730,10 +1730,14 @@ select.status-select {
 
 .due__vendor,
 .due__open {
+    grid-row: 1;
+    grid-column: 1;
     font-weight: 600;
 }
 
 .due__amount {
+    grid-row: 1;
+    grid-column: 2;
     font-variant-numeric: tabular-nums;
     text-align: right;
 }
@@ -1744,11 +1748,6 @@ select.status-select {
     grid-column: 1 / -1;
     color: var(--text-muted);
     font-size: 0.875rem;
-}
-
-.due__wedding {
-    grid-column: 1;
-    grid-row: 2;
 }
 
 .due--overdue .due__when {
@@ -2221,7 +2220,10 @@ select.status-select {
     .contact-list a,
     .track__preview summary,
     .brand,
-    .category-total__name {
+    .category-total__name,
+    .step a,
+    .due__vendor,
+    .link-button {
         min-height: var(--target);
     }
 
@@ -2232,6 +2234,9 @@ select.status-select {
     .link-action,
     .contact-list a,
     .category-total__name,
+    .step a,
+    .due__vendor,
+    .link-button,
     .disclosure summary,
     .track__preview summary {
         display: inline-flex;
