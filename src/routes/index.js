@@ -52,7 +52,14 @@ import {
     showInspiration
 } from '../controllers/inspiration.js';
 import { processAcceptInvite, processDeclineInvite, showInvite } from '../controllers/invites.js';
-import { processAddTrack, processClearSection, processDeleteTrack, showMusic } from '../controllers/music.js';
+import {
+    processAddLink,
+    processAddTrack,
+    processClearSection,
+    processDeleteTrack,
+    processMoveTrack,
+    showMusic
+} from '../controllers/music.js';
 import {
     processHandover,
     processBecomePlanner,
@@ -360,6 +367,8 @@ router.post('/payments/:id/delete', editor, processDeletePayment);
 /* Music --------------------------------------------------------------------------------------- */
 router.get('/music', member, searchLimiter, showMusic);
 router.post('/music/tracks', editor, processAddTrack);
+router.post('/music/links', editor, processAddLink);
+router.post('/music/tracks/:id/move', editor, processMoveTrack);
 router.post('/music/tracks/:id/delete', editor, processDeleteTrack);
 router.post('/music/sections/:slug/clear', editor, processClearSection);
 

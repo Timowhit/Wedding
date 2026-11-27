@@ -190,7 +190,7 @@ describe('planning pages', { skip: skipWithoutDb }, () => {
         const page = await fresh.get('/');
         assert.match(page.body, /Getting started/);
         assert.match(page.body, /0 of 5 done/);
-        assert.doesNotMatch(page.body, /href="\/music"/, 'music is hidden when Spotify is not configured');
+        assert.match(page.body, /href="\/music"/, 'the DJ page works without Spotify keys (songs are added by link)');
         assert.doesNotMatch(page.body, /Join a wedding/, 'joining lives in Settings and on /welcome');
         await fresh.post('/budget/limit', { total: '1000' });
         assert.match((await fresh.get('/')).body, /1 of 5 done/);
