@@ -44,3 +44,10 @@ It applies `013_planning_details.sql` and `014_wrap_up.sql`, which only add colu
 1. Open the PR, click **Ready for review**, wait for the CI check, then **Merge pull request**.
 2. Pull `main` and run `npm run migrate` again, as in step 2. It adds `015_files.sql`.
 3. Keep an eye on your Render database's storage. Each wedding can use up to 250 MB of files, and each person can upload up to 1 GB in total across their weddings. Render shows the database size on the database's page. If you get close to your plan's limit, tell me and I'll move files to cheaper storage.
+
+## 4. Merge the messages and questionnaires library (after step 3)
+
+[PR link added when it opens] adds your message templates and questionnaires (`/library`) and the Questionnaires page couples answer. It is built on top of the file uploads PR, so merge that first; if GitHub then shows a conflict here, tell me and I'll update it.
+
+1. Merge the PR once its CI check is green.
+2. Pull `main` and run `npm run migrate` (adds `016_library.sql`).

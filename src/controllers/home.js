@@ -11,7 +11,7 @@ const FEATURES = Object.freeze([
 ]);
 
 /** Ideas from notes.txt that are planned but not built yet; listed under "Coming next" only. */
-const COMING_NEXT = Object.freeze(['questionnaires', 'workflows']);
+const COMING_NEXT = Object.freeze(['workflows']);
 
 /**
  * The public landing page for visitors who are not signed in. Signed-in users fall through to

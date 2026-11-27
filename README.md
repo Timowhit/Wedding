@@ -41,6 +41,7 @@ There is no frontend framework, bundler or TypeScript. `public/js/app.js` is a s
 - **Wrap-up**: after the wedding day, the dashboard shows what is still owed, booked vendors to rate (1-5 stars and notes) and a button that adds dated wrap-up tasks. The owner can archive the wedding: it leaves active lists, the calendar and reminders, and can be brought back
 - **Progress badge and celebrations**: a ring at the top right shows the wedding's checklist progress and opens to the next three tasks. Ticking a task off brings a short confetti burst and a message, with a bigger one at 25%, 50%, 75% and 100% (CSS only; still for people who prefer reduced motion)
 - **Files** (`/files`): contracts, floor plans, inspiration photos and other files for each wedding, stored in PostgreSQL. Photos show as a grid; vendor pages show and upload that vendor's files. PDF, photos, Word, Excel and text up to 10 MB each and 250 MB per wedding; types are checked from the file's contents
+- **Library** (`/library`, planners): your own email, follow-up and proposal templates with `{couple}`, `{date}`, `{days_left}` and `{planner}` filled in for a wedding (copy, open in your email app or print), and questionnaires you build once and send to any wedding. Couples answer them on `/questionnaires`; you read the answers there
 - **Notices**: confirmations fade after a few seconds (paused while hovered or focused); errors stay until dismissed
 - **Dashboard**: countdown to the wedding date, a getting-started list for new weddings, totals for every section, pending invitations
 - **Budget**: total budget, expenses, spending per category, spent/remaining with an over-budget warning
@@ -220,6 +221,14 @@ All `POST` routes require the session's CSRF token (see Security Notes).
 | POST   | `/files` (multipart)                                      | Editor               | Upload a file (CSRF checked after parsing)                               |
 | GET    | `/files/:id`                                              | Member               | Download (sandboxed, nosniff)                                            |
 | POST   | `/files/:id/delete`                                       | Editor               | Delete a file                                                            |
+| GET    | `/library`                                                | Account              | Your message templates and questionnaires                                |
+| POST   | `/library/messages`, `/:id/edit`, `/:id/delete`           | Account              | Add, edit or delete a message template                                   |
+| GET    | `/library/messages/:id/use`                               | Editor               | The message filled in for the active wedding                             |
+| GET    | `/library/questionnaires/new`, `/:id/edit`                | Account              | Questionnaire builder                                                    |
+| POST   | `/library/questionnaires`, `/:id/edit`, `/:id/delete`     | Account              | Save or delete a questionnaire                                           |
+| GET    | `/questionnaires`, `/questionnaires/:id`                  | Member               | Questionnaires sent to the wedding, and one with its answers             |
+| POST   | `/questionnaires/send`, `/questionnaires/:id/delete`      | Editor               | Send one of yours to the wedding, or remove it                           |
+| POST   | `/questionnaires/:id/answers`                             | Answerer             | Save the couple's answers                                                |
 | GET    | `/layout`                                                 | Member               | The venue floor plan                                                     |
 | POST   | `/layout/room`                                            | Editor               | Room size and unit (pieces are moved back inside)                        |
 | POST   | `/layout/tables`, `/layout/items`                         | Editor               | Place a seating table / add a fixture                                    |
@@ -325,6 +334,9 @@ guests (013)       meal NULL, accessibility NULL
 weddings (014)     archived_at NULL   vendors (014) rating 1..5 NULL, review NULL
 wedding_files (015) (id PK, wedding_id FK CASCADE, vendor_id FK SET NULL, uploaded_by FK SET NULL, kind, name,
                     content_type, size, note, data BYTEA)  -- lists never select data
+message_templates (016) (id PK, user_id FK CASCADE, kind email|follow_up|proposal, name, subject, body, UNIQUE (user_id, kind, name))
+questionnaires (016)    (id PK, user_id FK CASCADE, title, intro, questions JSONB)
+wedding_questionnaires  (id PK, wedding_id FK CASCADE, title, intro, questions JSONB (a copy), answers JSONB, sent_by, answered_by, answered_at)
 vendor_payments    (id PK, wedding_id FK, vendor_id FK CASCADE, label, amount > 0, due_date, paid_on NULL = unpaid, note)
 music_tracks       (id PK, wedding_id, section, track_id, track_name, artist_name, artwork_url, UNIQUE (wedding_id, section, track_id))
 inspiration_photos (id PK, wedding_id, photo_id, thumb_url, full_url, alt_desc, source_link, UNIQUE (wedding_id, photo_id))

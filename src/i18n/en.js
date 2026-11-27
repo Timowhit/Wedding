@@ -763,7 +763,6 @@ export default {
     'landing.couplesBody':
         'Your clients join with a link from you, in your brand colours. Couples without a planner can plan their own wedding here for free, too.',
     'landing.comingHeading': 'Coming next',
-    'landing.coming.questionnaires': 'Reusable questionnaires, proposals and message templates',
     'landing.coming.workflows': 'Custom fields and workflows for your planning style',
     'landing.finalHeading': 'Run your next wedding here',
     'vendor.back': 'All vendors',

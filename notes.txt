@@ -2,9 +2,11 @@ Wedding-planner UX and feature ideas
 Status checked against the code on 2026-11-27. [x] done, [~] partly done (what's missing is listed), [ ] not started.
 
 Next up
-- [ ] Reusable questionnaires, proposals, email messages, and follow-up templates (proposed next).
+- [ ] Let planners customize fields and workflows for different budgets, traditions, and planning styles (the last idea not started).
+- [ ] The navigation has grown to two rows for planners: group Templates, Library and Calendar under one menu.
 
 Done
+- [x] Reusable questionnaires, proposals, email messages, and follow-up templates. (/library and /questionnaires, branch library; proposals are text templates for now)
 - [x] Store inspiration boards, floor plans, contracts, and other files in each event workspace. (/files, stored in PostgreSQL, PR #14)
 - [x] Gamify task completion with a banner in the top right with tasks and an animation for completion. (Progress badge and celebrations, PR #12)
 - [x] Customizable checklists with due dates, priorities, and task owners. (Priorities and owners, PR #11)
@@ -47,4 +49,3 @@ Small follow-ups (from the review of PR #11)
 - [ ] Files: check by hand that PDFs open in Chrome, Firefox and Safari under the download sandbox.
 
 Not started
-- [ ] Let planners customize fields and workflows for different budgets, traditions, and planning styles.

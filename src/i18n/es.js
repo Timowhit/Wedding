@@ -768,7 +768,6 @@ export default {
     'landing.couplesBody':
         'Tus clientes se unen con un enlace tuyo, con los colores de tu marca. Las parejas sin organizador también pueden planificar su boda aquí gratis.',
     'landing.comingHeading': 'Próximamente',
-    'landing.coming.questionnaires': 'Cuestionarios, propuestas y plantillas de mensajes reutilizables',
     'landing.coming.workflows': 'Campos y flujos de trabajo a tu medida',
     'landing.finalHeading': 'Organiza aquí tu próxima boda',
     'vendor.back': 'Todos los proveedores',
