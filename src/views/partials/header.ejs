@@ -38,7 +38,7 @@
                 <button type="submit" class="btn btn-ghost btn-small" data-hide-with-js><%= t('nav.switch') %></button>
             </form>
         <% } else if (hasNav && hasWedding) { %>
-            <p class="wedding-current"><span class="visually-hidden"><%= t('nav.activeWedding') %>: </span><%= wedding.name %></p>
+            <p class="wedding-current"><span class="visually-hidden"><%= t('nav.activeWeddingLabel') %></span><%= wedding.wedding_date ? `${wedding.name} · ${formatDate(wedding.wedding_date)}` : wedding.name %></p>
         <% } %>
         <% if (hasNav) { %>
             <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav" hidden>

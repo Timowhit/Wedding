@@ -1056,5 +1056,6 @@ export default {
     'layout.pieceSaved': 'Saved.',
     'layout.deleted': 'Removed from the plan.',
     'layout.limit': 'A plan can hold up to {max} pieces.',
-    'layout.removeTableNamed': 'Take off the plan: {name}'
+    'layout.removeTableNamed': 'Take off the plan: {name}',
+    'nav.activeWeddingLabel': 'Wedding you are planning: '
 };

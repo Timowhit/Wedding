@@ -1065,5 +1065,6 @@ export default {
     'layout.pieceSaved': 'Guardado.',
     'layout.deleted': 'Quitado del plano.',
     'layout.limit': 'Un plano puede tener hasta {max} elementos.',
-    'layout.removeTableNamed': 'Quitar del plano: {name}'
+    'layout.removeTableNamed': 'Quitar del plano: {name}',
+    'nav.activeWeddingLabel': 'Boda que estás planificando: '
 };

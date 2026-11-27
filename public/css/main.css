@@ -1128,7 +1128,7 @@ textarea {
     height: 2.5rem;
     border-radius: 50%;
     background: var(--primary-soft);
-    color: var(--primary);
+    color: var(--primary-hover);
     font-weight: 600;
 }
 
@@ -1259,7 +1259,7 @@ select.status-select {
 }
 
 .role--owner {
-    color: var(--accent);
+    color: var(--primary-hover); /* accent is only checked at 3:1, too faint for text */
 }
 
 .filter-tabs {
