@@ -16,7 +16,7 @@
     <section class="card floor-plan-card" aria-labelledby="plan-heading">
         <h2 class="card-title" id="plan-heading"><%= t('layout.planHeading', { width: fmt(room.width), depth: fmt(room.depth), unit: unitLabel }) %></h2>
         <%# Positions and sizes are SVG attributes in room units, so the CSP (no inline styles) is never in the way. %>
-        <svg class="floor-plan" viewBox="0 0 <%= fmt(room.width) %> <%= fmt(room.depth) %>" role="img" aria-labelledby="plan-title"
+        <svg class="floor-plan" viewBox="0 0 <%= fmt(room.width) %> <%= fmt(room.depth) %>" role="<%= canEdit ? 'group' : 'img' %>" aria-labelledby="plan-title"
              <% if (canEdit) { %>data-layout-editable data-room-width="<%= fmt(room.width) %>" data-room-depth="<%= fmt(room.depth) %>"<% } %>>
             <title id="plan-title"><%= t('layout.planTitle', { width: fmt(room.width), depth: fmt(room.depth), unit: unitLabel, count: items.length }) %></title>
             <defs>
@@ -165,7 +165,7 @@
                             </details>
                             <form method="post" action="/layout/items/<%= item.id %>/delete" data-confirm="<%= t('layout.confirmDelete', { name: nameOf(item) }) %>">
                                 <%- include('partials/csrf-field') %>
-                                <button type="submit" class="link-action link-action--danger" aria-label="<%= t('action.deleteNamed', { name: nameOf(item) }) %>"><%= t(item.kind === 'table' ? 'layout.removeTable' : 'action.delete') %></button>
+                                <button type="submit" class="link-action link-action--danger" aria-label="<%= t(item.kind === 'table' ? 'layout.removeTableNamed' : 'action.deleteNamed', { name: nameOf(item) }) %>"><%= t(item.kind === 'table' ? 'layout.removeTable' : 'action.delete') %></button>
                             </form>
                         <% } %>
                     </li>

@@ -1055,5 +1055,6 @@ export default {
     'layout.added': '{name} is on the plan, in the free space nearest the middle.',
     'layout.pieceSaved': 'Saved.',
     'layout.deleted': 'Removed from the plan.',
-    'layout.limit': 'A plan can hold up to {max} pieces.'
+    'layout.limit': 'A plan can hold up to {max} pieces.',
+    'layout.removeTableNamed': 'Take off the plan: {name}'
 };

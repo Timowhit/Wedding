@@ -16,6 +16,7 @@ import { setFlash } from '../utils/flash.js';
 import { isUuid } from '../validators/common.js';
 import {
     clampToRoom,
+    convertPiece,
     findFreeSpot,
     fixtureDefaults,
     readMove,
@@ -53,14 +54,19 @@ const renderLayout = async (req, res, { status = 200, roomForm, fixtureForm, pie
 /** GET /layout: the venue floor plan. */
 const showLayout = (req, res) => renderLayout(req, res);
 
-/** POST /layout/room: the room's size and unit. Pieces that no longer fit are moved back inside. */
+/** POST /layout/room: the room's size and unit. A new unit converts the pieces; any that no longer fit move back inside. */
 const processRoom = async (req, res) => {
     const { values, data, errors } = validateRoom(req.body);
     if (errors.length > 0) return renderLayout(req, res, { status: 400, roomForm: { values, errors } });
+    const previous = await findRoom(req.wedding.id);
     await saveRoom(req.wedding.id, data);
+    // A new unit converts every piece (a 5 ft table stays about 1.5 m); then anything that no longer
+    // fits is moved back inside.
     for (const item of await findLayoutItems(req.wedding.id)) {
-        const inside = clampToRoom(item, data);
-        if (inside.x !== item.x || inside.y !== item.y) await moveLayoutItem(item.id, req.wedding.id, inside);
+        const converted = { ...item, ...convertPiece(item, previous.unit, data.unit) };
+        const piece = { ...converted, ...clampToRoom(converted, data) };
+        const changed = ['x', 'y', 'width', 'depth'].some((key) => piece[key] !== item[key]);
+        if (changed) await updateLayoutItem(item.id, req.wedding.id, piece);
     }
     setFlash(req, 'success', 'layout.roomSaved');
     res.redirect('/layout');

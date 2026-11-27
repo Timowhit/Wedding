@@ -68,4 +68,20 @@ describe('venue layout rules', () => {
         const full = [{ x: 30, y: 20, width: 60, depth: 40, rotation: 0 }];
         assert.deepEqual(findFreeSpot(piece, room, full), { x: 30, y: 20 }, 'no room left: the middle anyway');
     });
+
+    it('finds a spot quickly even in the largest room, full of pieces', () => {
+        const big = { width: 500, depth: 500 };
+        const others = Array.from({ length: 200 }, (_, i) => ({
+            x: 10 + (i % 20) * 24,
+            y: 10 + Math.floor(i / 20) * 24,
+            width: 20,
+            depth: 20,
+            rotation: 0
+        }));
+        const started = performance.now();
+        const spot = findFreeSpot({ width: 6, depth: 6, rotation: 0 }, big, others);
+        const elapsed = performance.now() - started;
+        assert.ok(elapsed < 100, `took ${elapsed.toFixed(0)} ms`);
+        assert.ok(spot.x >= 3 && spot.x <= 497 && spot.y >= 3 && spot.y <= 497);
+    });
 });

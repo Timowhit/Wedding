@@ -54,7 +54,7 @@ describe('venue layout', { skip: skipWithoutDb }, () => {
         const page = await owner.get('/layout');
         assert.equal(page.status, 200);
         assert.match(page.body, /<svg class="floor-plan"[^>]*viewBox="0 0 60 40"/);
-        assert.match(page.body, /role="img"/);
+        assert.match(page.body, /role="group"/, 'editors get a group of movable pieces');
         assert.equal(await room(), undefined, 'nothing is stored until someone saves');
     });
 
@@ -131,6 +131,29 @@ describe('venue layout', { skip: skipWithoutDb }, () => {
             assert.ok(item.y >= Math.min(halfY, 10) && item.y <= Math.max(20 - halfY, 10), `${item.kind} y ${item.y}`);
         }
         assert.match((await owner.get('/layout')).body, /viewBox="0 0 30 20"/);
+    });
+
+    it('changing the unit converts every piece, so the plan keeps its real size', async () => {
+        const before = await items();
+        assert.equal((await owner.post('/layout/room', { width: '9', depth: '6', unit: 'm' })).location, '/layout');
+        const after = await items();
+        const half = (value) => Math.round(value * 2) / 2;
+        for (const [old, now] of before.map((item, i) => [item, after[i]])) {
+            assert.equal(now.width, Math.max(0.5, half(old.width / 3.281)), `${old.kind} width`);
+            assert.equal(now.depth, Math.max(0.5, half(old.depth / 3.281)), `${old.kind} depth`);
+        }
+        await owner.post('/layout/room', { width: '30', depth: '20', unit: 'ft' });
+    });
+
+    it('the editable plan is a labelled group so its pieces reach assistive technology', async () => {
+        const page = await owner.get('/layout');
+        assert.match(page.body, /<svg class="floor-plan"[^>]*role="group"[^>]*aria-labelledby="plan-title"/);
+        assert.match((await viewer.get('/layout')).body, /<svg class="floor-plan"[^>]*role="img"/);
+        const label = page.body.match(/aria-label="([^"]+)">Take off the plan</);
+        assert.ok(
+            label && label[1].startsWith('Take off the plan'),
+            `visible text starts the accessible name: ${label?.[1]}`
+        );
     });
 
     it('metric rooms get metric default sizes', async () => {

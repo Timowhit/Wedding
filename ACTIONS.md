@@ -74,11 +74,9 @@ Cron Jobs are a paid Render instance type.
 - the Venue layout page
 - the new logo and the fading notices
 
-I'm finishing its final review. When this step says "ready", do the following:
+It has been reviewed and the review's fixes are in. Ready to merge:
 
 1. GitGuardian marks the PR with "2 secrets uncovered". These are false positives: the flagged strings are colour codes in a test, not passwords or keys, and the check doesn't block merging. To clear it, open the two incidents from the GitGuardian comment on the PR and mark each as **False positive**. You can also ignore it.
 2. Open the PR, click **Ready for review**, wait for the "CI" check to turn green (GitGuardian may stay red; see 1), then **Merge pull request**. Squash is fine.
 3. Repeat step 1 of this file (`git pull origin main`, then `npm run migrate`). It applies `012_appearance_and_layout.sql`, which only adds columns and tables.
 4. Delete the `appearance-and-layout` branch on GitHub.
-
-Status: **not ready yet** (review in progress).

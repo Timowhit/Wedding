@@ -1064,5 +1064,6 @@ export default {
     'layout.added': '{name} está en el plano, en el espacio libre más cercano al centro.',
     'layout.pieceSaved': 'Guardado.',
     'layout.deleted': 'Quitado del plano.',
-    'layout.limit': 'Un plano puede tener hasta {max} elementos.'
+    'layout.limit': 'Un plano puede tener hasta {max} elementos.',
+    'layout.removeTableNamed': 'Quitar del plano: {name}'
 };

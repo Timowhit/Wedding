@@ -112,10 +112,12 @@
                 html.setAttribute('data-palette', palette);
                 html.setAttribute('data-mode', String(form.get('mode') || 'auto'));
             };
-            // The custom swatch follows the pickers even when this page shows another theme.
+            // Inside a wedding with its own colours (or a planner's brand) the page keeps those: the
+            // choice is saved for elsewhere, and swapping the stylesheet here would hide the wedding's.
             if (
-                /^[0-9a-f]{6}-[0-9a-f]{6}-[0-9a-f]{6}-[npsa]$/.test(colorsKey(form)) &&
-                (palette === 'custom' || !previewHere)
+                previewHere &&
+                palette === 'custom' &&
+                /^[0-9a-f]{6}-[0-9a-f]{6}-[0-9a-f]{6}-[npsa]$/.test(colorsKey(form))
             ) {
                 useCustomSheet('/css/custom/' + colorsKey(form) + '.css', apply);
             } else {

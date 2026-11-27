@@ -82,8 +82,10 @@ const clampToRoom = (piece, room) => {
     return { x: snap(fit(piece.x, half.x, room.width)), y: snap(fit(piece.y, half.y, room.depth)) };
 };
 
-// Candidate spots are tried on this grid (in room units), nearest the middle first.
-const SPOT_STEP = 0.5;
+// Candidate spots are tried on a grid of about this many steps across the room's longer side, so
+// the search costs the same in any room (a fine grid over a 500 × 500 room would take a second).
+const SPOT_STEPS_ACROSS = 100;
+const MIN_SPOT_STEP = 0.5;
 
 /**
  * Where a new piece goes: the free spot nearest the middle of the room, so it never lands on top
@@ -99,15 +101,40 @@ const findFreeSpot = (piece, room, others) => {
     const free = (x, y) =>
         boxes.every((box) => Math.abs(x - box.cx) >= half.x + box.x || Math.abs(y - box.cy) >= half.y + box.y);
     const middle = { x: snap(room.width / 2), y: snap(room.depth / 2) };
+    // A multiple of half a unit, so every candidate is already snapped.
+    const step = Math.max(MIN_SPOT_STEP, Math.ceil((Math.max(room.width, room.depth) / SPOT_STEPS_ACROSS) * 2) / 2);
     const candidates = [];
-    for (let x = Math.ceil(half.x / SPOT_STEP) * SPOT_STEP; x <= room.width - half.x; x += SPOT_STEP) {
-        for (let y = Math.ceil(half.y / SPOT_STEP) * SPOT_STEP; y <= room.depth - half.y; y += SPOT_STEP) {
+    for (let x = Math.ceil(half.x / step) * step; x <= room.width - half.x; x += step) {
+        for (let y = Math.ceil(half.y / step) * step; y <= room.depth - half.y; y += step) {
             candidates.push({ x, y, d: Math.hypot(x - middle.x, y - middle.y) });
         }
+    }
+    if (
+        free(middle.x, middle.y) &&
+        middle.x >= half.x &&
+        middle.x <= room.width - half.x &&
+        middle.y >= half.y &&
+        middle.y <= room.depth - half.y
+    ) {
+        return middle;
     }
     candidates.sort((a, b) => a.d - b.d);
     const spot = candidates.find(({ x, y }) => free(x, y));
     return spot ? { x: spot.x, y: spot.y } : clampToRoom({ ...piece, ...middle }, room);
+};
+
+/**
+ * A piece's numbers in another unit, so changing the room from feet to metres keeps its real size.
+ * @param {{x: number, y: number, width: number, depth: number}} piece
+ * @param {string} from - 'ft' or 'm'.
+ * @param {string} to - 'ft' or 'm'.
+ * @returns {{x: number, y: number, width: number, depth: number}}
+ */
+const convertPiece = (piece, from, to) => {
+    if (from === to) return { x: piece.x, y: piece.y, width: piece.width, depth: piece.depth };
+    const factor = to === 'm' ? 1 / FEET_PER_METRE : FEET_PER_METRE;
+    const size = (value) => Math.min(PIECE_SIZE_MAX, Math.max(PIECE_SIZE_MIN, snap(value * factor)));
+    return { x: snap(piece.x * factor), y: snap(piece.y * factor), width: size(piece.width), depth: size(piece.depth) };
 };
 
 /**
@@ -187,6 +214,7 @@ const readMove = (body = {}, piece, room) => {
 
 export {
     clampToRoom,
+    convertPiece,
     findFreeSpot,
     fixtureDefaults,
     tableDefaults,
