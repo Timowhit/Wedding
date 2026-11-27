@@ -61,7 +61,9 @@ const showFiles = (req, res) => renderFiles(req, res);
 /** The vendor whose page the upload form was on, if any (it posts return_to /vendors/:id). */
 const uploadVendor = async (req, vendorId) => {
     const target = readText(req.body?.return_to);
-    return vendorId && target === `/vendors/${vendorId}` && isUuid(vendorId) ? findVendor(vendorId, req.wedding.id) : null;
+    return vendorId && target === `/vendors/${vendorId}` && isUuid(vendorId)
+        ? findVendor(vendorId, req.wedding.id)
+        : null;
 };
 
 /** A failed upload shows its errors on the page it came from: a vendor's page or /files. */

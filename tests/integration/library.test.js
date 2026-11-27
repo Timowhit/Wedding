@@ -1,5 +1,6 @@
 import { after, before, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { MAX_SENT_QUESTIONNAIRES } from '../../src/constants.js';
 import { registeredClient, skipWithoutDb, startTestApp } from '../helpers/app.js';
 
 const textOf = (html) =>
@@ -292,6 +293,113 @@ describe('messages and questionnaires library', { skip: skipWithoutDb }, () => {
         it('ignores a made-up row action', async () => {
             const page = await pia.post('/library/questionnaires', twoRows({ row_action: 'add:99' }));
             assert.deepEqual(rowValues(page.body), ['First?', 'Second?']);
+        });
+    });
+
+    describe('follow-ups', () => {
+        const sentId = async () =>
+            (
+                await q(`SELECT id FROM wedding_questionnaires WHERE wedding_id = $1 ORDER BY sent_at LIMIT 1;`, [
+                    weddingId
+                ])
+            ).rows[0].id;
+        const seenOf = (html) => /name="seen" value="([^"]*)"/.exec(html)?.[1];
+
+        it('message names are unique without regard to capital letters', async () => {
+            await pia.get('/library');
+            const fields = { kind: 'email', subject: '', body: 'x' };
+            assert.equal((await pia.post('/library/messages', { ...fields, name: 'Case test' })).status, 302);
+            const again = await pia.post('/library/messages', { ...fields, name: 'CASE TEST' });
+            assert.equal(again.status, 400);
+            const edit = await pia.post(`/library/messages/${await messageId('Case test')}/edit`, {
+                ...fields,
+                name: 'case TEST'
+            });
+            assert.equal(edit.status, 302, 'renaming a message to itself in other capitals is fine');
+        });
+
+        it('a chosen answer can be cleared', async () => {
+            const id = await sentId();
+            const page = await cal.get(`/questionnaires/${id}`);
+            assert.match(page.body, /<input type="radio" name="a1" value=""/, 'a "no answer" choice');
+            await cal.post(`/questionnaires/${id}/answers`, {
+                a0: 'At a friend’s wedding',
+                a1: '',
+                seen: seenOf(page.body)
+            });
+            const answers = (await q(`SELECT answers FROM wedding_questionnaires WHERE id = $1;`, [id])).rows[0]
+                .answers;
+            assert.equal(answers[1], '');
+        });
+
+        it('warns instead of overwriting when a partner saved answers in the meantime', async () => {
+            const id = await sentId();
+            const dani = await registeredClient(app.baseUrl, 'Dani', 'dani@example.com');
+            await q(
+                `INSERT INTO wedding_members (wedding_id, user_id, role) SELECT $1, id, 'client' FROM users WHERE email = 'dani@example.com';`,
+                [weddingId]
+            );
+            await dani.get('/');
+            await dani.post('/wedding/switch', { wedding_id: weddingId, return_to: '/' });
+            const calPage = await cal.get(`/questionnaires/${id}`);
+            const daniPage = await dani.get(`/questionnaires/${id}`);
+            await new Promise((resolve) => setTimeout(resolve, 5)); // distinct save times
+            const first = await dani.post(`/questionnaires/${id}/answers`, {
+                a0: 'Dani’s answer',
+                a1: 'Civil',
+                seen: seenOf(daniPage.body)
+            });
+            assert.equal(first.status, 302);
+            const late = await cal.post(`/questionnaires/${id}/answers`, {
+                a0: 'Cal’s answer',
+                a1: 'Civil',
+                seen: seenOf(calPage.body)
+            });
+            assert.equal(late.status, 409);
+            assert.match(textOf(late.body), /Dani saved answers while you were editing/);
+            assert.match(late.body, /Cal’s answer/, 'your answers are kept on the page');
+            let answers = (await q(`SELECT answers FROM wedding_questionnaires WHERE id = $1;`, [id])).rows[0].answers;
+            assert.equal(answers[0], 'Dani’s answer', 'nothing overwritten');
+            // Saving again from the warning page is a deliberate choice.
+            const again = await cal.post(`/questionnaires/${id}/answers`, {
+                a0: 'Cal’s answer',
+                a1: 'Civil',
+                seen: seenOf(late.body)
+            });
+            assert.equal(again.status, 302);
+            answers = (await q(`SELECT answers FROM wedding_questionnaires WHERE id = $1;`, [id])).rows[0].answers;
+            assert.equal(answers[0], 'Cal’s answer');
+        });
+
+        it(`a wedding holds at most ${MAX_SENT_QUESTIONNAIRES} questionnaires`, async () => {
+            const count = async () =>
+                (await q(`SELECT COUNT(*)::int AS n FROM wedding_questionnaires WHERE wedding_id = $1;`, [weddingId]))
+                    .rows[0].n;
+            await q(
+                `INSERT INTO wedding_questionnaires (wedding_id, title, questions)
+                 SELECT $1, 'Filler ' || g, '[]'::jsonb FROM generate_series(1, $2::int) g;`,
+                [weddingId, MAX_SENT_QUESTIONNAIRES - (await count())]
+            );
+            await pia.get('/questionnaires');
+            const id = (await q(`SELECT id FROM questionnaires LIMIT 1;`)).rows[0].id;
+            await pia.post('/questionnaires/send', { questionnaire_id: id });
+            assert.equal(await count(), MAX_SENT_QUESTIONNAIRES);
+            assert.match(textOf((await pia.get('/questionnaires')).body), /already has \d+ questionnaires/);
+            await q(`DELETE FROM wedding_questionnaires WHERE title LIKE 'Filler %';`);
+        });
+
+        it('a long message suggests Copy, since some email apps cut long links off', async () => {
+            await pia.get('/library');
+            await pia.post('/library/messages', {
+                kind: 'proposal',
+                name: 'Long one',
+                subject: 'Plan',
+                body: 'Lorem ipsum '.repeat(300)
+            });
+            const use = await pia.get(`/library/messages/${await messageId('Long one')}/use`);
+            assert.match(textOf(use.body), /may cut off a message this long/);
+            const short = await pia.get(`/library/messages/${await messageId('After the venue visit')}/use`);
+            assert.doesNotMatch(textOf(short.body), /may cut off a message this long/);
         });
     });
 });

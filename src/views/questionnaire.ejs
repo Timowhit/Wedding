@@ -15,8 +15,12 @@
     <section class="card">
         <% if (canAnswerDecisions) { %>
             <%- include('partials/form-errors', { errors, id: 'answer-errors' }) %>
+            <% if (conflict) { %>
+                <div class="form-errors" role="alert"><p><%= t('questionnaires.conflict', { name: sent.answered_by_name || '—' }) %></p></div>
+            <% } %>
             <form method="post" action="/questionnaires/<%= sent.id %>/answers" class="form-stack">
                 <%- include('partials/csrf-field') %>
+                <input type="hidden" name="seen" value="<%= sent.answer_version %>">
                 <% sent.questions.forEach((question, i) => { %>
                     <% if (question.type === 'choice') { %>
                         <fieldset class="choice-group" <%- fieldState(errors, `a${i}`, 'answer-errors') %>>
@@ -24,6 +28,7 @@
                             <% question.options.forEach((option, j) => { %>
                                 <label class="choice"><input type="radio" name="a<%= i %>" value="<%= option %>" <%= values[i] === option ? 'checked' : '' %>> <%= option %></label>
                             <% }); %>
+                            <label class="choice choice--quiet"><input type="radio" name="a<%= i %>" value="" <%= values[i] ? '' : 'checked' %>> <%= t('questionnaires.noAnswer') %></label>
                         </fieldset>
                     <% } else { %>
                         <div class="field">

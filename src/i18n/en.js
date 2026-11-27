@@ -1222,6 +1222,8 @@ export default {
     'library.openEmail': 'Open in your email app',
     'library.copy': 'Copy text',
     'library.notSent': 'Nothing is sent from here: check the text, then send it from your own email.',
+    'library.longMessage':
+        'Some email apps may cut off a message this long when opened from here. If that happens, use Copy text and paste it into your email.',
     'library.qTitle': 'Title',
     'library.qIntro': 'Introduction',
     'library.questionN': 'Question {n}',
@@ -1266,6 +1268,9 @@ export default {
     'questionnaires.noAnswer': 'No answer yet',
     'questionnaires.remove': 'Remove from this wedding',
     'questionnaires.sent': 'Sent {title}.',
+    'questionnaires.limit': 'This wedding already has {max} questionnaires. Remove one to send another.',
+    'questionnaires.conflict':
+        '{name} saved answers while you were editing. Yours are below and have not been saved yet: check theirs, then save again to replace them.',
     'questionnaires.answered': 'Answers saved. Your planner can see them now.',
     'nav.group.planning': 'Planning',
     'nav.group.money': 'Money',

@@ -371,7 +371,11 @@ describe('planner accounts and founding spots', { skip: skipWithoutDb }, () => {
         try {
             const upcoming = (await planner.get('/planner?when=upcoming')).body;
             const isUpcoming = date >= appToday;
-            assert.equal(/<h3 class="card-title">Zone Couple<\/h3>/.test(upcoming), isUpcoming, `${zone} ${appToday} vs db ${dbToday}`);
+            assert.equal(
+                /<h3 class="card-title">Zone Couple<\/h3>/.test(upcoming),
+                isUpcoming,
+                `${zone} ${appToday} vs db ${dbToday}`
+            );
             const past = (await planner.get('/planner?when=past')).body;
             assert.equal(/<h3 class="card-title">Zone Couple<\/h3>/.test(past), !isUpcoming);
         } finally {

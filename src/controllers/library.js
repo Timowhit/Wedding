@@ -1,4 +1,4 @@
-import { MESSAGE_KINDS, QUESTION_TYPES, SPARE_QUESTION_ROWS } from '../constants.js';
+import { MAX_SENT_QUESTIONNAIRES, MESSAGE_KINDS, QUESTION_TYPES, SPARE_QUESTION_ROWS } from '../constants.js';
 import { PG_ERRORS } from '../models/db.js';
 import {
     createMessage,
@@ -34,6 +34,8 @@ import {
 const EMPTY_MESSAGE = Object.freeze({ kind: 'email', name: '', subject: '', body: '' });
 const DUPLICATE_NAME = { field: 'name', key: 'library.nameTaken' };
 const blankRow = () => ({ text: '', type: 'short', options: '' });
+// Some email apps and browsers cut off mailto: links longer than about this many characters.
+const MAILTO_SAFE_LENGTH = 2000;
 
 // ---------- The library page ----------
 
@@ -130,7 +132,14 @@ const showUseMessage = async (req, res, next) => {
         // Encoded, so an unusual address can never add mailto fields of its own.
         .map((member) => encodeURIComponent(member.email).replace(/%40/g, '@'));
     const mailto = `mailto:${recipients.join(',')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    res.render('use-message', { title: message.name, message, subject, body, mailto });
+    res.render('use-message', {
+        title: message.name,
+        message,
+        subject,
+        body,
+        mailto,
+        mailtoTooLong: mailto.length > MAILTO_SAFE_LENGTH
+    });
 };
 
 // ---------- Questionnaire builder ----------
@@ -243,12 +252,13 @@ const processSendQuestionnaire = async (req, res, next) => {
         : null;
     if (!questionnaire) return next();
     const questions = normaliseQuestions(questionnaire.questions);
-    await sendQuestionnaire(
+    const sent = await sendQuestionnaire(
         req.wedding.id,
         { title: questionnaire.title, intro: questionnaire.intro, questions },
         req.session.user.id
     );
-    setFlash(req, 'success', 'questionnaires.sent', { title: questionnaire.title });
+    if (sent) setFlash(req, 'success', 'questionnaires.sent', { title: questionnaire.title });
+    else setFlash(req, 'error', 'questionnaires.limit', { max: MAX_SENT_QUESTIONNAIRES });
     res.redirect('/questionnaires');
 };
 
@@ -257,10 +267,11 @@ const loadSent = async (req) => {
     return sent ? { ...sent, questions: normaliseQuestions(sent.questions) } : null;
 };
 
-const renderSent = (req, res, sent, { status = 200, values = null, errors = [] } = {}) =>
+const renderSent = (req, res, sent, { status = 200, values = null, errors = [], conflict = false } = {}) =>
     res.status(status).render('questionnaire', {
         title: sent.title,
         sent,
+        conflict,
         values: values ?? sent.questions.map((_, i) => (Array.isArray(sent.answers) ? (sent.answers[i] ?? '') : '')),
         errors
     });
@@ -278,7 +289,14 @@ const processAnswers = async (req, res, next) => {
     if (!sent) return next();
     const { values, data, errors } = validateAnswers(req.body, sent.questions);
     if (errors.length > 0) return renderSent(req, res, sent, { status: 400, values, errors });
-    await saveAnswers(sent.id, req.wedding.id, data.answers, req.session.user.id);
+    // A form from before this change has no version: it saves as before (the last save wins).
+    const seen = typeof req.body.seen === 'string' ? req.body.seen : null;
+    if (!(await saveAnswers(sent.id, req.wedding.id, data.answers, req.session.user.id, seen))) {
+        const latest = await loadSent(req);
+        if (!latest) return next();
+        // Someone saved in the meantime: keep this person's answers on the page, save nothing.
+        return renderSent(req, res, latest, { status: 409, values, conflict: true });
+    }
     setFlash(req, 'success', 'questionnaires.answered');
     res.redirect(`/questionnaires/${sent.id}`);
 };

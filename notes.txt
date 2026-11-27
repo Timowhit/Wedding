@@ -6,7 +6,6 @@ Next up
 
 Done
 - [x] Navigation grouped into dropdowns (Planning, Money, Guests & venue, Event day, Planner), a styled wedding menu, the task badge just under the header, a −/+ pill on each question in the questionnaire builder (− removes it, + adds one under it), a header on one line on wide screens, and stylesheets that always match the page (fixes the badge looking different between pages). (PR #17, merged; pill and one-line header in PR #19)
-- [x] Navigation grouped into dropdowns (Planning, Money, Guests & venue, Event day, Planner), a styled wedding menu, the task badge just under the header, questions added and removed in the questionnaire builder, and stylesheets that always match the page (fixes the badge looking different between pages). (PR #17, merged)
 - [x] Reusable questionnaires, proposals, email messages, and follow-up templates. (/library and /questionnaires, PR #15, merged; proposals are text templates for now)
 - [x] Store inspiration boards, floor plans, contracts, and other files in each event workspace. (/files, stored in PostgreSQL, PR #14, merged)
 - [x] Gamify task completion with a banner in the top right with tasks and an animation for completion. (Progress badge and celebrations, PR #12, merged)
@@ -40,15 +39,15 @@ Partly done
 - [~] Configurable reminders for meetings, deadlines, payments, and unanswered questions.
       Done: daily email digest of tasks, payments and decisions, with a switch and unsubscribe. Missing: meetings, and choosing what or when.
 
-Small follow-ups (from the review of PR #11)
-- [ ] Planner dashboard date filters still use the database's date; switch them to APP_TIME_ZONE like the rest.
-- [ ] Let a vendor rating be cleared.
-- [ ] Wrap-up tasks: stop a second member who uses another language from adding them again.
-- [ ] Progress badge: close its panel with Escape, a click outside or 8 seconds of not hovering.
-- [ ] Celebrations: remember the highest milestone per wedding so unticking and ticking again doesn't repeat the big confetti.
-- [ ] Files: re-show the vendor page (not /files) when an upload from it fails; check .docx/.xlsx contents, not just that they're zip files.
-- [ ] Files: check by hand that PDFs open in Chrome, Firefox and Safari under the download sandbox.
-- [ ] Library: case-insensitive unique names; cap questionnaires sent per wedding; clear a chosen answer; warn when two partners save answers at once; long messages may be cut off in some email apps (suggest Copy).
+Small follow-ups (from the reviews of PRs #11 to #15)
+- [x] Planner dashboard date filters use APP_TIME_ZONE like the rest. (PR #20)
+- [x] A vendor rating can be cleared. (PR #20)
+- [x] Wrap-up tasks aren't added again by a member who uses another language. (PR #20)
+- [x] Progress badge: its panel closes with Escape, a click outside, or 8 seconds without the pointer over it (never while keyboard focus is inside). (PR #20)
+- [x] Celebrations: each milestone's big confetti plays once per wedding. (PR #20)
+- [x] Files: a failed upload from a vendor page shows the error there; .docx/.xlsx files must contain a Word/Excel document without macros. (PR #20)
+- [ ] Files: check by hand that PDFs open in Chrome, Firefox and Safari under the download sandbox. (In ACTIONS.md: only you can do this.)
+- [x] Library: names unique without regard to capitals; at most 30 questionnaires per wedding; a chosen answer can be cleared ("No answer"); a warning instead of overwriting when a partner saved answers meanwhile; long messages suggest Copy. (PR #20)
 
 Not started
 - [ ] Option to use a playground, where sign in is bypassed but the user is informed that their work will not be saved if they leave without signing up.

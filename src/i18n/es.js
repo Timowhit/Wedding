@@ -1231,6 +1231,8 @@ export default {
     'library.openEmail': 'Abrir en tu correo',
     'library.copy': 'Copiar texto',
     'library.notSent': 'Desde aquí no se envía nada: revisa el texto y envíalo desde tu correo.',
+    'library.longMessage':
+        'Algunas apps de correo pueden cortar un mensaje así de largo al abrirlo desde aquí. Si pasa, usa Copiar texto y pégalo en tu correo.',
     'library.qTitle': 'Título',
     'library.qIntro': 'Introducción',
     'library.questionN': 'Pregunta {n}',
@@ -1275,6 +1277,9 @@ export default {
     'questionnaires.noAnswer': 'Sin respuesta todavía',
     'questionnaires.remove': 'Quitar de esta boda',
     'questionnaires.sent': 'Se envió {title}.',
+    'questionnaires.limit': 'Esta boda ya tiene {max} cuestionarios. Quita uno para enviar otro.',
+    'questionnaires.conflict':
+        '{name} guardó respuestas mientras editabas. Las tuyas están abajo y aún no se han guardado: revisa las suyas y vuelve a guardar para reemplazarlas.',
     'questionnaires.answered': 'Respuestas guardadas. Tu organizador ya puede verlas.',
     'nav.group.planning': 'Planificación',
     'nav.group.money': 'Dinero',
