@@ -14,6 +14,7 @@ import { UNSPLASH_IMAGE_HOSTS, isUnsplashConfigured } from './services/unsplash.
 import { isSpotifyConfigured } from './services/spotify.js';
 import { resolveTheme } from './themes.js';
 import { takeCelebration } from './utils/celebrate.js';
+import { assetUrl } from './utils/assets.js';
 import { findTaskBadge } from './models/checklist.js';
 import { takeFlash } from './utils/flash.js';
 import { emphasize, fieldState } from './utils/view-helpers.js';
@@ -115,6 +116,7 @@ const createApp = (env = process.env) => {
         res.locals.currentPath = req.path;
         res.locals.currentUrl = req.originalUrl;
         // The offline worker's background saves (X-FP-Background) must not use up a notice.
+        res.locals.asset = assetUrl;
         res.locals.flash = req.get('x-fp-background') ? null : takeFlash(req);
         res.locals.languages = SUPPORTED_LANGUAGES;
         res.locals.errors = [];
@@ -173,6 +175,7 @@ const createApp = (env = process.env) => {
             res.locals.emphasize = emphasize;
             res.locals.features = { music: false, inspiration: false };
             res.locals.currentTheme = () => resolveTheme({});
+            res.locals.asset = assetUrl;
         }
         res.status(status).render('errors/500', { title: res.locals.t('errors.serverErrorTitle'), status });
     });

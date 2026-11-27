@@ -459,6 +459,24 @@ button {
         flex-direction: column;
     }
 
+    /* In the phone menu the groups open in place instead of floating (more specific than the
+       desktop rule further down). */
+    .site-nav .nav-group > .nav-group__items {
+        position: static;
+        min-width: 0;
+        padding: 0 0 0 var(--space-4);
+        border: 0;
+        box-shadow: none;
+    }
+
+    .wedding-menu__current {
+        max-width: 12rem;
+    }
+
+    .wedding-menu__current .wedding-menu__date {
+        display: none; /* the name matters more on a narrow screen; the list shows dates */
+    }
+
     .site-nav a {
         min-height: var(--target);
     }
@@ -476,6 +494,225 @@ button {
     .brand__name {
         display: none; /* the ring stays as the home link; the wedding name matters more here */
     }
+}
+
+/* ---------- Navigation groups and the wedding menu (dropdowns) ---------- */
+[data-dropdown] > summary {
+    list-style: none;
+    cursor: pointer;
+}
+
+[data-dropdown] > summary::-webkit-details-marker {
+    display: none;
+}
+
+.site-nav__groups > li {
+    position: relative;
+}
+
+.nav-group__label,
+.site-nav__groups > li > a {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-height: 2.5rem;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+    font-weight: 500;
+}
+
+/* A chevron drawn with borders, so it follows the theme colour and turns when open. */
+.nav-group__label::after {
+    content: '';
+    width: 0.4rem;
+    height: 0.4rem;
+    margin: 0 0 0.2rem var(--space-1);
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg);
+    transition: transform 0.15s ease;
+}
+
+.nav-group[open] > .nav-group__label::after {
+    margin: 0.2rem 0 0 var(--space-1);
+    transform: rotate(225deg);
+}
+
+.nav-group__label:hover,
+.nav-group[open] > .nav-group__label {
+    background: var(--surface-2);
+    color: var(--text);
+}
+
+.nav-group--current > .nav-group__label {
+    background: var(--primary-soft);
+    color: var(--primary-hover);
+}
+
+.nav-group__label:focus-visible,
+.wedding-menu__current:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+}
+
+.site-nav .nav-group__items {
+    position: absolute;
+    top: calc(100% + var(--space-1));
+    left: 0;
+    z-index: 30;
+    display: grid;
+    gap: 2px;
+    min-width: 12rem;
+    padding: var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+}
+
+.site-nav .nav-group__items a {
+    width: 100%;
+    white-space: nowrap;
+}
+
+.wedding-menu {
+    position: relative;
+    min-width: 0;
+}
+
+.wedding-menu__current {
+    position: relative;
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    max-width: 18rem;
+    min-height: 2.25rem;
+    padding: var(--space-1) 2.25rem var(--space-1) 2rem;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    background: var(--primary-soft);
+    color: var(--primary-hover);
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.8;
+    white-space: nowrap;
+}
+
+.wedding-menu__current::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0.75rem;
+    width: 0.7rem;
+    height: 0.7rem;
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+    transform: translateY(-50%);
+}
+
+.wedding-menu__current::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 0.95rem;
+    width: 0.4rem;
+    height: 0.4rem;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: translateY(-70%) rotate(45deg);
+}
+
+.wedding-menu[open] > .wedding-menu__current::after {
+    transform: translateY(-20%) rotate(225deg);
+}
+
+.wedding-menu__current:hover {
+    border-color: var(--primary);
+}
+
+.wedding-menu__current .wedding-menu__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.wedding-menu__current .wedding-menu__date {
+    flex: none;
+    font-weight: 500;
+}
+
+.wedding-menu__list {
+    position: absolute;
+    top: calc(100% + var(--space-1));
+    left: 0;
+    z-index: 30;
+    display: grid;
+    gap: 2px;
+    width: max-content;
+    min-width: 100%;
+    max-width: min(24rem, calc(100vw - 2rem));
+    max-height: 60vh;
+    margin: 0;
+    padding: var(--space-2);
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    list-style: none;
+}
+
+.wedding-menu__option {
+    display: grid;
+    width: 100%;
+    padding: var(--space-2) var(--space-3) var(--space-2) 2rem;
+    position: relative;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.wedding-menu__option:hover,
+.wedding-menu__option:focus-visible {
+    background: var(--surface-2);
+    outline: none;
+}
+
+.wedding-menu__option[aria-current='true'] {
+    background: var(--primary-soft);
+    color: var(--primary-hover);
+}
+
+/* A tick for the wedding you are in. */
+.wedding-menu__option[aria-current='true']::before {
+    content: '';
+    position: absolute;
+    top: 0.85rem;
+    left: 0.85rem;
+    width: 0.35rem;
+    height: 0.65rem;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg);
+}
+
+.wedding-menu__option .wedding-menu__name {
+    font-weight: 600;
+}
+
+.wedding-menu__option .wedding-menu__date {
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+}
+
+.wedding-menu__option[aria-current='true'] .wedding-menu__date {
+    color: inherit;
 }
 
 /* ---------- Layout ---------- */
@@ -2464,10 +2701,25 @@ input[type='color'] {
 }
 
 /* ---------- Task progress badge and celebrations ---------- */
+/* The badge hangs just under the header, at the right, without taking space from the page. */
+.site-header {
+    position: relative;
+}
+
+.task-badge-dock {
+    position: absolute;
+    top: calc(100% + var(--space-2));
+    right: var(--space-4);
+    z-index: 15;
+}
+
 .task-badge {
     position: relative;
-    flex: none;
-    margin-left: auto;
+}
+
+.task-badge__summary {
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
 }
 
 .task-badge__summary {
@@ -2747,24 +2999,6 @@ input[type='color'] {
 @media (prefers-reduced-motion: reduce) {
     .celebrate__confetti {
         display: none;
-    }
-}
-
-/* On phones the badge sits beside the menu button, so its panel spans the screen instead. */
-@media (max-width: 40rem) {
-    .task-badge {
-        position: static;
-    }
-
-    .task-badge__panel {
-        top: 4rem;
-        right: var(--space-4);
-        left: var(--space-4);
-        width: auto;
-    }
-
-    .site-header {
-        position: relative;
     }
 }
 

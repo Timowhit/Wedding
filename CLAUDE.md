@@ -39,6 +39,8 @@ Server-rendered Express 5 + EJS + PostgreSQL app. Read README.md for setup, rout
 
 ## Views
 
+- Link CSS and JS from `public/` through `asset('/css/main.css')` (`utils/assets.js`): it adds a hash of the file, so browsers and the offline worker never show a new page with an old stylesheet.
+- Navigation lives in `partials/header.ejs` as groups (`<details data-dropdown>`); add a page to the group it belongs to.
 - Escape with `<%= %>`. Use `<%- %>` only for `include()` and the helpers in `utils/view-helpers.js`.
 - Every form includes `partials/csrf-field`. Forms in list pages also include `partials/return-to` so filters survive.
 - No inline `<script>`, event handlers or `style=""` (the CSP blocks them, and tests check every page). Styles go in `public/css/main.css` using its tokens; behavior goes in `public/js/app.js`, and every feature must work without it.

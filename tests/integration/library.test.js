@@ -236,4 +236,51 @@ describe('messages and questionnaires library', { skip: skipWithoutDb }, () => {
             assert.match((await cal.get('/')).body, /href="\/questionnaires"/);
         });
     });
+
+    describe('adding and removing questions', () => {
+        it('"Add a question" shows one more row without saving', async () => {
+            await pia.get('/library/questionnaires/new');
+            const page = await pia.post('/library/questionnaires', {
+                title: 'Draft',
+                intro: '',
+                q0_text: 'First?',
+                q0_type: 'short',
+                q0_options: '',
+                q1_text: '',
+                q1_type: 'short',
+                q1_options: '',
+                add_row: '1'
+            });
+            assert.equal(page.status, 200);
+            assert.equal((page.body.match(/class="question-row"/g) || []).length, 3);
+            assert.match(page.body, /value="First\?"/);
+            assert.equal(await questionnaireId('Draft'), undefined, 'nothing saved yet');
+        });
+
+        it('a question marked for removal is left out', async () => {
+            const saved = await pia.post('/library/questionnaires', {
+                title: 'Trimmed',
+                intro: '',
+                q0_text: 'Keep me',
+                q0_type: 'short',
+                q0_options: '',
+                q1_text: 'Drop me',
+                q1_type: 'short',
+                q1_options: '',
+                q1_remove: 'on'
+            });
+            assert.equal(saved.location, '/library');
+            const row = (await q(`SELECT questions FROM questionnaires WHERE title = 'Trimmed';`)).rows[0];
+            assert.deepEqual(
+                row.questions.map((question) => question.text),
+                ['Keep me']
+            );
+        });
+
+        it('each row has a remove control and the builder an add button', async () => {
+            const page = await pia.get('/library/questionnaires/new');
+            assert.match(page.body, /name="q0_remove"/);
+            assert.match(page.body, /<button type="submit" name="add_row" value="1"/);
+        });
+    });
 });

@@ -15,8 +15,6 @@ export default {
     'nav.inspiration': 'Inspiración',
     'nav.settings': 'Configuración',
     'nav.signOut': 'Cerrar sesión',
-    'nav.activeWedding': 'Boda que estás planificando',
-    'nav.switch': 'Cambiar',
     'nav.language': 'Idioma',
     'nav.changeLanguage': 'Cambiar',
     'language.en': 'English',
@@ -1237,7 +1235,7 @@ export default {
     'library.questionText': 'Pregunta',
     'library.questionType': 'Respuesta',
     'library.questionOptions': 'Opciones (para elegir, una por línea)',
-    'library.builderHint': 'Deja una pregunta vacía para omitirla. Guarda para tener más filas vacías.',
+    'library.builderHint': 'Deja una pregunta vacía para omitirla.',
     'library.saveQuestionnaire': 'Guardar cuestionario',
     'library.messageSaved': 'Se guardó {name}.',
     'library.questionnaireSaved': 'Se guardó {title}.',
@@ -1275,5 +1273,13 @@ export default {
     'questionnaires.noAnswer': 'Sin respuesta todavía',
     'questionnaires.remove': 'Quitar de esta boda',
     'questionnaires.sent': 'Se envió {title}.',
-    'questionnaires.answered': 'Respuestas guardadas. Tu organizador ya puede verlas.'
+    'questionnaires.answered': 'Respuestas guardadas. Tu organizador ya puede verlas.',
+    'nav.group.planning': 'Planificación',
+    'nav.group.money': 'Dinero',
+    'nav.group.guests': 'Invitados y lugar',
+    'nav.group.day': 'Día de la boda',
+    'nav.group.planner': 'Organizador',
+    'library.addQuestion': 'Añadir una pregunta',
+    'library.removeQuestion': 'Quitar esta pregunta',
+    'library.removeQuestionN': 'Quitar la pregunta {n}'
 };

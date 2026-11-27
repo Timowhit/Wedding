@@ -1,50 +1,75 @@
 <%
     const isPlanner = Boolean(locals.user && user.isPlanner);
     const hasWedding = Boolean(locals.wedding);
-    const navItems = [
-        { href: '/planner', key: 'nav.allWeddings', hidden: !isPlanner },
-        { href: '/', key: 'nav.dashboard', hidden: !hasWedding },
-        { href: '/calendar', key: 'nav.calendar', hidden: !hasWedding && !isPlanner },
-        { href: '/budget', key: 'nav.budget', hidden: !hasWedding },
-        { href: '/guests', key: 'nav.guests', hidden: !hasWedding },
-        { href: '/seating', key: 'nav.seating', hidden: !hasWedding },
-        { href: '/layout', key: 'nav.layout', hidden: !hasWedding },
-        { href: '/vendors', key: 'nav.vendors', hidden: !hasWedding },
-        { href: '/checklist', key: 'nav.checklist', hidden: !hasWedding },
-        { href: '/decisions', key: 'nav.decisions', hidden: !hasWedding },
-        { href: '/schedule', key: 'nav.schedule', hidden: !hasWedding },
-        { href: '/files', key: 'nav.files', hidden: !hasWedding },
-        { href: '/colors', key: 'nav.colors', hidden: !hasWedding },
-        { href: '/music', key: 'nav.music', hidden: !hasWedding || !features.music },
-        { href: '/inspiration', key: 'nav.inspiration', hidden: !hasWedding || !features.inspiration },
-        { href: '/templates', key: 'nav.templates', hidden: !isPlanner },
-        { href: '/library', key: 'nav.library', hidden: !isPlanner },
-        { href: '/questionnaires', key: 'nav.questionnaires', hidden: !hasWedding || !(locals.isPlannerWedding || isPlanner) },
-        { href: '/settings', key: 'nav.settings' }
-    ].filter((item) => !item.hidden || currentPath === item.href);
+    // Pages grouped into dropdowns (<details>, so they work without JavaScript). Hidden items are
+    // left out; a group with nothing left is not shown. The current page is always listed.
+    const groups = [
+        { key: 'nav.group.planning', items: [
+            { href: '/', key: 'nav.dashboard', hidden: !hasWedding },
+            { href: '/calendar', key: 'nav.calendar', hidden: !hasWedding && !isPlanner },
+            { href: '/checklist', key: 'nav.checklist', hidden: !hasWedding },
+            { href: '/decisions', key: 'nav.decisions', hidden: !hasWedding },
+            { href: '/questionnaires', key: 'nav.questionnaires', hidden: !hasWedding || !(locals.isPlannerWedding || isPlanner) }
+        ] },
+        { key: 'nav.group.money', items: [
+            { href: '/budget', key: 'nav.budget', hidden: !hasWedding },
+            { href: '/vendors', key: 'nav.vendors', hidden: !hasWedding }
+        ] },
+        { key: 'nav.group.guests', items: [
+            { href: '/guests', key: 'nav.guests', hidden: !hasWedding },
+            { href: '/seating', key: 'nav.seating', hidden: !hasWedding },
+            { href: '/layout', key: 'nav.layout', hidden: !hasWedding }
+        ] },
+        { key: 'nav.group.day', items: [
+            { href: '/schedule', key: 'nav.schedule', hidden: !hasWedding },
+            { href: '/files', key: 'nav.files', hidden: !hasWedding },
+            { href: '/colors', key: 'nav.colors', hidden: !hasWedding },
+            { href: '/music', key: 'nav.music', hidden: !hasWedding || !features.music },
+            { href: '/inspiration', key: 'nav.inspiration', hidden: !hasWedding || !features.inspiration }
+        ] },
+        { key: 'nav.group.planner', items: [
+            { href: '/planner', key: 'nav.allWeddings', hidden: !isPlanner },
+            { href: '/templates', key: 'nav.templates', hidden: !isPlanner },
+            { href: '/library', key: 'nav.library', hidden: !isPlanner }
+        ] }
+    ]
+        .map((group) => ({ ...group, items: group.items.filter((item) => !item.hidden || currentPath === item.href) }))
+        .filter((group) => group.items.length > 0);
     const isCurrent = (href) => (href === '/' ? currentPath === '/' : currentPath === href || currentPath.startsWith(`${href}/`));
     const hasNav = Boolean(locals.user && (hasWedding || isPlanner));
+    const weddingLabel = (w) => ({ name: w.name, date: w.wedding_date ? formatShortDate(w.wedding_date) : '' });
 %>
 <header class="site-header">
     <div class="site-header__bar">
         <a class="brand" href="/"><%- include('logo') %><span class="brand__name">Forever <em>Planner</em></span></a>
 
         <% if (hasNav && hasWedding && weddings.length > 1) { %>
-            <form class="wedding-switcher" method="post" action="/wedding/switch">
-                <%- include('csrf-field') %>
-                <input type="hidden" name="return_to" value="<%= currentUrl %>">
-                <label class="visually-hidden" for="wedding-switcher"><%= t('nav.activeWedding') %></label>
-                <select id="wedding-switcher" name="wedding_id" data-autosubmit>
-                    <% weddings.forEach((w) => { %>
-                        <option value="<%= w.id %>" <%= w.id === wedding.id ? 'selected' : '' %>><%= w.wedding_date ? `${w.name} · ${formatShortDate(w.wedding_date)}` : w.name %></option>
+            <%# A styled menu instead of a <select> (whose list the browser draws): each wedding is a small switch form. %>
+            <details class="wedding-menu" data-dropdown>
+                <summary class="wedding-menu__current">
+                    <span class="visually-hidden"><%= t('nav.activeWeddingLabel') %></span>
+                    <span class="wedding-menu__name"><%= wedding.name %></span>
+                    <% if (wedding.wedding_date) { %><span class="wedding-menu__date"><%= formatShortDate(wedding.wedding_date) %></span><% } %>
+                </summary>
+                <ul class="wedding-menu__list">
+                    <% weddings.forEach((w) => { const label = weddingLabel(w); %>
+                        <li>
+                            <form method="post" action="/wedding/switch">
+                                <%- include('csrf-field') %>
+                                <input type="hidden" name="return_to" value="<%= currentUrl %>">
+                                <input type="hidden" name="wedding_id" value="<%= w.id %>">
+                                <button type="submit" class="wedding-menu__option" <%- w.id === wedding.id ? 'aria-current="true"' : '' %>>
+                                    <span class="wedding-menu__name"><%= label.name %></span>
+                                    <% if (label.date) { %><span class="wedding-menu__date"><%= label.date %></span><% } %>
+                                </button>
+                            </form>
+                        </li>
                     <% }); %>
-                </select>
-                <button type="submit" class="btn btn-ghost btn-small" data-hide-with-js><%= t('nav.switch') %></button>
-            </form>
+                </ul>
+            </details>
         <% } else if (hasNav && hasWedding) { %>
             <p class="wedding-current"><span class="visually-hidden"><%= t('nav.activeWeddingLabel') %></span><%= wedding.wedding_date ? `${wedding.name} · ${formatShortDate(wedding.wedding_date)}` : wedding.name %></p>
         <% } %>
-        <% if (hasNav && hasWedding) { %><%- include('task-badge') %><% } %>
         <% if (hasNav) { %>
             <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav" hidden>
                 <span class="visually-hidden"><%= t('nav.menu') %></span>
@@ -60,10 +85,20 @@
 
     <% if (hasNav) { %>
         <nav id="site-nav" class="site-nav" aria-label="<%= t('nav.label') %>">
-            <ul>
-                <% navItems.forEach((item) => { %>
-                    <li><a href="<%= item.href %>" <%- isCurrent(item.href) ? 'aria-current="page"' : '' %>><%= t(item.key) %></a></li>
+            <ul class="site-nav__groups">
+                <% groups.forEach((group) => { const current = group.items.some((item) => isCurrent(item.href)); %>
+                    <li>
+                        <details class="nav-group<%= current ? ' nav-group--current' : '' %>" data-dropdown>
+                            <summary class="nav-group__label"><%= t(group.key) %></summary>
+                            <ul class="nav-group__items">
+                                <% group.items.forEach((item) => { %>
+                                    <li><a href="<%= item.href %>" <%- isCurrent(item.href) ? 'aria-current="page"' : '' %>><%= t(item.key) %></a></li>
+                                <% }); %>
+                            </ul>
+                        </details>
+                    </li>
                 <% }); %>
+                <li><a href="/settings" <%- isCurrent('/settings') ? 'aria-current="page"' : '' %>><%= t('nav.settings') %></a></li>
             </ul>
             <%- include('account') %>
         </nav>
@@ -71,5 +106,6 @@
         <%- include('account') %>
     <% } %>
     <%- include('offline-banner') %>
+    <% if (hasNav && hasWedding) { %><div class="task-badge-dock"><%- include('task-badge') %></div><% } %>
 </header>
 <%- include('celebrate') %>
