@@ -136,4 +136,90 @@ describe('reminders', { skip: skipWithoutDb }, () => {
             assert.ok((await m.findReminderCandidates('2027-03-16')).some((u) => u.email === 'done@example.com'));
         });
     });
+
+    describe('daily run', () => {
+        let run;
+        const capture = () => {
+            const sent = [];
+            return { sent, send: async (message) => sent.push(message) };
+        };
+        const quiet = { info() {}, warn() {}, error() {} };
+
+        before(async () => {
+            ({ runReminders: run } = await import('../../src/services/reminders.js'));
+            const evil = await vendor(ana, '<script>alert(1)</script>');
+            await payment(ana, evil, 10, '2027-03-15');
+        });
+
+        it('sends one digest to each person with something due, in their language, with names escaped', async () => {
+            const { sent, send } = capture();
+            const result = await run({ today: TODAY, send, log: quiet });
+            const to = sent.map((message) => message.to).sort();
+            assert.deepEqual(to, ['couple@example.com', 'planner@example.com']);
+            assert.equal(result.sent, 2);
+
+            const english = sent.find((message) => message.to === 'planner@example.com');
+            assert.equal(english.lang, 'en');
+            assert.match(english.subject, /need attention/);
+            assert.match(english.text, /Bloom & Blossom/);
+            assert.match(english.text, /Ana & Luis/);
+            assert.match(english.html, /Bloom &amp; Blossom/);
+            assert.match(english.html, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
+            assert.doesNotMatch(english.html, /<script>/);
+            assert.match(english.unsubscribeUrl, /\/reminders\/unsubscribe\?u=[0-9a-f-]{36}&t=[0-9a-f]{64}$/);
+
+            const spanish = sent.find((message) => message.to === 'couple@example.com');
+            assert.equal(spanish.lang, 'es');
+            assert.match(spanish.text, /Choose the music/);
+            assert.doesNotMatch(spanish.subject, /need attention/);
+        });
+
+        it('a second run the same day sends nothing', async () => {
+            const { sent, send } = capture();
+            await run({ today: TODAY, send, log: quiet });
+            assert.equal(sent.length, 0);
+        });
+
+        it("one failure doesn't stop the rest and isn't marked", async () => {
+            const tomorrow = '2027-03-16';
+            const sent = [];
+            const send = async (message) => {
+                if (message.to === 'planner@example.com') throw new Error('mailbox unavailable');
+                sent.push(message);
+            };
+            const result = await run({ today: tomorrow, send, log: quiet });
+            const to = sent.map((message) => message.to);
+            assert.ok(to.includes('couple@example.com'), 'the others still get theirs');
+            assert.ok(!to.includes('planner@example.com'));
+            assert.equal(result.failed, 1);
+            const { rows } = await q(
+                `SELECT reminders_sent_on::text AS day FROM users WHERE email = 'planner@example.com';`
+            );
+            assert.equal(rows[0].day, TODAY, 'not marked for the failed day, so it is retried');
+        });
+
+        it('switched-off people get nothing', async () => {
+            await q(`UPDATE users SET reminder_emails = FALSE WHERE email = 'couple@example.com';`);
+            const { sent, send } = capture();
+            await run({ today: '2027-03-17', send, log: quiet });
+            assert.ok(!sent.some((message) => message.to === 'couple@example.com'));
+            await q(`UPDATE users SET reminder_emails = TRUE WHERE email = 'couple@example.com';`);
+        });
+
+        it('without SMTP the default sender marks nobody', async () => {
+            const saved = process.env.SMTP_HOST;
+            delete process.env.SMTP_HOST;
+            try {
+                const result = await run({ today: '2027-03-18', log: quiet });
+                assert.equal(result.sent, 0);
+                assert.equal(result.configured, false);
+                const { rows } = await q(
+                    `SELECT COUNT(*)::int AS n FROM users WHERE reminders_sent_on = '2027-03-18';`
+                );
+                assert.equal(rows[0].n, 0);
+            } finally {
+                if (saved !== undefined) process.env.SMTP_HOST = saved;
+            }
+        });
+    });
 });

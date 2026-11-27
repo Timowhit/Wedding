@@ -924,5 +924,19 @@ export default {
     'templates.optionOne.checklist': '{name} (1 tarea)',
     'templates.optionOne.schedule': '{name} (1 elemento)',
     'templates.appliedOne': 'Se añadió 1 tarea de «{name}».',
-    'templates.appliedScheduleOne': 'Se añadió 1 elemento de «{name}».'
+    'templates.appliedScheduleOne': 'Se añadió 1 elemento de «{name}».',
+    'reminders.subject': '{count} cosas necesitan atención',
+    'reminders.subjectOne': '1 cosa necesita atención',
+    'reminders.intro': 'Esto es lo que está vencido o vence en los próximos {days} días en tus bodas.',
+    'reminders.payments': 'Pagos',
+    'reminders.tasks': 'Tareas',
+    'reminders.decisions': 'Decisiones',
+    'reminders.paymentLine': '{vendor}: {label}, {amount}, vence el {date}',
+    'reminders.taskLine': '{text}, vence el {date}',
+    'reminders.decisionOpen': 'Esperando tu respuesta: {title}',
+    'reminders.decisionSentBack': 'Devuelta con una nota: {title}',
+    'reminders.open': 'Abrir Forever Planner',
+    'reminders.why': 'Recibes este resumen porque los recordatorios diarios están activados en tu cuenta.',
+    'reminders.settings': 'Cámbialo en Ajustes',
+    'reminders.unsubscribe': 'Darse de baja'
 };

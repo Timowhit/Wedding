@@ -915,5 +915,19 @@ export default {
     'templates.optionOne.checklist': '{name} (1 task)',
     'templates.optionOne.schedule': '{name} (1 item)',
     'templates.appliedOne': 'Added 1 task from “{name}”.',
-    'templates.appliedScheduleOne': 'Added 1 item from “{name}”.'
+    'templates.appliedScheduleOne': 'Added 1 item from “{name}”.',
+    'reminders.subject': '{count} things need attention',
+    'reminders.subjectOne': '1 thing needs attention',
+    'reminders.intro': 'Here is what is overdue or due in the next {days} days across your weddings.',
+    'reminders.payments': 'Payments',
+    'reminders.tasks': 'Tasks',
+    'reminders.decisions': 'Decisions',
+    'reminders.paymentLine': '{vendor}: {label}, {amount}, due {date}',
+    'reminders.taskLine': '{text}, due {date}',
+    'reminders.decisionOpen': 'Waiting for your answer: {title}',
+    'reminders.decisionSentBack': 'Sent back with a note: {title}',
+    'reminders.open': 'Open Forever Planner',
+    'reminders.why': 'You get this summary because daily reminders are on for your account.',
+    'reminders.settings': 'Change this in Settings',
+    'reminders.unsubscribe': 'Unsubscribe'
 };
