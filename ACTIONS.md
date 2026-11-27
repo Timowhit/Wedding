@@ -28,3 +28,33 @@ The next big item in `notes.txt` is uploading contracts, floor plans and inspira
 - **C. Skip uploads for now.** Keep using links to Google Drive or Dropbox, as contracts already do.
 
 Until you answer, I'll keep building the other items.
+
+## 3. Merge the planning details release
+
+[PR link added when it opens] adds:
+
+- task priorities and owners
+- guest meals and access needs
+- the calendar and search
+- the post-event wrap-up
+
+Status: **not ready yet** (final review in progress). When this says ready:
+
+1. Open the PR, click **Ready for review**, wait for the CI check to turn green, then **Merge pull request**.
+2. On your computer, in the project folder, with `.env` pointing at Render:
+
+   ```bash
+   git checkout main
+   ```
+
+   ```bash
+   git pull origin main
+   ```
+
+   ```bash
+   npm run migrate
+   ```
+
+   It applies `013_planning_details.sql` and `014_wrap_up.sql`, which only add columns.
+
+3. Delete the `planning-details` branch on GitHub.
