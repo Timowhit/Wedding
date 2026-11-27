@@ -1,0 +1,50 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content">
+    <header class="page-header"><h1><%= title %></h1></header>
+    <section class="card">
+        <%- include('partials/form-errors', { errors, id: 'questionnaire-errors' }) %>
+        <form method="post" action="<%= id ? `/library/questionnaires/${id}/edit` : '/library/questionnaires' %>" class="form-stack">
+            <%- include('partials/csrf-field') %>
+            <div class="field">
+                <label for="q-title"><%= t('library.qTitle') %></label>
+                <input type="text" id="q-title" name="title" required maxlength="120" value="<%= values.title %>" <%- fieldState(errors, 'title', 'questionnaire-errors') %>>
+            </div>
+            <div class="field">
+                <label for="q-intro"><%= t('library.qIntro') %> <span class="optional"><%= t('form.optional') %></span></label>
+                <textarea id="q-intro" name="intro" rows="3" maxlength="2000" <%- fieldState(errors, 'intro', 'questionnaire-errors') %>><%= values.intro %></textarea>
+            </div>
+            <ol class="question-rows">
+                <% values.rows.forEach((row, i) => { %>
+                    <li class="question-row">
+                        <fieldset>
+                            <legend><%= t('library.questionN', { n: i + 1 }) %></legend>
+                            <div class="field">
+                                <label for="q<%= i %>-text"><%= t('library.questionText') %></label>
+                                <input type="text" id="q<%= i %>-text" name="q<%= i %>_text" maxlength="300" value="<%= row.text %>" <%- fieldState(errors, `q${i}_text`, 'questionnaire-errors') %>>
+                            </div>
+                            <div class="field">
+                                <label for="q<%= i %>-type"><%= t('library.questionType') %></label>
+                                <select id="q<%= i %>-type" name="q<%= i %>_type">
+                                    <%- include('partials/options', { options: types, selected: row.type, prefix: 'questionType' }) %>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="q<%= i %>-options"><%= t('library.questionOptions') %></label>
+                                <textarea id="q<%= i %>-options" name="q<%= i %>_options" rows="3" <%- fieldState(errors, `q${i}_options`, 'questionnaire-errors', 'options-hint') %>><%= row.options %></textarea>
+                            </div>
+                        </fieldset>
+                    </li>
+                <% }); %>
+            </ol>
+            <p class="hint" id="options-hint"><%= t('library.builderHint') %></p>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"><%= t('library.saveQuestionnaire') %></button>
+                <a class="btn btn-ghost" href="/library"><%= t('action.cancel') %></a>
+            </div>
+        </form>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

@@ -114,6 +114,25 @@ const FILE_NOTE_MAX = 300;
 const MAX_USER_FILES_GB = 1;
 const MAX_USER_FILE_BYTES = MAX_USER_FILES_GB * 1024 * BYTES_PER_MB;
 const FILES_PER_PAGE = 24;
+
+// Messages and questionnaires library (a person's own, like templates).
+const MESSAGE_KINDS = Object.freeze(['email', 'follow_up', 'proposal']);
+const QUESTION_TYPES = Object.freeze(['short', 'long', 'choice']);
+const MAX_MESSAGES_PER_USER = 100;
+const MAX_QUESTIONNAIRES_PER_USER = 50;
+const MAX_QUESTIONS = 30;
+const MAX_CHOICE_OPTIONS = 20;
+const LIBRARY_LIMITS = Object.freeze({
+    name: 120,
+    subject: 200,
+    body: 10000,
+    intro: 2000,
+    question: 300,
+    option: 100,
+    answer: 2000
+});
+// Empty question rows shown under the saved ones in the questionnaire builder.
+const SPARE_QUESTION_ROWS = 3;
 const REVIEW_MAX = 2000;
 
 /** Which budget category a booked vendor's contract counts under (the two lists use different names). */
@@ -205,6 +224,14 @@ export {
     MAX_USER_FILES_GB,
     MAX_USER_FILE_BYTES,
     FILES_PER_PAGE,
+    MESSAGE_KINDS,
+    QUESTION_TYPES,
+    MAX_MESSAGES_PER_USER,
+    MAX_QUESTIONNAIRES_PER_USER,
+    MAX_QUESTIONS,
+    MAX_CHOICE_OPTIONS,
+    LIBRARY_LIMITS,
+    SPARE_QUESTION_ROWS,
     REVIEW_MAX,
     DEFAULT_TASK_PRIORITY,
     RSVP_STATUSES,

@@ -18,6 +18,8 @@
         { href: '/music', key: 'nav.music', hidden: !hasWedding || !features.music },
         { href: '/inspiration', key: 'nav.inspiration', hidden: !hasWedding || !features.inspiration },
         { href: '/templates', key: 'nav.templates', hidden: !isPlanner },
+        { href: '/library', key: 'nav.library', hidden: !isPlanner },
+        { href: '/questionnaires', key: 'nav.questionnaires', hidden: !hasWedding || !(locals.isPlannerWedding) },
         { href: '/settings', key: 'nav.settings' }
     ].filter((item) => !item.hidden || currentPath === item.href);
     const isCurrent = (href) => (href === '/' ? currentPath === '/' : currentPath === href || currentPath.startsWith(`${href}/`));

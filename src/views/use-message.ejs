@@ -1,0 +1,27 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content">
+    <p class="print-hide"><a href="/library"><%= t('library.back') %></a></p>
+    <header class="page-header">
+        <h1><%= message.name %></h1>
+        <p class="subtitle"><%= t('library.filledFor', { wedding: wedding.name }) %></p>
+    </header>
+    <section class="card message-preview">
+        <% if (subject) { %>
+            <p class="message-preview__label"><%= t('library.subject') %></p>
+            <p class="message-preview__subject" id="message-subject-text"><%= subject %></p>
+        <% } %>
+        <p class="message-preview__label"><%= t('library.body') %></p>
+        <div class="preserve-lines message-preview__body" id="message-body-text"><%= body %></div>
+        <div class="form-actions print-hide">
+            <a class="btn btn-primary" href="<%= mailto %>"><%= t('library.openEmail') %></a>
+            <input type="hidden" id="message-copy-source" value="<%= subject ? `${subject}\n\n${body}` : body %>">
+            <button type="button" class="btn btn-secondary" data-copy="message-copy-source" data-copied-label="<%= t('action.copied') %>" hidden><%= t('library.copy') %></button>
+            <a class="btn btn-ghost" href="/library/messages/<%= message.id %>/edit"><%= t('action.edit') %></a>
+        </div>
+        <p class="hint print-hide"><%= t('library.notSent') %></p>
+    </section>
+</main>
+
+<%- include('partials/footer') %>
