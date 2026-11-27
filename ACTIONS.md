@@ -39,7 +39,7 @@ It applies `013_planning_details.sql` and `014_wrap_up.sql`, which only add colu
 
 ## 3. Merge the file uploads release
 
-[PR link added when it opens] adds the Files page and files on vendor pages, stored in your PostgreSQL database as you chose.
+[Timowhit/Wedding#14](https://github.com/Timowhit/Wedding/pull/14) adds the Files page and files on vendor pages, stored in your PostgreSQL database as you chose.
 
 1. Open the PR, click **Ready for review**, wait for the CI check, then **Merge pull request**.
 2. Pull `main` and run `npm run migrate` again, as in step 2. It adds `015_files.sql`.
