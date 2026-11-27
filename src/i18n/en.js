@@ -1140,6 +1140,7 @@ export default {
     'wrapup.ratingSaved': 'Saved your rating of {name}.',
     'wrapup.ratingCleared': 'Rating cleared for {name}.',
     'wrapup.clearRating': 'Clear rating',
+    'wrapup.confirmClearRating': 'Clear the rating and note for {name}?',
     'wrapup.starsOne': '1 star',
     'wrapup.notYet': 'Wrap-up tasks are for after the wedding day.',
     'celebrate.badgeLabel': '{done} of {total} tasks done',
@@ -1271,6 +1272,7 @@ export default {
     'questionnaires.limit': 'This wedding already has {max} questionnaires. Remove one to send another.',
     'questionnaires.conflict':
         '{name} saved answers while you were editing. Yours are below and have not been saved yet: check theirs, then save again to replace them.',
+    'questionnaires.clearChoice': 'No answer',
     'questionnaires.answered': 'Answers saved. Your planner can see them now.',
     'nav.group.planning': 'Planning',
     'nav.group.money': 'Money',

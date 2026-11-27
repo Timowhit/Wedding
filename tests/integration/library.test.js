@@ -321,7 +321,11 @@ describe('messages and questionnaires library', { skip: skipWithoutDb }, () => {
         it('a chosen answer can be cleared', async () => {
             const id = await sentId();
             const page = await cal.get(`/questionnaires/${id}`);
-            assert.match(page.body, /<input type="radio" name="a1" value=""/, 'a "no answer" choice');
+            assert.match(
+                page.body,
+                /<input type="radio" name="a1" value=""[^>]*> No answer<\/label>/,
+                'a "no answer" choice'
+            );
             await cal.post(`/questionnaires/${id}/answers`, {
                 a0: 'At a friend’s wedding',
                 a1: '',

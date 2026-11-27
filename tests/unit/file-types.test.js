@@ -71,6 +71,12 @@ describe('file types', () => {
         const truncated = zipWith(DOCX);
         truncated.writeUInt32LE(0xffffff, truncated.length - 6); // directory offset past the end
         assert.equal(detectFileType(truncated, 'x.docx'), null, 'bad directory');
+        // A comment after the end record may contain its signature; the real record is the one
+        // whose comment runs to the end of the file.
+        const commented = zipWith(DOCX);
+        const comment = Buffer.from(`PK\u0005\u0006${'x'.repeat(40)}`);
+        commented.writeUInt16LE(comment.length, commented.length - 2);
+        assert.match(detectFileType(Buffer.concat([commented, comment]), 'c.docx').contentType, /wordprocessingml/);
     });
 
     it('cleans names and encodes them for downloads', () => {

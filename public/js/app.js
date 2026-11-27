@@ -170,8 +170,10 @@
             });
         });
     });
-    // The progress badge's panel also closes after a while left alone: never while the pointer is
-    // over it or keyboard focus is inside it (a mouse click also focuses it, so only :focus-visible counts).
+    // The progress badge's panel also closes a while after the mouse leaves it: never while the
+    // pointer is over it or keyboard focus is inside it (a mouse click also focuses it, so only
+    // :focus-visible counts). Opened by keyboard, screen reader or touch, there is no mouseleave,
+    // so it stays open until closed.
     const BADGE_IDLE_MS = 8000;
     document.querySelectorAll('.task-badge').forEach(function (badge) {
         let timer = null;
@@ -190,17 +192,13 @@
             }, BADGE_IDLE_MS);
         };
         badge.addEventListener('toggle', function () {
-            if (badge.open) start();
-            else stop();
+            if (!badge.open) stop();
         });
         badge.addEventListener('mouseenter', stop);
         badge.addEventListener('focusin', function () {
             if (inUse()) stop();
         });
         badge.addEventListener('mouseleave', start);
-        badge.addEventListener('focusout', function () {
-            window.setTimeout(start, 0); // after focus has moved
-        });
     });
     document.addEventListener('click', function (event) {
         dropdowns.forEach(function (dropdown) {

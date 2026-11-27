@@ -12,7 +12,8 @@ DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'message_templates_user_kind_lower_name_key') THEN
     -- Names that only differ in capitals get a short suffix first, so the new rule can hold.
-    UPDATE message_templates m SET name = m.name || ' (' || LEFT(m.id::text, 4) || ')'
+    -- Trimmed so the result still fits the 120-character name limit.
+    UPDATE message_templates m SET name = LEFT(m.name, 113) || ' (' || LEFT(m.id::text, 4) || ')'
     WHERE EXISTS (
       SELECT 1 FROM message_templates o
       WHERE o.user_id = m.user_id AND o.kind = m.kind AND LOWER(o.name) = LOWER(m.name) AND o.id < m.id

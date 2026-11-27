@@ -38,7 +38,9 @@ const zipEntryNames = (buffer) => {
     const lowest = Math.max(0, buffer.length - ZIP_END_SIZE - ZIP_COMMENT_MAX);
     let end = -1;
     for (let at = buffer.length - ZIP_END_SIZE; at >= lowest; at -= 1) {
-        if (buffer.readUInt32LE(at) === ZIP_END) {
+        // The real end record's comment runs exactly to the end of the file; a lookalike inside
+        // a comment doesn't.
+        if (buffer.readUInt32LE(at) === ZIP_END && at + ZIP_END_SIZE + buffer.readUInt16LE(at + 20) === buffer.length) {
             end = at;
             break;
         }

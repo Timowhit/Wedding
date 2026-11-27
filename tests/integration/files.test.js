@@ -166,18 +166,30 @@ describe('file uploads', { skip: skipWithoutDb }, () => {
     });
 
     it('a failed upload from a vendor page shows the error on that vendor page', async () => {
-        await ana.get(`/vendors/${vendorId}`);
-        const failed = await upload(ana, '/files', {
-            file: Buffer.from('<html>no</html>'),
-            name: 'page.html',
-            type: 'text/html',
-            fields: { vendor_id: vendorId, return_to: `/vendors/${vendorId}` }
-        });
-        assert.equal(failed.status, 400);
-        assert.match(failed.body, /id="rating-heading"|id="vendor-files-heading"/, 'the vendor page');
-        assert.match(failed.body, /id="upload-errors"/);
-        assert.match(failed.body, /id="upload-file"[^>]*aria-invalid="true"/);
-        assert.doesNotMatch(failed.body, /id="upload-vendor"/, 'not the /files form with a vendor picker');
+        // Fields in the order the vendor page's form sends them: the file comes before kind and
+        // vendor_id, and a too-big file stops the reading there.
+        const fromVendorPage = async (file, name, type) => {
+            await ana.get(`/vendors/${vendorId}`);
+            const form = new FormData();
+            form.append('_csrf', ana.csrfToken);
+            form.append('return_to', `/vendors/${vendorId}`);
+            form.append('file', new Blob([file], { type }), name);
+            form.append('kind', 'contract');
+            form.append('vendor_id', vendorId);
+            form.append('note', '');
+            return ana.request('/files', { method: 'POST', body: form });
+        };
+        for (const [file, name, type] of [
+            [Buffer.from('<html>no</html>'), 'page.html', 'text/html'],
+            [Buffer.concat([Buffer.from('%PDF-1.7 '), Buffer.alloc(11 * 1024 * 1024)]), 'huge.pdf', 'application/pdf']
+        ]) {
+            const failed = await fromVendorPage(file, name, type);
+            assert.equal(failed.status, 400, name);
+            assert.match(failed.body, /id="vendor-files-heading"/, `${name}: the vendor page`);
+            assert.match(failed.body, /id="upload-errors"/);
+            assert.match(failed.body, /id="upload-file"[^>]*aria-invalid="true"/);
+            assert.doesNotMatch(failed.body, /id="upload-vendor"/, 'not the /files form with a vendor picker');
+        }
     });
 
     it('an editor deletes a file', async () => {

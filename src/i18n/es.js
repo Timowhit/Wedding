@@ -1149,6 +1149,7 @@ export default {
     'wrapup.ratingSaved': 'Se guardó tu valoración de {name}.',
     'wrapup.ratingCleared': 'Se borró la valoración de {name}.',
     'wrapup.clearRating': 'Borrar valoración',
+    'wrapup.confirmClearRating': '¿Borrar la valoración y la nota de {name}?',
     'wrapup.starsOne': '1 estrella',
     'wrapup.notYet': 'Las tareas de cierre son para después del día de la boda.',
     'celebrate.badgeLabel': '{done} de {total} tareas hechas',
@@ -1280,6 +1281,7 @@ export default {
     'questionnaires.limit': 'Esta boda ya tiene {max} cuestionarios. Quita uno para enviar otro.',
     'questionnaires.conflict':
         '{name} guardó respuestas mientras editabas. Las tuyas están abajo y aún no se han guardado: revisa las suyas y vuelve a guardar para reemplazarlas.',
+    'questionnaires.clearChoice': 'Sin respuesta',
     'questionnaires.answered': 'Respuestas guardadas. Tu organizador ya puede verlas.',
     'nav.group.planning': 'Planificación',
     'nav.group.money': 'Dinero',

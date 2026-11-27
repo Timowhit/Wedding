@@ -79,7 +79,7 @@
                 <div class="form-actions"><button type="submit" class="btn btn-primary btn-small"><%= t('wrapup.saveRating') %></button></div>
             </form>
             <% if (vendor.rating) { %>
-                <form method="post" action="/vendors/<%= vendor.id %>/rating/clear" class="inline-form">
+                <form method="post" action="/vendors/<%= vendor.id %>/rating/clear" class="inline-form" data-confirm="<%= t('wrapup.confirmClearRating', { name: vendor.name }) %>">
                     <%- include('partials/csrf-field') %>
                     <button type="submit" class="link-action link-action--danger"><%= t('wrapup.clearRating') %></button>
                 </form>

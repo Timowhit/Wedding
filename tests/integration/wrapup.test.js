@@ -119,7 +119,7 @@ describe('post-event wrap-up', { skip: skipWithoutDb }, () => {
         await viewer.post(`/vendors/${vendorId}/rating/clear`, {});
         assert.equal((await q(`SELECT rating FROM vendors WHERE id = $1;`, [vendorId])).rows[0].rating, 4);
         const page = (await ana.get(`/vendors/${vendorId}`)).body;
-        assert.match(page, /action="\/vendors\/[0-9a-f-]+\/rating\/clear"/);
+        assert.match(page, /action="\/vendors\/[0-9a-f-]+\/rating\/clear"[^>]*data-confirm="Clear the rating/);
         assert.equal((await ana.post(`/vendors/${vendorId}/rating/clear`, {})).location, `/vendors/${vendorId}`);
         const cleared = (await q(`SELECT rating, review FROM vendors WHERE id = $1;`, [vendorId])).rows[0];
         assert.deepEqual(cleared, { rating: null, review: null });
