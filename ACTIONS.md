@@ -58,3 +58,10 @@ It has been reviewed and the review's fixes are in. Ready to merge:
    It applies `013_planning_details.sql` and `014_wrap_up.sql`, which only add columns.
 
 3. Delete the `planning-details` branch on GitHub.
+
+## 4. Merge the task celebrations release (after step 3)
+
+[PR link added when it opens] adds the progress badge at the top right and the confetti when tasks are ticked off. It is built on top of #11, so merge #11 first. If GitHub then shows a conflict on this PR, tell me and I'll update it. There are no database changes.
+
+1. Open the PR, click **Ready for review**, wait for the CI check, then **Merge pull request**.
+2. Delete the `task-celebrations` branch on GitHub.

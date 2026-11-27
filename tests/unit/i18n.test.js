@@ -5,6 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DICTIONARIES, languageFromHeader, translate } from '../../src/i18n/index.js';
 import { COMING_NEXT, FEATURES } from '../../src/controllers/home.js';
+import { MILESTONES } from '../../src/utils/celebrate.js';
 import {
     BUDGET_CATEGORIES,
     EXAMPLE_TASKS,
@@ -71,6 +72,7 @@ const dynamicKeys = () => [
     ...[...PALETTES, CUSTOM_PALETTE].map((p) => `palette.${p}`),
     ...CUSTOM_BACKGROUNDS.map((b) => `background.${b}`),
     ...TASK_PRIORITIES.map((p) => `priority.${p}`),
+    ...MILESTONES.map((m) => `celebrate.milestone${m}`),
     ...WRAPUP_TASKS.map((task) => task.key),
     ...['wedding', 'task', 'payment', 'decision'].map((k) => `calendar.kind.${k}`),
     ...['guest', 'vendor', 'task', 'decision', 'schedule'].map((k) => `search.kind.${k}`),

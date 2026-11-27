@@ -1,3 +1,4 @@
+import { findTaskBadge } from '../models/checklist.js';
 import { findWeddingForMember, findWeddingsForUser } from '../models/weddings.js';
 import { setFlash } from '../utils/flash.js';
 
@@ -59,6 +60,8 @@ const loadActiveWedding = async (req, res, next) => {
     const { wedding, weddings } = await findActiveWedding(req);
     if (!wedding) return res.redirect(req.session.user.isPlanner ? '/planner' : '/welcome');
     exposeWedding(req, res, wedding, weddings);
+    // The header's checklist progress badge, on every page of a wedding.
+    res.locals.taskBadge = wedding ? await findTaskBadge(wedding.id) : null;
     next();
 };
 
@@ -70,6 +73,8 @@ const loadActiveWedding = async (req, res, next) => {
 const loadOptionalWedding = async (req, res, next) => {
     const { wedding, weddings } = await findActiveWedding(req);
     exposeWedding(req, res, wedding, weddings);
+    // The header's checklist progress badge, on every page of a wedding.
+    res.locals.taskBadge = wedding ? await findTaskBadge(wedding.id) : null;
     next();
 };
 

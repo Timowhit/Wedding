@@ -16,6 +16,7 @@ import { setFlash } from '../utils/flash.js';
 import { backTo } from '../utils/redirect.js';
 import { toIsoDate } from '../utils/format.js';
 import { todayIso } from '../utils/today.js';
+import { celebrationFor } from '../utils/celebrate.js';
 import { isUuid, readChoice } from '../validators/common.js';
 import { validateTask } from '../validators/planning.js';
 
@@ -135,6 +136,8 @@ const processEditTask = async (req, res, next) => {
 const processToggleTask = async (req, res, next) => {
     const task = isUuid(req.params.id) ? await toggleTask(req.params.id, req.wedding.id) : null;
     if (!task) return next();
+    // Ticking a task off is celebrated on the next page (shown once, see partials/celebrate.ejs).
+    if (task.done) req.session.celebrate = celebrationFor(await findTaskProgress(req.wedding.id));
     res.redirect(backTo(req, '/checklist'));
 };
 

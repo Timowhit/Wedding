@@ -1152,5 +1152,15 @@ export default {
     'planner.when.archived': 'Archivadas',
     'wrapup.ratingSaved': 'Se guardó tu valoración de {name}.',
     'wrapup.starsOne': '1 estrella',
-    'wrapup.notYet': 'Las tareas de cierre son para después del día de la boda.'
+    'wrapup.notYet': 'Las tareas de cierre son para después del día de la boda.',
+    'celebrate.badgeLabel': '{done} de {total} tareas hechas',
+    'celebrate.nextUp': 'Lo siguiente',
+    'celebrate.allDone': 'Todas las tareas están hechas.',
+    'celebrate.openChecklist': 'Abrir la lista',
+    'celebrate.nice': '¡Bien hecho!',
+    'celebrate.milestone25': '¡Ya va un cuarto!',
+    'celebrate.milestone50': '¡A mitad de camino!',
+    'celebrate.milestone75': '¡Tres cuartos hechos!',
+    'celebrate.milestone100': 'Todas las tareas están hechas. ¡A celebrar!',
+    'celebrate.progress': '{done} de {total} hechas ({pct}%).'
 };

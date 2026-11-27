@@ -195,6 +195,7 @@ button {
 
 .site-header__bar {
     display: flex;
+    flex: 1 1 100%; /* full width, so the progress badge can sit at the top right */
     align-items: center;
     gap: var(--space-3);
     min-width: 0;
@@ -471,7 +472,7 @@ button {
     }
 }
 
-@media (max-width: 24rem) {
+@media (max-width: 30rem) {
     .brand__name {
         display: none; /* the ring stays as the home link; the wedding name matters more here */
     }
@@ -2459,6 +2460,337 @@ input[type='color'] {
 @media (max-width: 40rem) {
     .month-grid {
         display: none; /* seven narrow columns are unreadable on a phone; the agenda says it all */
+    }
+}
+
+/* ---------- Task progress badge and celebrations ---------- */
+.task-badge {
+    position: relative;
+    flex: none;
+    margin-left: auto;
+}
+
+.task-badge__summary {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    cursor: pointer;
+    list-style: none;
+}
+
+.task-badge__summary::-webkit-details-marker {
+    display: none;
+}
+
+.task-badge__summary:hover {
+    background: var(--primary-soft);
+}
+
+.task-badge__ring,
+.task-badge__pct {
+    grid-area: 1 / 1;
+}
+
+.task-badge__ring {
+    width: 2.5rem;
+    height: 2.5rem;
+    transform: rotate(-90deg);
+}
+
+.task-badge__track,
+.task-badge__value {
+    fill: none;
+    stroke-width: 3.5;
+}
+
+.task-badge__track {
+    stroke: var(--border);
+}
+
+.task-badge__value {
+    stroke: var(--primary);
+    stroke-linecap: round;
+    transition: stroke-dasharray 0.6s ease;
+}
+
+.task-badge__pct {
+    color: var(--text);
+    font-size: 0.6875rem;
+    font-weight: 700;
+}
+
+.task-badge__panel {
+    position: absolute;
+    top: calc(100% + var(--space-2));
+    right: 0;
+    z-index: 20;
+    display: grid;
+    gap: var(--space-2);
+    width: min(18rem, calc(100vw - 2rem));
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+}
+
+.task-badge__panel p {
+    margin: 0;
+}
+
+.task-badge__count {
+    font-weight: 600;
+}
+
+.task-badge__next {
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+}
+
+.task-badge__list {
+    display: grid;
+    gap: var(--space-1);
+    margin: 0;
+    padding-left: var(--space-4);
+}
+
+.task-badge + .nav-toggle {
+    margin-left: var(--space-2);
+}
+
+.celebrate {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 50;
+    height: 0;
+    pointer-events: none;
+}
+
+.celebrate__message {
+    position: fixed;
+    top: 5.5rem;
+    right: var(--space-4);
+    max-width: 20rem;
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--success);
+    border-left-width: 4px;
+    border-radius: var(--radius-sm);
+    background: var(--success-soft);
+    box-shadow: var(--shadow);
+    animation: celebrate-message 4.5s ease forwards;
+}
+
+.celebrate--milestone .celebrate__message {
+    border-color: var(--primary);
+    background: var(--primary-soft);
+}
+
+.celebrate__confetti span {
+    position: fixed;
+    top: -1rem;
+    left: var(--x);
+    width: 0.5rem;
+    height: 0.8rem;
+    border-radius: 2px;
+    opacity: 0;
+    animation: confetti-fall 1.6s ease-in var(--delay) forwards;
+}
+
+.celebrate:not(.celebrate--milestone) .celebrate__confetti span:nth-child(n + 10) {
+    display: none; /* a small burst for every task, the full one for milestones */
+}
+
+.celebrate__confetti span:nth-child(1) {
+    --x: 2.1%;
+    --drift: 40px;
+    --spin: 200deg;
+    --delay: 0.05s;
+    background: var(--accent);
+}
+
+.celebrate__confetti span:nth-child(2) {
+    --x: 6.6%;
+    --drift: -10px;
+    --spin: 200deg;
+    --delay: 0.19s;
+    background: var(--secondary);
+}
+
+.celebrate__confetti span:nth-child(3) {
+    --x: 15.5%;
+    --drift: -40px;
+    --spin: 540deg;
+    --delay: 0.08s;
+    background: var(--primary);
+}
+
+.celebrate__confetti span:nth-child(4) {
+    --x: 19.1%;
+    --drift: 25px;
+    --spin: 540deg;
+    --delay: 0.08s;
+    background: var(--accent);
+}
+
+.celebrate__confetti span:nth-child(5) {
+    --x: 23.2%;
+    --drift: -25px;
+    --spin: 200deg;
+    --delay: 0.2s;
+    background: var(--secondary);
+}
+
+.celebrate__confetti span:nth-child(6) {
+    --x: 30.9%;
+    --drift: -25px;
+    --spin: 200deg;
+    --delay: 0.14s;
+    background: var(--primary);
+}
+
+.celebrate__confetti span:nth-child(7) {
+    --x: 36.3%;
+    --drift: 10px;
+    --spin: 320deg;
+    --delay: 0.05s;
+    background: var(--accent);
+}
+
+.celebrate__confetti span:nth-child(8) {
+    --x: 41.8%;
+    --drift: 25px;
+    --spin: 320deg;
+    --delay: 0.2s;
+    background: var(--secondary);
+}
+
+.celebrate__confetti span:nth-child(9) {
+    --x: 45.6%;
+    --drift: -25px;
+    --spin: 420deg;
+    --delay: 0.2s;
+    background: var(--primary);
+}
+
+.celebrate__confetti span:nth-child(10) {
+    --x: 51.2%;
+    --drift: 25px;
+    --spin: 200deg;
+    --delay: 0.25s;
+    background: var(--accent);
+}
+
+.celebrate__confetti span:nth-child(11) {
+    --x: 58.8%;
+    --drift: 25px;
+    --spin: 540deg;
+    --delay: 0.17s;
+    background: var(--secondary);
+}
+
+.celebrate__confetti span:nth-child(12) {
+    --x: 65%;
+    --drift: 10px;
+    --spin: 420deg;
+    --delay: 0.16s;
+    background: var(--primary);
+}
+
+.celebrate__confetti span:nth-child(13) {
+    --x: 68.6%;
+    --drift: 40px;
+    --spin: 320deg;
+    --delay: 0.28s;
+    background: var(--accent);
+}
+
+.celebrate__confetti span:nth-child(14) {
+    --x: 73.3%;
+    --drift: 10px;
+    --spin: 420deg;
+    --delay: 0.11s;
+    background: var(--secondary);
+}
+
+.celebrate__confetti span:nth-child(15) {
+    --x: 81.5%;
+    --drift: -40px;
+    --spin: 200deg;
+    --delay: 0.1s;
+    background: var(--primary);
+}
+
+.celebrate__confetti span:nth-child(16) {
+    --x: 86.2%;
+    --drift: -10px;
+    --spin: 320deg;
+    --delay: 0.06s;
+    background: var(--accent);
+}
+
+.celebrate__confetti span:nth-child(17) {
+    --x: 93.4%;
+    --drift: 40px;
+    --spin: 200deg;
+    --delay: 0.15s;
+    background: var(--secondary);
+}
+
+.celebrate__confetti span:nth-child(18) {
+    --x: 98.3%;
+    --drift: -10px;
+    --spin: 420deg;
+    --delay: 0.2s;
+    background: var(--primary);
+}
+
+@keyframes confetti-fall {
+    0% {
+        opacity: 1;
+        transform: translate(0, 0) rotate(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(var(--drift), 70vh) rotate(var(--spin));
+    }
+}
+
+@keyframes celebrate-message {
+    0% {
+        opacity: 0;
+        transform: translateY(-0.5rem);
+    }
+    10%,
+    80% {
+        opacity: 1;
+        transform: none;
+    }
+    100% {
+        opacity: 0;
+        visibility: hidden;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .celebrate__confetti {
+        display: none;
+    }
+
+    .celebrate__message {
+        animation: none;
+    }
+}
+
+@media (max-width: 52rem) {
+    .celebrate__message {
+        top: 4.5rem;
+        left: var(--space-4);
+        max-width: none;
     }
 }
 

@@ -96,11 +96,13 @@ describe('planning details', { skip: skipWithoutDb }, () => {
         });
 
         it('filters: mine and high priority', async () => {
-            const mine = textOf((await ben.get('/checklist?who=me')).body);
+            // Only the task list counts: the header's progress badge lists upcoming tasks on every page.
+            const taskList = (html) => textOf(html.match(/<ul class="item-list">[^]*?<\/ul>/)?.[0] ?? '');
+            const mine = taskList((await ben.get('/checklist?who=me')).body);
             assert.match(mine, /Book the florist/);
             assert.doesNotMatch(mine, /Order cake/);
-            assert.doesNotMatch(textOf((await ana.get('/checklist?who=me')).body), /Book the florist/);
-            const high = textOf((await ana.get('/checklist?priority=high')).body);
+            assert.doesNotMatch(taskList((await ana.get('/checklist?who=me')).body), /Book the florist/);
+            const high = taskList((await ana.get('/checklist?priority=high')).body);
             assert.match(high, /Book the florist/);
             assert.doesNotMatch(high, /Order cake/);
         });

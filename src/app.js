@@ -13,6 +13,7 @@ import { configureGoogle } from './services/google.js';
 import { UNSPLASH_IMAGE_HOSTS, isUnsplashConfigured } from './services/unsplash.js';
 import { isSpotifyConfigured } from './services/spotify.js';
 import { resolveTheme } from './themes.js';
+import { takeCelebration } from './utils/celebrate.js';
 import { takeFlash } from './utils/flash.js';
 import { emphasize, fieldState } from './utils/view-helpers.js';
 import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES, translate } from './i18n/index.js';
@@ -106,6 +107,7 @@ const createApp = (env = process.env) => {
         res.locals.currentPath = req.path;
         res.locals.currentUrl = req.originalUrl;
         res.locals.flash = takeFlash(req);
+        res.locals.celebration = takeCelebration(req);
         res.locals.languages = SUPPORTED_LANGUAGES;
         res.locals.errors = [];
         res.locals.emphasize = emphasize;

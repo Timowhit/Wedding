@@ -41,6 +41,7 @@
         <% } else if (hasNav && hasWedding) { %>
             <p class="wedding-current"><span class="visually-hidden"><%= t('nav.activeWeddingLabel') %></span><%= wedding.wedding_date ? `${wedding.name} · ${formatShortDate(wedding.wedding_date)}` : wedding.name %></p>
         <% } %>
+        <% if (hasNav && hasWedding) { %><%- include('task-badge') %><% } %>
         <% if (hasNav) { %>
             <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav" hidden>
                 <span class="visually-hidden"><%= t('nav.menu') %></span>
@@ -68,3 +69,4 @@
     <% } %>
     <%- include('offline-banner') %>
 </header>
+<%- include('celebrate') %>

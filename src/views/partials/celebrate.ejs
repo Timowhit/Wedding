@@ -1,0 +1,11 @@
+<%# Shown once after a task is ticked off (utils/celebrate.js). The confetti is CSS only and stays
+    still for people who prefer reduced motion; the message is announced as a status. %>
+<% if (locals.celebration) { %>
+    <div class="celebrate<%= celebration.milestone ? ` celebrate--milestone celebrate--m${celebration.milestone}` : '' %>" data-celebrate role="status">
+        <div class="celebrate__confetti" aria-hidden="true"><% for (let i = 0; i < 18; i += 1) { %><span></span><% } %></div>
+        <p class="celebrate__message">
+            <strong><%= t(celebration.milestone ? `celebrate.milestone${celebration.milestone}` : 'celebrate.nice') %></strong>
+            <%= t('celebrate.progress', { done: celebration.done, total: celebration.total, pct: Math.round((celebration.done / celebration.total) * 100) }) %>
+        </p>
+    </div>
+<% } %>
