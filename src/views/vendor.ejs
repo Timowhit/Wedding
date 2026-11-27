@@ -1,0 +1,117 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<% const hasContract = vendor.contract_total !== null || vendor.contract_signed_on || vendor.contract_url || vendor.contract_includes || vendor.contract_cancellation; %>
+<% const website = vendor.website && /^https?:\/\//i.test(vendor.website) ? vendor.website : null; %>
+<main id="main-content" class="narrow">
+    <p class="back-link"><a href="/vendors"><span aria-hidden="true">←</span> <%= t('vendor.back') %></a></p>
+    <header class="page-header page-header--left">
+        <h1><%= vendor.name %></h1>
+        <p class="item-meta">
+            <span class="tag"><%= t(`vendorCategory.${vendor.category}`) %></span>
+            <span class="tag"><%= t(`vendorStatus.${vendor.status}`) %></span>
+        </p>
+        <% if (vendor.phone || vendor.email || website) { %>
+            <ul class="contact-list">
+                <% if (vendor.phone) { %><li><a href="tel:<%= vendor.phone.replace(/[^\d+]/g, '') %>"><%= vendor.phone %></a></li><% } %>
+                <% if (vendor.email) { %><li><a href="mailto:<%= vendor.email %>"><%= vendor.email %></a></li><% } %>
+                <% if (website) { %><li><a href="<%= website %>" rel="noopener noreferrer" target="_blank"><%= t('vendors.visitWebsite') %><span class="visually-hidden"> (<%= t('action.opensNewTab') %>)</span></a></li><% } %>
+            </ul>
+        <% } %>
+        <% if (canEdit) { %><a class="link-action" href="/vendors/<%= vendor.id %>/edit"><%= t('vendor.editVendor') %></a><% } %>
+    </header>
+    <%- include('partials/flash') %>
+    <%- include('partials/read-only-notice') %>
+
+    <section class="card" aria-labelledby="contract-heading">
+        <h2 class="card-title" id="contract-heading"><%= t('contract.heading') %></h2>
+        <% if (!hasContract) { %>
+            <p class="empty-state"><%= t('contract.empty') %></p>
+            <% if (canEdit) { %><a class="btn btn-secondary btn-small" href="/vendors/<%= vendor.id %>/contract"><%= t('contract.add') %></a><% } %>
+        <% } else { %>
+            <p class="contract-facts">
+                <% if (vendor.contract_signed_on) { %><span><%= t('contract.signedOn', { date: formatDate(vendor.contract_signed_on) }) %></span><% } %>
+                <% if (vendor.contract_total !== null) { %>
+                    <span><%= t(money.quote !== null ? 'contract.quote' : 'contract.total', { amount: formatCurrency(vendor.contract_total) }) %></span>
+                <% } %>
+                <% if (vendor.contract_url) { %>
+                    <span><a href="<%= vendor.contract_url %>" target="_blank" rel="noopener noreferrer"><%= t('contract.viewSigned') %><span class="visually-hidden"> (<%= t('action.opensNewTab') %>)</span></a></span>
+                <% } %>
+            </p>
+            <% if (vendor.contract_includes) { %>
+                <h3 class="subheading"><%= t('contract.includes') %></h3>
+                <p class="preserve-lines"><%= vendor.contract_includes %></p>
+            <% } %>
+            <% if (vendor.contract_cancellation) { %>
+                <h3 class="subheading"><%= t('contract.cancellation') %></h3>
+                <p class="preserve-lines"><%= vendor.contract_cancellation %></p>
+            <% } %>
+            <% if (canEdit) { %><a class="link-action" href="/vendors/<%= vendor.id %>/contract"><%= t('contract.edit') %></a><% } %>
+        <% } %>
+    </section>
+
+    <section class="card" aria-labelledby="payments-heading">
+        <div class="card-header">
+            <h2 class="card-title" id="payments-heading"><%= t('payments.heading') %></h2>
+            <% if (money.counts && (money.committed > 0 || payments.length > 0)) { %>
+                <p class="payments-summary"><%= t('payments.paidSoFar', { amount: formatCurrency(money.paid) }) %> · <strong><%= t('vendor.stillOwed', { amount: formatCurrency(money.owed) }) %></strong></p>
+            <% } %>
+        </div>
+        <% if (!money.counts && payments.length > 0) { %>
+            <p class="hint"><%= t(vendor.status === 'Declined' ? 'payments.declinedNote' : 'payments.notBookedNote') %></p>
+        <% } %>
+        <% if (payments.length === 0) { %>
+            <p class="empty-state"><%= t('payments.empty') %></p>
+        <% } else { %>
+            <ul class="payment-list">
+                <% payments.forEach((p) => { %>
+                    <% const name = p.label || t('payments.payment'); %>
+                    <% const overdue = money.counts && !p.paid_on && p.due_date && toIsoDate(p.due_date) < today; %>
+                    <li class="payment <%= p.paid_on ? 'payment--paid' : '' %>">
+                        <div class="payment__main">
+                            <p class="payment__name"><% if (p.paid_on) { %><span aria-hidden="true">✓ </span><% } %><%= name %></p>
+                            <p class="payment__amount"><%= formatCurrency(p.amount) %></p>
+                            <p class="payment__when <%= overdue ? 'text-danger' : '' %>">
+                                <% if (p.paid_on) { %><%= t('payments.paidOn', { date: formatDate(p.paid_on) }) %>
+                                <% } else if (p.due_date) { %><%= t('payments.dueOn', { date: formatDate(p.due_date) }) %><% if (overdue) { %> · <strong><%= t('payments.overdue') %></strong><% } %>
+                                <% } else { %><%= t('payments.noDueDate') %><% } %>
+                            </p>
+                            <% if (p.note) { %><p class="item-notes"><%= p.note %></p><% } %>
+                        </div>
+                        <% if (canEdit) { %>
+                            <form method="post" action="/payments/<%= p.id %>/paid" class="payment__toggle">
+                                <%- include('partials/csrf-field') %>
+                                <input type="hidden" name="paid" value="<%= p.paid_on ? '0' : '1' %>">
+                                <button type="submit" class="btn btn-small <%= p.paid_on ? 'btn-ghost' : 'btn-secondary' %>"
+                                        aria-label="<%= t(p.paid_on ? 'payments.markUnpaidNamed' : 'payments.markPaidNamed', { name, amount: formatCurrency(p.amount) }) %>">
+                                    <%= t(p.paid_on ? 'payments.markUnpaid' : 'payments.markPaid') %>
+                                </button>
+                            </form>
+                            <%- include('partials/row-actions', { editHref: `/payments/${p.id}/edit`, deleteAction: `/payments/${p.id}/delete`, name: `${name} ${formatCurrency(p.amount)}`, confirm: t('confirm.deletePayment', { name, amount: formatCurrency(p.amount) }) }) %>
+                        <% } %>
+                    </li>
+                <% }); %>
+            </ul>
+        <% } %>
+        <% if (money.unscheduled !== null && money.unscheduled > 0) { %>
+            <p class="hint"><%= t('payments.unscheduled', { amount: formatCurrency(money.unscheduled) }) %></p>
+        <% } else if (money.unscheduled !== null && money.unscheduled < 0) { %>
+            <p class="hint"><%= t('payments.overScheduled', { amount: formatCurrency(-money.unscheduled) }) %></p>
+        <% } %>
+
+        <% if (canEdit) { %>
+            <%- include('partials/add-panel-start', { id: 'add-payment', labelKey: 'payments.add', open: payments.length === 0 || paymentForm.errors.length > 0 }) %>
+                <%- include('partials/form-errors', { errors: paymentForm.errors, id: 'payment-errors' }) %>
+                <form method="post" action="/vendors/<%= vendor.id %>/payments" class="form-grid">
+                    <%- include('partials/csrf-field') %>
+                    <%- include('partials/payment-fields', { values: paymentForm.values, errors: paymentForm.errors, errorsId: 'payment-errors' }) %>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary"><%= t('payments.addSubmit') %></button>
+                    </div>
+                </form>
+            <%- include('partials/add-panel-end') %>
+        <% } %>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

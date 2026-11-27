@@ -1,5 +1,7 @@
 import { VENDOR_CATEGORIES, VENDOR_STATUSES } from '../constants.js';
+import { findVendorMoney } from '../models/payments.js';
 import {
+    countVendorPayments,
     createVendor,
     deleteVendor,
     findVendor,
@@ -28,11 +30,17 @@ const toFormValues = (vendor) =>
 
 const renderVendors = async (req, res, { status = 200, vendorForm } = {}) => {
     const activeStatus = readChoice(req.query.status, VENDOR_STATUSES);
-    const vendors = await findVendors(req.wedding.id, activeStatus);
+    const [vendors, money, paymentCounts] = await Promise.all([
+        findVendors(req.wedding.id, activeStatus),
+        findVendorMoney(req.wedding.id),
+        countVendorPayments(req.wedding.id)
+    ]);
 
     res.status(status).render('vendors', {
         title: req.t('vendors.title'),
         vendors,
+        money,
+        paymentCounts,
         categories: VENDOR_CATEGORIES,
         statuses: VENDOR_STATUSES,
         activeStatus,

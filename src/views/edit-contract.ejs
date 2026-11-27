@@ -1,0 +1,43 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content" class="narrow">
+    <%- include('partials/page-header', { heading: 'contract.editHeading' }) %>
+    <section class="card" aria-labelledby="edit-heading">
+        <h2 class="card-title" id="edit-heading"><%= vendor.name %></h2>
+        <p class="hint"><%= t('contract.formHint') %></p>
+        <%- include('partials/form-errors', { errors }) %>
+        <form method="post" action="/vendors/<%= vendor.id %>/contract" class="form-grid">
+            <%- include('partials/csrf-field') %>
+            <div class="field">
+                <label for="contract_total"><%= t('field.contract_total') %> <span class="optional"><%= t('form.optional') %></span></label>
+                <input type="text" id="contract_total" name="contract_total" inputmode="decimal" value="<%= values.contract_total %>" <%- fieldState(errors, 'contract_total') %>>
+            </div>
+            <div class="field">
+                <label for="contract_signed_on"><%= t('field.contract_signed_on') %> <span class="optional"><%= t('form.optional') %></span></label>
+                <input type="date" id="contract_signed_on" name="contract_signed_on" min="1900-01-01" max="2100-12-31" value="<%= values.contract_signed_on %>" <%- fieldState(errors, 'contract_signed_on') %>>
+            </div>
+            <div class="field field--wide">
+                <label for="contract_url"><%= t('field.contract_url') %> <span class="optional"><%= t('form.optional') %></span></label>
+                <input type="url" id="contract_url" name="contract_url" maxlength="2000" value="<%= values.contract_url %>"
+                       placeholder="https://" <%- fieldState(errors, 'contract_url', 'form-errors', 'contract-url-hint') %>>
+                <p class="hint" id="contract-url-hint"><%= t('contract.urlHint') %></p>
+            </div>
+            <div class="field field--wide">
+                <label for="contract_includes"><%= t('field.contract_includes') %> <span class="optional"><%= t('form.optional') %></span></label>
+                <textarea id="contract_includes" name="contract_includes" rows="4" maxlength="2000"
+                          placeholder="<%= t('contract.includesPlaceholder') %>" <%- fieldState(errors, 'contract_includes') %>><%= values.contract_includes %></textarea>
+            </div>
+            <div class="field field--wide">
+                <label for="contract_cancellation"><%= t('field.contract_cancellation') %> <span class="optional"><%= t('form.optional') %></span></label>
+                <textarea id="contract_cancellation" name="contract_cancellation" rows="3" maxlength="1000" <%- fieldState(errors, 'contract_cancellation') %>><%= values.contract_cancellation %></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"><%= t('action.save') %></button>
+                <a class="btn btn-ghost" href="/vendors/<%= vendor.id %>"><%= t('action.cancel') %></a>
+            </div>
+        </form>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

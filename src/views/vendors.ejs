@@ -36,7 +36,7 @@
                 <% vendors.forEach((vendor) => { %>
                     <li class="item-card">
                         <div class="item-info">
-                            <p class="item-name"><%= vendor.name %> <span class="tag"><%= t(`vendorCategory.${vendor.category}`) %></span></p>
+                            <p class="item-name"><a class="item-link" href="/vendors/<%= vendor.id %>"><%= vendor.name %></a> <span class="tag"><%= t(`vendorCategory.${vendor.category}`) %></span></p>
                             <%# Rows saved by older versions were validated less strictly: only http(s) becomes a link. %>
                             <% const website = vendor.website && /^https?:\/\//i.test(vendor.website) ? vendor.website : null; %>
                             <% if (vendor.phone || vendor.email || website) { %>
@@ -46,13 +46,21 @@
                                     <% if (website) { %><li><a href="<%= website %>" rel="noopener noreferrer" target="_blank"><%= t('vendors.visitWebsite') %><span class="visually-hidden"> (<%= t('action.opensNewTab') %>)</span></a></li><% } %>
                                 </ul>
                             <% } %>
+                            <% const m = money.get(vendor.id); %>
+                            <% if (m && m.counts && m.committed > 0) { %>
+                                <p class="item-meta money-line <%= m.overdue ? 'text-danger' : '' %>">
+                                    <%= t('vendor.contractLine', { total: formatCurrency(m.committed), owed: formatCurrency(m.owed) }) %><% if (m.nextDue) { %> · <%= t('vendor.nextDue', { date: formatDate(m.nextDue) }) %><% } %><% if (m.overdue) { %> · <strong><%= t('payments.overdue') %></strong><% } %>
+                                </p>
+                            <% } else if (m && m.quote !== null) { %>
+                                <p class="item-meta money-line"><%= t('vendor.quoteLine', { amount: formatCurrency(m.quote) }) %></p>
+                            <% } %>
                             <% if (vendor.notes) { %><p class="item-notes"><%= vendor.notes %></p><% } %>
                         </div>
                         <div class="item-side">
                             <%- include('partials/status-form', { action: `/vendors/${vendor.id}/status`, field: 'status', value: vendor.status, options: statuses, prefix: 'vendorStatus', label: t('vendors.statusFor', { name: vendor.name }), id: `status-${vendor.id}` }) %>
                         </div>
                         <% if (canEdit) { %>
-                            <%- include('partials/row-actions', { editHref: `/vendors/${vendor.id}/edit`, deleteAction: `/vendors/${vendor.id}/delete`, name: vendor.name, confirm: t('confirm.deleteVendor', { name: vendor.name }) }) %>
+                            <%- include('partials/row-actions', { editHref: `/vendors/${vendor.id}/edit`, deleteAction: `/vendors/${vendor.id}/delete`, name: vendor.name, confirm: paymentCounts.get(vendor.id) ? t('confirm.deleteVendorWithPayments', { name: vendor.name, count: paymentCounts.get(vendor.id) }) : t('confirm.deleteVendor', { name: vendor.name }) }) %>
                         <% } %>
                     </li>
                 <% }); %>

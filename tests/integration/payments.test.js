@@ -1,6 +1,7 @@
 import { after, before, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { skipWithoutDb, startTestApp } from '../helpers/app.js';
+import { TestClient, registeredClient, skipWithoutDb, startTestApp } from '../helpers/app.js';
+import { todayIso } from '../../src/utils/today.js';
 
 const TODAY = '2027-03-15';
 
@@ -211,6 +212,250 @@ describe('payments', { skip: skipWithoutDb }, () => {
                 theirVendor
             ]);
             assert.equal(rowCount, 0);
+        });
+    });
+
+    describe('vendor page', () => {
+        const PASSWORD = 'correct horse battery';
+        const tokenIn = (body) => body.match(/\/invite\/([0-9a-f-]{36})/)?.[1];
+        let planner;
+        let client;
+        let viewer;
+        let weddingId;
+        let vendorId;
+
+        const paymentsOf = async (id) =>
+            (
+                await app.pool.query(
+                    'SELECT label, amount::float AS amount, paid_on::text AS paid_on FROM vendor_payments WHERE vendor_id = $1 ORDER BY created_at;',
+                    [id]
+                )
+            ).rows;
+        const contractOf = async (id) =>
+            (
+                await app.pool.query(
+                    `SELECT contract_total::float AS total, contract_url AS url, contract_includes AS includes
+                     FROM vendors WHERE id = $1;`,
+                    [id]
+                )
+            ).rows[0];
+        const emptyContract = {
+            contract_total: '',
+            contract_signed_on: '',
+            contract_url: '',
+            contract_includes: '',
+            contract_cancellation: ''
+        };
+
+        before(async () => {
+            planner = new TestClient(app.baseUrl);
+            await planner.get('/register?as=planner');
+            await planner.post('/register', {
+                as: 'planner',
+                name: 'Pia',
+                email: 'pia@example.com',
+                password: PASSWORD,
+                confirm_password: PASSWORD
+            });
+            await planner.get('/planner');
+            await planner.post('/planner/weddings', { name: 'Rosa & Tom', wedding_date: '' });
+            weddingId = (await app.pool.query(`SELECT id FROM weddings WHERE name = 'Rosa & Tom';`)).rows[0].id;
+            await planner.get('/settings');
+            await planner.post('/settings/invites', { email: '', role: 'client' });
+            const clientToken = tokenIn((await planner.get('/settings')).body);
+            await planner.post('/settings/invites', { email: '', role: 'viewer' });
+            const tokens = [...(await planner.get('/settings')).body.matchAll(/\/invite\/([0-9a-f-]{36})/g)].map(
+                (match) => match[1]
+            );
+            const viewerToken = tokens.find((t) => t !== clientToken);
+            client = await registeredClient(app.baseUrl, 'Rosa', 'rosa@example.com');
+            await client.get(`/invite/${clientToken}`);
+            await client.post(`/invite/${clientToken}/accept`);
+            viewer = await registeredClient(app.baseUrl, 'Val', 'val@example.com');
+            await viewer.get(`/invite/${viewerToken}`);
+            await viewer.post(`/invite/${viewerToken}/accept`);
+
+            await planner.get('/vendors');
+            await planner.post('/vendors', {
+                name: 'Bloom & Blossom',
+                category: 'Florist',
+                status: 'Booked',
+                phone: '',
+                email: '',
+                website: '',
+                notes: ''
+            });
+            vendorId = (await app.pool.query(`SELECT id FROM vendors WHERE name = 'Bloom & Blossom';`)).rows[0].id;
+        });
+
+        it('contract saves, shows and clears', async () => {
+            await planner.get(`/vendors/${vendorId}/contract`);
+            const saved = await planner.post(`/vendors/${vendorId}/contract`, {
+                ...emptyContract,
+                contract_total: '$4,800',
+                contract_signed_on: '2027-03-12',
+                contract_url: 'https://drive.example/c.pdf',
+                contract_includes: 'Arch and 12 centrepieces'
+            });
+            assert.equal(saved.location, `/vendors/${vendorId}`);
+            const page = await client.get(`/vendors/${vendorId}`);
+            assert.equal(page.status, 200);
+            assert.match(page.body, /\$4,800\.00/);
+            assert.match(page.body, /Arch and 12 centrepieces/);
+            assert.match(
+                page.body,
+                /href="https:\/\/drive\.example\/c\.pdf" target="_blank" rel="noopener noreferrer"/
+            );
+
+            await planner.get(`/vendors/${vendorId}/contract`);
+            await planner.post(`/vendors/${vendorId}/contract`, emptyContract);
+            assert.deepEqual(await contractOf(vendorId), { total: null, url: null, includes: null });
+            assert.match((await planner.get(`/vendors/${vendorId}`)).body, /Add contract details/);
+        });
+
+        it('invalid contract re-renders with 400 and keeps the input escaped', async () => {
+            await planner.get(`/vendors/${vendorId}/contract`);
+            const bad = await planner.post(`/vendors/${vendorId}/contract`, {
+                ...emptyContract,
+                contract_total: '900',
+                contract_url: 'javascript:alert("x")'
+            });
+            assert.equal(bad.status, 400);
+            assert.match(bad.body, /value="javascript:alert\(&#34;x&#34;\)"/);
+            assert.equal((await contractOf(vendorId)).total, null);
+        });
+
+        it('add, pay, unpay, edit and delete a payment', async () => {
+            await planner.get(`/vendors/${vendorId}`);
+            const added = await planner.post(`/vendors/${vendorId}/payments`, {
+                label: 'Deposit',
+                amount: '$1,200',
+                due_date: '2027-03-12',
+                paid_on: '',
+                note: ''
+            });
+            assert.equal(added.location, `/vendors/${vendorId}`);
+            assert.match((await planner.get(`/vendors/${vendorId}`)).body, /Deposit/);
+            const paymentId = (await app.pool.query('SELECT id FROM vendor_payments WHERE vendor_id = $1;', [vendorId]))
+                .rows[0].id;
+
+            await client.get(`/vendors/${vendorId}`);
+            await client.post(`/payments/${paymentId}/paid`, { paid: '1' });
+            assert.deepEqual(await paymentsOf(vendorId), [{ label: 'Deposit', amount: 1200, paid_on: todayIso() }]);
+            await client.post(`/payments/${paymentId}/paid`, { paid: '0' });
+            assert.equal((await paymentsOf(vendorId))[0].paid_on, null);
+
+            await planner.get(`/payments/${paymentId}/edit`);
+            await planner.post(`/payments/${paymentId}/edit`, {
+                label: 'Deposit',
+                amount: '1200',
+                due_date: '2027-03-12',
+                paid_on: '2027-03-01',
+                note: ''
+            });
+            assert.equal((await paymentsOf(vendorId))[0].paid_on, '2027-03-01');
+
+            await planner.get(`/vendors/${vendorId}`);
+            const deleted = await planner.post(`/payments/${paymentId}/delete`);
+            assert.equal(deleted.location, `/vendors/${vendorId}`);
+            assert.deepEqual(await paymentsOf(vendorId), []);
+        });
+
+        it('bad payment amount keeps the input', async () => {
+            await planner.get(`/vendors/${vendorId}`);
+            const bad = await planner.post(`/vendors/${vendorId}/payments`, {
+                label: '',
+                amount: 'abc',
+                due_date: '',
+                paid_on: '',
+                note: ''
+            });
+            assert.equal(bad.status, 400);
+            assert.match(bad.body, /value="abc"/);
+            assert.deepEqual(await paymentsOf(vendorId), []);
+        });
+
+        it('the vendor page shows owed, unscheduled and overdue', async () => {
+            await app.pool.query('UPDATE vendors SET contract_total = 4800 WHERE id = $1;', [vendorId]);
+            await pay(weddingId, vendorId, 1200, { due: '2027-01-01', paid: '2027-01-01' });
+            await pay(weddingId, vendorId, 1800, { due: '2020-01-01' });
+            const page = (await planner.get(`/vendors/${vendorId}`)).body;
+            assert.match(page, /Still owed \$3,600\.00/);
+            assert.match(page, /\$1,800\.00 not yet scheduled/);
+            assert.match(page, /overdue/);
+
+            await pay(weddingId, vendorId, 2100, {});
+            assert.match((await planner.get(`/vendors/${vendorId}`)).body, /\$300\.00 more than the contract total/);
+            await app.pool.query('DELETE FROM vendor_payments WHERE vendor_id = $1 AND amount = 2100;', [vendorId]);
+        });
+
+        it('the vendor list shows the money line, and a quote for unbooked vendors', async () => {
+            await planner.get('/vendors');
+            await planner.post('/vendors', {
+                name: 'Lens & Light',
+                category: 'Photographer',
+                status: 'Researching',
+                phone: '',
+                email: '',
+                website: '',
+                notes: ''
+            });
+            await app.pool.query(`UPDATE vendors SET contract_total = 3000 WHERE name = 'Lens & Light';`);
+            const list = (await planner.get('/vendors')).body;
+            assert.match(list, /href="\/vendors\/[0-9a-f-]{36}"/);
+            assert.match(list, /Contract \$4,800\.00 · \$3,600\.00 owed/);
+            assert.match(list, /Quote \$3,000\.00/);
+        });
+
+        it('viewers see but cannot change', async () => {
+            const page = await viewer.get(`/vendors/${vendorId}`);
+            assert.equal(page.status, 200);
+            assert.doesNotMatch(page.body, /action="\/vendors\/[0-9a-f-]{36}\/payments"/);
+            assert.doesNotMatch(page.body, /\/paid"/);
+            const before = (await paymentsOf(vendorId)).length;
+            const refused = await viewer.post(`/vendors/${vendorId}/payments`, { amount: '50' });
+            assert.notEqual(refused.status, 200);
+            assert.equal((await paymentsOf(vendorId)).length, before);
+        });
+
+        it("another wedding's vendor or payment is out of reach", async () => {
+            const other = await registeredClient(app.baseUrl, 'Otto', 'otto@example.com');
+            await other.get('/vendors');
+            await other.post('/vendors', {
+                name: 'Other Florist',
+                category: 'Florist',
+                status: 'Booked',
+                phone: '',
+                email: '',
+                website: '',
+                notes: ''
+            });
+            const { rows } = await app.pool.query(`SELECT id, wedding_id FROM vendors WHERE name = 'Other Florist';`);
+            const theirVendor = rows[0].id;
+            await pay(rows[0].wedding_id, theirVendor, 700, { due: '2027-05-01' });
+            const theirPayment = (
+                await app.pool.query('SELECT id FROM vendor_payments WHERE vendor_id = $1;', [theirVendor])
+            ).rows[0].id;
+
+            await planner.get('/vendors');
+            const attempts = [
+                planner.get(`/vendors/${theirVendor}`),
+                planner.post(`/vendors/${theirVendor}/contract`, { ...emptyContract, contract_total: '1' }),
+                planner.post(`/vendors/${theirVendor}/payments`, { amount: '1' }),
+                planner.post(`/payments/${theirPayment}/paid`, { paid: '1' }),
+                planner.post(`/payments/${theirPayment}/edit`, { amount: '1' }),
+                planner.post(`/payments/${theirPayment}/delete`)
+            ];
+            for (const response of await Promise.all(attempts)) assert.equal(response.status, 404);
+            assert.deepEqual(await paymentsOf(theirVendor), [{ label: null, amount: 700, paid_on: null }]);
+            assert.equal((await contractOf(theirVendor)).total, null);
+        });
+
+        it('deleting a vendor removes its payments, and the confirmation says so', async () => {
+            const list = (await planner.get('/vendors')).body;
+            assert.match(list, /data-confirm="[^"]*2 payments/);
+            await planner.post(`/vendors/${vendorId}/delete`);
+            assert.deepEqual(await paymentsOf(vendorId), []);
         });
     });
 });

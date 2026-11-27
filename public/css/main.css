@@ -1587,6 +1587,109 @@ select.status-select {
     max-width: 48rem;
 }
 
+/* Vendor page: contract and payments ----------------------------------------------------------- */
+
+.back-link {
+    margin: var(--space-3) 0 0;
+    font-size: 0.875rem;
+}
+
+.page-header--left {
+    text-align: left;
+}
+
+.page-header--left .item-meta,
+.page-header--left .contact-list {
+    margin-bottom: var(--space-2);
+}
+
+.card-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2);
+}
+
+.contract-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-4);
+}
+
+/* Contract text is typed with line breaks; keep them without allowing any HTML. */
+.preserve-lines {
+    white-space: pre-line;
+}
+
+.payments-summary {
+    margin: 0;
+}
+
+.payment-list {
+    margin: var(--space-3) 0;
+    padding: 0;
+    list-style: none;
+}
+
+.payment {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+    padding: var(--space-3) 0;
+    border-top: 1px solid var(--border);
+}
+
+.payment__main {
+    display: grid;
+    flex: 1 1 14rem;
+    grid-template-columns: 1fr auto;
+    gap: 0 var(--space-3);
+    min-width: 0;
+}
+
+.payment__main p {
+    margin: 0;
+}
+
+.payment__name {
+    font-weight: 600;
+}
+
+.payment__amount {
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+.payment__when,
+.payment__main .item-notes {
+    grid-column: 1 / -1;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.payment__when.text-danger {
+    color: var(--danger);
+}
+
+.payment--paid .payment__name,
+.payment--paid .payment__amount {
+    color: var(--text-muted);
+}
+
+.payment .row-actions {
+    flex-basis: 100%;
+}
+
+.money-line {
+    font-variant-numeric: tabular-nums;
+}
+
+.item-link {
+    color: inherit;
+}
+
 @media print {
     .site-header,
     .site-footer,
