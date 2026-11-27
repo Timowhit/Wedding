@@ -108,6 +108,20 @@ describe('post-event wrap-up', { skip: skipWithoutDb }, () => {
         );
     });
 
+    it('an editor can clear a rating; a viewer cannot', async () => {
+        await viewer.get(`/vendors/${vendorId}`);
+        await viewer.post(`/vendors/${vendorId}/rating/clear`, {});
+        assert.equal((await q(`SELECT rating FROM vendors WHERE id = $1;`, [vendorId])).rows[0].rating, 4);
+        const page = (await ana.get(`/vendors/${vendorId}`)).body;
+        assert.match(page, /action="\/vendors\/[0-9a-f-]+\/rating\/clear"/);
+        assert.equal((await ana.post(`/vendors/${vendorId}/rating/clear`, {})).location, `/vendors/${vendorId}`);
+        const cleared = (await q(`SELECT rating, review FROM vendors WHERE id = $1;`, [vendorId])).rows[0];
+        assert.deepEqual(cleared, { rating: null, review: null });
+        assert.match((await ana.get(`/vendors/${vendorId}`)).body, /Rating cleared/);
+        assert.doesNotMatch((await ana.get(`/vendors/${vendorId}`)).body, /rating\/clear/, 'nothing left to clear');
+        await ana.post(`/vendors/${vendorId}/rating`, { rating: '4', review: 'Lovely work' });
+    });
+
     it('the owner archives the wedding: hidden from active lists and reminders, and can bring it back', async () => {
         await viewer.get('/');
         await viewer.post('/wedding/archive', {});

@@ -136,10 +136,10 @@ const countVendorPayments = async (weddingId) => {
 };
 
 /**
- * Saves a vendor's rating (1-5) and review after the wedding.
+ * Saves a vendor's rating (1-5) and review after the wedding; null for both clears them.
  * @param {string} id
  * @param {string} weddingId
- * @param {{rating: number, review: string|null}} values - Already validated.
+ * @param {{rating: number|null, review: string|null}} values - Already validated.
  * @returns {Promise<boolean>} False when no such vendor exists in this wedding.
  */
 const rateVendor = async (id, weddingId, { rating, review }) => {

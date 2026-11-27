@@ -1138,6 +1138,8 @@ export default {
     'field.review': 'Notes',
     'planner.when.archived': 'Archived',
     'wrapup.ratingSaved': 'Saved your rating of {name}.',
+    'wrapup.ratingCleared': 'Rating cleared for {name}.',
+    'wrapup.clearRating': 'Clear rating',
     'wrapup.starsOne': '1 star',
     'wrapup.notYet': 'Wrap-up tasks are for after the wedding day.',
     'celebrate.badgeLabel': '{done} of {total} tasks done',

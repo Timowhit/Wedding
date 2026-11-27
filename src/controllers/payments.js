@@ -79,6 +79,15 @@ const processRating = async (req, res, next) => {
     res.redirect(`/vendors/${vendor.id}`);
 };
 
+/** POST /vendors/:id/rating/clear: removes the stars and the note. */
+const processClearRating = async (req, res, next) => {
+    const vendor = await routeVendor(req);
+    if (!vendor) return next();
+    await rateVendor(vendor.id, req.wedding.id, { rating: null, review: null });
+    setFlash(req, 'success', 'wrapup.ratingCleared', { name: vendor.name });
+    res.redirect(`/vendors/${vendor.id}`);
+};
+
 /** GET /vendors/:id: the vendor with its contract and payments. */
 const showVendor = async (req, res, next) => {
     const vendor = await routeVendor(req);
@@ -171,6 +180,7 @@ const processDeletePayment = async (req, res, next) => {
 export {
     showVendor,
     processRating,
+    processClearRating,
     showEditContract,
     processContract,
     processNewPayment,

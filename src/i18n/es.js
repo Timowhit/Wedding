@@ -1147,6 +1147,8 @@ export default {
     'field.review': 'Notas',
     'planner.when.archived': 'Archivadas',
     'wrapup.ratingSaved': 'Se guardó tu valoración de {name}.',
+    'wrapup.ratingCleared': 'Se borró la valoración de {name}.',
+    'wrapup.clearRating': 'Borrar valoración',
     'wrapup.starsOne': '1 estrella',
     'wrapup.notYet': 'Las tareas de cierre son para después del día de la boda.',
     'celebrate.badgeLabel': '{done} de {total} tareas hechas',
