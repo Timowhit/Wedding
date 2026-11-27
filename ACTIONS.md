@@ -46,3 +46,7 @@ Uploaded files are stored in your Render database. Each wedding can use up to 25
 ## 4. Reload the site once
 
 [Timowhit/Wedding#17](https://github.com/Timowhit/Wedding/pull/17) is merged. When Render has deployed it, reload the site once in each browser you use. Browsers that still hold the old stylesheet pick up the new one, and from then on every release updates on its own. Then delete the `nav-polish` branch on GitHub.
+
+## 5. Merge the −/+ pill and one-line header
+
+Merge [Timowhit/Wedding#19](https://github.com/Timowhit/Wedding/pull/19) (it includes #18, so merging #19 alone is enough; close #18 if GitHub doesn't close it for you). Then delete the `builder-pills` and `actions-after-17` branches.
