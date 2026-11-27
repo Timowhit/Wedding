@@ -80,6 +80,12 @@ describe('post-event wrap-up', { skip: skipWithoutDb }, () => {
         await ana.post('/checklist/wrap-up', {});
         const again = await q(`SELECT COUNT(*)::int AS n FROM checklist_tasks WHERE wedding_id = $1;`, [weddingId]);
         assert.equal(again.rows[0].n, tasks.rows.length, 'nothing added twice');
+        // Someone reading in Spanish doesn't add the same tasks again in Spanish.
+        await ana.post('/language', { language: 'es', return_to: '/' });
+        await ana.post('/checklist/wrap-up', {});
+        await ana.post('/language', { language: 'en', return_to: '/' });
+        const spanish = await q(`SELECT COUNT(*)::int AS n FROM checklist_tasks WHERE wedding_id = $1;`, [weddingId]);
+        assert.equal(spanish.rows[0].n, tasks.rows.length, 'not added again in another language');
     });
 
     it('rates a vendor 1 to 5 with a note, shown as stars; viewers cannot rate', async () => {

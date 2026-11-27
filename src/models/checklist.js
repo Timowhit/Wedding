@@ -156,7 +156,22 @@ const createTasksIfMissing = async (weddingId, tasks) => {
     return result.rowCount;
 };
 
+/**
+ * Which of these task texts the wedding already has (compared without case).
+ * @param {string} weddingId
+ * @param {string[]} texts
+ * @returns {Promise<Set<string>>} The matching texts, lowercased.
+ */
+const findExistingTaskTexts = async (weddingId, texts) => {
+    const result = await db.query(
+        `SELECT DISTINCT LOWER(text) AS text FROM checklist_tasks WHERE wedding_id = $1 AND LOWER(text) = ANY($2::text[]);`,
+        [weddingId, texts.map((text) => text.toLowerCase())]
+    );
+    return new Set(result.rows.map((row) => row.text));
+};
+
 export {
+    findExistingTaskTexts,
     findTasks,
     findTaskProgress,
     findTask,
