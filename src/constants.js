@@ -182,6 +182,11 @@ const ROOM_SIZE_MIN = 5;
 const ROOM_SIZE_MAX = 500;
 const PIECE_SIZE_MIN = 0.5;
 const PIECE_SIZE_MAX = 200;
+// Trials (the playground): deleted after this long without a visit; last_seen_at is written at most this often.
+const TRIAL_IDLE_HOURS = 24;
+const TRIAL_TOUCH_MINUTES = 5;
+// A trial wedding is dated this many days ahead, so its countdown and deadlines look real.
+const TRIAL_WEDDING_DAYS_AHEAD = 180;
 const MAX_LAYOUT_ITEMS = 200;
 // Rooms (or floors) per venue.
 const MAX_ROOMS = 10;
@@ -269,6 +274,9 @@ export {
     ROOM_SIZE_MAX,
     PIECE_SIZE_MIN,
     PIECE_SIZE_MAX,
+    TRIAL_IDLE_HOURS,
+    TRIAL_TOUCH_MINUTES,
+    TRIAL_WEDDING_DAYS_AHEAD,
     MAX_LAYOUT_ITEMS,
     MAX_ROOMS,
     ROOM_NAME_MAX,

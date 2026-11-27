@@ -12,7 +12,7 @@ const findReminderCandidates = async (today) => {
     const result = await db.query(
         `SELECT u.id, u.email, u.display_name, u.language, u.account_type
          FROM users u
-         WHERE u.reminder_emails
+         WHERE u.reminder_emails AND NOT u.is_trial
            AND (u.reminders_sent_on IS NULL OR u.reminders_sent_on <> $1::date)
            AND EXISTS (SELECT 1 FROM wedding_members wm WHERE wm.user_id = u.id AND wm.role = ANY($2))
          ORDER BY u.email ASC;`,

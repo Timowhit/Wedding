@@ -8,6 +8,7 @@ import {
     upsertGoogleUser
 } from '../models/users.js';
 import { countFoundingSpotsLeft } from '../models/founding.js';
+import { convertTrial } from '../models/trials.js';
 import { createWedding } from '../models/weddings.js';
 import { authenticateWithGoogle, isGoogleConfigured, passport } from '../services/google.js';
 import { isSupportedLanguage } from '../i18n/index.js';
@@ -79,6 +80,7 @@ const processRegister = async (req, res) => {
     if (errors.length > 0) return renderRegister(req, res, 400, signupAs, values, errors);
 
     const passwordHash = await hashPassword(password);
+    if (req.session.user?.isTrial) return finishTrialSignup(req, res, signupAs, values, passwordHash);
     // Planners start with an empty dashboard and add client weddings; couples get their own wedding.
     const createOwnWedding = signupAs === 'couple' && !isJoiningByInvite(req);
     let user;
@@ -116,6 +118,35 @@ const processRegister = async (req, res) => {
               : 'auth.accountCreatedForInvite';
     setFlash(req, 'success', welcomeKey, { name: req.session.user.name });
     res.redirect(next);
+};
+
+/**
+ * Sign-up from the playground: the trial account becomes the real one, so its wedding is kept.
+ */
+const finishTrialSignup = async (req, res, signupAs, values, passwordHash) => {
+    let user;
+    try {
+        user = await convertTrial(req.session.user.id, {
+            email: values.email,
+            passwordHash,
+            displayName: values.name,
+            accountType: signupAs,
+            businessName: signupAs === 'planner' ? values.business_name || null : null,
+            weddingName: req.t('wedding.defaultName', { name: values.name }),
+            trialWeddingName: req.t('trial.weddingName')
+        });
+    } catch (err) {
+        if (err.code !== PG_ERRORS.UNIQUE_VIOLATION) throw err;
+        return renderRegister(req, res, 409, signupAs, values, [{ field: 'email', key: 'auth.emailTaken' }]);
+    }
+    // Deleted in the meantime (left alone for a day): sign up as usual instead.
+    if (!user) {
+        delete req.session.user;
+        return renderRegister(req, res, 410, signupAs, values, [{ field: 'email', key: 'trial.expired' }]);
+    }
+    await startUserSession(req, user);
+    setFlash(req, 'success', 'trial.kept', { name: req.session.user.name });
+    res.redirect(signupAs === 'planner' ? '/planner' : '/');
 };
 
 const processLogout = async (req, res) => {

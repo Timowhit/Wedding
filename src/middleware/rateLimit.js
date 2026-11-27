@@ -33,6 +33,8 @@ const loginLimiter = createLimiter({
 
 /** Account creation runs the deliberately slow hasher: 10 attempts per address per hour. */
 const registerLimiter = createLimiter({ windowMs: 60 * MINUTE, limit: 10, messageKey: 'errors.tooManyRegistrations' });
+/** Trials per address per hour: each one is a small wedding in the database. */
+const trialLimiter = createLimiter({ windowMs: 60 * MINUTE, limit: 10, messageKey: 'errors.tooManyTrials' });
 
 /** Changing a password checks the current one, so it is limited like a login. */
 const passwordLimiter = createLimiter({
@@ -61,4 +63,4 @@ const uploadLimiter = createLimiter({
     messageKey: 'files.tooMany'
 });
 
-export { uploadLimiter, loginLimiter, registerLimiter, passwordLimiter, inviteLimiter, searchLimiter };
+export { uploadLimiter, loginLimiter, registerLimiter, trialLimiter, passwordLimiter, inviteLimiter, searchLimiter };

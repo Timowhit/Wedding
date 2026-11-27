@@ -1,3 +1,4 @@
+import { touchTrial } from '../models/trials.js';
 import { findUserById } from '../models/users.js';
 import { setFlash } from '../utils/flash.js';
 
@@ -20,7 +21,8 @@ const toSessionUser = (row) => ({
     themeMode: row.theme_mode,
     themeColors: row.theme_colors ?? null,
     reminderEmails: row.reminder_emails !== false,
-    brandPalette: row.brand_palette ?? null
+    brandPalette: row.brand_palette ?? null,
+    isTrial: row.is_trial === true
 });
 
 /**
@@ -42,6 +44,7 @@ const refreshSessionUser = async (req, res, next) => {
     }
 
     req.session.user = toSessionUser(current);
+    if (current.is_trial) await touchTrial(current.id); // keeps a trial in use from being deleted
     next();
 };
 
@@ -79,6 +82,27 @@ const redirectIfLoggedIn = (req, res, next) => {
 };
 
 /**
+ * Sends signed-up users away from the sign-up, login and trial pages. A trial may use them: to
+ * sign up (keeping the trial wedding) or to log in to an account it already has.
+ * @type {import('express').RequestHandler}
+ */
+const redirectIfSignedUp = (req, res, next) => {
+    if (req.session.user && !req.session.user.isTrial) return res.redirect('/');
+    next();
+};
+
+/**
+ * Things a trial can't do until it signs up (inviting people, uploading files, a password):
+ * it is sent to the sign-up form with a note.
+ * @type {import('express').RequestHandler}
+ */
+const requireRealAccount = (req, res, next) => {
+    if (!req.session.user?.isTrial) return next();
+    setFlash(req, 'info', 'trial.signUpFirst');
+    res.redirect('/register');
+};
+
+/**
  * Planner accounts only. Anyone else gets the 404 page, as if the page did not exist.
  * Must run after requireLogin.
  * @type {import('express').RequestHandler}
@@ -88,4 +112,13 @@ const requirePlanner = (req, res, next) => {
     next('router');
 };
 
-export { requirePlanner, toSessionUser, refreshSessionUser, setCurrentUser, requireLogin, redirectIfLoggedIn };
+export {
+    requirePlanner,
+    toSessionUser,
+    refreshSessionUser,
+    setCurrentUser,
+    requireLogin,
+    redirectIfLoggedIn,
+    redirectIfSignedUp,
+    requireRealAccount
+};

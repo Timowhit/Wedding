@@ -84,13 +84,21 @@ import {
     showEditVendor,
     showVendors
 } from '../controllers/vendors.js';
-import { redirectIfLoggedIn, requireLogin, requirePlanner } from '../middleware/auth.js';
+import {
+    redirectIfLoggedIn,
+    redirectIfSignedUp,
+    requireLogin,
+    requirePlanner,
+    requireRealAccount
+} from '../middleware/auth.js';
+import { processTry, showTry } from '../controllers/trial.js';
 import { processNewClientWedding, processOpenWedding, showPlannerDashboard } from '../controllers/planner.js';
 import {
     inviteLimiter,
     loginLimiter,
     passwordLimiter,
     registerLimiter,
+    trialLimiter,
     searchLimiter,
     uploadLimiter
 } from '../middleware/rateLimit.js';
@@ -201,13 +209,16 @@ const account = [requireLogin, loadOptionalWedding];
 const planner = [requireLogin, requirePlanner, loadOptionalWedding];
 
 /* Public ------------------------------------------------------------------------------------- */
-router.get('/login', redirectIfLoggedIn, showLoginForm);
-router.post('/login', redirectIfLoggedIn, loginLimiter, processLogin);
-router.get('/start', redirectIfLoggedIn, showStart);
+router.get('/login', redirectIfSignedUp, showLoginForm);
+router.post('/login', redirectIfSignedUp, loginLimiter, processLogin);
+router.get('/start', redirectIfSignedUp, showStart);
+// The playground: anyone not signed in can start a private trial wedding.
+router.get('/try', redirectIfLoggedIn, showTry);
+router.post('/try', redirectIfLoggedIn, trialLimiter, processTry);
 router.get('/offline', showOffline);
 router.get('/css/custom/:key.css', showCustomCss);
-router.get('/register', redirectIfLoggedIn, showRegisterForm);
-router.post('/register', redirectIfLoggedIn, registerLimiter, processRegister);
+router.get('/register', redirectIfSignedUp, showRegisterForm);
+router.post('/register', redirectIfSignedUp, registerLimiter, processRegister);
 router.post('/logout', processLogout);
 router.get('/auth/google', startGoogleLogin);
 router.get('/auth/google/callback', finishGoogleLogin);
@@ -218,8 +229,8 @@ router.get('/invite/:token', showInvite);
 router.get('/welcome', requireLogin, showWelcome);
 router.post('/weddings', requireLogin, processNewWedding);
 router.post('/wedding/switch', requireLogin, processSwitchWedding);
-router.post('/invites/join', requireLogin, processJoinByLink);
-router.post('/invite/:token/accept', requireLogin, processAcceptInvite);
+router.post('/invites/join', requireLogin, requireRealAccount, processJoinByLink);
+router.post('/invite/:token/accept', requireLogin, requireRealAccount, processAcceptInvite);
 router.post('/invite/:token/decline', requireLogin, processDeclineInvite);
 
 /* Planner dashboard ---------------------------------------------------------------------------- */
@@ -268,7 +279,7 @@ router.post('/layout/items/:id/delete', editor, processDeletePiece);
 
 /* Files (member downloads, editor uploads; uploads are multipart, see middleware/upload.js) ----- */
 router.get('/files', member, showFiles);
-router.post('/files', editor, uploadLimiter, parseUpload, verifyUploadCsrf, processUpload);
+router.post('/files', editor, requireRealAccount, uploadLimiter, parseUpload, verifyUploadCsrf, processUpload);
 router.get('/files/:id', member, downloadFile);
 router.post('/files/:id/delete', editor, processDeleteFile);
 
@@ -389,11 +400,11 @@ router.get('/reminders/unsubscribe', showUnsubscribe);
 router.post('/reminders/unsubscribe', processUnsubscribe);
 router.post('/settings/business', account, processBusiness);
 router.post('/settings/become-planner', account, processBecomePlanner);
-router.post('/settings/password', account, passwordLimiter, processPassword);
+router.post('/settings/password', account, requireRealAccount, passwordLimiter, processPassword);
 router.post('/settings/leave', member, processLeaveWedding);
 router.post('/settings/wedding', owner, processWeddingDetails);
-router.post('/settings/invites', owner, inviteLimiter, processInvite);
-router.post('/settings/handover', owner, inviteLimiter, processHandover);
+router.post('/settings/invites', owner, requireRealAccount, inviteLimiter, processInvite);
+router.post('/settings/handover', owner, requireRealAccount, inviteLimiter, processHandover);
 router.post('/settings/invites/:id/delete', owner, processRevokeInvite);
 router.post('/settings/members/:userId/role', owner, processMemberRole);
 router.post('/settings/members/:userId/delete', owner, processRemoveMember);

@@ -21,6 +21,7 @@
     "start": "node --env-file-if-exists=.env server.js",
     "migrate": "node --env-file-if-exists=.env scripts/migrate.js",
     "reminders": "node --env-file-if-exists=.env scripts/send-reminders.js",
+    "cleanup-trials": "node --env-file-if-exists=.env scripts/cleanup-trials.js",
     "test": "node --test --test-concurrency=1 \"tests/**/*.test.js\"",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

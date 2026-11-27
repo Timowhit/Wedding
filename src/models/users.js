@@ -2,7 +2,7 @@ import db from './db.js';
 
 // Columns that are safe to load into a session or a view. Never includes password_hash.
 const PUBLIC_COLUMNS = `id, email, display_name, avatar_url, language, created_at, account_type, founding_number,
-                        business_name, theme_palette, theme_mode, theme_colors, brand_palette, reminder_emails`;
+                        business_name, theme_palette, theme_mode, theme_colors, brand_palette, reminder_emails, is_trial`;
 
 /**
  * @param {string} id - users.id (UUID).

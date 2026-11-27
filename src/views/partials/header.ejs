@@ -105,6 +105,9 @@
     <% } else if (locals.user) { %>
         <%- include('account') %>
     <% } %>
+    <% if (locals.user && user.isTrial) { %>
+        <p class="trial-banner"><%= t('trial.banner') %> <a href="/register"><%= t('trial.bannerLink') %></a></p>
+    <% } %>
     <%- include('offline-banner') %>
     <% if (hasNav && hasWedding) { %><div class="task-badge-dock"><%- include('task-badge') %></div><% } %>
 </header>

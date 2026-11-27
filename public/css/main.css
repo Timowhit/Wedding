@@ -3994,3 +3994,31 @@ input[type='color'] {
 .track__order .icon-button:hover {
     background: var(--surface-2);
 }
+
+/* ---------- Playground (trial) ---------- */
+.trial-banner {
+    flex: 1 1 100%;
+    margin: 0;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    background: var(--warning-soft);
+    color: var(--text);
+    font-size: 0.9375rem;
+    text-align: center;
+}
+
+.trial-banner a {
+    font-weight: 600;
+}
+
+.try-card {
+    max-width: 36rem;
+    margin-inline: auto;
+}
+
+.try-points {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0 0 var(--space-4);
+    padding-left: var(--space-4);
+}

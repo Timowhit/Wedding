@@ -1,0 +1,22 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content">
+    <%- include('partials/page-header', { heading: 'trial.heading', subtitle: 'trial.subtitle' }) %>
+    <%- include('partials/flash') %>
+
+    <section class="card try-card">
+        <ul class="try-points">
+            <li><%= t('trial.pointExample') %></li>
+            <li><%= t('trial.pointPrivate') %></li>
+            <li><%= t('trial.pointKept') %></li>
+        </ul>
+        <form method="post" action="/try">
+            <%- include('partials/csrf-field') %>
+            <button type="submit" class="btn btn-primary btn-large"><%= t('trial.start') %></button>
+        </form>
+        <p class="form-footnote"><%= t('auth.haveAccount') %> <a href="/login"><%= t('auth.signIn') %></a></p>
+    </section>
+</main>
+
+<%- include('partials/footer') %>
