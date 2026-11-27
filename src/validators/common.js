@@ -36,6 +36,19 @@ const readText = (value) => (typeof value === 'string' ? value.trim() : '');
  */
 const readChoice = (value, allowed) => (allowed.includes(value) ? value : null);
 
+const HEX_COLOR = /^#[0-9a-f]{6}$/i;
+
+/**
+ * A "#rrggbb" colour (what <input type="color"> sends), lowercased, or null.
+ * @param {unknown} value
+ * @returns {string|null}
+ */
+const readHex = (value) => {
+    const text = readText(value);
+    const withHash = text.startsWith('#') ? text : `#${text}`;
+    return HEX_COLOR.test(withHash) ? withHash.toLowerCase() : null;
+};
+
 /**
  * True for a canonical UUID (the primary-key format of every table). Checking route ids
  * first keeps malformed input from ever reaching PostgreSQL.
@@ -136,5 +149,6 @@ export {
     isHttpUrl,
     parseMoney,
     collectErrors,
-    checkText
+    checkText,
+    readHex
 };

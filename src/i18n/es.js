@@ -950,5 +950,24 @@ export default {
     'unsubscribe.submit': 'Darse de baja',
     'unsubscribe.done': 'Hecho. Ya no recibirás resúmenes diarios.',
     'unsubscribe.later': 'Puedes volver a activarlos en Ajustes cuando quieras.',
-    'action.dismiss': 'Cerrar'
+    'action.dismiss': 'Cerrar',
+    'validation.color': 'Elige un color o escribe un código hexadecimal como #a85a73.',
+    'palette.custom': 'Tus propios colores',
+    'settings.customColors': 'Tus propios colores',
+    'settings.customHint':
+        'Se usan cuando eliges «Tus propios colores». Los tonos se ajustan cuando hace falta para que el texto se lea bien.',
+    'field.primary': 'Color principal',
+    'field.secondary': 'Color secundario',
+    'field.accent': 'Acento',
+    'field.background': 'Fondo',
+    'background.n': 'Neutro',
+    'background.p': 'Con un toque del color principal',
+    'background.s': 'Con un toque del color secundario',
+    'background.a': 'Con un toque del acento',
+    'settings.liveHint': 'Los cambios se ven al momento y se guardan solos.',
+    'settings.liveSaving': 'Guardando…',
+    'settings.liveSaved': 'Guardado.',
+    'settings.liveFailed': 'No se pudo guardar. Revisa tu conexión e inténtalo de nuevo.',
+    'settings.weddingColorsInUse':
+        'Esta boda usa sus propios colores (ver Colores de la boda). Tu elección se aplica en tus otras bodas.'
 };

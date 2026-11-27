@@ -1,6 +1,7 @@
-import { PALETTES, THEME_MODES } from '../constants.js';
+import { CUSTOM_BACKGROUNDS, CUSTOM_PALETTE, PALETTES, THEME_MODES } from '../constants.js';
+import { colorsKey } from '../themes.js';
 import { isSupportedLanguage } from '../i18n/index.js';
-import { EMAIL_MAX, checkText, collectErrors, isEmail, readChoice, readText } from './common.js';
+import { EMAIL_MAX, checkText, collectErrors, isEmail, readChoice, readHex, readText } from './common.js';
 
 const NAME_MAX = 80;
 const BUSINESS_NAME_MAX = 120;
@@ -101,19 +102,36 @@ const validatePasswordChange = (body = {}, hasPassword = true) => {
  */
 const readSignupKind = (value) => (value === 'planner' ? 'planner' : 'couple');
 
+const COLOR_FIELDS = Object.freeze(['primary', 'secondary', 'accent']);
+
 /**
- * A user's own colour theme.
+ * A person's colour theme: a palette (or "custom", with three colours and a background choice)
+ * and a light/dark mode.
  * @param {object} [body] - req.body
- * @returns {{values: {palette: string, mode: string}, data: {palette: string, mode: string}, errors: Array}}
+ * @returns {{values: {palette: string, mode: string, primary: string, secondary: string, accent: string, background: string}, data: {palette: string, mode: string, colors: string|null}, errors: Array}}
  */
 const validateAppearance = (body = {}) => {
-    const values = { palette: readText(body.palette), mode: readText(body.mode) };
+    const values = {
+        palette: readText(body.palette),
+        mode: readText(body.mode),
+        ...Object.fromEntries(COLOR_FIELDS.map((field) => [field, readText(body[field])])),
+        background: readText(body.background)
+    };
     const { errors, fail } = collectErrors();
-    const palette = readChoice(values.palette, PALETTES);
+    const palette = readChoice(values.palette, [...PALETTES, CUSTOM_PALETTE]);
     const mode = readChoice(values.mode, THEME_MODES);
     if (!palette) fail('palette', 'validation.choice');
     if (!mode) fail('mode', 'validation.choice');
-    return { values, data: { palette, mode }, errors };
+
+    // The colour fields are always on the form; they only have to be valid when they are used.
+    let colors = null;
+    if (palette === CUSTOM_PALETTE) {
+        const hexes = Object.fromEntries(COLOR_FIELDS.map((field) => [field, readHex(values[field])]));
+        COLOR_FIELDS.filter((field) => !hexes[field]).forEach((field) => fail(field, 'validation.color'));
+        if (!CUSTOM_BACKGROUNDS.includes(values.background)) fail('background', 'validation.choice');
+        colors = colorsKey({ ...hexes, background: values.background });
+    }
+    return { values, data: { palette, mode, colors }, errors };
 };
 
 /**

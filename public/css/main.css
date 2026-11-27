@@ -1572,6 +1572,50 @@ select.status-select {
     background: linear-gradient(135deg, var(--swatch-a) 50%, var(--swatch-b) 50%);
 }
 
+/* Until the custom stylesheet has loaded, the custom swatch shows a colour wheel. */
+.swatch[data-swatch='custom'] {
+    --swatch-a: #c86f8b;
+    --swatch-b: #5b8fb0;
+}
+
+.custom-colors {
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+}
+
+.custom-colors .hint {
+    margin: 0;
+}
+
+.color-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-5);
+}
+
+.field--color {
+    display: grid;
+    gap: var(--space-1);
+}
+
+input[type='color'] {
+    width: 4rem;
+    min-height: var(--target);
+    padding: 0.2rem;
+    border: 1px solid var(--field-border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    cursor: pointer;
+}
+
+.live-status:empty {
+    display: none;
+}
+
 /* ---------- Start now ---------- */
 .start-choices {
     display: grid;

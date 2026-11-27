@@ -99,6 +99,7 @@ import {
     showEditItem,
     showSchedule
 } from '../controllers/schedule.js';
+import { showCustomCss } from '../controllers/themes.js';
 import { showOffline } from '../controllers/offline.js';
 import { processUnsubscribe, showUnsubscribe } from '../controllers/reminders.js';
 import {
@@ -143,6 +144,7 @@ router.get('/login', redirectIfLoggedIn, showLoginForm);
 router.post('/login', redirectIfLoggedIn, loginLimiter, processLogin);
 router.get('/start', redirectIfLoggedIn, showStart);
 router.get('/offline', showOffline);
+router.get('/css/custom/:key.css', showCustomCss);
 router.get('/register', redirectIfLoggedIn, showRegisterForm);
 router.post('/register', redirectIfLoggedIn, registerLimiter, processRegister);
 router.post('/logout', processLogout);

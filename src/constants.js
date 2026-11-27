@@ -8,6 +8,10 @@ const FOUNDING_DISCOUNT_PCT = 40;
 /** Colour themes. Values are stored in users.theme_palette / brand_palette and theme_mode. */
 const PALETTES = Object.freeze(['rose', 'sage', 'navy', 'champagne', 'slate']);
 const THEME_MODES = Object.freeze(['auto', 'light', 'dark']);
+// The palette whose colours a person (or a wedding) picks; its stylesheet is /css/custom/<key>.css.
+const CUSTOM_PALETTE = 'custom';
+// Background of custom colours: n = neutral, or a light tint of the primary, secondary or accent.
+const CUSTOM_BACKGROUNDS = Object.freeze(['n', 'p', 's', 'a']);
 
 /**
  * Fixed option lists. Values are stored in the database exactly as written here (several are
@@ -128,6 +132,8 @@ export {
     FOUNDING_DISCOUNT_PCT,
     PALETTES,
     THEME_MODES,
+    CUSTOM_PALETTE,
+    CUSTOM_BACKGROUNDS,
     BUDGET_CATEGORIES,
     TASK_CATEGORIES,
     TASK_STATUSES,

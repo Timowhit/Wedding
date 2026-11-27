@@ -2,7 +2,7 @@ import db from './db.js';
 
 // Columns that are safe to load into a session or a view. Never includes password_hash.
 const PUBLIC_COLUMNS = `id, email, display_name, avatar_url, language, created_at, account_type, founding_number,
-                        business_name, theme_palette, theme_mode, brand_palette, reminder_emails`;
+                        business_name, theme_palette, theme_mode, theme_colors, brand_palette, reminder_emails`;
 
 /**
  * @param {string} id - users.id (UUID).
@@ -123,15 +123,17 @@ const updatePasswordHash = async (id, passwordHash) => {
 };
 
 /**
- * Saves a user's own colour theme.
+ * Saves a user's own colour theme. Custom colours are kept when another palette is chosen, so
+ * switching back to "custom" brings them back.
  * @param {string} id
- * @param {{palette: string, mode: string}} values - Already validated against PALETTES / THEME_MODES.
+ * @param {{palette: string, mode: string, colors: string|null}} values - Already validated; colors is a custom colours key or null to keep the saved one.
  * @returns {Promise<Object|null>} The updated user (public columns).
  */
-const updateAppearance = async (id, { palette, mode }) => {
+const updateAppearance = async (id, { palette, mode, colors }) => {
     const result = await db.query(
-        `UPDATE users SET theme_palette = $2, theme_mode = $3 WHERE id = $1 RETURNING ${PUBLIC_COLUMNS};`,
-        [id, palette, mode]
+        `UPDATE users SET theme_palette = $2, theme_mode = $3, theme_colors = COALESCE($4, theme_colors)
+         WHERE id = $1 RETURNING ${PUBLIC_COLUMNS};`,
+        [id, palette, mode, colors ?? null]
     );
     return result.rows[0] ?? null;
 };

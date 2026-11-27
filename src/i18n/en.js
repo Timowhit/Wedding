@@ -941,5 +941,24 @@ export default {
     'unsubscribe.submit': 'Unsubscribe',
     'unsubscribe.done': "Done. You won't get daily summaries any more.",
     'unsubscribe.later': 'You can switch them back on in Settings at any time.',
-    'action.dismiss': 'Dismiss'
+    'action.dismiss': 'Dismiss',
+    'validation.color': 'Choose a colour, or type a hex code such as #a85a73.',
+    'palette.custom': 'Your own colours',
+    'settings.customColors': 'Your own colours',
+    'settings.customHint':
+        'Used when “Your own colours” is chosen above. Shades are adjusted where needed so text stays easy to read.',
+    'field.primary': 'Main colour',
+    'field.secondary': 'Second colour',
+    'field.accent': 'Accent',
+    'field.background': 'Background',
+    'background.n': 'Neutral',
+    'background.p': 'Tinted with the main colour',
+    'background.s': 'Tinted with the second colour',
+    'background.a': 'Tinted with the accent',
+    'settings.liveHint': 'Changes show straight away and save themselves.',
+    'settings.liveSaving': 'Saving…',
+    'settings.liveSaved': 'Saved.',
+    'settings.liveFailed': 'Couldn’t save. Check your connection and try again.',
+    'settings.weddingColorsInUse':
+        'This wedding uses its own colours (see Wedding colours). Your choice applies in your other weddings.'
 };

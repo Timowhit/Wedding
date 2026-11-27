@@ -40,7 +40,7 @@ These are the six ideas the product owner added to `notes.txt`. Every choice the
 
 - **Custom colours as a key.**
   - Four colours become a key such as `a85a73-4f7a59-b8862b-p`: three hex colours plus `n`, `p`, `s` or `a` for the background.
-  - `GET /theme/<key>.css` returns the stylesheet. It is a pure function of the key, cached as immutable, and needs no sign-in.
+  - `GET /css/custom/<key>.css` (under `/css/`, so the offline worker caches it like the other stylesheets) returns the stylesheet. It is a pure function of the key, cached as immutable, and needs no sign-in.
   - The page links it and sets `data-palette="custom"`. The live preview only swaps that link, so the colour rules live in one place (`src/themes.js`) and the CSP stays strict: no inline styles.
 - **The derivation** (`customTokens(key)`): for light and dark mode, it shifts each colour's lightness just enough for these to pass WCAG AA (4.5:1):
   - primary on surface and on background
@@ -68,7 +68,7 @@ These are the six ideas the product owner added to `notes.txt`. Every choice the
   - member: `GET /colors`, `GET /layout`
   - editor: `POST /colors`, `/colors/:id/delete`, `/colors/app`, `/colors/app/off`, `/layout/room`, `/layout/items`, `/layout/tables`, `/layout/items/:id`, `/layout/items/:id/delete`
   - account: `POST /settings/appearance`, which now also accepts `custom` and answers JSON to `fetch`
-  - public: `GET /theme/:key.css`
+  - public: `GET /css/custom/:key.css`
 
 ## Testing
 

@@ -2,6 +2,7 @@
  * Progressive enhancement only. Every feature works without JavaScript: forms post normally
  * and the server renders the result. This file adds conveniences on top:
  * - success and info notices fade after a few seconds; every notice gets a close button
+ * - Settings > Appearance previews every change and saves it with fetch
  * - selects marked [data-autosubmit] submit their form on change (their button is then hidden)
  * - forms marked [data-confirm] ask for confirmation before submitting
  * - buttons marked [data-copy] copy the value of the input they name
@@ -56,6 +57,103 @@
         flash.addEventListener('mouseleave', resume);
         flash.addEventListener('focusout', resume);
     });
+
+    document.querySelectorAll('[data-show-with-js]').forEach(function (element) {
+        element.hidden = false;
+    });
+
+    // Settings > Appearance: every change shows at once and saves itself. The custom colours'
+    // stylesheet comes from the server (/css/custom/<key>.css), so the colour rules live in one
+    // place. A new stylesheet replaces the old one only once it has loaded, so nothing flickers.
+    const appearance = document.querySelector('form[data-live-appearance]');
+    if (appearance && window.fetch && window.URLSearchParams) {
+        const html = document.documentElement;
+        const status = appearance.querySelector('[data-save-status]');
+        // Inside a wedding with its own colours or a planner's brand, the choice applies elsewhere.
+        const previewHere = appearance.getAttribute('data-theme-source') === 'personal';
+        const PREVIEW_DELAY_MS = 150;
+        const SAVE_DELAY_MS = 600;
+        let previewTimer = null;
+        let saveTimer = null;
+        let saveCount = 0;
+
+        const colorsKey = function (form) {
+            const hex = function (name) {
+                return String(form.get(name) || '')
+                    .replace('#', '')
+                    .toLowerCase();
+            };
+            return [hex('primary'), hex('secondary'), hex('accent'), form.get('background')].join('-');
+        };
+        const setStatus = function (key, text) {
+            if (status) status.textContent = text || status.getAttribute(key) || '';
+        };
+        const useCustomSheet = function (href, done) {
+            const current = document.querySelector('link[data-custom-theme]');
+            if (current && current.getAttribute('href') === href) return done();
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = href;
+            link.setAttribute('data-custom-theme', '');
+            link.addEventListener('load', function () {
+                document.querySelectorAll('link[data-custom-theme]').forEach(function (old) {
+                    if (old !== link) old.remove();
+                });
+                done();
+            });
+            document.head.appendChild(link);
+        };
+        const preview = function () {
+            const form = new FormData(appearance);
+            const palette = String(form.get('palette') || '');
+            const apply = function () {
+                if (!previewHere) return;
+                html.setAttribute('data-palette', palette);
+                html.setAttribute('data-mode', String(form.get('mode') || 'auto'));
+            };
+            // The custom swatch follows the pickers even when this page shows another theme.
+            if (
+                /^[0-9a-f]{6}-[0-9a-f]{6}-[0-9a-f]{6}-[npsa]$/.test(colorsKey(form)) &&
+                (palette === 'custom' || !previewHere)
+            ) {
+                useCustomSheet('/css/custom/' + colorsKey(form) + '.css', apply);
+            } else {
+                apply();
+            }
+        };
+        const save = function () {
+            const attempt = ++saveCount;
+            setStatus('data-saving');
+            fetch(appearance.action, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams(new FormData(appearance))
+            })
+                .then(function (response) {
+                    return response.json().then(function (body) {
+                        if (attempt !== saveCount) return; // a newer change is on its way
+                        if (response.ok) setStatus('data-saved');
+                        else setStatus('data-failed', (body.errors || []).join(' '));
+                    });
+                })
+                .catch(function () {
+                    if (attempt === saveCount) setStatus('data-failed');
+                });
+        };
+        const changed = function () {
+            clearTimeout(previewTimer);
+            clearTimeout(saveTimer);
+            previewTimer = setTimeout(preview, PREVIEW_DELAY_MS);
+            saveTimer = setTimeout(save, SAVE_DELAY_MS);
+        };
+        appearance.addEventListener('input', changed);
+        appearance.addEventListener('change', changed);
+        appearance.addEventListener('submit', function (event) {
+            event.preventDefault();
+            changed();
+        });
+    }
 
     document.addEventListener('submit', function (event) {
         const message = event.target.getAttribute('data-confirm');

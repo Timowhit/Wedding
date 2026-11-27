@@ -25,11 +25,11 @@ const DEFAULT_WEDDING_NAME = 'Our Wedding';
 /**
  * Every wedding the user belongs to, owned weddings first, then by join date.
  * @param {string} userId
- * @returns {Promise<Array<{id: string, name: string, wedding_date: Date|null, planner_managed: boolean, role: string, owner_brand_palette: string|null}>>}
+ * @returns {Promise<Array<{id: string, name: string, wedding_date: Date|null, planner_managed: boolean, theme_colors: string|null, role: string, owner_brand_palette: string|null}>>}
  */
 const findWeddingsForUser = async (userId) => {
     const result = await db.query(
-        `SELECT w.id, w.name, w.wedding_date, w.planner_managed, wm.role,
+        `SELECT w.id, w.name, w.wedding_date, w.planner_managed, w.theme_colors, wm.role,
                 ${OWNER_BRAND_PALETTE} AS owner_brand_palette
          FROM weddings w
          JOIN wedding_members wm ON wm.wedding_id = w.id
@@ -45,11 +45,11 @@ const findWeddingsForUser = async (userId) => {
  * This is the access check every wedding page relies on.
  * @param {string} weddingId
  * @param {string} userId
- * @returns {Promise<{id: string, name: string, wedding_date: Date|null, planner_managed: boolean, role: string, owner_brand_palette: string|null}|null>}
+ * @returns {Promise<{id: string, name: string, wedding_date: Date|null, planner_managed: boolean, theme_colors: string|null, role: string, owner_brand_palette: string|null}|null>}
  */
 const findWeddingForMember = async (weddingId, userId) => {
     const result = await db.query(
-        `SELECT w.id, w.name, w.wedding_date, w.planner_managed, wm.role,
+        `SELECT w.id, w.name, w.wedding_date, w.planner_managed, w.theme_colors, wm.role,
                 ${OWNER_BRAND_PALETTE} AS owner_brand_palette
          FROM weddings w
          JOIN wedding_members wm ON wm.wedding_id = w.id

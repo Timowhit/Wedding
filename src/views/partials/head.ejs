@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500;600&display=swap">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/themes.css">
+    <% if (theme.colors) { %><link rel="stylesheet" href="/css/custom/<%= theme.colors %>.css" data-custom-theme><% } %>
     <script src="/js/app.js" defer></script>
 </head>
 <body<% if (locals.bodyClass) { %> class="<%= bodyClass %>"<% } %><% if (locals.user) { %> data-offline<% } %><% if (locals.wedding) { %> data-wedding="<%= wedding.id %>"<% } %> data-rendered-at="<%= renderedAt %>">
