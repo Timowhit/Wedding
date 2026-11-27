@@ -84,6 +84,30 @@ const EXAMPLE_TASKS = Object.freeze([
     { key: 'examples.arrangeTransport', category: 'Other' }
 ]);
 
+/** Which budget category a booked vendor's contract counts under (the two lists use different names). */
+const VENDOR_BUDGET_CATEGORY = Object.freeze({
+    Photographer: 'Photography',
+    Videographer: 'Photography',
+    Florist: 'Flowers',
+    Caterer: 'Catering',
+    Cake: 'Catering',
+    Venue: 'Venue',
+    'DJ / Band': 'Music',
+    'Hair & Makeup': 'Attire',
+    Transportation: 'Transportation',
+    Officiant: 'Other',
+    Other: 'Other'
+});
+
+/** Vendor status whose contract and payments count in full. */
+const COUNTED_STATUS = 'Booked';
+/** Vendor status whose already-paid payments still count (that money is gone). */
+const PAID_ONLY_STATUS = 'Declined';
+/** "Payments due" on a wedding's dashboard: overdue, plus due within this many days. */
+const PAYMENT_DUE_WINDOW_DAYS = 30;
+/** Filters for the planner's cross-wedding "Payments due" list; the first is the default. */
+const PLANNER_PAYMENT_FILTERS = Object.freeze(['month', 'next30', 'overdue']);
+
 export {
     ACCOUNT_TYPES,
     FOUNDING_SPOTS,
@@ -97,5 +121,10 @@ export {
     VENDOR_CATEGORIES,
     VENDOR_STATUSES,
     MUSIC_SECTIONS,
-    EXAMPLE_TASKS
+    EXAMPLE_TASKS,
+    VENDOR_BUDGET_CATEGORY,
+    COUNTED_STATUS,
+    PAID_ONLY_STATUS,
+    PAYMENT_DUE_WINDOW_DAYS,
+    PLANNER_PAYMENT_FILTERS
 };
