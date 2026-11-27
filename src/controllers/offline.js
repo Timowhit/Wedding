@@ -3,6 +3,6 @@
  * a connection. Public, so it can be cached for anyone and rendered without a session.
  * @type {import('express').RequestHandler}
  */
-const showOffline = (req, res) => res.render('offline', { title: req.t('offline.title') });
+const showOffline = (req, res) => res.render('offline', { title: req.t('offline.title'), hideOfflineBanner: true });
 
 export { showOffline };

@@ -48,6 +48,25 @@ describe('offline event day', { skip: skipWithoutDb }, () => {
         assert.match(page, /<button type="button"[^>]*data-save-offline[^>]*hidden/);
     });
 
+    it('every page tells the service worker which wedding it belongs to', async () => {
+        const weddingId = (
+            await app.pool.query(
+                `SELECT wm.wedding_id FROM wedding_members wm JOIN users u ON u.id = wm.user_id WHERE u.email = 'ivy@example.com';`
+            )
+        ).rows[0].wedding_id;
+        assert.equal((await couple.get('/schedule')).headers.get('x-fp-wedding'), weddingId);
+        assert.equal((await couple.get('/vendors')).headers.get('x-fp-wedding'), weddingId);
+        assert.equal((await new TestClient(app.baseUrl).get('/login')).headers.get('x-fp-wedding'), 'none');
+    });
+
+    it('the print view carries the offline banner too', async () => {
+        assert.match((await couple.get('/schedule?print=1')).body, /data-offline-banner/);
+    });
+
+    it('the offline page has no "copy saved at" banner', async () => {
+        assert.doesNotMatch((await couple.get('/offline')).body, /data-offline-banner/);
+    });
+
     it('sign-out clears site data', async () => {
         const temp = await registeredClient(app.baseUrl, 'Tem', 'tem@example.com');
         await temp.get('/');

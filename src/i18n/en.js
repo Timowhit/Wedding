@@ -860,5 +860,6 @@ export default {
     'offline.save': 'Save for offline',
     'offline.saved': 'Saved for offline at',
     'offline.saveHint':
-        'The schedule, vendor list and the vendors on this schedule are saved on this device for the wedding day. Open the schedule again after switching weddings.'
+        'The schedule, vendor list and the vendors on this schedule are saved on this device for the wedding day. Open the schedule again after switching weddings.',
+    'offline.saveFailed': "Couldn't save for offline: the connection isn't working. Try again before you lose signal."
 };

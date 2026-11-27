@@ -867,5 +867,7 @@ export default {
     'offline.save': 'Guardar sin conexión',
     'offline.saved': 'Guardado sin conexión a las',
     'offline.saveHint':
-        'El programa, la lista de proveedores y los proveedores de este programa se guardan en este dispositivo para el día de la boda. Vuelve a abrir el programa después de cambiar de boda.'
+        'El programa, la lista de proveedores y los proveedores de este programa se guardan en este dispositivo para el día de la boda. Vuelve a abrir el programa después de cambiar de boda.',
+    'offline.saveFailed':
+        'No se pudo guardar sin conexión: la conexión no funciona. Inténtalo de nuevo antes de perder la señal.'
 };

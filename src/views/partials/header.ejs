@@ -60,7 +60,5 @@
     <% } else if (locals.user) { %>
         <%- include('account') %>
     <% } %>
-    <% if (locals.user) { %>
-        <p class="offline-banner" data-offline-banner role="status" hidden><%= t('offline.banner') %> <time data-saved-time></time></p>
-    <% } %>
+    <%- include('offline-banner') %>
 </header>

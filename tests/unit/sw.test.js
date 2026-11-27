@@ -14,7 +14,7 @@ const loadWorker = () => {
 };
 
 describe('service worker', () => {
-    const { routeFor, shouldStore } = loadWorker();
+    const { routeFor, shouldStore, weddingAction, markSavedCopy } = loadWorker();
     const route = (path, origin = ORIGIN) => routeFor(new URL(path, origin), ORIGIN);
 
     it('routeFor classifies paths', () => {
@@ -40,5 +40,26 @@ describe('service worker', () => {
         assert.equal(shouldStore({ ...good, redirected: true, url: `${ORIGIN}/login` }), false);
         assert.equal(shouldStore({ ...good, url: `${ORIGIN}/login` }), false);
         assert.equal(shouldStore({ ...good, type: 'opaque' }), false);
+    });
+
+    it('weddingAction clears saved pages when the wedding changes or nobody is signed in', () => {
+        const A = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+        const B = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+        assert.equal(weddingAction(null, A), 'remember');
+        assert.equal(weddingAction(A, A), 'keep');
+        assert.equal(weddingAction(A, B), 'clear');
+        assert.equal(weddingAction(A, 'none'), 'clear');
+        assert.equal(weddingAction(null, 'none'), 'remember');
+        assert.equal(weddingAction(A, null), 'keep', 'responses without the header change nothing');
+    });
+
+    it('markSavedCopy flags a page served from the saved copy', () => {
+        const html =
+            '<html><body class="x" data-offline data-rendered-at="2027-01-01T10:00:00.000Z"><p>data-rendered-at</p>';
+        assert.equal(
+            markSavedCopy(html),
+            '<html><body class="x" data-offline data-saved-copy data-rendered-at="2027-01-01T10:00:00.000Z"><p>data-rendered-at</p>'
+        );
+        assert.equal(markSavedCopy('<p>no marker</p>'), '<p>no marker</p>');
     });
 });

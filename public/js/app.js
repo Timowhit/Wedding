@@ -93,17 +93,29 @@
     });
     // Offline event day -------------------------------------------------------------------------
     const body = document.body;
-    const formatTime = (date) => date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    // A page older than this when it loads came from the saved copy, not the network.
+    const SAVED_COPY_AGE_MS = 10 * 60 * 1000;
+    const WORKER_REPLY_TIMEOUT_MS = 20000;
+    const renderedAt = new Date(body.getAttribute('data-rendered-at'));
+    const isSavedCopy =
+        body.hasAttribute('data-saved-copy') ||
+        (!Number.isNaN(renderedAt.getTime()) && Date.now() - renderedAt.getTime() > SAVED_COPY_AGE_MS);
+
+    const formatSavedTime = (date) => {
+        const time = { hour: '2-digit', minute: '2-digit' };
+        return date.toDateString() === new Date().toDateString()
+            ? date.toLocaleTimeString([], time)
+            : date.toLocaleString([], { weekday: 'short', day: 'numeric', month: 'short', ...time });
+    };
 
     const banner = document.querySelector('[data-offline-banner]');
     const showBanner = () => {
         if (!banner) return;
-        banner.hidden = navigator.onLine;
+        banner.hidden = navigator.onLine && !isSavedCopy;
         const time = banner.querySelector('[data-saved-time]');
-        const savedAt = new Date(body.getAttribute('data-rendered-at'));
-        if (time && !Number.isNaN(savedAt.getTime())) {
-            time.dateTime = savedAt.toISOString();
-            time.textContent = formatTime(savedAt);
+        if (time && !Number.isNaN(renderedAt.getTime())) {
+            time.dateTime = renderedAt.toISOString();
+            time.textContent = formatSavedTime(renderedAt);
         }
     };
     showBanner();
@@ -111,69 +123,56 @@
     window.addEventListener('offline', showBanner);
 
     if (body.hasAttribute('data-offline') && 'serviceWorker' in navigator) {
-        /** Sends a message to the active worker and resolves with its reply (or null). */
+        /** Sends a message to the active worker; resolves with its reply, or null on timeout. */
         const ask = (message) =>
             navigator.serviceWorker.ready.then(
                 (registration) =>
                     new Promise((resolve) => {
                         if (!registration.active) return resolve(null);
                         const channel = new MessageChannel();
-                        channel.port1.onmessage = (event) => resolve(event.data);
+                        const timer = window.setTimeout(() => resolve(null), WORKER_REPLY_TIMEOUT_MS);
+                        channel.port1.onmessage = (event) => {
+                            window.clearTimeout(timer);
+                            resolve(event.data);
+                        };
                         registration.active.postMessage(message, [channel.port2]);
                     })
             );
 
-        navigator.serviceWorker.register('/sw.js').catch(() => {});
-
-        // A saved event day belongs to one wedding: drop it when the active wedding changes.
-        const wedding = body.getAttribute('data-wedding');
-        let savedFor = null;
-        try {
-            savedFor = window.localStorage.getItem('fp-offline-wedding');
-        } catch {
-            savedFor = null;
-        }
-        const remember = () => {
-            try {
-                window.localStorage.setItem('fp-offline-wedding', wedding);
-            } catch {
-                // Private mode: nothing to remember between visits.
-            }
-        };
-        const cleared =
-            wedding && navigator.onLine && savedFor && savedFor !== wedding
-                ? ask({ type: 'clear-pages' }).then(remember)
-                : Promise.resolve();
-
         const saveButton = document.querySelector('[data-save-offline]');
-        if (saveButton && wedding) {
-            const status = document.querySelector('[data-save-offline-status]');
-            const hint = document.querySelector('[data-save-offline-hint]');
-            const pages = () => [
-                '/schedule',
-                '/schedule?print=1',
-                '/vendors',
-                ...Array.from(document.querySelectorAll('a[data-offline-page]'), (link) => link.getAttribute('href'))
-            ];
-            const save = () => {
-                if (!navigator.onLine) return;
-                saveButton.disabled = true;
-                cleared
-                    .then(() => ask({ type: 'save', urls: pages() }))
-                    .then((reply) => {
-                        saveButton.disabled = false;
-                        if (!reply || reply.type !== 'saved') return;
-                        remember();
+        navigator.serviceWorker
+            .register('/sw.js')
+            .then(() => {
+                if (!saveButton || isSavedCopy) return;
+                const status = document.querySelector('[data-save-offline-status]');
+                const failed = document.querySelector('[data-save-offline-failed]');
+                const hint = document.querySelector('[data-save-offline-hint]');
+                const pages = () => [
+                    '/schedule',
+                    '/schedule?print=1',
+                    '/vendors',
+                    ...Array.from(document.querySelectorAll('a[data-offline-page]'), (link) =>
+                        link.getAttribute('href')
+                    )
+                ];
+                const save = () => {
+                    saveButton.setAttribute('aria-busy', 'true');
+                    ask({ type: 'save', urls: pages() }).then((reply) => {
+                        saveButton.removeAttribute('aria-busy');
+                        // Only a stored schedule counts: Wi-Fi without internet "succeeds" with nothing saved.
+                        const saved = Boolean(reply && reply.type === 'saved' && reply.schedule);
                         if (status) {
-                            status.querySelector('time').textContent = formatTime(new Date());
-                            status.hidden = false;
+                            status.querySelector('time').textContent = formatSavedTime(new Date());
+                            status.hidden = !saved;
                         }
+                        if (failed) failed.hidden = saved;
                     });
-            };
-            saveButton.hidden = false;
-            if (hint) hint.hidden = false;
-            saveButton.addEventListener('click', save);
-            save();
-        }
+                };
+                saveButton.hidden = false;
+                if (hint) hint.hidden = false;
+                saveButton.addEventListener('click', save);
+                save();
+            })
+            .catch(() => {});
     }
 })();

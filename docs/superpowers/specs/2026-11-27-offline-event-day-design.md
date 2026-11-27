@@ -50,10 +50,9 @@ Success means: a planner opens the event-day schedule once while online, and lat
 - **Saving:** on the schedule page, `app.js` asks the worker to save `/schedule`, `/schedule?print=1`, `/vendors` and every vendor page linked from the schedule. This happens on each visit, and when the person taps **Save for offline**, which then reports "Saved for offline at 14:05". _(call)_ Vendor names on the schedule become links to their vendor pages, which is useful online too.
 - **Offline page (`/offline`):** a small public page, saved when the worker installs, in the language in use at that time. It says "You're offline" and links to the event-day schedule and vendors.
 - **Banner:** every page carries the time it was rendered (`data-rendered-at`). When the browser is offline, `app.js` shows a banner (`role="status"`): "You're offline. This copy was saved at 14:05." The time is formatted in the browser.
-- **Clearing:**
-  - Sign-out responds with `Clear-Site-Data: "cache", "storage"`, which removes the cached pages and the service worker.
-  - Switching the active wedding responds with `Clear-Site-Data: "cache"`. This covers the header switcher and the planner dashboard's "Open".
-  - _(call)_ After switching, the planner opens the schedule once to save the new wedding's day. The schedule page says so beside the Save button.
+- **Clearing:** every rendered page carries an `X-FP-Wedding` header: the active wedding's id, or `none` when signed out or without a wedding. When it changes, the worker drops its saved pages, except the offline page. That covers switching weddings, signing in as someone else, an expired session and being removed from a wedding. Sign-out also sends `Clear-Site-Data: "cache", "storage"`, which removes everything, including the worker. _(Changed during review: the first version sent `Clear-Site-Data: "cache"` on switches, but that header doesn't clear the worker's page cache.)_
+- **Weak signal:** if the network hasn't answered within 4 seconds and a saved copy exists, the saved copy is shown while the network keeps refreshing it in the background. A page served from the saved copy is marked (`data-saved-copy`), so the banner shows even when the browser thinks it is online. The banner shows the date when the copy is from another day. The print view has the banner too.
+- **Save feedback:** "Saved for offline" only appears when `/schedule` itself was stored. Otherwise the page says it couldn't save.
 
 ## Constraints
 
