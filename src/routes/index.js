@@ -10,7 +10,16 @@ import {
     showRegisterForm,
     startGoogleLogin
 } from '../controllers/auth.js';
-import { processBudgetLimit, processDeleteExpense, processNewExpense, showBudget } from '../controllers/budget.js';
+import {
+    processBudgetLimit,
+    processCategoryPlan,
+    processDeleteCategory,
+    processDeleteExpense,
+    processNewCategory,
+    processNewExpense,
+    processSuggestedCategories,
+    showBudget
+} from '../controllers/budget.js';
 import {
     processDeleteTask,
     processEditTask,
@@ -269,6 +278,10 @@ router.get('/budget', member, showBudget);
 router.post('/budget/limit', editor, processBudgetLimit);
 router.post('/budget/expenses', editor, processNewExpense);
 router.post('/budget/expenses/:id/delete', editor, processDeleteExpense);
+router.post('/budget/categories', editor, processNewCategory);
+router.post('/budget/categories/suggested', editor, processSuggestedCategories);
+router.post('/budget/categories/:id/plan', editor, processCategoryPlan);
+router.post('/budget/categories/:id/delete', editor, processDeleteCategory);
 
 /* Checklist ----------------------------------------------------------------------------------- */
 router.get('/checklist', member, showChecklist);

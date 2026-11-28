@@ -40,20 +40,80 @@
         <% } %>
     </section>
 
-    <% if (categoryTotals.length > 0) { %>
+    <% if (categoryRows.length > 0 || canEdit) { %>
         <section class="card" aria-labelledby="by-category-heading">
             <h2 class="card-title" id="by-category-heading"><%= t('budget.byCategory') %></h2>
-            <ul class="category-totals">
-                <% categoryTotals.forEach((row) => { %>
-                    <% const share = summary.committed > 0 ? Math.round((row.total / summary.committed) * 100) : 0; %>
-                    <li class="category-total">
-                        <a href="/budget?category=<%= encodeURIComponent(row.category) %>" class="category-total__name"><%= t(`budgetCategory.${row.category}`) %></a>
-                        <span class="category-total__amount"><%= formatCurrency(row.total) %></span>
-                        <span class="category-total__share"><%= t('budget.share', { pct: share }) %></span>
-                        <progress class="progress progress--thin" max="100" value="<%= share %>" aria-hidden="true"></progress>
-                    </li>
-                <% }); %>
-            </ul>
+            <% if (categoryRows.length > 0) { %>
+                <ul class="category-totals">
+                    <% categoryRows.forEach((row) => { %>
+                        <% const share = summary.committed > 0 ? Math.round((row.total / summary.committed) * 100) : 0; %>
+                        <% const planShare = row.planned > 0 ? Math.min(Math.round((row.total / row.planned) * 100), 100) : share; %>
+                        <li class="category-total<%= row.planned > 0 && row.total > row.planned ? ' category-total--over' : '' %>">
+                            <a href="/budget?category=<%= encodeURIComponent(row.value) %>" class="category-total__name"><%= row.label %></a>
+                            <span class="category-total__amount"><%= formatCurrency(row.total) %><% if (row.planned > 0) { %> <span class="category-total__plan"><%= t('budget.ofPlanned', { planned: formatCurrency(row.planned) }) %></span><% } %></span>
+                            <span class="category-total__share"><%= t('budget.share', { pct: share }) %></span>
+                            <progress class="progress progress--thin" max="100" value="<%= planShare %>" aria-hidden="true"></progress>
+                        </li>
+                    <% }); %>
+                </ul>
+            <% } else { %>
+                <p class="hint"><%= t('budget.byCategoryEmpty') %></p>
+            <% } %>
+
+            <% if (canEdit) { %>
+                <details class="disclosure" <%= categoryForm.errors.length > 0 || planForm ? 'open' : '' %>>
+                    <summary><%= t('budget.manageCategories') %></summary>
+                    <% if (planForm) { %><%- include('partials/form-errors', { errors: planForm.errors, id: 'plan-errors' }) %><% } %>
+                    <ul class="category-manage">
+                        <% categories.forEach((category) => { const failed = planForm && planForm.id === category.id; %>
+                            <li class="category-manage__row">
+                                <form method="post" action="/budget/categories/<%= category.id %>/plan" class="inline-form category-manage__plan">
+                                    <%- include('partials/csrf-field') %>
+                                    <%- include('partials/return-to') %>
+                                    <label for="plan-<%= category.id %>" class="category-manage__name"><%= category.label %><span class="visually-hidden"> · <%= t('field.planned') %></span></label>
+                                    <input type="text" inputmode="decimal" id="plan-<%= category.id %>" name="planned" maxlength="16"
+                                           value="<%= failed ? planForm.values.planned : (category.planned ?? '') %>" placeholder="<%= t('budget.plannedPlaceholder') %>"
+                                           <%- failed ? fieldState(planForm.errors, 'planned', 'plan-errors') : '' %>>
+                                    <button type="submit" class="btn btn-secondary btn-small" aria-label="<%= t('budget.savePlannedFor', { name: category.label }) %>"><%= t('budget.savePlanned') %></button>
+                                </form>
+                                <% if (category.deletable) { %>
+                                    <form method="post" action="/budget/categories/<%= category.id %>/delete" class="inline-form" data-confirm="<%= t('confirm.deleteCategory', { name: category.label, other: categoryLabel('Other') }) %>">
+                                        <%- include('partials/csrf-field') %>
+                                        <%- include('partials/return-to') %>
+                                        <button type="submit" class="link-action link-action--danger" aria-label="<%= t('action.deleteNamed', { name: category.label }) %>"><%= t('action.delete') %></button>
+                                    </form>
+                                <% } %>
+                            </li>
+                        <% }); %>
+                    </ul>
+                    <p class="hint"><%= t('budget.categoriesHint') %></p>
+
+                    <h3 class="subheading"><%= t('budget.addCategory') %></h3>
+                    <%- include('partials/form-errors', { errors: categoryForm.errors, id: 'category-errors' }) %>
+                    <form method="post" action="/budget/categories" class="form-grid">
+                        <%- include('partials/csrf-field') %>
+                        <%- include('partials/return-to') %>
+                        <div class="field">
+                            <label for="category-name"><%= t('field.name') %></label>
+                            <input type="text" id="category-name" name="name" required maxlength="<%= categoryNameMax %>" value="<%= categoryForm.values.name %>"
+                                   placeholder="<%= t('budget.categoryPlaceholder') %>" <%- fieldState(categoryForm.errors, 'name', 'category-errors') %>>
+                        </div>
+                        <div class="field">
+                            <label for="category-planned"><%= t('field.planned') %> <span class="optional"><%= t('form.optional') %></span></label>
+                            <input type="text" inputmode="decimal" id="category-planned" name="planned" maxlength="16" value="<%= categoryForm.values.planned %>"
+                                   placeholder="0.00" <%- fieldState(categoryForm.errors, 'planned', 'category-errors') %>>
+                        </div>
+                        <div class="form-actions"><button type="submit" class="btn btn-secondary"><%= t('budget.addCategorySubmit') %></button></div>
+                    </form>
+                    <% if (missingSuggested) { %>
+                        <form method="post" action="/budget/categories/suggested" class="inline-form">
+                            <%- include('partials/csrf-field') %>
+                            <%- include('partials/return-to') %>
+                            <button type="submit" class="btn btn-ghost btn-small"><%= t('budget.addSuggested') %></button>
+                        </form>
+                    <% } %>
+                </details>
+            <% } %>
         </section>
     <% } %>
 
@@ -71,7 +131,9 @@
                 <div class="field">
                     <label for="category"><%= t('field.category') %></label>
                     <select id="category" name="category" <%- fieldState(expenseForm.errors, 'category', 'expense-errors') %>>
-                        <%- include('partials/options', { options: categories, selected: expenseForm.values.category, prefix: 'budgetCategory' }) %>
+                        <% categories.forEach((category) => { %>
+                            <option value="<%= category.value %>" <%= category.value === expenseForm.values.category ? 'selected' : '' %>><%= category.label %></option>
+                        <% }); %>
                     </select>
                 </div>
                 <div class="field">
@@ -93,7 +155,7 @@
                 <% contracts.forEach((row) => { %>
                     <li class="item-card">
                         <div class="item-info">
-                            <p class="item-name"><a class="item-link" href="/vendors/<%= row.id %>"><%= row.name %></a> <span class="tag"><%= t(`budgetCategory.${row.budgetCategory}`) %></span></p>
+                            <p class="item-name"><a class="item-link" href="/vendors/<%= row.id %>"><%= row.name %></a> <span class="tag"><%= categoryLabel(row.budgetCategory) %></span></p>
                             <p class="item-meta money-line"><%= t('budget.contractPaid', { paid: formatCurrency(row.paid), owed: formatCurrency(row.owed) }) %></p>
                         </div>
                         <p class="item-amount"><%= formatCurrency(row.committed) %></p>
@@ -105,7 +167,7 @@
     <section aria-labelledby="expenses-heading">
         <h2 class="section-heading" id="expenses-heading"><%= t(contracts.length > 0 ? 'budget.otherExpenses' : 'budget.expenses') %></h2>
         <% if (activeCategory) { %>
-            <p class="filter-note"><%= t('budget.showingCategory', { category: t(`budgetCategory.${activeCategory}`) }) %> <a href="/budget"><%= t('filter.showAll') %></a></p>
+            <p class="filter-note"><%= t('budget.showingCategory', { category: categoryLabel(activeCategory) }) %> <a href="/budget"><%= t('filter.showAll') %></a></p>
         <% } %>
 
         <% if (expenses.length === 0) { %>
@@ -116,7 +178,7 @@
                     <li class="item-card">
                         <div class="item-info">
                             <p class="item-name"><%= expense.name %></p>
-                            <p class="item-meta"><span class="tag"><%= t(`budgetCategory.${expense.category}`) %></span></p>
+                            <p class="item-meta"><span class="tag"><%= categoryLabel(expense.category) %></span></p>
                         </div>
                         <div class="item-side"><p class="item-amount"><%= formatCurrency(expense.amount) %></p></div>
                         <% if (canEdit) { %>

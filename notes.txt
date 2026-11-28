@@ -24,6 +24,8 @@ Done
 - [x] Build editable event-day schedules with vendor arrival times, contacts, setup notes, and contingency plans.
 - [x] Make essential schedules and contacts easy to access on mobile, including offline on event day.
 - [x] Let users choose a color theme for the app, and let planners set a brand palette their clients see.
+- [x] Categorizable budget amounts: suggested categories (venue, catering, attire, invitations, decorations…) that can be deleted and brought back, the wedding's own categories, and a planned amount per category. (PR #21)
+- [x] The printable event-day schedule is black and white by default, laid out as an A4 page, with an "In colour" option next to the printable version link. (PR #21)
 
 Partly done
 - [~] Wedding-specific templates for timelines, task lists, budgets, and vendor coordination.
@@ -55,5 +57,3 @@ Not started
 - [ ] DJ page, where songs can be selected, sequenced, and played. Preferance would be youtube or spotify but we want to stay ad free.
 - [ ] Layout page should have an inventory of objects on a sidebar, to store off the plan ad fill in later and/or automatically bring in tables made in the seating page.
 - [ ] Multiple rooms/floors option in venue layout.
-- [ ] catogorizable budget quantities, i.e. venue, food, wardobe, invitations, decorations... some default options should be possible to generate but able to delete and add their own too.
-- [ ] printable version should be black and white by default (displayed in A4 format) with a selection option for color next to the printable version link on the event day schedule page.
