@@ -64,6 +64,16 @@ describe('task progress badge and celebrations', { skip: skipWithoutDb }, () => 
         assert.doesNotMatch((await ana.get('/checklist')).body, /data-celebrate/);
     });
 
+    it('ticking it again celebrates, but not the milestone a second time', async () => {
+        await ana.post(`/checklist/${await taskId('Book band')}/toggle`, {});
+        const page = (await ana.get('/checklist')).body;
+        assert.match(page, /data-celebrate/);
+        assert.doesNotMatch(page, /celebrate--milestone/);
+        assert.doesNotMatch(textOf(page), /Halfway there/);
+        assert.match(textOf(page), /Nice work!/);
+        await ana.post(`/checklist/${await taskId('Book band')}/toggle`, {}); // back to how it was
+    });
+
     it('everything done: the big one', async () => {
         for (const text of ['Book band', 'Order cake', 'Buy rings']) {
             await ana.post(`/checklist/${await taskId(text)}/toggle`, {});

@@ -20,6 +20,7 @@
             <button type="button" class="btn btn-secondary" data-copy="message-copy-source" data-copied-label="<%= t('action.copied') %>" hidden><%= t('library.copy') %></button>
             <a class="btn btn-ghost" href="/library/messages/<%= message.id %>/edit"><%= t('action.edit') %></a>
         </div>
+        <% if (mailtoTooLong) { %><p class="hint print-hide"><%= t('library.longMessage') %></p><% } %>
         <p class="hint print-hide"><%= t('library.notSent') %></p>
     </section>
 </main>

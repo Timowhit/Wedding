@@ -16,7 +16,8 @@ import {
     findStorageUsed,
     readFileChunk
 } from '../models/files.js';
-import { findVendors } from '../models/vendors.js';
+import { findVendor, findVendors } from '../models/vendors.js';
+import { renderVendorPage } from './payments.js';
 import { contentDisposition } from '../utils/file-types.js';
 import { setFlash } from '../utils/flash.js';
 import { backTo } from '../utils/redirect.js';
@@ -57,6 +58,21 @@ const renderFiles = async (req, res, { status = 200, uploadForm } = {}) => {
 /** GET /files: the wedding's files, optionally one kind. */
 const showFiles = (req, res) => renderFiles(req, res);
 
+/** The vendor whose page the upload form was on, if any (it posts return_to /vendors/:id). */
+const uploadVendor = async (req, vendorId) => {
+    const target = readText(req.body?.return_to);
+    return vendorId && target === `/vendors/${vendorId}` && isUuid(vendorId)
+        ? findVendor(vendorId, req.wedding.id)
+        : null;
+};
+
+/** A failed upload shows its errors on the page it came from: a vendor's page or /files. */
+const renderUploadErrors = async (req, res, uploadForm) => {
+    const vendor = await uploadVendor(req, uploadForm.values.vendor_id);
+    if (vendor) return renderVendorPage(req, res, vendor, { status: 400, uploadForm });
+    return renderFiles(req, res, { status: 400, uploadForm });
+};
+
 /** Where to go after an upload: the vendor page it came from, or the files page. */
 const afterUpload = (req, vendorId) => {
     const target = readText(req.body?.return_to);
@@ -71,7 +87,7 @@ const processUpload = async (req, res) => {
         errors.unshift({ field: 'file', key: 'files.tooBig', vars: { max: MAX_FILE_MB } });
     else if (req.uploadError === 'busy') errors.unshift({ field: 'file', key: 'files.busy' });
     else if (req.uploadError) errors.unshift({ field: 'file', key: 'files.unreadable' });
-    if (errors.length > 0) return renderFiles(req, res, { status: 400, uploadForm: { values, errors } });
+    if (errors.length > 0) return renderUploadErrors(req, res, { values, errors });
 
     const added = await addFile(req.wedding.id, {
         kind: data.kind,
@@ -87,7 +103,7 @@ const processUpload = async (req, res) => {
             added.full === 'wedding'
                 ? { field: 'file', key: 'files.full', vars: { max: MAX_WEDDING_FILES_MB } }
                 : { field: 'file', key: 'files.userFull', vars: { max: MAX_USER_FILES_GB } };
-        return renderFiles(req, res, { status: 400, uploadForm: { values, errors: [full] } });
+        return renderUploadErrors(req, res, { values, errors: [full] });
     }
     setFlash(req, 'success', 'files.uploaded', { name: data.name });
     res.redirect(afterUpload(req, data.vendorId));

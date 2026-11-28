@@ -3228,6 +3228,10 @@ input[type='color'] {
     }
 }
 
+.choice--quiet {
+    color: var(--text-muted);
+}
+
 .answers dt {
     margin-top: var(--space-3);
     font-weight: 600;
