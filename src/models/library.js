@@ -1,5 +1,5 @@
-import { MAX_MESSAGES_PER_USER, MAX_QUESTIONNAIRES_PER_USER } from '../constants.js';
-import db from './db.js';
+import { MAX_MESSAGES_PER_USER, MAX_QUESTIONNAIRES_PER_USER, MAX_SENT_QUESTIONNAIRES } from '../constants.js';
+import db, { withTransaction } from './db.js';
 
 // ---------- Message templates (scoped by user_id) ----------
 
@@ -144,7 +144,10 @@ const deleteQuestionnaire = async (id, userId) => {
 
 // ---------- Questionnaires sent to a wedding (scoped by wedding_id) ----------
 
+// answer_version stamps the last save (microseconds), so a form can tell if it is out of date.
+const ANSWER_VERSION = `COALESCE((EXTRACT(EPOCH FROM wq.answered_at) * 1000000)::bigint::text, '')`;
 const SENT_COLUMNS = `wq.id, wq.title, wq.intro, wq.questions, wq.answers, wq.sent_at, wq.answered_at,
+                      ${ANSWER_VERSION} AS answer_version,
                       COALESCE(s.display_name, s.email) AS sent_by_name, COALESCE(a.display_name, a.email) AS answered_by_name`;
 const SENT_FROM = `FROM wedding_questionnaires wq
                    LEFT JOIN users s ON s.id = wq.sent_by
@@ -155,15 +158,21 @@ const SENT_FROM = `FROM wedding_questionnaires wq
  * @param {string} weddingId
  * @param {{title: string, intro: string|null, questions: Array<Object>}} questionnaire - Normalised.
  * @param {string} sentBy
- * @returns {Promise<{id: string}>}
+ * @returns {Promise<{id: string}|null>} Null when the wedding already has MAX_SENT_QUESTIONNAIRES.
  */
-const sendQuestionnaire = async (weddingId, { title, intro, questions }, sentBy) => {
-    const result = await db.query(
-        `INSERT INTO wedding_questionnaires (wedding_id, title, intro, questions, sent_by) VALUES ($1, $2, $3, $4::jsonb, $5) RETURNING id;`,
-        [weddingId, title, intro, JSON.stringify(questions), sentBy]
-    );
-    return result.rows[0];
-};
+const sendQuestionnaire = async (weddingId, { title, intro, questions }, sentBy) =>
+    withTransaction(async (client) => {
+        // One send at a time per wedding, so two at once can't both slip under the limit.
+        await client.query(`SELECT pg_advisory_xact_lock(hashtext('wedding_questionnaires:' || $1));`, [weddingId]);
+        const result = await client.query(
+            `INSERT INTO wedding_questionnaires (wedding_id, title, intro, questions, sent_by)
+             SELECT $1, $2, $3, $4::jsonb, $5
+             WHERE (SELECT COUNT(*) FROM wedding_questionnaires WHERE wedding_id = $1) < $6
+             RETURNING id;`,
+            [weddingId, title, intro, JSON.stringify(questions), sentBy, MAX_SENT_QUESTIONNAIRES]
+        );
+        return result.rows[0] ?? null;
+    });
 
 /**
  * @param {string} weddingId
@@ -191,17 +200,19 @@ const findSentQuestionnaire = async (id, weddingId) => {
 };
 
 /**
- * Saves the answers (the last save wins) and who gave them.
+ * Saves the answers and who gave them, unless someone else saved since the form was opened.
  * @param {string} id
  * @param {string} weddingId
  * @param {string[]} answers - Already validated against the questions.
  * @param {string} userId
- * @returns {Promise<boolean>}
+ * @param {string|null} seen - The answer_version the form showed ('' if unanswered); null skips the check.
+ * @returns {Promise<boolean>} False when not saved: the answers changed since (or no such questionnaire).
  */
-const saveAnswers = async (id, weddingId, answers, userId) => {
+const saveAnswers = async (id, weddingId, answers, userId, seen = null) => {
     const result = await db.query(
-        `UPDATE wedding_questionnaires SET answers = $3::jsonb, answered_by = $4, answered_at = NOW() WHERE id = $1 AND wedding_id = $2;`,
-        [id, weddingId, JSON.stringify(answers), userId]
+        `UPDATE wedding_questionnaires wq SET answers = $3::jsonb, answered_by = $4, answered_at = clock_timestamp()
+         WHERE wq.id = $1 AND wq.wedding_id = $2 AND ($5::text IS NULL OR ${ANSWER_VERSION} = $5::text);`,
+        [id, weddingId, JSON.stringify(answers), userId, seen]
     );
     return result.rowCount > 0;
 };

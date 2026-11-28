@@ -8,10 +8,69 @@ const startsWith = (buffer, bytes, offset = 0) => bytes.every((byte, i) => buffe
 const ascii = (text) => [...text].map((char) => char.charCodeAt(0));
 
 const ZIP = [0x50, 0x4b, 0x03, 0x04];
+const ZIP_END = 0x06054b50;
+const ZIP_ENTRY = 0x02014b50;
+const ZIP_END_SIZE = 22;
+const ZIP_ENTRY_SIZE = 46;
+// The end record may be followed by a comment of up to 65,535 bytes.
+const ZIP_COMMENT_MAX = 0xffff;
+// Office files are zips whose parts say what they are; a macro part means .docm/.xlsm in disguise.
 const OFFICE = Object.freeze({
-    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    docx: {
+        contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        mainPart: 'word/document.xml',
+        macros: 'word/vbaProject.bin'
+    },
+    xlsx: {
+        contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        mainPart: 'xl/workbook.xml',
+        macros: 'xl/vbaProject.bin'
+    }
 });
+
+/**
+ * The entry names in a zip's central directory, or null when it can't be read. Names are stored
+ * uncompressed there, so nothing needs unpacking.
+ * @param {Buffer} buffer
+ * @returns {Set<string>|null}
+ */
+const zipEntryNames = (buffer) => {
+    const lowest = Math.max(0, buffer.length - ZIP_END_SIZE - ZIP_COMMENT_MAX);
+    let end = -1;
+    for (let at = buffer.length - ZIP_END_SIZE; at >= lowest; at -= 1) {
+        // The real end record's comment runs exactly to the end of the file; a lookalike inside
+        // a comment doesn't.
+        if (buffer.readUInt32LE(at) === ZIP_END && at + ZIP_END_SIZE + buffer.readUInt16LE(at + 20) === buffer.length) {
+            end = at;
+            break;
+        }
+    }
+    if (end < 0) return null;
+    const count = buffer.readUInt16LE(end + 10);
+    let at = buffer.readUInt32LE(end + 16);
+    const names = new Set();
+    for (let i = 0; i < count; i += 1) {
+        if (at + ZIP_ENTRY_SIZE > end || buffer.readUInt32LE(at) !== ZIP_ENTRY) return null;
+        const nameLength = buffer.readUInt16LE(at + 28);
+        const extraLength = buffer.readUInt16LE(at + 30);
+        const commentLength = buffer.readUInt16LE(at + 32);
+        const nameEnd = at + ZIP_ENTRY_SIZE + nameLength;
+        if (nameEnd > end) return null;
+        names.add(buffer.toString('utf8', at + ZIP_ENTRY_SIZE, nameEnd));
+        at = nameEnd + extraLength + commentLength;
+    }
+    return names;
+};
+
+/** The Office type when the zip holds that kind of document (and no macros), else null. */
+const officeType = (buffer, extension) => {
+    const office = OFFICE[extension];
+    if (!office || buffer.length < ZIP_END_SIZE) return null;
+    const names = zipEntryNames(buffer);
+    const isDocument =
+        names && names.has('[Content_Types].xml') && names.has(office.mainPart) && !names.has(office.macros);
+    return isDocument ? { contentType: office.contentType, inline: false } : null;
+};
 
 const isUtf8Text = (buffer) => {
     if (buffer.includes(0)) return false;
@@ -28,6 +87,7 @@ const isUtf8Text = (buffer) => {
  * browser is never accepted.
  * @param {Buffer} buffer - The whole file.
  * @param {string} name - The original file name (only used to tell .docx from .xlsx, and .txt).
+ * Word and Excel files must contain that kind of document.
  * @returns {{contentType: string, inline: boolean}|null} `inline`: safe to show in the browser (images, PDF).
  */
 const detectFileType = (buffer, name) => {
@@ -41,7 +101,7 @@ const detectFileType = (buffer, name) => {
         return { contentType: 'image/gif', inline: true };
     if (startsWith(buffer, ascii('RIFF')) && startsWith(buffer, ascii('WEBP'), 8))
         return { contentType: 'image/webp', inline: true };
-    if (startsWith(buffer, ZIP) && OFFICE[extension]) return { contentType: OFFICE[extension], inline: false };
+    if (startsWith(buffer, ZIP)) return officeType(buffer, extension);
     if (extension === 'txt' && isUtf8Text(buffer)) return { contentType: 'text/plain; charset=utf-8', inline: false };
     return null;
 };

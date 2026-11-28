@@ -156,7 +156,38 @@ const createTasksIfMissing = async (weddingId, tasks) => {
     return result.rowCount;
 };
 
+/**
+ * Which of these task texts the wedding already has (compared without case).
+ * @param {string} weddingId
+ * @param {string[]} texts
+ * @returns {Promise<Set<string>>} The matching texts, lowercased.
+ */
+const findExistingTaskTexts = async (weddingId, texts) => {
+    const result = await db.query(
+        `SELECT DISTINCT LOWER(text) AS text FROM checklist_tasks WHERE wedding_id = $1 AND LOWER(text) = ANY($2::text[]);`,
+        [weddingId, texts.map((text) => text.toLowerCase())]
+    );
+    return new Set(result.rows.map((row) => row.text));
+};
+
+/**
+ * Records that a wedding reached a checklist milestone. Only the first time counts, so
+ * unticking a task and ticking it again doesn't replay the big celebration.
+ * @param {string} weddingId
+ * @param {number} milestone - A percentage from MILESTONES.
+ * @returns {Promise<boolean>} True when this milestone is new for the wedding.
+ */
+const claimMilestone = async (weddingId, milestone) => {
+    const result = await db.query(
+        `UPDATE weddings SET celebrated_milestone = $2 WHERE id = $1 AND celebrated_milestone < $2;`,
+        [weddingId, milestone]
+    );
+    return result.rowCount > 0;
+};
+
 export {
+    claimMilestone,
+    findExistingTaskTexts,
     findTasks,
     findTaskProgress,
     findTask,

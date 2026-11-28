@@ -25,8 +25,8 @@ const renderDashboard = async (req, res, { status = 200, weddingForm } = {}) => 
     const today = todayIso();
     const userId = req.session.user.id;
     const [weddings, workload, spotsLeft, paymentsDue, overduePayments] = await Promise.all([
-        findPlannerOverview(userId, filters),
-        findPlannerWorkload(userId),
+        findPlannerOverview(userId, filters, today),
+        findPlannerWorkload(userId, today),
         countFoundingSpotsLeft(),
         findPlannerPaymentsDue(userId, { filter: filters.pay, today }),
         countPlannerOverdue(userId, today)
