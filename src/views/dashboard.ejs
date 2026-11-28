@@ -125,6 +125,21 @@
         </section>
     <% } %>
 
+    <% if (appointments.length > 0) { %>
+        <section class="card" aria-labelledby="appointments-heading">
+            <h2 class="card-title" id="appointments-heading"><%= t('appointments.next') %></h2>
+            <ul class="due-list">
+                <% appointments.forEach((a) => { %>
+                    <li class="due">
+                        <a class="due__vendor" href="/appointments"><%= a.title %></a>
+                        <span class="due__when"><%= formatDate(a.starts_on) %><% if (a.starts_at) { %>, <%= formatTime(a.starts_at) %><% } %></span>
+                        <% if (a.location) { %><span class="due__label"><%= a.location %></span><% } %>
+                    </li>
+                <% }); %>
+            </ul>
+        </section>
+    <% } %>
+
     <% if (steps.length > 0) { %>
         <section class="card" aria-labelledby="steps-heading">
             <h2 class="card-title" id="steps-heading"><%= t('onboarding.heading') %></h2>

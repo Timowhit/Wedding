@@ -19,13 +19,14 @@ Without this nothing is sent, and nothing breaks.
 
 Cron Jobs are a paid Render instance type.
 
-## 2. Merge the three open pull requests, then update the Render database
+## 2. Merge the four open pull requests, then update the Render database
 
 [Timowhit/Wedding#20](https://github.com/Timowhit/Wedding/pull/20) is merged. Merge these next, in this order, each once its checks have passed. If GitHub says one has a conflict after you merge the one before, tell me and I'll fix it.
 
 1. [Timowhit/Wedding#21](https://github.com/Timowhit/Wedding/pull/21): budget categories and the printable schedule
 2. [Timowhit/Wedding#22](https://github.com/Timowhit/Wedding/pull/22): venue rooms and the inventory
 3. [Timowhit/Wedding#23](https://github.com/Timowhit/Wedding/pull/23): the playground, the DJ page, custom fields, whole-wedding templates, French and Portuguese
+4. [Timowhit/Wedding#24](https://github.com/Timowhit/Wedding/pull/24): appointments, reminder choices, vendor availability and proposals.
 
 Then, straight away (some pages show an error until this has run), on your computer, in the project folder, with `.env` pointing at Render:
 
@@ -41,7 +42,7 @@ git pull origin main
 npm run migrate
 ```
 
-This adds migrations `017` to `021`. Then delete the branches `follow-ups`, `budget-print`, `layout-rooms` and `next-features` on GitHub.
+This adds migrations `017` to `024`. Then delete the branches `follow-ups`, `budget-print`, `layout-rooms`, `next-features` and `appointments` on GitHub.
 
 ## 3. Have the French and Portuguese checked
 

@@ -127,6 +127,19 @@ import {
 } from '../controllers/schedule.js';
 import { showCustomCss } from '../controllers/themes.js';
 import {
+    processAvailability,
+    processDeleteProposal,
+    processNewProposal,
+    processProposalStatus
+} from '../controllers/proposals.js';
+import {
+    processDeleteAppointment,
+    processEditAppointment,
+    processNewAppointment,
+    showAppointments,
+    showEditAppointment
+} from '../controllers/appointments.js';
+import {
     processAnswers,
     processDeleteMessage,
     processDeleteQuestionnaire,
@@ -295,6 +308,13 @@ router.get('/schedule/:id/edit', editor, showEditItem);
 router.post('/schedule/:id/edit', editor, processEditItem);
 router.post('/schedule/:id/delete', editor, processDeleteItem);
 
+/* Appointments -------------------------------------------------------------------------------- */
+router.get('/appointments', member, showAppointments);
+router.post('/appointments', editor, processNewAppointment);
+router.get('/appointments/:id/edit', editor, showEditAppointment);
+router.post('/appointments/:id/edit', editor, processEditAppointment);
+router.post('/appointments/:id/delete', editor, processDeleteAppointment);
+
 /* Seating chart ------------------------------------------------------------------------------- */
 router.get('/seating', member, showSeating);
 router.post('/seating/tables', editor, processNewTable);
@@ -345,6 +365,10 @@ router.post('/vendors/:id/contract', editor, processContract);
 router.post('/vendors/:id/payments', editor, processNewPayment);
 router.post('/vendors/:id/rating', editor, processRating);
 router.post('/vendors/:id/rating/clear', editor, processClearRating);
+router.post('/vendors/:id/availability', editor, processAvailability);
+router.post('/vendors/:id/proposals', editor, processNewProposal);
+router.post('/proposals/:id/status', editor, processProposalStatus);
+router.post('/proposals/:id/delete', editor, processDeleteProposal);
 
 /* Custom fields on guests, vendors and tasks (member reads, editor changes) --------------------- */
 router.get('/fields', member, showFields);

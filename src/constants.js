@@ -107,6 +107,11 @@ const WRAPUP_TASKS = Object.freeze([
     { key: 'wrapup.preserveKeepsakes', daysAfter: 30 }
 ]);
 const RATING_MAX = 5;
+/** Whether a vendor is free on the wedding day; 'hold' means they keep it free until hold_until. */
+const VENDOR_AVAILABILITY = Object.freeze(['unknown', 'available', 'hold', 'unavailable']);
+const PROPOSAL_STATUSES = Object.freeze(['received', 'accepted', 'declined']);
+/** Per vendor; more than any real back-and-forth of quotes. */
+const MAX_PROPOSALS_PER_VENDOR = 20;
 
 // Files (stored in PostgreSQL, see migration 015).
 const FILE_KINDS = Object.freeze(['contract', 'floor_plan', 'inspiration', 'other']);
@@ -216,14 +221,23 @@ const LAYOUT_FIXTURES = Object.freeze({
 /** Per template; more than any real checklist or timeline. */
 const MAX_TEMPLATE_ITEMS = 300;
 
-/** The daily summary lists what is overdue or due within this many days. */
+/** The summary lists what is overdue or due within this many days, unless the person picks another choice. */
 const REMINDER_WINDOW_DAYS = 7;
+const REMINDER_DAY_CHOICES = Object.freeze([1, 3, 7, 14, 30]);
+const REMINDER_FREQUENCIES = Object.freeze(['daily', 'weekly']);
+/** Weekly summaries go out on this ISO weekday (1 = Monday), in APP_TIME_ZONE. */
+const REMINDER_WEEKLY_DAY = 1;
+/** What a summary can include, in the order the email lists them. */
+const REMINDER_KINDS = Object.freeze(['payments', 'tasks', 'decisions', 'appointments']);
 /** A wedding that ended longer ago than this stops appearing in summaries (unticked leftovers would repeat forever). */
 const REMINDER_PAST_WEDDING_DAYS = 30;
 /** Roles that get the daily summary for a wedding (a viewer can't act on anything). */
 const REMINDER_ROLES = Object.freeze(['owner', 'editor', 'client']);
 
 export {
+    VENDOR_AVAILABILITY,
+    PROPOSAL_STATUSES,
+    MAX_PROPOSALS_PER_VENDOR,
     ACCOUNT_TYPES,
     FOUNDING_SPOTS,
     FOUNDING_DISCOUNT_PCT,
@@ -298,6 +312,10 @@ export {
     LAYOUT_FIXTURES,
     MAX_TEMPLATE_ITEMS,
     REMINDER_WINDOW_DAYS,
+    REMINDER_DAY_CHOICES,
+    REMINDER_FREQUENCIES,
+    REMINDER_WEEKLY_DAY,
+    REMINDER_KINDS,
     REMINDER_ROLES,
     REMINDER_PAST_WEDDING_DAYS
 };

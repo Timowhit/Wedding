@@ -1,7 +1,7 @@
 import { findReminderCandidates, findReminderDigest, markReminded } from '../models/reminders.js';
 import { REMINDER_WINDOW_DAYS } from '../constants.js';
 import { translate } from '../i18n/index.js';
-import { formatCurrency, formatDate } from '../utils/format.js';
+import { formatCurrency, formatDate, formatTime } from '../utils/format.js';
 import { todayIso } from '../utils/today.js';
 import { unsubscribeToken } from '../utils/unsubscribe.js';
 import { escapeHtml, isEmailConfigured, sendReminderEmail } from './email.js';
@@ -9,6 +9,7 @@ import { escapeHtml, isEmailConfigured, sendReminderEmail } from './email.js';
 /** Section headings in the email, in the order they appear. */
 const GROUP_HEADINGS = Object.freeze({
     payments: 'reminders.payments',
+    appointments: 'reminders.appointments',
     tasks: 'reminders.tasks',
     decisions: 'reminders.decisions'
 });
@@ -27,6 +28,17 @@ const linesFor = (wedding, t, lang) => [
             date: formatDate(p.due_date, lang)
         })
     })),
+    ...wedding.appointments.map((a) => {
+        const date = formatDate(a.starts_on, lang);
+        const when = a.starts_at ? t('reminders.appointmentWhen', { date, time: formatTime(a.starts_at, lang) }) : date;
+        return {
+            group: 'appointments',
+            overdue: false,
+            text: a.location
+                ? t('reminders.appointmentLinePlace', { title: a.title, when, place: a.location })
+                : t('reminders.appointmentLine', { title: a.title, when })
+        };
+    }),
     ...wedding.tasks.map((task) => ({
         group: 'tasks',
         overdue: task.overdue,
@@ -41,11 +53,12 @@ const linesFor = (wedding, t, lang) => [
 
 /**
  * The summary email for one person, in their language.
- * @param {{id: string, email: string, language: string, account_type: string}} user
+ * @param {{id: string, email: string, language: string, account_type: string, reminder_days?: number}} user
  * @param {Array<object>} digest - From findReminderDigest.
  * @returns {{to: string, lang: string, subject: string, text: string, html: string, unsubscribeUrl: string}}
  */
 const buildReminderMessage = (user, digest) => {
+    const days = user.reminder_days ?? REMINDER_WINDOW_DAYS;
     const lang = user.language;
     const t = (key, vars) => translate(lang, key, vars);
     const sections = digest.map((wedding) => ({ name: wedding.name, lines: linesFor(wedding, t, lang) }));
@@ -54,7 +67,7 @@ const buildReminderMessage = (user, digest) => {
     const openUrl = `${appUrl()}${user.account_type === 'planner' ? '/planner' : '/'}`;
     const settingsUrl = `${appUrl()}/settings#reminders-heading`;
     const unsubscribeUrl = `${appUrl()}/reminders/unsubscribe?u=${user.id}&t=${unsubscribeToken(user.id)}`;
-    const intro = t('reminders.intro', { days: REMINDER_WINDOW_DAYS });
+    const intro = t(days === 1 ? 'reminders.introOneDay' : 'reminders.intro', { days });
     const groups = Object.keys(GROUP_HEADINGS);
 
     const text = [
@@ -127,7 +140,10 @@ const runReminders = async ({ today = todayIso(), send, log = console } = {}) =>
     const result = { sent: 0, skipped: 0, failed: 0, configured: true };
     for (const user of await findReminderCandidates(today)) {
         try {
-            const digest = await findReminderDigest(user.id, today);
+            const digest = await findReminderDigest(user.id, today, {
+                days: user.reminder_days,
+                kinds: user.reminder_kinds
+            });
             if (digest.length === 0) {
                 result.skipped += 1;
                 continue;

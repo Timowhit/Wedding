@@ -23,6 +23,30 @@
     <%- include('partials/flash') %>
     <%- include('partials/read-only-notice') %>
 
+    <section class="card" aria-labelledby="availability-heading">
+        <h2 class="card-title" id="availability-heading"><%= t('vendor.availabilityHeading') %></h2>
+        <p><%- include('partials/vendor-availability', { vendor, today }) %></p>
+        <% if (canEdit) { %>
+            <%- include('partials/form-errors', { errors: availabilityForm.errors, id: 'availability-errors' }) %>
+            <form method="post" action="/vendors/<%= vendor.id %>/availability" class="form-grid">
+                <%- include('partials/csrf-field') %>
+                <div class="field">
+                    <label for="availability"><%= t('field.availability') %></label>
+                    <select id="availability" name="availability" <%- fieldState(availabilityForm.errors, 'availability', 'availability-errors') %>>
+                        <% availabilityChoices.forEach((choice) => { %>
+                            <option value="<%= choice %>" <%= choice === availabilityForm.values.availability ? 'selected' : '' %>><%= t(`availability.${choice}`) %></option>
+                        <% }); %>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="hold_until"><%= t('field.holdUntil') %> <span class="optional"><%= t('vendor.holdOnly') %></span></label>
+                    <input type="date" id="hold_until" name="hold_until" value="<%= availabilityForm.values.hold_until %>" <%- fieldState(availabilityForm.errors, 'hold_until', 'availability-errors') %>>
+                </div>
+                <div class="form-actions"><button type="submit" class="btn btn-secondary btn-small"><%= t('action.save') %></button></div>
+            </form>
+        <% } %>
+    </section>
+
     <section class="card" aria-labelledby="contract-heading">
         <h2 class="card-title" id="contract-heading"><%= t('contract.heading') %></h2>
         <% if (!hasContract) { %>
@@ -87,6 +111,80 @@
         <% } %>
     </section>
 <% } %>
+
+<section class="card" aria-labelledby="proposals-heading">
+        <h2 class="card-title" id="proposals-heading"><%= t('proposals.heading') %></h2>
+        <p class="hint"><%= t('proposals.hint') %></p>
+        <% if (proposals.length === 0) { %>
+            <p class="empty-state"><%= t('proposals.empty') %></p>
+        <% } else { %>
+            <ul class="item-list">
+                <% proposals.forEach((p) => { %>
+                    <li class="item-card">
+                        <div class="item-info">
+                            <p class="item-name"><%= p.title %> <span class="tag proposal-status proposal-status--<%= p.status %>"><%= t(`proposalStatus.${p.status}`) %></span></p>
+                            <p class="item-meta">
+                                <% if (p.amount !== null) { %><span><%= formatCurrency(p.amount) %></span><% } %>
+                                <% if (p.valid_until) { %><span class="<%= p.status === 'received' && toIsoDate(p.valid_until) < today ? 'text-danger' : '' %>"><%= t('proposals.validUntil', { date: formatDate(p.valid_until) }) %></span><% } %>
+                                <% if (p.file_id && p.file_name) { %><a href="/files/<%= p.file_id %>"><%= p.file_name %></a><% } %>
+                            </p>
+                            <% if (p.notes) { %><p class="item-notes preserve-lines"><%= p.notes %></p><% } %>
+                            <% if (canEdit) { %>
+                                <div class="row-actions">
+                                    <% proposalStatuses.filter((status) => status !== p.status).forEach((status) => { %>
+                                        <form method="post" action="/proposals/<%= p.id %>/status">
+                                            <%- include('partials/csrf-field') %>
+                                            <input type="hidden" name="status" value="<%= status %>">
+                                            <button type="submit" class="link-action" aria-label="<%= t(`proposals.markNamed.${status}`, { name: p.title }) %>"><%= t(`proposals.mark.${status}`) %></button>
+                                        </form>
+                                    <% }); %>
+                                    <form method="post" action="/proposals/<%= p.id %>/delete" data-confirm="<%= t('proposals.confirmDelete', { name: p.title }) %>">
+                                        <%- include('partials/csrf-field') %>
+                                        <button type="submit" class="link-action link-action--danger" aria-label="<%= t('action.deleteNamed', { name: p.title }) %>"><%= t('action.delete') %></button>
+                                    </form>
+                                </div>
+                            <% } %>
+                        </div>
+                    </li>
+                <% }); %>
+            </ul>
+        <% } %>
+        <% if (canEdit) { %>
+            <%- include('partials/add-panel-start', { id: 'add-proposal', labelKey: 'proposals.add', open: proposalForm.errors.length > 0 }) %>
+                <%- include('partials/form-errors', { errors: proposalForm.errors, id: 'proposal-errors' }) %>
+                <form method="post" action="/vendors/<%= vendor.id %>/proposals" class="form-grid">
+                    <%- include('partials/csrf-field') %>
+                    <div class="field field--wide">
+                        <label for="proposal-title"><%= t('field.proposalTitle') %></label>
+                        <input type="text" id="proposal-title" name="title" required maxlength="200" value="<%= proposalForm.values.title %>"
+                               placeholder="<%= t('proposals.titlePlaceholder') %>" <%- fieldState(proposalForm.errors, 'title', 'proposal-errors') %>>
+                    </div>
+                    <div class="field">
+                        <label for="proposal-amount"><%= t('field.amount') %> <span class="optional"><%= t('form.optional') %></span></label>
+                        <input type="text" inputmode="decimal" id="proposal-amount" name="amount" value="<%= proposalForm.values.amount %>" <%- fieldState(proposalForm.errors, 'amount', 'proposal-errors') %>>
+                    </div>
+                    <div class="field">
+                        <label for="proposal-valid"><%= t('field.validUntil') %> <span class="optional"><%= t('form.optional') %></span></label>
+                        <input type="date" id="proposal-valid" name="valid_until" value="<%= proposalForm.values.valid_until %>" <%- fieldState(proposalForm.errors, 'valid_until', 'proposal-errors') %>>
+                    </div>
+                    <div class="field">
+                        <label for="proposal-file"><%= t('field.proposalFile') %> <span class="optional"><%= t('form.optional') %></span></label>
+                        <select id="proposal-file" name="file_id" <%- fieldState(proposalForm.errors, 'file_id', 'proposal-errors') %>>
+                            <option value=""><%= t('proposals.noFile') %></option>
+                            <% vendorFiles.forEach((file) => { %>
+                                <option value="<%= file.id %>" <%= file.id === proposalForm.values.file_id ? 'selected' : '' %>><%= file.name %></option>
+                            <% }); %>
+                        </select>
+                    </div>
+                    <div class="field field--wide">
+                        <label for="proposal-notes"><%= t('field.notes') %> <span class="optional"><%= t('form.optional') %></span></label>
+                        <textarea id="proposal-notes" name="notes" rows="2" maxlength="2000" <%- fieldState(proposalForm.errors, 'notes', 'proposal-errors') %>><%= proposalForm.values.notes %></textarea>
+                    </div>
+                    <div class="form-actions"><button type="submit" class="btn btn-primary"><%= t('proposals.addSubmit') %></button></div>
+                </form>
+            <%- include('partials/add-panel-end') %>
+        <% } %>
+    </section>
 
 <section class="card" aria-labelledby="vendor-files-heading">
         <h2 class="card-title" id="vendor-files-heading"><%= t('files.vendorHeading') %></h2>

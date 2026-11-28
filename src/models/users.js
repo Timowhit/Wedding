@@ -2,7 +2,8 @@ import db from './db.js';
 
 // Columns that are safe to load into a session or a view. Never includes password_hash.
 const PUBLIC_COLUMNS = `id, email, display_name, avatar_url, language, created_at, account_type, founding_number,
-                        business_name, theme_palette, theme_mode, theme_colors, brand_palette, reminder_emails, is_trial`;
+                        business_name, theme_palette, theme_mode, theme_colors, brand_palette, reminder_emails,
+                        reminder_days, reminder_frequency, reminder_kinds, is_trial`;
 
 /**
  * @param {string} id - users.id (UUID).
@@ -185,8 +186,24 @@ const setReminderEmails = async (id, on) => {
     return result.rows[0] ?? null;
 };
 
+/**
+ * Saves the reminder choices: on or off, days ahead, daily or weekly, and which kinds.
+ * @param {string} id
+ * @param {{on: boolean, days: number, frequency: string, kinds: string[]}} prefs - Already validated.
+ * @returns {Promise<object|null>} The updated public row, or null if there is no such user.
+ */
+const setReminderPreferences = async (id, { on, days, frequency, kinds }) => {
+    const result = await db.query(
+        `UPDATE users SET reminder_emails = $2, reminder_days = $3, reminder_frequency = $4, reminder_kinds = $5
+         WHERE id = $1 RETURNING ${PUBLIC_COLUMNS};`,
+        [id, on, days, frequency, kinds]
+    );
+    return result.rows[0] ?? null;
+};
+
 export {
     setReminderEmails,
+    setReminderPreferences,
     upgradeToPlanner,
     updateAppearance,
     updateBusiness,

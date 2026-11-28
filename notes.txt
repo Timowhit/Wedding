@@ -2,7 +2,7 @@ Wedding-planner UX and feature ideas
 Status checked against the code on 2026-11-27. [x] done, [~] partly done (what's missing is listed), [ ] not started.
 
 Next up
-- Nothing queued: the questions under "Partly done" are waiting on answers (appointments, a vendor role, vendor availability, reminder choices).
+- Building the rest of "Partly done" with my own defaults (the questions weren't answered): a vendor role is next.
 
 Done
 - [x] Navigation grouped into dropdowns (Planning, Money, Guests & venue, Event day, Planner), a styled wedding menu, the task badge just under the header, a −/+ pill on each question in the questionnaire builder (− removes it, + adds one under it), a header on one line on wide screens, and stylesheets that always match the page (fixes the badge looking different between pages). (PR #17, merged; pill and one-line header in PR #19)
@@ -36,16 +36,16 @@ Done
 Partly done
 - [x] Wedding-specific templates for timelines, task lists, budgets, and vendor coordination.
       Checklist and timeline templates, and whole-wedding templates with the budget plan and vendors. (PR #23)
-- [~] A dashboard showing each wedding's next deadlines, appointments, outstanding decisions, and budget status.
-      Done: deadlines, decisions, payments due, budget, and a calendar. Missing: appointments (meetings with a time).
-- [~] Vendor contacts, availability, proposals, notes, and key documents together.
-      Done: contacts, notes, contract link and key terms, ratings after the wedding. Missing: availability and proposals.
+- [x] A dashboard showing each wedding's next deadlines, appointments, outstanding decisions, and budget status.
+      Appointments (/appointments: date, times, place, who is coming, notes) on each wedding's dashboard, the calendar, search and the reminder email (not yet on the planner's all-weddings page). My defaults, as the question wasn't answered. (PR #24)
+- [x] Vendor contacts, availability, proposals, notes, and key documents together.
+      Contacts, notes, contract, files, ratings, and now availability on your date (free, holding it until a day, not free) and proposals (amount, valid until, a file, accepted or declined; never counted as money spent). Entered by whoever edits the wedding; my defaults. (PR #24)
 - [~] A shared client portal for couples to review plans, upload details, and approve decisions.
       Done: client role, decisions to approve, and file uploads (editors and clients).
 - [~] Role-based collaboration for planners, assistants, couples, and vendors.
       Done: owner, editor (assistant), client and viewer. Missing: a vendor role.
-- [~] Configurable reminders for meetings, deadlines, payments, and unanswered questions.
-      Done: daily email digest of tasks, payments and decisions, with a switch and unsubscribe. Missing: meetings, and choosing what or when.
+- [x] Configurable reminders for meetings, deadlines, payments, and unanswered questions.
+      Email summary of payments, tasks, decisions and appointments. In Settings each person picks every morning or Monday mornings, 1 to 30 days ahead, and which kinds. My defaults, as the question wasn't answered. (PR #24)
 
 Small follow-ups (from the reviews of PRs #11 to #15)
 - [x] Planner dashboard date filters use APP_TIME_ZONE like the rest. (PR #20)
@@ -57,4 +57,26 @@ Small follow-ups (from the reviews of PRs #11 to #15)
 - [ ] Files: check by hand that PDFs open in Chrome, Firefox and Safari under the download sandbox. (In ACTIONS.md: only you can do this.)
 - [x] Library: names unique without regard to capitals; at most 30 questionnaires per wedding; a chosen answer can be cleared ("No answer"); a warning instead of overwriting when a partner saved answers meanwhile; long messages suggest Copy. (PR #20)
 
+Small follow-ups (from the review of PR #24)
+- [ ] Planner's all-weddings page: show each wedding's next appointment.
+- [ ] Appointments that end after midnight (22:00 to 00:30) are refused as "end before start".
+- [ ] An appointment stays under "Coming up" until the end of its day, not its end time.
+- [ ] A weekly email looking 7 days ahead lists next Monday's items in both emails.
+- [ ] A proposal whose file is deleted while the form is being sent gives an error page instead of a message.
+- [ ] Accepting a proposal could decline the vendor's others and offer to mark the vendor Booked; an ended hold could go into reminders.
+
 Not started
+
+New ideas for you to review (mine, 2026-11-28; say which to build, change or drop)
+- [ ] Guest RSVP page: each guest (or household) gets a private link to answer yes/no, meal and needs themselves, instead of you typing replies in.
+- [ ] Guest import from a spreadsheet (CSV): paste or upload a list instead of adding guests one by one; duplicates are flagged.
+- [ ] Wedding website: a simple public page per wedding (date, place, schedule, travel and hotel notes, RSVP link), using the wedding's colours.
+- [ ] Gift and thank-you tracker: who gave what, and whether the thank-you card went out, with a count on the wrap-up card.
+- [ ] Hotel room blocks and travel: rooms held, booking deadline, which guests are staying where; deadlines go into reminders.
+- [ ] Vendor comparison view: proposals of the same category side by side (amount, valid until, availability), to pick one quickly.
+- [ ] Accepting a proposal can fill the vendor's contract total (with a confirm), so the budget picks it up without retyping.
+- [ ] Appointment invites: an .ics calendar file for each appointment, so it can be added to phone calendars.
+- [ ] Day-of checklist mode: a big-button, phone-first view of the event-day schedule that ticks items off as they happen, working offline.
+- [ ] Budget "what if": try a different guest count or category plan and see the total before saving.
+- [ ] Planner time tracking: hours per client wedding, for planners who bill by the hour.
+- [ ] Activity log per wedding: who changed what and when (useful once several people edit).

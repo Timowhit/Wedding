@@ -1,0 +1,31 @@
+<%# Fields shared by the add and edit appointment forms. Expects values, errors, errorsId. %>
+<div class="field field--wide">
+    <label for="title"><%= t('field.appointmentTitle') %></label>
+    <input type="text" id="title" name="title" required maxlength="200" value="<%= values.title %>"
+           placeholder="<%= t('appointments.titlePlaceholder') %>" <%- fieldState(errors, 'title', errorsId) %>>
+</div>
+<div class="field">
+    <label for="starts_on"><%= t('field.date') %></label>
+    <input type="date" id="starts_on" name="starts_on" required value="<%= values.starts_on %>" <%- fieldState(errors, 'starts_on', errorsId) %>>
+</div>
+<div class="field">
+    <label for="starts_at"><%= t('field.starts_at') %> <span class="optional"><%= t('form.optional') %></span></label>
+    <input type="time" id="starts_at" name="starts_at" value="<%= values.starts_at %>" <%- fieldState(errors, 'starts_at', errorsId) %>>
+</div>
+<div class="field">
+    <label for="ends_at"><%= t('field.ends_at') %> <span class="optional"><%= t('form.optional') %></span></label>
+    <input type="time" id="ends_at" name="ends_at" value="<%= values.ends_at %>" <%- fieldState(errors, 'ends_at', errorsId) %>>
+</div>
+<div class="field">
+    <label for="location"><%= t('field.location') %> <span class="optional"><%= t('form.optional') %></span></label>
+    <input type="text" id="location" name="location" maxlength="200" value="<%= values.location %>" <%- fieldState(errors, 'location', errorsId) %>>
+</div>
+<div class="field field--wide">
+    <label for="attendees"><%= t('field.attendees') %> <span class="optional"><%= t('form.optional') %></span></label>
+    <input type="text" id="attendees" name="attendees" maxlength="500" value="<%= values.attendees %>"
+           placeholder="<%= t('appointments.attendeesPlaceholder') %>" <%- fieldState(errors, 'attendees', errorsId) %>>
+</div>
+<div class="field field--wide">
+    <label for="notes"><%= t('field.notes') %> <span class="optional"><%= t('form.optional') %></span></label>
+    <textarea id="notes" name="notes" rows="2" maxlength="2000" <%- fieldState(errors, 'notes', errorsId) %>><%= values.notes %></textarea>
+</div>

@@ -1,5 +1,14 @@
-import { FILE_KINDS, FILE_NOTE_MAX, MAX_FILE_MB, RATING_MAX, VENDOR_STATUSES } from '../constants.js';
+import {
+    FILE_KINDS,
+    FILE_NOTE_MAX,
+    MAX_FILE_MB,
+    PROPOSAL_STATUSES,
+    RATING_MAX,
+    VENDOR_AVAILABILITY,
+    VENDOR_STATUSES
+} from '../constants.js';
 import { findFiles } from '../models/files.js';
+import { findProposals } from '../models/proposals.js';
 import {
     createPayment,
     deletePayment,
@@ -18,6 +27,7 @@ import { validateContract, validatePayment } from '../validators/payments.js';
 import { validateRating } from '../validators/wrapup.js';
 
 const EMPTY_PAYMENT = { label: '', amount: '', due_date: '', paid_on: '', note: '' };
+const EMPTY_PROPOSAL = { title: '', amount: '', valid_until: '', file_id: '', notes: '' };
 
 /** The vendor named in the route, if it belongs to the active wedding. */
 const routeVendor = (req) => (isUuid(req.params.id) ? findVendor(req.params.id, req.wedding.id) : null);
@@ -44,12 +54,18 @@ const paymentValues = (payment) => ({
 /**
  * The vendor page. The upload form comes back with its errors when an upload from here failed.
  */
-const renderVendorPage = async (req, res, vendor, { status = 200, paymentForm, ratingForm, uploadForm } = {}) => {
+const renderVendorPage = async (
+    req,
+    res,
+    vendor,
+    { status = 200, paymentForm, ratingForm, uploadForm, availabilityForm, proposalForm } = {}
+) => {
     const today = todayIso();
-    const [payments, money, vendorFiles] = await Promise.all([
+    const [payments, money, vendorFiles, proposals] = await Promise.all([
         findPayments(vendor.id, req.wedding.id),
         findVendorMoney(req.wedding.id, today),
-        findFiles(req.wedding.id, { vendorId: vendor.id })
+        findFiles(req.wedding.id, { vendorId: vendor.id }),
+        findProposals(vendor.id, req.wedding.id)
     ]);
     res.status(status).render('vendor', {
         title: vendor.name,
@@ -64,6 +80,14 @@ const renderVendorPage = async (req, res, vendor, { status = 200, paymentForm, r
             errors: []
         },
         ratingMax: RATING_MAX,
+        availabilityChoices: VENDOR_AVAILABILITY,
+        availabilityForm: availabilityForm ?? {
+            values: { availability: vendor.availability, hold_until: toIsoDate(vendor.hold_until) },
+            errors: []
+        },
+        proposals,
+        proposalStatuses: PROPOSAL_STATUSES,
+        proposalForm: proposalForm ?? { values: EMPTY_PROPOSAL, errors: [] },
         vendorFiles,
         uploadForm: uploadForm ?? { values: { kind: 'contract', note: '', vendor_id: vendor.id }, errors: [] },
         fileKinds: FILE_KINDS,
@@ -182,6 +206,7 @@ const processDeletePayment = async (req, res, next) => {
 };
 
 export {
+    routeVendor,
     renderVendorPage,
     showVendor,
     processRating,

@@ -1,3 +1,4 @@
+import { REMINDER_KINDS, REMINDER_WINDOW_DAYS } from '../constants.js';
 import { touchTrial } from '../models/trials.js';
 import { findUserById } from '../models/users.js';
 import { setFlash } from '../utils/flash.js';
@@ -21,6 +22,9 @@ const toSessionUser = (row) => ({
     themeMode: row.theme_mode,
     themeColors: row.theme_colors ?? null,
     reminderEmails: row.reminder_emails !== false,
+    reminderDays: row.reminder_days ?? REMINDER_WINDOW_DAYS,
+    reminderFrequency: row.reminder_frequency ?? 'daily',
+    reminderKinds: row.reminder_kinds ?? [...REMINDER_KINDS],
     brandPalette: row.brand_palette ?? null,
     isTrial: row.is_trial === true
 });

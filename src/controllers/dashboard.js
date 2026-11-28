@@ -1,3 +1,4 @@
+import { findUpcomingAppointments } from '../models/appointments.js';
 import { countOpenDecisions } from '../models/decisions.js';
 import { findMoneySummary, findPaymentsDue } from '../models/payments.js';
 import { findTaskProgress } from '../models/checklist.js';
@@ -17,6 +18,8 @@ import { isUuid, readText } from '../validators/common.js';
 import { extractInviteToken, validateWedding, validateWeddingDate } from '../validators/weddings.js';
 
 const EMPTY_WEDDING = { name: '', wedding_date: '' };
+// The dashboard shows the next few; the appointments page has the rest.
+const DASHBOARD_APPOINTMENTS = 3;
 
 /**
  * First steps for a new wedding, shown until they are all done. Only steps the member's role
@@ -39,19 +42,32 @@ const gettingStartedSteps = (wedding, stats, memberCount) => {
 
 const showDashboard = async (req, res) => {
     const weddingId = req.wedding.id;
-    const [money, paymentsDue, guests, tasks, vendors, tracks, photos, pendingInvites, memberCount, openDecisions] =
-        await Promise.all([
-            findMoneySummary(weddingId),
-            findPaymentsDue(weddingId),
-            findGuestStats(weddingId),
-            findTaskProgress(weddingId),
-            findVendorStats(weddingId),
-            countTracks(weddingId),
-            countPhotos(weddingId),
-            findPendingInvitesForEmail(req.session.user.email),
-            countMembers(weddingId),
-            countOpenDecisions(weddingId)
-        ]);
+    const today = todayIso();
+    const [
+        money,
+        paymentsDue,
+        guests,
+        tasks,
+        vendors,
+        tracks,
+        photos,
+        pendingInvites,
+        memberCount,
+        openDecisions,
+        appointments
+    ] = await Promise.all([
+        findMoneySummary(weddingId),
+        findPaymentsDue(weddingId),
+        findGuestStats(weddingId),
+        findTaskProgress(weddingId),
+        findVendorStats(weddingId),
+        countTracks(weddingId),
+        countPhotos(weddingId),
+        findPendingInvitesForEmail(req.session.user.email),
+        countMembers(weddingId),
+        countOpenDecisions(weddingId),
+        findUpcomingAppointments(weddingId, today, DASHBOARD_APPOINTMENTS)
+    ]);
     const stats = {
         budgetLimit: money.limit,
         committed: money.committed,
@@ -65,7 +81,7 @@ const showDashboard = async (req, res) => {
     const steps = gettingStartedSteps(req.wedding, stats, memberCount);
     const weddingIso = toIsoDate(req.wedding.wedding_date);
     const wrapUp =
-        weddingIso && weddingIso < todayIso()
+        weddingIso && weddingIso < today
             ? { owed: money.owed, unrated: await findUnratedBookedVendors(weddingId, COUNTED_STATUS) }
             : null;
 
@@ -73,6 +89,7 @@ const showDashboard = async (req, res) => {
         title: req.t('dashboard.title'),
         stats,
         paymentsDue,
+        appointments,
         steps: steps.every((step) => step.done) ? [] : steps,
         openDecisions,
         wrapUp,

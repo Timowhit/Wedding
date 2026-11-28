@@ -29,7 +29,9 @@ import {
     RSVP_STATUSES,
     TASK_CATEGORIES,
     VENDOR_CATEGORIES,
-    VENDOR_STATUSES
+    VENDOR_STATUSES,
+    PROPOSAL_STATUSES,
+    VENDOR_AVAILABILITY
 } from '../../src/constants.js';
 
 const srcDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../src');
@@ -85,13 +87,31 @@ const dynamicKeys = () => [
     ...FILE_KINDS.flatMap((k) => [`fileKind.${k}`, `fileKindPlural.${k}`]),
     ...MILESTONES.map((m) => `celebrate.milestone${m}`),
     ...WRAPUP_TASKS.map((task) => task.key),
-    ...['wedding', 'task', 'payment', 'decision'].map((k) => `calendar.kind.${k}`),
-    ...['guest', 'vendor', 'task', 'decision', 'schedule'].map((k) => `search.kind.${k}`),
+    ...['wedding', 'task', 'payment', 'decision', 'appointment'].map((k) => `calendar.kind.${k}`),
+    ...['guest', 'vendor', 'task', 'decision', 'schedule', 'appointment'].map((k) => `search.kind.${k}`),
+    ...['daily', 'weekly'].map((k) => `reminderFrequency.${k}`),
+    ...VENDOR_AVAILABILITY.map((k) => `availability.${k}`),
+    ...PROPOSAL_STATUSES.flatMap((k) => [
+        `proposalStatus.${k}`,
+        `proposals.mark.${k}`,
+        `proposals.markNamed.${k}`,
+        `proposals.marked.${k}`
+    ]),
     ...['high', 'low'].map((p) => `priorityTag.${p}`),
     ...Object.keys(LAYOUT_FIXTURES).map((k) => `layoutKind.${k}`),
     ...LAYOUT_UNITS.map((u) => `layoutUnit.${u}`),
     ...LAYOUT_SHAPES.map((s) => `layoutShape.${s}`),
     ...['primary', 'secondary', 'accent'].map((f) => `field.${f}`),
+    // Form fields named only in error summaries (partials/form-errors.ejs labels them field.<name>).
+    ...[
+        'starts_on',
+        'reminder_days',
+        'reminder_frequency',
+        'remind_payments',
+        'hold_until',
+        'valid_until',
+        'file_id'
+    ].map((f) => `field.${f}`),
     ...FEATURES.flatMap(({ key }) => ['title', 'body', 'alt'].map((part) => `landing.feature.${key}.${part}`)),
     ...COMING_NEXT.map((item) => `landing.coming.${item}`),
     ...THEME_MODES.map((m) => `themeMode.${m}`),
