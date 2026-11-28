@@ -168,11 +168,11 @@
                 <span class="stat-value"><%= stats.vendors.total %></span>
                 <span class="stat-label"><%= t('dashboard.vendorsBooked', { count: stats.vendors.booked }) %></span>
             </a></li>
-            <% if (features.music || stats.tracks > 0) { %><li><a class="stat-card stat-card--link" href="/music">
+            <li><a class="stat-card stat-card--link" href="/music">
                 <span class="stat-icon" aria-hidden="true">🎵</span>
                 <span class="stat-value"><%= stats.tracks %></span>
                 <span class="stat-label"><%= t('dashboard.songs') %></span>
-            </a></li><% } %>
+            </a></li>
             <% if (features.inspiration || stats.photos > 0) { %><li><a class="stat-card stat-card--link" href="/inspiration">
                 <span class="stat-icon" aria-hidden="true">🌸</span>
                 <span class="stat-value"><%= stats.photos %></span>

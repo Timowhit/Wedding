@@ -2,7 +2,7 @@ Wedding-planner UX and feature ideas
 Status checked against the code on 2026-11-27. [x] done, [~] partly done (what's missing is listed), [ ] not started.
 
 Next up
-- [ ] Let planners customize fields and workflows for different budgets, traditions, and planning styles (the last idea not started).
+- Nothing queued: the questions under "Partly done" are waiting on answers (appointments, a vendor role, vendor availability, reminder choices).
 
 Done
 - [x] Navigation grouped into dropdowns (Planning, Money, Guests & venue, Event day, Planner), a styled wedding menu, the task badge just under the header, a −/+ pill on each question in the questionnaire builder (− removes it, + adds one under it), a header on one line on wide screens, and stylesheets that always match the page (fixes the badge looking different between pages). (PR #17, merged; pill and one-line header in PR #19)
@@ -24,10 +24,18 @@ Done
 - [x] Build editable event-day schedules with vendor arrival times, contacts, setup notes, and contingency plans.
 - [x] Make essential schedules and contacts easy to access on mobile, including offline on event day.
 - [x] Let users choose a color theme for the app, and let planners set a brand palette their clients see.
+- [x] Playground: a private trial wedding with examples, without signing up; a banner says nothing is kept unless you sign up, and signing up keeps it. Trials idle for a day are deleted. (PR #23)
+- [x] French and Brazilian Portuguese, alongside English and Spanish. A native speaker should check them before they're advertised. (PR #23)
+- [x] DJ page: songs added from Spotify links (no keys needed), put in order, and each section played in order with Spotify's ad-free player (whole songs for Premium listeners, previews otherwise). (PR #23)
+- [x] Let planners customize fields and workflows: custom fields on guests, vendors and tasks, and whole-wedding templates (tasks, schedule, budget plan, vendors, fields) to start new weddings from. (PR #23)
+- [x] Venue layout inventory: a sidebar with seating tables not on a plan yet (tables made on the seating page appear there automatically) and pieces kept off the plan for later; place one, or all tables at once. (PR #22)
+- [x] Several rooms or floors in the venue layout, each with its own size and unit; pieces move between rooms or to the inventory. (PR #22)
+- [x] Categorizable budget amounts: suggested categories (venue, catering, attire, invitations, decorations…) that can be deleted and brought back, the wedding's own categories, and a planned amount per category. (PR #21)
+- [x] The printable event-day schedule is black and white by default, laid out as an A4 page, with an "In colour" option next to the printable version link. (PR #21)
 
 Partly done
-- [~] Wedding-specific templates for timelines, task lists, budgets, and vendor coordination.
-      Done: checklist and event-day timeline templates. Missing: budget and vendor templates.
+- [x] Wedding-specific templates for timelines, task lists, budgets, and vendor coordination.
+      Checklist and timeline templates, and whole-wedding templates with the budget plan and vendors. (PR #23)
 - [~] A dashboard showing each wedding's next deadlines, appointments, outstanding decisions, and budget status.
       Done: deadlines, decisions, payments due, budget, and a calendar. Missing: appointments (meetings with a time).
 - [~] Vendor contacts, availability, proposals, notes, and key documents together.
@@ -50,10 +58,3 @@ Small follow-ups (from the reviews of PRs #11 to #15)
 - [x] Library: names unique without regard to capitals; at most 30 questionnaires per wedding; a chosen answer can be cleared ("No answer"); a warning instead of overwriting when a partner saved answers meanwhile; long messages suggest Copy. (PR #20)
 
 Not started
-- [ ] Option to use a playground, where sign in is bypassed but the user is informed that their work will not be saved if they leave without signing up.
-- [ ] Offer many more languages
-- [ ] DJ page, where songs can be selected, sequenced, and played. Preferance would be youtube or spotify but we want to stay ad free.
-- [ ] Layout page should have an inventory of objects on a sidebar, to store off the plan ad fill in later and/or automatically bring in tables made in the seating page.
-- [ ] Multiple rooms/floors option in venue layout.
-- [ ] catogorizable budget quantities, i.e. venue, food, wardobe, invitations, decorations... some default options should be possible to generate but able to delete and add their own too.
-- [ ] printable version should be black and white by default (displayed in A4 format) with a selection option for color next to the printable version link on the event day schedule page.

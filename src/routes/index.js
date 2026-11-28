@@ -10,7 +10,16 @@ import {
     showRegisterForm,
     startGoogleLogin
 } from '../controllers/auth.js';
-import { processBudgetLimit, processDeleteExpense, processNewExpense, showBudget } from '../controllers/budget.js';
+import {
+    processBudgetLimit,
+    processCategoryPlan,
+    processDeleteCategory,
+    processDeleteExpense,
+    processNewCategory,
+    processNewExpense,
+    processSuggestedCategories,
+    showBudget
+} from '../controllers/budget.js';
 import {
     processDeleteTask,
     processEditTask,
@@ -43,7 +52,14 @@ import {
     showInspiration
 } from '../controllers/inspiration.js';
 import { processAcceptInvite, processDeclineInvite, showInvite } from '../controllers/invites.js';
-import { processAddTrack, processClearSection, processDeleteTrack, showMusic } from '../controllers/music.js';
+import {
+    processAddLink,
+    processAddTrack,
+    processClearSection,
+    processDeleteTrack,
+    processMoveTrack,
+    showMusic
+} from '../controllers/music.js';
 import {
     processHandover,
     processBecomePlanner,
@@ -68,13 +84,22 @@ import {
     showEditVendor,
     showVendors
 } from '../controllers/vendors.js';
-import { redirectIfLoggedIn, requireLogin, requirePlanner } from '../middleware/auth.js';
+import {
+    redirectIfLoggedIn,
+    redirectIfSignedUp,
+    requireLogin,
+    requirePlanner,
+    requireRealAccount
+} from '../middleware/auth.js';
+import { processTry, showTry } from '../controllers/trial.js';
+import { processDeleteField, processNewField, showFields } from '../controllers/custom-fields.js';
 import { processNewClientWedding, processOpenWedding, showPlannerDashboard } from '../controllers/planner.js';
 import {
     inviteLimiter,
     loginLimiter,
     passwordLimiter,
     registerLimiter,
+    trialLimiter,
     searchLimiter,
     uploadLimiter
 } from '../middleware/rateLimit.js';
@@ -125,9 +150,13 @@ import { processArchive, processWrapUpTasks } from '../controllers/wrapup.js';
 import { showCalendar, showSearch } from '../controllers/calendar.js';
 import {
     processDeletePiece,
+    processDeleteRoom,
     processEditPiece,
     processMovePiece,
     processNewFixture,
+    processNewRoom,
+    processPieceRoom,
+    processPlaceAllTables,
     processPlaceTable,
     processRoom,
     showLayout
@@ -143,9 +172,11 @@ import { showOffline } from '../controllers/offline.js';
 import { processUnsubscribe, showUnsubscribe } from '../controllers/reminders.js';
 import {
     processApplyTemplate,
+    processApplyWeddingTemplate,
     processDeleteTemplate,
     processRenameTemplate,
     processSaveTemplate,
+    processSaveWeddingTemplate,
     showTemplates
 } from '../controllers/templates.js';
 import {
@@ -181,13 +212,16 @@ const account = [requireLogin, loadOptionalWedding];
 const planner = [requireLogin, requirePlanner, loadOptionalWedding];
 
 /* Public ------------------------------------------------------------------------------------- */
-router.get('/login', redirectIfLoggedIn, showLoginForm);
-router.post('/login', redirectIfLoggedIn, loginLimiter, processLogin);
-router.get('/start', redirectIfLoggedIn, showStart);
+router.get('/login', redirectIfSignedUp, showLoginForm);
+router.post('/login', redirectIfSignedUp, loginLimiter, processLogin);
+router.get('/start', redirectIfSignedUp, showStart);
+// The playground: anyone not signed in can start a private trial wedding.
+router.get('/try', redirectIfLoggedIn, showTry);
+router.post('/try', redirectIfLoggedIn, trialLimiter, processTry);
 router.get('/offline', showOffline);
 router.get('/css/custom/:key.css', showCustomCss);
-router.get('/register', redirectIfLoggedIn, showRegisterForm);
-router.post('/register', redirectIfLoggedIn, registerLimiter, processRegister);
+router.get('/register', redirectIfSignedUp, showRegisterForm);
+router.post('/register', redirectIfSignedUp, registerLimiter, processRegister);
 router.post('/logout', processLogout);
 router.get('/auth/google', startGoogleLogin);
 router.get('/auth/google/callback', finishGoogleLogin);
@@ -198,13 +232,13 @@ router.get('/invite/:token', showInvite);
 router.get('/welcome', requireLogin, showWelcome);
 router.post('/weddings', requireLogin, processNewWedding);
 router.post('/wedding/switch', requireLogin, processSwitchWedding);
-router.post('/invites/join', requireLogin, processJoinByLink);
-router.post('/invite/:token/accept', requireLogin, processAcceptInvite);
+router.post('/invites/join', requireLogin, requireRealAccount, processJoinByLink);
+router.post('/invite/:token/accept', requireLogin, requireRealAccount, processAcceptInvite);
 router.post('/invite/:token/decline', requireLogin, processDeclineInvite);
 
 /* Planner dashboard ---------------------------------------------------------------------------- */
 router.get('/planner', planner, showPlannerDashboard);
-router.post('/planner/weddings', planner, processNewClientWedding);
+router.post('/planner/weddings', planner, requireRealAccount, processNewClientWedding);
 router.post('/planner/weddings/:id/open', planner, processOpenWedding);
 
 /* Dashboard ----------------------------------------------------------------------------------- */
@@ -238,13 +272,17 @@ router.get('/layout', member, showLayout);
 router.post('/layout/room', editor, processRoom);
 router.post('/layout/items', editor, processNewFixture);
 router.post('/layout/tables', editor, processPlaceTable);
+router.post('/layout/tables/all', editor, processPlaceAllTables);
+router.post('/layout/rooms', editor, processNewRoom);
+router.post('/layout/rooms/:id/delete', editor, processDeleteRoom);
+router.post('/layout/items/:id/room', editor, processPieceRoom);
 router.post('/layout/items/:id', editor, processEditPiece);
 router.post('/layout/items/:id/move', editor, processMovePiece);
 router.post('/layout/items/:id/delete', editor, processDeletePiece);
 
 /* Files (member downloads, editor uploads; uploads are multipart, see middleware/upload.js) ----- */
 router.get('/files', member, showFiles);
-router.post('/files', editor, uploadLimiter, parseUpload, verifyUploadCsrf, processUpload);
+router.post('/files', editor, requireRealAccount, uploadLimiter, parseUpload, verifyUploadCsrf, processUpload);
 router.get('/files/:id', member, downloadFile);
 router.post('/files/:id/delete', editor, processDeleteFile);
 
@@ -269,6 +307,10 @@ router.get('/budget', member, showBudget);
 router.post('/budget/limit', editor, processBudgetLimit);
 router.post('/budget/expenses', editor, processNewExpense);
 router.post('/budget/expenses/:id/delete', editor, processDeleteExpense);
+router.post('/budget/categories', editor, processNewCategory);
+router.post('/budget/categories/suggested', editor, processSuggestedCategories);
+router.post('/budget/categories/:id/plan', editor, processCategoryPlan);
+router.post('/budget/categories/:id/delete', editor, processDeleteCategory);
 
 /* Checklist ----------------------------------------------------------------------------------- */
 router.get('/checklist', member, showChecklist);
@@ -304,8 +346,15 @@ router.post('/vendors/:id/payments', editor, processNewPayment);
 router.post('/vendors/:id/rating', editor, processRating);
 router.post('/vendors/:id/rating/clear', editor, processClearRating);
 
+/* Custom fields on guests, vendors and tasks (member reads, editor changes) --------------------- */
+router.get('/fields', member, showFields);
+router.post('/fields', editor, processNewField);
+router.post('/fields/:id/delete', editor, processDeleteField);
+
 /* Templates (a person's own; see models/templates.js) ------------------------------------------- */
 router.get('/templates', account, showTemplates);
+router.post('/templates/wedding', editor, processSaveWeddingTemplate);
+router.post('/templates/:id/apply', editor, processApplyWeddingTemplate);
 
 /* Messages and questionnaires library (account: a person's own; using one needs a wedding).
    Sending and removing questionnaires is asking (the planner); answering is the couple's. ---- */
@@ -339,6 +388,8 @@ router.post('/payments/:id/delete', editor, processDeletePayment);
 /* Music --------------------------------------------------------------------------------------- */
 router.get('/music', member, searchLimiter, showMusic);
 router.post('/music/tracks', editor, processAddTrack);
+router.post('/music/links', editor, processAddLink);
+router.post('/music/tracks/:id/move', editor, processMoveTrack);
 router.post('/music/tracks/:id/delete', editor, processDeleteTrack);
 router.post('/music/sections/:slug/clear', editor, processClearSection);
 
@@ -358,12 +409,12 @@ router.post('/settings/reminders', account, processReminders);
 router.get('/reminders/unsubscribe', showUnsubscribe);
 router.post('/reminders/unsubscribe', processUnsubscribe);
 router.post('/settings/business', account, processBusiness);
-router.post('/settings/become-planner', account, processBecomePlanner);
-router.post('/settings/password', account, passwordLimiter, processPassword);
+router.post('/settings/become-planner', account, requireRealAccount, processBecomePlanner);
+router.post('/settings/password', account, requireRealAccount, passwordLimiter, processPassword);
 router.post('/settings/leave', member, processLeaveWedding);
 router.post('/settings/wedding', owner, processWeddingDetails);
-router.post('/settings/invites', owner, inviteLimiter, processInvite);
-router.post('/settings/handover', owner, inviteLimiter, processHandover);
+router.post('/settings/invites', owner, requireRealAccount, inviteLimiter, processInvite);
+router.post('/settings/handover', owner, requireRealAccount, inviteLimiter, processHandover);
 router.post('/settings/invites/:id/delete', owner, processRevokeInvite);
 router.post('/settings/members/:userId/role', owner, processMemberRole);
 router.post('/settings/members/:userId/delete', owner, processRemoveMember);

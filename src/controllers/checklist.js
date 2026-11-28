@@ -18,6 +18,9 @@ import { backTo } from '../utils/redirect.js';
 import { toIsoDate } from '../utils/format.js';
 import { todayIso } from '../utils/today.js';
 import { celebrationFor } from '../utils/celebrate.js';
+import { findCustomFields, saveCustomValues } from '../models/custom-fields.js';
+import { readCustomForm } from './custom-fields.js';
+import { customFormValues } from '../validators/custom-fields.js';
 import { isUuid, readChoice } from '../validators/common.js';
 import { validateTask } from '../validators/planning.js';
 
@@ -45,11 +48,12 @@ const renderChecklist = async (req, res, { status = 200, taskForm, templateForm 
         who: readChoice(req.query.who, WHO_FILTERS)
     };
     const assigneeId = filters.who === 'me' ? req.session.user.id : null;
-    const [tasks, progress, templates, owners] = await Promise.all([
+    const [tasks, progress, templates, owners, customFields] = await Promise.all([
         findTasks(weddingId, { ...filters, assigneeId }),
         findTaskProgress(weddingId),
         findTemplates(req.session.user.id, 'checklist'),
-        ownerOptions(weddingId)
+        ownerOptions(weddingId),
+        findCustomFields(weddingId, 'task')
     ]);
 
     res.status(status).render('checklist', {
@@ -60,6 +64,7 @@ const renderChecklist = async (req, res, { status = 200, taskForm, templateForm 
         categories: TASK_CATEGORIES,
         priorities: TASK_PRIORITIES,
         owners,
+        customFields,
         today: todayIso(),
         taskForm: taskForm ?? { values: EMPTY_TASK, errors: [] },
         templates,
@@ -74,24 +79,34 @@ const renderEditTask = async (req, res, { status = 200, id, values, errors = [] 
         categories: TASK_CATEGORIES,
         priorities: TASK_PRIORITIES,
         owners: await ownerOptions(req.wedding.id),
+        customFields: await findCustomFields(req.wedding.id, 'task'),
         values,
         errors
     });
 
-/** Validates a task form against this wedding's members. */
-const readTaskForm = async (req) =>
-    validateTask(
+/** Validates a task form against this wedding's members, with its custom fields. */
+const readTaskForm = async (req) => {
+    const task = validateTask(
         req.body,
         (await ownerOptions(req.wedding.id)).map((owner) => owner.id)
     );
+    const custom = await readCustomForm(req, 'task');
+    return {
+        values: { ...task.values, custom: custom.values },
+        data: task.data,
+        custom: custom.data,
+        errors: [...task.errors, ...custom.errors]
+    };
+};
 
 const showChecklist = (req, res) => renderChecklist(req, res);
 
 const processNewTask = async (req, res) => {
-    const { values, data, errors } = await readTaskForm(req);
+    const { values, data, custom, errors } = await readTaskForm(req);
     if (errors.length === 0) {
         try {
-            await createTask(req.wedding.id, data);
+            const task = await createTask(req.wedding.id, data);
+            await saveCustomValues('task', task.id, req.wedding.id, custom);
             setFlash(req, 'success', 'checklist.taskAdded');
             return res.redirect(backTo(req, '/checklist'));
         } catch (err) {
@@ -112,18 +127,20 @@ const showEditTask = async (req, res, next) => {
             category: task.category,
             due_date: toIsoDate(task.due_date),
             priority: task.priority,
-            assignee_id: task.assignee_id ?? ''
+            assignee_id: task.assignee_id ?? '',
+            custom: customFormValues(task.custom)
         }
     });
 };
 
 const processEditTask = async (req, res, next) => {
     if (!isUuid(req.params.id)) return next();
-    const { values, data, errors } = await readTaskForm(req);
+    const { values, data, custom, errors } = await readTaskForm(req);
     if (errors.length === 0) {
         try {
             const updated = await updateTask(req.params.id, req.wedding.id, data);
             if (!updated) return next();
+            await saveCustomValues('task', req.params.id, req.wedding.id, custom);
             setFlash(req, 'success', 'checklist.taskSaved');
             return res.redirect(backTo(req, '/checklist'));
         } catch (err) {

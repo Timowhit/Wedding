@@ -20,7 +20,7 @@ describe('public landing page', { skip: skipWithoutDb }, () => {
         assert.match(page.body, /288 spots left/);
         assert.match(page.body, /href="\/register\?as=planner"/);
         assert.match(page.body, /href="\/register\?as=couple"/);
-        assert.match(page.body, /<h2[^>]*>Coming next<\/h2>/);
+        assert.doesNotMatch(page.body, /Coming next/, 'nothing is listed as coming next right now');
         assert.doesNotMatch(page.body, /Sign up/i);
         assert.doesNotMatch(page.body, /<script[^>]+src="https?:/, 'no third-party scripts');
     });
@@ -57,5 +57,16 @@ describe('public landing page', { skip: skipWithoutDb }, () => {
         const page = await new TestClient(app.baseUrl).request('/', { headers: { 'accept-language': 'es' } });
         assert.match(page.body, /<html lang="es"/);
         assert.match(page.body, /Empieza ahora/);
+    });
+
+    it('speaks French and Brazilian Portuguese too, with each language in the picker', async () => {
+        const french = await new TestClient(app.baseUrl).request('/', { headers: { 'accept-language': 'fr-FR' } });
+        assert.match(french.body, /<html lang="fr"/);
+        assert.match(french.body, /Tous les <em>mariages<\/em> de vos clients/);
+        const portuguese = await new TestClient(app.baseUrl).request('/', { headers: { 'accept-language': 'pt-BR' } });
+        assert.match(portuguese.body, /<html lang="pt"/);
+        assert.match(portuguese.body, /Começar agora/);
+        assert.match(portuguese.body, /<option value="fr"[^>]*>Français<\/option>/);
+        assert.match(portuguese.body, /<option value="pt"[^>]*>Português \(Brasil\)<\/option>/);
     });
 });

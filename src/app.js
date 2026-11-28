@@ -11,7 +11,7 @@ import { csrfProtection } from './middleware/csrf.js';
 import { setLanguage } from './middleware/i18n.js';
 import { configureGoogle } from './services/google.js';
 import { UNSPLASH_IMAGE_HOSTS, isUnsplashConfigured } from './services/unsplash.js';
-import { isSpotifyConfigured } from './services/spotify.js';
+import { ARTWORK_HOSTS as SPOTIFY_ARTWORK_HOSTS } from './services/spotify.js';
 import { resolveTheme } from './themes.js';
 import { takeCelebration } from './utils/celebrate.js';
 import { assetUrl } from './utils/assets.js';
@@ -69,11 +69,14 @@ const createApp = (env = process.env) => {
                     'img-src': [
                         "'self'",
                         'data:',
-                        'https://i.scdn.co',
+                        ...SPOTIFY_ARTWORK_HOSTS.map((h) => `https://${h}`),
                         ...UNSPLASH_IMAGE_HOSTS.map((h) => `https://${h}`)
                     ],
                     'style-src': ["'self'", 'https://fonts.googleapis.com'],
                     'font-src': ["'self'", 'https://fonts.gstatic.com'],
+                    // Spotify's iFrame API (the DJ page plays a section in order): its embed path only,
+                    // so nothing else served from open.spotify.com can run here.
+                    'script-src': ["'self'", 'https://open.spotify.com/embed/'],
                     'frame-src': ['https://open.spotify.com'],
                     'form-action': ["'self'", 'https://accounts.google.com'],
                     'upgrade-insecure-requests': isProduction ? [] : null
@@ -123,7 +126,7 @@ const createApp = (env = process.env) => {
         res.locals.emphasize = emphasize;
         res.locals.fieldState = fieldState;
         // Optional features without API keys are left out of the navigation and dashboard.
-        res.locals.features = { music: isSpotifyConfigured(), inspiration: isUnsplashConfigured() };
+        res.locals.features = { inspiration: isUnsplashConfigured() };
         // A function, because the wedding is only loaded later by the route's own middleware.
         res.locals.currentTheme = () => resolveTheme({ user: res.locals.user, wedding: res.locals.wedding });
         // Offline copies of pages show when they were saved (see public/sw.js).
@@ -173,7 +176,7 @@ const createApp = (env = process.env) => {
             res.locals.currentPath = req.path;
             res.locals.csrfToken = () => '';
             res.locals.emphasize = emphasize;
-            res.locals.features = { music: false, inspiration: false };
+            res.locals.features = { inspiration: false };
             res.locals.currentTheme = () => resolveTheme({});
             res.locals.asset = assetUrl;
         }

@@ -1,4 +1,5 @@
 import { findVendors } from '../models/vendors.js';
+import { findRooms } from '../models/layout.js';
 import {
     createScheduleItem,
     deleteScheduleItem,
@@ -26,17 +27,24 @@ const EMPTY_ITEM = {
 const toFormValues = (item) => Object.fromEntries(Object.keys(EMPTY_ITEM).map((field) => [field, item[field] ?? '']));
 
 const renderSchedule = async (req, res, { status = 200, itemForm, templateForm } = {}) => {
-    const [items, vendors, templates] = await Promise.all([
+    const [items, vendors, templates, rooms] = await Promise.all([
         findScheduleItems(req.wedding.id),
         findVendors(req.wedding.id),
-        findTemplates(req.session.user.id, 'schedule')
+        findTemplates(req.session.user.id, 'schedule'),
+        findRooms(req.wedding.id)
     ]);
     const print = req.query.print === '1';
+    // The printable version is black and white unless colour is asked for, on a white page.
+    const colour = print && req.query.color === '1';
     res.status(status).render('schedule', {
         title: req.t('schedule.title'),
-        bodyClass: print ? 'print-view' : '',
+        bodyClass: print ? `print-view${colour ? '' : ' print-mono'}` : '',
+        forceLightMode: print,
         print,
+        colour,
         items,
+        // "Save for offline" saves /layout; the other rooms are listed so they are saved too.
+        offlineRooms: rooms.slice(1).map((room) => `/layout?room=${room.id}`),
         vendors,
         itemForm: itemForm ?? { values: EMPTY_ITEM, errors: [] },
         templates,

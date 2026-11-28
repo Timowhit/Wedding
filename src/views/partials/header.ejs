@@ -9,6 +9,7 @@
             { href: '/calendar', key: 'nav.calendar', hidden: !hasWedding && !isPlanner },
             { href: '/checklist', key: 'nav.checklist', hidden: !hasWedding },
             { href: '/decisions', key: 'nav.decisions', hidden: !hasWedding },
+            { href: '/fields', key: 'nav.fields', hidden: !hasWedding },
             { href: '/questionnaires', key: 'nav.questionnaires', hidden: !hasWedding || !(locals.isPlannerWedding || isPlanner) }
         ] },
         { key: 'nav.group.money', items: [
@@ -24,7 +25,7 @@
             { href: '/schedule', key: 'nav.schedule', hidden: !hasWedding },
             { href: '/files', key: 'nav.files', hidden: !hasWedding },
             { href: '/colors', key: 'nav.colors', hidden: !hasWedding },
-            { href: '/music', key: 'nav.music', hidden: !hasWedding || !features.music },
+            { href: '/music', key: 'nav.music', hidden: !hasWedding },
             { href: '/inspiration', key: 'nav.inspiration', hidden: !hasWedding || !features.inspiration }
         ] },
         { key: 'nav.group.planner', items: [
@@ -104,6 +105,9 @@
         </nav>
     <% } else if (locals.user) { %>
         <%- include('account') %>
+    <% } %>
+    <% if (locals.user && user.isTrial) { %>
+        <p class="trial-banner"><%= t('trial.banner') %> <a href="/register"><%= t('trial.bannerLink') %></a></p>
     <% } %>
     <%- include('offline-banner') %>
     <% if (hasNav && hasWedding) { %><div class="task-badge-dock"><%- include('task-badge') %></div><% } %>

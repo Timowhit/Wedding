@@ -3,7 +3,15 @@
 
 <main id="main-content">
     <% if (print) { %>
-        <p class="print-hide"><a href="/schedule"><%= t('schedule.backFromPrint') %></a></p>
+        <p class="print-hide print-switch">
+            <a href="/schedule"><%= t('schedule.backFromPrint') %></a>
+            <% if (colour) { %>
+                <a href="/schedule?print=1"><%= t('schedule.printMono') %></a>
+            <% } else { %>
+                <a href="/schedule?print=1&amp;color=1"><%= t('schedule.printColour') %></a>
+            <% } %>
+            <button type="button" class="btn btn-primary btn-small" data-print hidden><%= t('schedule.printNow') %></button>
+        </p>
         <header class="page-header">
             <h1><%= wedding.name %></h1>
             <p class="subtitle"><%= t('schedule.printHeading') %><% if (wedding.wedding_date) { %> · <%= formatDate(wedding.wedding_date) %><% } %></p>
@@ -12,12 +20,17 @@
         <%- include('partials/page-header', { heading: 'schedule.heading', subtitle: 'schedule.subtitle' }) %>
         <%- include('partials/flash') %>
         <%- include('partials/read-only-notice') %>
-        <p class="schedule__print"><a href="/schedule?print=1"><%= t('schedule.printable') %></a></p>
+        <p class="schedule__print">
+            <a href="/schedule?print=1"><%= t('schedule.printable') %></a>
+            <span aria-hidden="true">·</span>
+            <a href="/schedule?print=1&amp;color=1"><%= t('schedule.printColour') %></a>
+        </p>
         <div class="offline-save">
             <button type="button" class="btn btn-secondary btn-small" data-save-offline hidden><%= t('offline.save') %></button>
             <p class="hint" data-save-offline-status role="status" hidden><%= t('offline.saved') %> <time></time></p>
             <p class="hint text-danger" data-save-offline-failed role="status" hidden><%= t('offline.saveFailed') %></p>
             <p class="hint" data-save-offline-hint hidden><%= t('offline.saveHint') %></p>
+            <% offlineRooms.forEach((url) => { %><a href="<%= url %>" data-offline-page hidden></a><% }); %>
         </div>
 
         <% if (canEdit) { %>

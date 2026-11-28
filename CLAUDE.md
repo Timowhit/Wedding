@@ -30,7 +30,7 @@ Server-rendered Express 5 + EJS + PostgreSQL app. Read README.md for setup, rout
 - Calendar and search (`models/calendar.js`) start from the person's memberships (`MY_WEDDINGS`); never query another wedding by id alone. Archived weddings (`archived_at`) stay out of active lists, the calendar and reminders, but search finds them.
 - Files: stored in `wedding_files.data`; lists must never select `data` (see `FILE_COLUMNS` in `models/files.js`). New upload routes go in `UPLOAD_PATHS` (`middleware/csrf.js`) and use `parseUpload` + `verifyUploadCsrf` after the role check. Accept types only through `detectFileType`.
 - Library: message templates and questionnaires belong to a person (`user_id`), like templates; a questionnaire sent to a wedding is a copy in `wedding_questionnaires` (scoped by `wedding_id`). Stored questions go through `normaliseQuestions` before use; only decision answerers save answers.
-- Venue layout: positions are piece centres in room units; every write goes through `clampToRoom` (and new pieces through `findFreeSpot`) in `validators/layout.js`. `public/js/app.js` repeats `clampToRoom` for dragging, so keep the two the same.
+- Venue layout: a wedding has one or more rooms (`venue_rooms`; `findRooms` creates the first). A piece with `room_id` null is in the inventory, sized in feet; convert with `convertPiece` when it moves between units. Positions are piece centres in room units; every write goes through `clampToRoom` (and new pieces through `findFreeSpot`) in `validators/layout.js`. `public/js/app.js` repeats `clampToRoom` for dragging, so keep the two the same.
 - Controllers: validate -> call models/services -> render or redirect. No SQL. On success, `setFlash` then redirect (post/redirect/get). On validation errors, re-render the page with status 400 and the submitted values.
 - Validators (`src/validators`) are pure and return `{ values, data, errors }`, where errors are `{ field, key, vars? }` and `key` is an i18n key.
 - Models own all SQL: parameterized, scoped by `wedding_id`, explicit column lists (never `SELECT *` for users: it would load `password_hash`).
@@ -49,6 +49,6 @@ Server-rendered Express 5 + EJS + PostgreSQL app. Read README.md for setup, rout
 
 ## Translations
 
-- Every user-facing string goes through `t()` with a key in **both** `src/i18n/en.js` and `src/i18n/es.js`. Tests fail on missing, unused or mismatched keys and placeholders.
+- Every user-facing string goes through `t()` with a key in **every** language file: `src/i18n/en.js`, `es.js`, `fr.js` and `pt.js` (Brazilian Portuguese). Tests fail on missing, unused or mismatched keys, placeholders and `*emphasis*` marks.
 - Values stored in the database (categories, statuses) are translated with prefixed keys, e.g. `t(\`rsvp.${guest.rsvp}\`)`.
 - `*word*` in a heading string is rendered as `<em>`; translations must not contain HTML.

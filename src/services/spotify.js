@@ -7,7 +7,9 @@ import { ServiceError, fetchJson, httpsUrlOnHost } from './http.js';
 
 const TOKEN_URL = 'https://accounts.spotify.com/api/token';
 const API_URL = 'https://api.spotify.com/v1';
-const ARTWORK_HOSTS = ['i.scdn.co'];
+// Covers from the Web API (i.scdn.co) and from oEmbed (the image CDN); also allowed in the CSP.
+const ARTWORK_HOSTS = ['i.scdn.co', 'image-cdn-ak.spotifycdn.com', 'image-cdn-fa.spotifycdn.com'];
+const OEMBED_URL = 'https://open.spotify.com/oembed';
 const TRACK_ID_PATTERN = /^[A-Za-z0-9]{22}$/;
 const SEARCH_LIMIT = 12;
 
@@ -75,9 +77,32 @@ const searchTracks = async (query) => {
  */
 const getTrack = async (trackId) => toTrack(await callApi(`/tracks/${trackId}`));
 
+/**
+ * Looks a public track up through Spotify's oEmbed endpoint, which needs no keys: its title and
+ * cover (the artist is part of the title only when Spotify puts it there).
+ * @param {string} trackId - Already validated with isSpotifyTrackId.
+ * @returns {Promise<{trackId: string, trackName: string, artistName: null, artworkUrl: string|null}>}
+ * @throws {ServiceError} reason 'not-found' for an unknown track, 'unavailable' when Spotify can't be reached.
+ */
+const getTrackByLink = async (trackId) => {
+    const params = new URLSearchParams({ url: `https://open.spotify.com/track/${trackId}` });
+    const data = await fetchJson(`${OEMBED_URL}?${params}`);
+    const trackName = String(data.title ?? '').slice(0, 300);
+    if (!trackName) throw new ServiceError('not-found', 'Spotify returned no title');
+    return { trackId, trackName, artistName: null, artworkUrl: httpsUrlOnHost(data.thumbnail_url, ARTWORK_HOSTS) };
+};
+
 /** Clears the cached token (used by tests). */
 const resetSpotifyToken = () => {
     cachedToken = null;
 };
 
-export { isSpotifyConfigured, isSpotifyTrackId, searchTracks, getTrack, resetSpotifyToken };
+export {
+    ARTWORK_HOSTS,
+    isSpotifyConfigured,
+    isSpotifyTrackId,
+    searchTracks,
+    getTrack,
+    getTrackByLink,
+    resetSpotifyToken
+};

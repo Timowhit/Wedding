@@ -1,7 +1,7 @@
 import db from './db.js';
 
 // The owner's name only while they are still a member: someone who left shows as nobody.
-const TASK_SELECT = `SELECT t.id, t.text, t.category, t.due_date, t.done, t.sort_order, t.created_at, t.priority,
+const TASK_SELECT = `SELECT t.id, t.text, t.category, t.due_date, t.done, t.sort_order, t.created_at, t.priority, t.custom,
                             CASE WHEN wm.user_id IS NULL THEN NULL ELSE t.assignee_id END AS assignee_id,
                             CASE WHEN wm.user_id IS NULL THEN NULL ELSE COALESCE(u.display_name, u.email) END AS assignee_name
                      FROM checklist_tasks t

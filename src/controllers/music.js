@@ -1,9 +1,10 @@
 import { MUSIC_SECTIONS } from '../constants.js';
-import { addTrack, deleteSection, deleteTrack, findTracks } from '../models/music.js';
-import { getTrack, isSpotifyConfigured, isSpotifyTrackId, searchTracks } from '../services/spotify.js';
+import { addTrack, deleteSection, deleteTrack, findTracks, moveTrack } from '../models/music.js';
+import { getTrack, getTrackByLink, isSpotifyConfigured, isSpotifyTrackId, searchTracks } from '../services/spotify.js';
 import { setFlash } from '../utils/flash.js';
 import { backTo } from '../utils/redirect.js';
 import { isUuid, readText } from '../validators/common.js';
+import { validateTrackLink } from '../validators/music.js';
 import { validateSearch } from '../validators/planning.js';
 
 /** i18n keys for each ServiceError reason. */
@@ -23,7 +24,7 @@ const serviceMessage = (err) => {
     return SERVICE_MESSAGES[err.reason];
 };
 
-const showMusic = async (req, res) => {
+const renderMusic = async (req, res, { status = 200, linkForm } = {}) => {
     const { query, errors } = validateSearch(req.query.q);
     let results = [];
     let searchError = null;
@@ -41,7 +42,7 @@ const showMusic = async (req, res) => {
         tracks: tracks.filter((track) => track.section === section.name)
     }));
 
-    res.status(errors.length > 0 ? 400 : 200).render('music', {
+    res.status(errors.length > 0 ? 400 : status).render('music', {
         title: req.t('music.title'),
         query,
         results,
@@ -50,8 +51,40 @@ const showMusic = async (req, res) => {
         sections: MUSIC_SECTIONS,
         playlists,
         trackCount: tracks.length,
-        errors
+        errors,
+        linkForm: linkForm ?? { values: { link: '', section: MUSIC_SECTIONS[0].slug }, errors: [] }
     });
+};
+
+/** GET /music: the playlists, a song search (when Spotify keys are set) and "add by link". */
+const showMusic = (req, res) => renderMusic(req, res);
+
+/** POST /music/links: adds a song from a pasted Spotify link (works without Spotify keys). */
+const processAddLink = async (req, res) => {
+    const { values, data, errors } = validateTrackLink(req.body);
+    if (errors.length > 0) return renderMusic(req, res, { status: 400, linkForm: { values, errors } });
+    let track;
+    try {
+        track = await getTrackByLink(data.trackId);
+    } catch (err) {
+        serviceMessage(err); // logs outages, rethrows anything that isn't a service error
+        const key = err.reason === 'not-found' ? 'music.linkMissing' : 'music.linkFailed';
+        return renderMusic(req, res, { status: 400, linkForm: { values, errors: [{ field: 'link', key }] } });
+    }
+    const added = await addTrack(req.wedding.id, { ...track, section: data.section.name });
+    setFlash(req, added ? 'success' : 'info', added ? 'music.trackAdded' : 'music.trackDuplicate', {
+        name: track.trackName,
+        section: req.t(`music.section.${data.section.slug}`)
+    });
+    res.redirect('/music');
+};
+
+/** POST /music/tracks/:id/move: one place up or down in its section. */
+const processMoveTrack = async (req, res, next) => {
+    const direction = ['up', 'down'].includes(req.body?.direction) ? req.body.direction : null;
+    if (!isUuid(req.params.id) || !direction || !(await moveTrack(req.params.id, req.wedding.id, direction)))
+        return next();
+    res.redirect(`/music#track-${req.params.id}`);
 };
 
 /** Adds a search result to a section. Only the Spotify id comes from the form. */
@@ -98,4 +131,4 @@ const processClearSection = async (req, res, next) => {
     res.redirect(backTo(req, '/music'));
 };
 
-export { showMusic, processAddTrack, processDeleteTrack, processClearSection };
+export { showMusic, processAddTrack, processAddLink, processMoveTrack, processDeleteTrack, processClearSection };

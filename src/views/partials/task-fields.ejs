@@ -30,3 +30,4 @@
         <% }); %>
     </select>
 </div>
+<%- include('custom-field-inputs', { fields: locals.customFields || [], values: values.custom || {}, errors, errorsId }) %>

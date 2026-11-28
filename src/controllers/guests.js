@@ -10,7 +10,10 @@ import {
     updateGuest,
     updateGuestRsvp
 } from '../models/guests.js';
+import { findCustomFields, saveCustomValues } from '../models/custom-fields.js';
 import { setFlash } from '../utils/flash.js';
+import { readCustomForm } from './custom-fields.js';
+import { customFormValues } from '../validators/custom-fields.js';
 import { backTo } from '../utils/redirect.js';
 import { isUuid, readChoice } from '../validators/common.js';
 import { validateGuest } from '../validators/planning.js';
@@ -27,11 +30,12 @@ const EMPTY_GUEST = {
 
 const renderGuests = async (req, res, { status = 200, guestForm } = {}) => {
     const rsvp = readChoice(req.query.rsvp, RSVP_STATUSES);
-    const [guests, stats, mealSummary, mealOptions] = await Promise.all([
+    const [guests, stats, mealSummary, mealOptions, customFields] = await Promise.all([
         findGuests(req.wedding.id, rsvp),
         findGuestStats(req.wedding.id),
         findMealSummary(req.wedding.id),
-        findMealOptions(req.wedding.id)
+        findMealOptions(req.wedding.id),
+        findCustomFields(req.wedding.id, 'guest')
     ]);
 
     res.status(status).render('guests', {
@@ -42,6 +46,7 @@ const renderGuests = async (req, res, { status = 200, guestForm } = {}) => {
         activeRsvp: rsvp,
         mealSummary,
         mealOptions,
+        customFields,
         guestForm: guestForm ?? { values: EMPTY_GUEST, errors: [] }
     });
 };
@@ -52,6 +57,7 @@ const renderEditGuest = async (req, res, { status = 200, id, values, errors = []
         formAction: `/guests/${id}/edit`,
         statuses: RSVP_STATUSES,
         mealOptions: await findMealOptions(req.wedding.id),
+        customFields: await findCustomFields(req.wedding.id, 'guest'),
         values,
         errors
     });
@@ -60,9 +66,16 @@ const showGuests = (req, res) => renderGuests(req, res);
 
 const processNewGuest = async (req, res) => {
     const { values, data, errors } = validateGuest(req.body);
-    if (errors.length > 0) return renderGuests(req, res, { status: 400, guestForm: { values, errors } });
+    const custom = await readCustomForm(req, 'guest');
+    errors.push(...custom.errors);
+    if (errors.length > 0)
+        return renderGuests(req, res, {
+            status: 400,
+            guestForm: { values: { ...values, custom: custom.values }, errors }
+        });
 
     const guest = await createGuest(req.wedding.id, data);
+    await saveCustomValues('guest', guest.id, req.wedding.id, custom.data);
     setFlash(req, 'success', 'guests.added', { name: guest.name });
     res.redirect(backTo(req, '/guests'));
 };
@@ -79,7 +92,8 @@ const showEditGuest = async (req, res, next) => {
             plus_one: guest.plus_one ?? '',
             meal: guest.meal ?? '',
             accessibility: guest.accessibility ?? '',
-            group_name: guest.group_name ?? ''
+            group_name: guest.group_name ?? '',
+            custom: customFormValues(guest.custom)
         }
     });
 };
@@ -87,10 +101,19 @@ const showEditGuest = async (req, res, next) => {
 const processEditGuest = async (req, res, next) => {
     if (!isUuid(req.params.id)) return next();
     const { values, data, errors } = validateGuest(req.body);
-    if (errors.length > 0) return renderEditGuest(req, res, { status: 400, id: req.params.id, values, errors });
+    const custom = await readCustomForm(req, 'guest');
+    errors.push(...custom.errors);
+    if (errors.length > 0)
+        return renderEditGuest(req, res, {
+            status: 400,
+            id: req.params.id,
+            values: { ...values, custom: custom.values },
+            errors
+        });
 
     const updated = await updateGuest(req.params.id, req.wedding.id, data);
     if (!updated) return next();
+    await saveCustomValues('guest', updated.id, req.wedding.id, custom.data);
     setFlash(req, 'success', 'guests.saved', { name: updated.name });
     res.redirect(backTo(req, '/guests'));
 };

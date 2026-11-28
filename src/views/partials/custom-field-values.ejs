@@ -1,0 +1,7 @@
+<%# The custom values of one guest, vendor or task, for list rows. Expects fields and custom. %>
+<% const shown = fields.filter((field) => custom && custom[field.id] !== undefined && custom[field.id] !== null); %>
+<% if (shown.length > 0) { %>
+    <p class="item-meta custom-values">
+        <% shown.forEach((field, i) => { const value = custom[field.id]; %><span><%= field.label %>: <%= value === true ? t('fields.yes') : value === false ? t('fields.no') : value %></span><%= i < shown.length - 1 ? ' · ' : '' %><% }); %>
+    </p>
+<% } %>

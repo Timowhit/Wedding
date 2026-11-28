@@ -4,7 +4,7 @@
         <p><strong><%= t('validation.fix') %></strong></p>
         <ul>
             <% errors.forEach((error) => { %>
-                <li><%= t(`field.${error.field}`) %>: <%= t(error.key, error.vars) %></li>
+                <li><%= error.label || t(`field.${error.field}`) %>: <%= t(error.key, error.vars) %></li>
             <% }); %>
         </ul>
     </div>

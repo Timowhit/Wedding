@@ -1,15 +1,18 @@
 import en from './en.js';
 import es from './es.js';
+import fr from './fr.js';
+import pt from './pt.js';
 
 /**
- * Server-side translations. Every user-facing string lives in en.js/es.js under a dotted key.
+ * Server-side translations. Every user-facing string lives in en.js (and es.js, fr.js, pt.js) under a dotted key.
  * Strings may contain {placeholders}; values are inserted as plain text and EJS escapes the
  * result, so translations never inject HTML. tests/i18n.test.js checks both files share keys.
  */
 
 const DEFAULT_LANGUAGE = 'en';
-const SUPPORTED_LANGUAGES = Object.freeze(['en', 'es']);
-const DICTIONARIES = { en, es };
+// pt is Brazilian Portuguese; Accept-Language pt-PT also lands on it.
+const SUPPORTED_LANGUAGES = Object.freeze(['en', 'es', 'fr', 'pt']);
+const DICTIONARIES = { en, es, fr, pt };
 
 /**
  * @param {unknown} value

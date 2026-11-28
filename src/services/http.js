@@ -32,7 +32,11 @@ const fetchJson = async (url, options = {}) => {
     }
     if (response.status === 404) throw new ServiceError('not-found', `${new URL(url).host} returned 404`);
     if (!response.ok) throw new ServiceError('unavailable', `${new URL(url).host} returned ${response.status}`);
-    return response.json();
+    try {
+        return await response.json();
+    } catch {
+        throw new ServiceError('unavailable', `${new URL(url).host} returned something other than JSON`);
+    }
 };
 
 /**

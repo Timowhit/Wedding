@@ -8,6 +8,17 @@
     <% groups.forEach(({ kind, templates }) => { %>
         <section class="card" aria-labelledby="<%= kind %>-templates-heading">
             <h2 class="card-title" id="<%= kind %>-templates-heading"><%= t(`templates.kind.${kind}`) %></h2>
+            <% if (kind === 'wedding' && locals.wedding && canEdit) { %>
+                <p class="hint"><%= t('templates.saveHint.wedding') %></p>
+                <%- include('partials/form-errors', { errors: weddingForm.errors, id: 'wedding-template-errors' }) %>
+                <form method="post" action="/templates/wedding" class="inline-form inline-form--start">
+                    <%- include('partials/csrf-field') %>
+                    <label for="wedding-template-name"><%= t('templates.templateName') %></label>
+                    <input type="text" id="wedding-template-name" name="name" required maxlength="120" value="<%= weddingForm.values.name %>"
+                           placeholder="<%= t('templates.namePlaceholder.wedding') %>" <%- fieldState(weddingForm.errors, 'name', 'wedding-template-errors') %>>
+                    <button type="submit" class="btn btn-secondary btn-small"><%= t('templates.saveWedding', { name: wedding.name }) %></button>
+                </form>
+            <% } %>
             <% if (templates.length === 0) { %>
                 <p class="empty-state"><%= t(`templates.empty.${kind}`) %></p>
             <% } else { %>
@@ -31,6 +42,12 @@
                                     </form>
                                 </details>
                             </div>
+                            <% if (kind === 'wedding' && locals.wedding && canEdit) { %>
+                                <form method="post" action="/templates/<%= template.id %>/apply" data-confirm="<%= t('templates.confirmApply', { name: template.name, wedding: wedding.name }) %>">
+                                    <%- include('partials/csrf-field') %>
+                                    <button type="submit" class="btn btn-secondary btn-small"><%= t('templates.applyTo', { wedding: wedding.name }) %></button>
+                                </form>
+                            <% } %>
                             <%- include('partials/row-actions', { deleteAction: `/templates/${template.id}/delete`, name: template.name, confirm: t('confirm.deleteTemplate', { name: template.name }) }) %>
                         </li>
                     <% }); %>

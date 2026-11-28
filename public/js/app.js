@@ -278,6 +278,83 @@
         renumber();
     }
 
+    // DJ page: each section plays its songs in order with Spotify's embed player (no ads; whole
+    // songs for listeners signed in to Spotify Premium, 30-second previews otherwise). Without
+    // JavaScript each song still has its own player.
+    const djPlayers = Array.from(document.querySelectorAll('[data-dj-player]'));
+    if (djPlayers.length > 0) {
+        const END_MARGIN_MS = 800; // playback_update stops a little short of the duration
+        window.onSpotifyIframeApiReady = function (api) {
+            djPlayers.forEach(function (player) {
+                const tracks = (player.getAttribute('data-tracks') || '').split(',').filter(Boolean);
+                const names = Array.from(player.parentElement.querySelectorAll('[data-track-name]'), (item) =>
+                    item.getAttribute('data-track-name')
+                );
+                const now = player.querySelector('[data-dj-now]');
+                let controller = null;
+                let index = 0;
+                let advanced = false;
+                const show = function () {
+                    now.textContent = player
+                        .getAttribute('data-now-template')
+                        .replace('{name}', names[index] || '')
+                        .replace('{n}', index + 1)
+                        .replace('{total}', tracks.length);
+                };
+                const playAt = function (next) {
+                    index = (next + tracks.length) % tracks.length;
+                    advanced = false;
+                    show();
+                    const uri = 'spotify:track:' + tracks[index];
+                    if (controller) {
+                        controller.loadUri(uri);
+                        controller.play();
+                        return;
+                    }
+                    api.createController(
+                        player.querySelector('[data-dj-embed]'),
+                        { uri: uri, width: '100%', height: 152 },
+                        function (created) {
+                            controller = created;
+                            controller.addListener('ready', function () {
+                                controller.play();
+                            });
+                            controller.addListener('playback_update', function (event) {
+                                const data = event.data || {};
+                                const ended = data.duration > 0 && data.position >= data.duration - END_MARGIN_MS;
+                                if (ended && !advanced && index < tracks.length - 1) {
+                                    advanced = true;
+                                    playAt(index + 1);
+                                }
+                            });
+                        }
+                    );
+                };
+                player.hidden = false;
+                player.querySelector('[data-dj-play]').addEventListener('click', function () {
+                    playAt(0);
+                });
+                player.querySelector('[data-dj-prev]').addEventListener('click', function () {
+                    playAt(index - 1);
+                });
+                player.querySelector('[data-dj-next]').addEventListener('click', function () {
+                    playAt(index + 1);
+                });
+            });
+        };
+        const script = document.createElement('script');
+        script.src = 'https://open.spotify.com/embed/iframe-api/v1';
+        script.async = true;
+        document.head.appendChild(script);
+    }
+
+    document.querySelectorAll('[data-print]').forEach(function (button) {
+        button.hidden = false;
+        button.addEventListener('click', function () {
+            window.print();
+        });
+    });
+
     document.addEventListener('submit', function (event) {
         const message = event.target.getAttribute('data-confirm');
         if (message && !window.confirm(message)) event.preventDefault();

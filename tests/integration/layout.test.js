@@ -18,9 +18,10 @@ describe('venue layout', { skip: skipWithoutDb }, () => {
         ).rows;
     const room = async () =>
         (
-            await app.pool.query(`SELECT width::float, depth::float, unit FROM venue_layouts WHERE wedding_id = $1;`, [
-                weddingId
-            ])
+            await app.pool.query(
+                `SELECT width::float, depth::float, unit FROM venue_rooms WHERE wedding_id = $1 ORDER BY created_at, id LIMIT 1;`,
+                [weddingId]
+            )
         ).rows[0];
     const jsonPost = (client, path, fields) =>
         client.request(path, {
@@ -55,7 +56,7 @@ describe('venue layout', { skip: skipWithoutDb }, () => {
         assert.equal(page.status, 200);
         assert.match(page.body, /<svg class="floor-plan"[^>]*viewBox="0 0 60 40"/);
         assert.match(page.body, /role="group"/, 'editors get a group of movable pieces');
-        assert.equal(await room(), undefined, 'nothing is stored until someone saves');
+        assert.deepEqual(await room(), { width: 60, depth: 40, unit: 'ft' }, 'the first room is the default size');
     });
 
     it('places seating tables once, sized by their seats, with how many are seated', async () => {
@@ -64,7 +65,7 @@ describe('venue layout', { skip: skipWithoutDb }, () => {
         const tableId = (await app.pool.query(`SELECT id FROM seating_tables WHERE wedding_id = $1;`, [weddingId]))
             .rows[0].id;
         const page = await owner.get('/layout');
-        assert.match(page.body, new RegExp(`<option value="${tableId}">Table 1`));
+        assert.match(page.body, new RegExp(`name="table_id" value="${tableId}"`), 'in the inventory');
 
         assert.equal((await owner.post('/layout/tables', { table_id: tableId })).location, '/layout');
         assert.equal((await owner.post('/layout/tables', { table_id: tableId })).location, '/layout');
@@ -77,7 +78,7 @@ describe('venue layout', { skip: skipWithoutDb }, () => {
         const drawn = await owner.get('/layout');
         assert.match(drawn.body, /Table 1/);
         assert.match(drawn.body, /0\/8/);
-        assert.doesNotMatch(drawn.body, new RegExp(`<option value="${tableId}">`), 'no longer offered');
+        assert.doesNotMatch(drawn.body, new RegExp(`name="table_id" value="${tableId}"`), 'no longer offered');
     });
 
     it('fixtures get default sizes; a move is kept inside the room', async () => {

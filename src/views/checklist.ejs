@@ -96,6 +96,7 @@
                                 <% if (task.assignee_name) { %><span><%= t('checklist.for', { name: task.assignee_name }) %></span><% } %>
                                 <% if (due) { %><span class="<%= overdue ? 'text-danger' : '' %>"><%= t(overdue ? 'checklist.overdue' : 'checklist.due', { date: formatDate(task.due_date) }) %></span><% } %>
                             </p>
+                            <%- include('partials/custom-field-values', { fields: customFields, custom: task.custom }) %>
                             <% if (canEdit) { %>
                                 <%- include('partials/row-actions', { editHref: `/checklist/${task.id}/edit`, deleteAction: `/checklist/${task.id}/delete`, name: task.text, confirm: t('confirm.deleteTask', { name: task.text }) }) %>
                             <% } %>

@@ -29,8 +29,14 @@ const BUDGET_CATEGORIES = Object.freeze([
     'Invitations',
     'Transportation',
     'Honeymoon',
+    'Decorations',
     'Other'
 ]);
+// Expenses in a deleted category move here; it can't be deleted.
+const FALLBACK_BUDGET_CATEGORY = 'Other';
+const BUDGET_CATEGORY_NAME_MAX = 60;
+// Categories per wedding, suggested ones included.
+const MAX_BUDGET_CATEGORIES = 40;
 
 const TASK_CATEGORIES = Object.freeze([
     'Venue',
@@ -162,7 +168,7 @@ const PAYMENT_DUE_WINDOW_DAYS = 30;
 const PLANNER_PAYMENT_FILTERS = Object.freeze(['month', 'next30', 'overdue']);
 
 /** What can be saved as a template. */
-const TEMPLATE_KINDS = Object.freeze(['checklist', 'schedule']);
+const TEMPLATE_KINDS = Object.freeze(['checklist', 'schedule', 'wedding']);
 /** Per account, so one person can't fill the database with templates. */
 const MAX_TEMPLATES_PER_USER = 100;
 // Wedding colours page: swatches per wedding and the length of a swatch's name.
@@ -176,7 +182,22 @@ const ROOM_SIZE_MIN = 5;
 const ROOM_SIZE_MAX = 500;
 const PIECE_SIZE_MIN = 0.5;
 const PIECE_SIZE_MAX = 200;
+// Trials (the playground): deleted after this long without a visit; last_seen_at is written at most this often.
+const TRIAL_IDLE_HOURS = 24;
+const TRIAL_TOUCH_MINUTES = 5;
+// A trial wedding is dated this many days ahead, so its countdown and deadlines look real.
+const TRIAL_WEDDING_DAYS_AHEAD = 180;
+// Custom fields: what they belong to, their types, and limits.
+const CUSTOM_FIELD_ENTITIES = Object.freeze(['guest', 'vendor', 'task']);
+const CUSTOM_FIELD_TYPES = Object.freeze(['text', 'number', 'yesno', 'choice']);
+const MAX_CUSTOM_FIELDS = 10; // per entity per wedding
+const CUSTOM_FIELD_LABEL_MAX = 60;
+const CUSTOM_FIELD_OPTIONS_MAX = 20;
+const CUSTOM_VALUE_MAX = 500;
 const MAX_LAYOUT_ITEMS = 200;
+// Rooms (or floors) per venue.
+const MAX_ROOMS = 10;
+const ROOM_NAME_MAX = 60;
 const LAYOUT_LABEL_MAX = 60;
 const LAYOUT_SHAPES = Object.freeze(['rect', 'round']);
 // What can be added besides seating tables, with a typical size in feet (width, depth, shape).
@@ -211,6 +232,9 @@ export {
     CUSTOM_PALETTE,
     CUSTOM_BACKGROUNDS,
     BUDGET_CATEGORIES,
+    BUDGET_CATEGORY_NAME_MAX,
+    FALLBACK_BUDGET_CATEGORY,
+    MAX_BUDGET_CATEGORIES,
     TASK_CATEGORIES,
     TASK_STATUSES,
     TASK_PRIORITIES,
@@ -257,7 +281,18 @@ export {
     ROOM_SIZE_MAX,
     PIECE_SIZE_MIN,
     PIECE_SIZE_MAX,
+    TRIAL_IDLE_HOURS,
+    TRIAL_TOUCH_MINUTES,
+    TRIAL_WEDDING_DAYS_AHEAD,
+    CUSTOM_FIELD_ENTITIES,
+    CUSTOM_FIELD_TYPES,
+    MAX_CUSTOM_FIELDS,
+    CUSTOM_FIELD_LABEL_MAX,
+    CUSTOM_FIELD_OPTIONS_MAX,
+    CUSTOM_VALUE_MAX,
     MAX_LAYOUT_ITEMS,
+    MAX_ROOMS,
+    ROOM_NAME_MAX,
     LAYOUT_LABEL_MAX,
     LAYOUT_SHAPES,
     LAYOUT_FIXTURES,
