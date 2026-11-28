@@ -2,7 +2,7 @@ import db from './db.js';
 
 const VENDOR_COLUMNS = `id, name, category, phone, email, website, status, notes, created_at,
     contract_total::float AS contract_total, contract_signed_on, contract_url, contract_includes, contract_cancellation,
-    rating, review, custom`;
+    rating, review, custom, availability, hold_until`;
 
 /**
  * Vendors alphabetically, optionally only one booking status.
@@ -136,6 +136,21 @@ const countVendorPayments = async (weddingId) => {
 };
 
 /**
+ * Saves whether the vendor is free on the wedding day; hold_until only goes with 'hold'.
+ * @param {string} id
+ * @param {string} weddingId
+ * @param {{availability: string, holdUntil: string|null}} values - Already validated.
+ * @returns {Promise<boolean>} False when the vendor is not in this wedding.
+ */
+const setAvailability = async (id, weddingId, { availability, holdUntil }) => {
+    const result = await db.query(
+        `UPDATE vendors SET availability = $3, hold_until = $4, updated_at = NOW() WHERE id = $1 AND wedding_id = $2;`,
+        [id, weddingId, availability, holdUntil]
+    );
+    return result.rowCount > 0;
+};
+
+/**
  * Saves a vendor's rating (1-5) and review after the wedding; null for both clears them.
  * @param {string} id
  * @param {string} weddingId
@@ -184,6 +199,7 @@ const addVendorsIfMissing = async (weddingId, vendors, status) => {
 };
 
 export {
+    setAvailability,
     addVendorsIfMissing,
     rateVendor,
     findUnratedBookedVendors,

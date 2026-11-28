@@ -127,6 +127,12 @@ import {
 } from '../controllers/schedule.js';
 import { showCustomCss } from '../controllers/themes.js';
 import {
+    processAvailability,
+    processDeleteProposal,
+    processNewProposal,
+    processProposalStatus
+} from '../controllers/proposals.js';
+import {
     processDeleteAppointment,
     processEditAppointment,
     processNewAppointment,
@@ -359,6 +365,10 @@ router.post('/vendors/:id/contract', editor, processContract);
 router.post('/vendors/:id/payments', editor, processNewPayment);
 router.post('/vendors/:id/rating', editor, processRating);
 router.post('/vendors/:id/rating/clear', editor, processClearRating);
+router.post('/vendors/:id/availability', editor, processAvailability);
+router.post('/vendors/:id/proposals', editor, processNewProposal);
+router.post('/proposals/:id/status', editor, processProposalStatus);
+router.post('/proposals/:id/delete', editor, processDeleteProposal);
 
 /* Custom fields on guests, vendors and tasks (member reads, editor changes) --------------------- */
 router.get('/fields', member, showFields);

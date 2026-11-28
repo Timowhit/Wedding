@@ -38,8 +38,8 @@ Partly done
       Checklist and timeline templates, and whole-wedding templates with the budget plan and vendors. (PR #23)
 - [x] A dashboard showing each wedding's next deadlines, appointments, outstanding decisions, and budget status.
       Appointments (/appointments: date, times, place, who is coming, notes) on the dashboard, calendar, search and reminder email. My defaults, as the question wasn't answered. (PR to come, branch appointments)
-- [~] Vendor contacts, availability, proposals, notes, and key documents together.
-      Done: contacts, notes, contract link and key terms, ratings after the wedding. Missing: availability and proposals.
+- [x] Vendor contacts, availability, proposals, notes, and key documents together.
+      Contacts, notes, contract, files, ratings, and now availability on your date (free, holding it until a day, not free) and proposals (amount, valid until, a file, accepted or declined; never counted as money spent). Entered by whoever edits the wedding; my defaults. (branch appointments)
 - [~] A shared client portal for couples to review plans, upload details, and approve decisions.
       Done: client role, decisions to approve, and file uploads (editors and clients).
 - [~] Role-based collaboration for planners, assistants, couples, and vendors.

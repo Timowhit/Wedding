@@ -1,0 +1,7 @@
+<%# One line saying whether a vendor is free on the day. Expects vendor, today (YYYY-MM-DD). %>
+<% if (vendor.availability === 'hold' && vendor.hold_until) { %>
+    <% const ended = toIsoDate(vendor.hold_until) < today; %>
+    <span class="<%= ended ? 'text-danger' : '' %>"><%= t(ended ? 'availability.holdEnded' : 'availability.holdUntil', { date: formatDate(vendor.hold_until) }) %></span>
+<% } else { %>
+    <span><%= t(`availability.${vendor.availability}`) %></span>
+<% } %>

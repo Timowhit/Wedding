@@ -29,7 +29,9 @@ import {
     RSVP_STATUSES,
     TASK_CATEGORIES,
     VENDOR_CATEGORIES,
-    VENDOR_STATUSES
+    VENDOR_STATUSES,
+    PROPOSAL_STATUSES,
+    VENDOR_AVAILABILITY
 } from '../../src/constants.js';
 
 const srcDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../src');
@@ -88,6 +90,13 @@ const dynamicKeys = () => [
     ...['wedding', 'task', 'payment', 'decision', 'appointment'].map((k) => `calendar.kind.${k}`),
     ...['guest', 'vendor', 'task', 'decision', 'schedule', 'appointment'].map((k) => `search.kind.${k}`),
     ...['daily', 'weekly'].map((k) => `reminderFrequency.${k}`),
+    ...VENDOR_AVAILABILITY.map((k) => `availability.${k}`),
+    ...PROPOSAL_STATUSES.flatMap((k) => [
+        `proposalStatus.${k}`,
+        `proposals.mark.${k}`,
+        `proposals.markNamed.${k}`,
+        `proposals.marked.${k}`
+    ]),
     ...['high', 'low'].map((p) => `priorityTag.${p}`),
     ...Object.keys(LAYOUT_FIXTURES).map((k) => `layoutKind.${k}`),
     ...LAYOUT_UNITS.map((u) => `layoutUnit.${u}`),

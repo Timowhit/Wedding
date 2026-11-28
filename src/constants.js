@@ -107,6 +107,11 @@ const WRAPUP_TASKS = Object.freeze([
     { key: 'wrapup.preserveKeepsakes', daysAfter: 30 }
 ]);
 const RATING_MAX = 5;
+/** Whether a vendor is free on the wedding day; 'hold' means they keep it free until hold_until. */
+const VENDOR_AVAILABILITY = Object.freeze(['unknown', 'available', 'hold', 'unavailable']);
+const PROPOSAL_STATUSES = Object.freeze(['received', 'accepted', 'declined']);
+/** Per vendor; more than any real back-and-forth of quotes. */
+const MAX_PROPOSALS_PER_VENDOR = 20;
 
 // Files (stored in PostgreSQL, see migration 015).
 const FILE_KINDS = Object.freeze(['contract', 'floor_plan', 'inspiration', 'other']);
@@ -230,6 +235,9 @@ const REMINDER_PAST_WEDDING_DAYS = 30;
 const REMINDER_ROLES = Object.freeze(['owner', 'editor', 'client']);
 
 export {
+    VENDOR_AVAILABILITY,
+    PROPOSAL_STATUSES,
+    MAX_PROPOSALS_PER_VENDOR,
     ACCOUNT_TYPES,
     FOUNDING_SPOTS,
     FOUNDING_DISCOUNT_PCT,

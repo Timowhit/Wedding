@@ -1,3 +1,5 @@
+import { countProposalsByVendor } from '../models/proposals.js';
+import { todayIso } from '../utils/today.js';
 import { VENDOR_CATEGORIES, VENDOR_STATUSES, RATING_MAX } from '../constants.js';
 import { findVendorMoney } from '../models/payments.js';
 import {
@@ -33,11 +35,12 @@ const toFormValues = (vendor) =>
 
 const renderVendors = async (req, res, { status = 200, vendorForm } = {}) => {
     const activeStatus = readChoice(req.query.status, VENDOR_STATUSES);
-    const [vendors, money, paymentCounts, customFields] = await Promise.all([
+    const [vendors, money, paymentCounts, customFields, proposalCounts] = await Promise.all([
         findVendors(req.wedding.id, activeStatus),
         findVendorMoney(req.wedding.id),
         countVendorPayments(req.wedding.id),
-        findCustomFields(req.wedding.id, 'vendor')
+        findCustomFields(req.wedding.id, 'vendor'),
+        countProposalsByVendor(req.wedding.id)
     ]);
 
     res.status(status).render('vendors', {
@@ -45,6 +48,8 @@ const renderVendors = async (req, res, { status = 200, vendorForm } = {}) => {
         vendors,
         money,
         paymentCounts,
+        proposalCounts,
+        today: todayIso(),
         categories: VENDOR_CATEGORIES,
         statuses: VENDOR_STATUSES,
         ratingMax: RATING_MAX,
