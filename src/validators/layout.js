@@ -5,6 +5,7 @@ import {
     LAYOUT_UNITS,
     PIECE_SIZE_MAX,
     PIECE_SIZE_MIN,
+    ROOM_NAME_MAX,
     ROOM_SIZE_MAX,
     ROOM_SIZE_MIN
 } from '../constants.js';
@@ -138,13 +139,19 @@ const convertPiece = (piece, from, to) => {
 };
 
 /**
- * The room's size and unit.
+ * A room's optional name, size and unit.
  * @param {object} [body] - req.body
- * @returns {{values: {width: string, depth: string, unit: string}, data: {width: number|null, depth: number|null, unit: string|null}, errors: Array}}
+ * @returns {{values: {name: string, width: string, depth: string, unit: string}, data: {name: string|null, width: number|null, depth: number|null, unit: string|null}, errors: Array}}
  */
 const validateRoom = (body = {}) => {
-    const values = { width: readText(body.width), depth: readText(body.depth), unit: readText(body.unit) };
+    const values = {
+        name: readText(body.name),
+        width: readText(body.width),
+        depth: readText(body.depth),
+        unit: readText(body.unit)
+    };
     const { errors, fail } = collectErrors();
+    checkText(fail, 'name', values.name, { max: ROOM_NAME_MAX });
     const width = readSize(values.width, ROOM_SIZE_MIN, ROOM_SIZE_MAX);
     const depth = readSize(values.depth, ROOM_SIZE_MIN, ROOM_SIZE_MAX);
     const unit = readChoice(values.unit, LAYOUT_UNITS);
@@ -152,7 +159,7 @@ const validateRoom = (body = {}) => {
     if (width === null) fail('width', 'layout.sizeRange', range);
     if (depth === null) fail('depth', 'layout.sizeRange', range);
     if (!unit) fail('unit', 'validation.choice');
-    return { values, data: { width, depth, unit }, errors };
+    return { values, data: { name: values.name || null, width, depth, unit }, errors };
 };
 
 /**

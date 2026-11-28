@@ -19,13 +19,16 @@ Without this nothing is sent, and nothing breaks.
 
 Cron Jobs are a paid Render instance type.
 
-## 2. Keep an eye on file storage
+## 2. Merge the two open pull requests, then update the Render database
 
-Uploaded files are stored in your Render database. Each wedding can use up to 250 MB, and each person can upload up to 1 GB in total. Render shows the database size on the database's page. If you get close to your plan's limit, tell me and I'll move files to cheaper storage.
+[Timowhit/Wedding#20](https://github.com/Timowhit/Wedding/pull/20) is merged. Merge these next, in this order, each once its checks have passed:
 
-## 3. Merge the follow-ups, then update the Render database
+1. [Timowhit/Wedding#21](https://github.com/Timowhit/Wedding/pull/21): budget categories and the printable schedule
+2. [Timowhit/Wedding#22](https://github.com/Timowhit/Wedding/pull/22): venue rooms and the inventory
 
-When [Timowhit/Wedding#20](https://github.com/Timowhit/Wedding/pull/20) passes its checks, merge it. Then, on your computer, in the project folder, with `.env` pointing at Render:
+If GitHub says #22 has a conflict after you merge #21, tell me and I'll fix it.
+
+Then, straight away (the venue layout page shows an error until this has run), on your computer, in the project folder, with `.env` pointing at Render:
 
 ```bash
 git checkout main
@@ -39,8 +42,12 @@ git pull origin main
 npm run migrate
 ```
 
-This adds migration `017`: it remembers which checklist milestones each wedding has celebrated, and makes message names unique without regard to capital letters. Then delete the `follow-ups` branch on GitHub.
+This adds migrations `017` to `019`: celebrated milestones and case-insensitive message names, each wedding's budget categories, and venue rooms (each wedding's current floor plan becomes its "Main room"). Then delete the branches `follow-ups`, `budget-print` and `layout-rooms` on GitHub.
 
-## 4. Check that PDFs open in your browsers
+## 3. Check that PDFs open in your browsers
 
 Files are downloaded in a locked-down mode so nothing in them can run on the site. Open a PDF from **Event day → Files** in each browser you use (Chrome, Firefox, Safari, and on your phone). It should either show the PDF or download it. If one shows an empty or blocked page instead, tell me which browser.
+
+## 4. Keep an eye on file storage
+
+Uploaded files are stored in your Render database. Each wedding can use up to 250 MB, and each person can upload up to 1 GB in total. Render shows the database size on the database's page. If you get close to your plan's limit, tell me and I'll move files to cheaper storage.

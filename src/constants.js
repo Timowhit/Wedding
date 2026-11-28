@@ -177,6 +177,9 @@ const ROOM_SIZE_MAX = 500;
 const PIECE_SIZE_MIN = 0.5;
 const PIECE_SIZE_MAX = 200;
 const MAX_LAYOUT_ITEMS = 200;
+// Rooms (or floors) per venue.
+const MAX_ROOMS = 10;
+const ROOM_NAME_MAX = 60;
 const LAYOUT_LABEL_MAX = 60;
 const LAYOUT_SHAPES = Object.freeze(['rect', 'round']);
 // What can be added besides seating tables, with a typical size in feet (width, depth, shape).
@@ -258,6 +261,8 @@ export {
     PIECE_SIZE_MIN,
     PIECE_SIZE_MAX,
     MAX_LAYOUT_ITEMS,
+    MAX_ROOMS,
+    ROOM_NAME_MAX,
     LAYOUT_LABEL_MAX,
     LAYOUT_SHAPES,
     LAYOUT_FIXTURES,
