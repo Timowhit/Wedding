@@ -49,6 +49,6 @@ Server-rendered Express 5 + EJS + PostgreSQL app. Read README.md for setup, rout
 
 ## Translations
 
-- Every user-facing string goes through `t()` with a key in **both** `src/i18n/en.js` and `src/i18n/es.js`. Tests fail on missing, unused or mismatched keys and placeholders.
+- Every user-facing string goes through `t()` with a key in **every** language file: `src/i18n/en.js`, `es.js`, `fr.js` and `pt.js` (Brazilian Portuguese). Tests fail on missing, unused or mismatched keys, placeholders and `*emphasis*` marks.
 - Values stored in the database (categories, statuses) are translated with prefixed keys, e.g. `t(\`rsvp.${guest.rsvp}\`)`.
 - `*word*` in a heading string is rendered as `<em>`; translations must not contain HTML.

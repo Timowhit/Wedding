@@ -33,7 +33,8 @@ import {
 } from '../../src/constants.js';
 
 const srcDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../src');
-const { en, es } = DICTIONARIES;
+const { en } = DICTIONARIES;
+const others = Object.entries(DICTIONARIES).filter(([code]) => code !== 'en');
 
 /** Every 'namespace.key' string literal in the app's code and views. */
 const findUsedKeys = () => {
@@ -103,8 +104,9 @@ const dynamicKeys = () => [
 ];
 
 describe('translations', () => {
-    it('English and Spanish have exactly the same keys', () => {
-        assert.deepEqual(Object.keys(es).sort(), Object.keys(en).sort());
+    it('every language has exactly the same keys as English', () => {
+        for (const [code, dictionary] of others)
+            assert.deepEqual(Object.keys(dictionary).sort(), Object.keys(en).sort(), code);
     });
 
     it('every key used in the code exists', () => {
@@ -121,25 +123,40 @@ describe('translations', () => {
 
     it('placeholders match between languages', () => {
         const placeholders = (text) => [...text.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
-        for (const key of Object.keys(en)) {
-            assert.deepEqual(placeholders(es[key]), placeholders(en[key]), key);
+        for (const [code, dictionary] of others) {
+            for (const key of Object.keys(en)) {
+                assert.deepEqual(placeholders(dictionary[key]), placeholders(en[key]), `${code} ${key}`);
+            }
+        }
+    });
+
+    it('*emphasis* marks match between languages (headings turn them into <em>)', () => {
+        const stars = (text) => (text.match(/\*/g) || []).length;
+        for (const [code, dictionary] of others) {
+            for (const key of Object.keys(en)) assert.equal(stars(dictionary[key]), stars(en[key]), `${code} ${key}`);
         }
     });
 
     it('translations contain no HTML (views escape them, so markup would show as text)', () => {
-        for (const [key, text] of Object.entries({ ...en, ...es })) assert.doesNotMatch(text, /[<>]/, key);
+        for (const [code, dictionary] of Object.entries(DICTIONARIES)) {
+            for (const [key, text] of Object.entries(dictionary)) assert.doesNotMatch(text, /[<>]/, `${code} ${key}`);
+        }
     });
 
     it('translate fills placeholders and falls back to English, then the key', () => {
         assert.equal(translate('es', 'guests.added', { name: 'Ana' }), 'Se agregó a Ana.');
-        assert.equal(translate('fr', 'nav.budget'), 'Budget');
+        assert.equal(translate('de', 'nav.budget'), 'Budget');
+        assert.equal(translate('fr', 'guests.added', { name: 'Ana' }), 'Ana ajouté.');
+        assert.equal(translate('pt', 'guests.added', { name: 'Ana' }), 'Ana adicionado.');
         assert.equal(translate('en', 'no.such.key'), 'no.such.key');
         assert.equal(translate('en', 'guests.added'), '{name} added.');
     });
 
     it('languageFromHeader picks the first supported language', () => {
         assert.equal(languageFromHeader('es-MX,es;q=0.9,en;q=0.8'), 'es');
-        assert.equal(languageFromHeader('fr-FR,de'), 'en');
+        assert.equal(languageFromHeader('de-DE,it'), 'en');
+        assert.equal(languageFromHeader('fr-CA,fr;q=0.9'), 'fr');
+        assert.equal(languageFromHeader('pt-PT'), 'pt', 'European Portuguese gets the Brazilian translation');
         assert.equal(languageFromHeader(undefined), 'en');
     });
 });

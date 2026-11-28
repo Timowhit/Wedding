@@ -22,6 +22,8 @@ export default {
     'nav.changeLanguage': 'Change',
     'language.en': 'English',
     'language.es': 'Español',
+    'language.fr': 'Français',
+    'language.pt': 'Português (Brasil)',
 
     // Shared actions and form text
     'action.add': 'Add',
@@ -800,7 +802,6 @@ export default {
     'landing.couplesBody':
         'Your clients join with a link from you, in your brand colours. Couples without a planner can plan their own wedding here for free, too.',
     'landing.comingHeading': 'Coming next',
-    'landing.coming.workflows': 'Custom fields and workflows for your planning style',
     'landing.finalHeading': 'Run your next wedding here',
     'vendor.back': 'All vendors',
     'vendor.editVendor': 'Edit vendor details',

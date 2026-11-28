@@ -19,6 +19,8 @@ export default {
     'nav.changeLanguage': 'Cambiar',
     'language.en': 'English',
     'language.es': 'Español',
+    'language.fr': 'Français',
+    'language.pt': 'Português (Brasil)',
 
     // Acciones y formularios
     'action.add': 'Agregar',
@@ -806,7 +808,6 @@ export default {
     'landing.couplesBody':
         'Tus clientes se unen con un enlace tuyo, con los colores de tu marca. Las parejas sin organizador también pueden planificar su boda aquí gratis.',
     'landing.comingHeading': 'Próximamente',
-    'landing.coming.workflows': 'Campos y flujos de trabajo a tu medida',
     'landing.finalHeading': 'Organiza aquí tu próxima boda',
     'vendor.back': 'Todos los proveedores',
     'vendor.editVendor': 'Editar datos del proveedor',

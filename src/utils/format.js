@@ -2,7 +2,7 @@
  * Display formatting used by the views (exposed through res.locals in middleware/i18n.js).
  */
 
-const LOCALES = { en: 'en-US', es: 'es-ES' };
+const LOCALES = { en: 'en-US', es: 'es-ES', fr: 'fr-FR', pt: 'pt-BR' };
 
 /**
  * @param {number|string|null} amount - NUMERIC columns arrive from pg as strings.

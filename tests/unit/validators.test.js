@@ -95,7 +95,8 @@ describe('auth validators', () => {
     });
 
     it('validateProfile only accepts supported languages', () => {
-        assert.deepEqual(fields(validateProfile({ display_name: 'Ana', language: 'fr' })), ['language']);
+        assert.deepEqual(fields(validateProfile({ display_name: 'Ana', language: 'de' })), ['language']);
+        assert.deepEqual(validateProfile({ display_name: 'Ana', language: 'pt' }).errors, []);
         assert.deepEqual(validateProfile({ display_name: 'Ana', language: 'es' }).errors, []);
     });
 

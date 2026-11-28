@@ -1,6 +1,6 @@
 # Forever Planner
 
-A server-rendered wedding planning app for **professional wedding planners and their clients**. Planners run every client wedding from one dashboard; couples join their wedding as clients for free, and couples without a planner can plan their own wedding here too. Each wedding has a budget, guest list and RSVPs, vendors, a checklist, decisions for the couple to approve, an event-day schedule, a seating chart, playlists and an inspiration board. The whole app is available in English and Spanish, in five colour themes.
+A server-rendered wedding planning app for **professional wedding planners and their clients**. Planners run every client wedding from one dashboard; couples join their wedding as clients for free, and couples without a planner can plan their own wedding here too. Each wedding has a budget, guest list and RSVPs, vendors, a checklist, decisions for the couple to approve, an event-day schedule, a seating chart, playlists and an inspiration board. The whole app is available in English, Spanish, French and Brazilian Portuguese, in five colour themes.
 
 ## Tech Stack
 
@@ -53,7 +53,7 @@ There is no frontend framework, bundler or TypeScript. `public/js/app.js` is a s
 - **Inspiration**: Unsplash search with photographer credit, a saved board
 - **Collaboration**: several weddings per user, email invites and share links, owner/editor/client/viewer roles, leave a wedding
 - **Account**: profile, language, change (or, for Google accounts, set) a password
-- English and Spanish everywhere, including validation messages and invite emails
+- English, Spanish, French and Brazilian Portuguese everywhere, including validation messages and invite emails
 - Light and dark themes, responsive layout, keyboard-visible focus, reduced-motion support
 
 ## Getting Started
@@ -278,7 +278,7 @@ src/
   models/                     # All SQL (parameterized), one file per area; db.js owns the pool
   services/                   # Spotify, Unsplash, email, Google sign-in
   utils/                      # Passwords, sessions, flash messages, formatting, view helpers
-  i18n/                       # en.js and es.js (same keys) + translate()
+  i18n/                       # en.js, es.js, fr.js, pt.js (same keys) + translate()
   constants.js                # Option lists stored in the database, founding offer, palettes
   themes.js                   # Colour tokens per palette and mode, custom colours (customTokens), resolveTheme()
   db/

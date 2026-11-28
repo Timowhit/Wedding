@@ -51,6 +51,7 @@
         <a class="btn btn-secondary" href="/register?as=couple"><%= t('auth.createAccount') %></a>
     </section>
 
+    <% if (comingNext.length > 0) { %>
     <section aria-labelledby="coming-heading">
         <h2 id="coming-heading" class="landing__heading"><%= t('landing.comingHeading') %></h2>
         <ul class="coming-next">
@@ -59,6 +60,7 @@
             <% }); %>
         </ul>
     </section>
+    <% } %>
 
     <section class="landing__final" aria-labelledby="final-heading">
         <h2 id="final-heading" class="landing__heading"><%= t('landing.finalHeading') %></h2>
