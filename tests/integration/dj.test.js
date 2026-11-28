@@ -119,7 +119,9 @@ describe('DJ page: songs from Spotify links, in order, played in the page', { sk
     it('each section has a player that plays its songs in order, allowed by the page policy', async () => {
         const response = await owner.get('/music');
         assert.match(response.body, new RegExp(`data-dj-player[^>]*data-tracks="${id(3)},${id(1)},${id(2)}"`));
-        assert.match(response.headers.get('content-security-policy'), /script-src[^;]*https:\/\/open\.spotify\.com/);
+        const policy = response.headers.get('content-security-policy');
+        assert.match(policy, /script-src[^;]*https:\/\/open\.spotify\.com\/embed\//, 'only Spotify’s embed scripts');
+        assert.doesNotMatch(policy, /script-src[^;]*https:\/\/open\.spotify\.com[ ;]/, 'not the whole host');
         assert.match(
             response.headers.get('content-security-policy'),
             /img-src[^;]*https:\/\/image-cdn-ak\.spotifycdn\.com/

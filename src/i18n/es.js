@@ -1435,5 +1435,7 @@ export default {
     'templates.confirmApply': '¿Añadir todo lo de {name} a {wedding}? Lo que ya tiene se queda como está.',
     'templates.appliedWedding': 'Se añadió {name} a {wedding}.',
     'planner.startFrom': 'Empezar desde una plantilla',
-    'planner.startEmpty': 'Una boda vacía'
+    'planner.startEmpty': 'Una boda vacía',
+    'planner.templateMissing':
+        '“{name}” está lista para planificar. No se encontró la plantilla que elegiste, así que la boda empieza vacía.'
 };

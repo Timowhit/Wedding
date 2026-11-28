@@ -1,4 +1,11 @@
+import { VENDOR_STATUSES } from '../constants.js';
+import { toIsoDate } from '../utils/format.js';
+import { dueDateFrom, normaliseWeddingTemplate } from '../validators/templates.js';
+import { addCategoriesWithPlans } from './budget.js';
+import { addCustomFieldsIfMissing } from './custom-fields.js';
 import db from './db.js';
+import { findScheduleItems } from './schedule.js';
+import { addVendorsIfMissing } from './vendors.js';
 
 // A list template's items are an array; a whole wedding's are an object of lists.
 const ITEM_COUNT = `CASE WHEN jsonb_typeof(items) = 'array' THEN jsonb_array_length(items)
@@ -126,7 +133,29 @@ const addScheduleItems = async (weddingId, items) => {
     return result.rowCount;
 };
 
+/**
+ * Adds a whole-wedding template to a wedding: tasks dated from its day, the schedule, budget
+ * categories and plans, vendors (as Researching) and custom fields. Nothing is added twice.
+ * @param {{id: string, wedding_date: Date|string|null}} wedding
+ * @param {unknown} storedItems - The template's items as stored.
+ * @returns {Promise<void>}
+ */
+const applyWeddingTemplate = async (wedding, storedItems) => {
+    const items = normaliseWeddingTemplate(storedItems);
+    const weddingIso = toIsoDate(wedding.wedding_date) || null;
+    await addChecklistItems(
+        wedding.id,
+        items.tasks.map((item) => ({ ...item, dueDate: dueDateFrom(weddingIso, item.daysBefore) }))
+    );
+    // Schedule items have no natural key, so they are only added to an empty schedule.
+    if ((await findScheduleItems(wedding.id)).length === 0) await addScheduleItems(wedding.id, items.schedule);
+    await addCategoriesWithPlans(wedding.id, items.categories);
+    await addVendorsIfMissing(wedding.id, items.vendors, VENDOR_STATUSES[0]);
+    await addCustomFieldsIfMissing(wedding.id, items.fields);
+};
+
 export {
+    applyWeddingTemplate,
     findTemplates,
     findTemplate,
     countTemplates,

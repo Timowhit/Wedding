@@ -141,4 +141,16 @@ describe('whole-wedding templates', { skip: skipWithoutDb }, () => {
         ).rows[0].p;
         assert.equal(favours, 300, 'a new category gets the template’s plan');
     });
+
+    it('a planner hears when the template they picked could not be used', async () => {
+        await pia.get('/planner');
+        await pia.post('/planner/weddings', {
+            name: 'Missing template',
+            wedding_date: '',
+            template_id: '00000000-0000-4000-8000-000000000000'
+        });
+        const page = textOf((await pia.get('/planner')).body);
+        assert.match(page, /“Missing template” is ready to plan/);
+        assert.match(page, /The template you chose could not be found, so the wedding starts empty/);
+    });
 });

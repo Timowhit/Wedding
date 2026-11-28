@@ -1,13 +1,14 @@
-import { MAX_TEMPLATE_ITEMS, MAX_TEMPLATES_PER_USER, VENDOR_STATUSES } from '../constants.js';
-import { addCategoriesWithPlans, findBudgetCategories } from '../models/budget.js';
-import { addCustomFieldsIfMissing, findCustomFields } from '../models/custom-fields.js';
-import { addVendorsIfMissing, findVendors } from '../models/vendors.js';
+import { MAX_TEMPLATE_ITEMS, MAX_TEMPLATES_PER_USER } from '../constants.js';
+import { findBudgetCategories } from '../models/budget.js';
+import { findCustomFields } from '../models/custom-fields.js';
+import { findVendors } from '../models/vendors.js';
 import { findTasks } from '../models/checklist.js';
 import { PG_ERRORS } from '../models/db.js';
 import { findScheduleItems } from '../models/schedule.js';
 import {
     addChecklistItems,
     addScheduleItems,
+    applyWeddingTemplate,
     countTemplates,
     deleteTemplate,
     findTemplate,
@@ -24,7 +25,6 @@ import {
     dueDateFrom,
     normaliseChecklistItems,
     normaliseScheduleItems,
-    normaliseWeddingTemplate,
     scheduleItemsFrom,
     validateTemplateName,
     weddingTemplateFrom,
@@ -133,27 +133,6 @@ const weddingItemsFrom = async (wedding) => {
     });
 };
 
-/**
- * Adds a whole-wedding template to a wedding: tasks dated from its day, the schedule, budget
- * categories and plans, vendors (as Researching) and custom fields. Nothing is added twice.
- * @param {{id: string, wedding_date: Date|string|null}} wedding
- * @param {unknown} storedItems - The template's items as stored.
- * @returns {Promise<void>}
- */
-const applyWeddingTemplate = async (wedding, storedItems) => {
-    const items = normaliseWeddingTemplate(storedItems);
-    const weddingIso = toIsoDate(wedding.wedding_date) || null;
-    await addChecklistItems(
-        wedding.id,
-        items.tasks.map((item) => ({ ...item, dueDate: dueDateFrom(weddingIso, item.daysBefore) }))
-    );
-    // Schedule items have no natural key, so they are only added to an empty schedule.
-    if ((await findScheduleItems(wedding.id)).length === 0) await addScheduleItems(wedding.id, items.schedule);
-    await addCategoriesWithPlans(wedding.id, items.categories);
-    await addVendorsIfMissing(wedding.id, items.vendors, VENDOR_STATUSES[0]);
-    await addCustomFieldsIfMissing(wedding.id, items.fields);
-};
-
 /** POST /templates/wedding: saves the active wedding as a whole-wedding template. */
 const processSaveWeddingTemplate = async (req, res) => {
     const { values, data, errors } = validateTemplateName(req.body);
@@ -216,6 +195,5 @@ export {
     processRenameTemplate,
     processDeleteTemplate,
     processSaveWeddingTemplate,
-    processApplyWeddingTemplate,
-    applyWeddingTemplate
+    processApplyWeddingTemplate
 };

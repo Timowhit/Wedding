@@ -1384,5 +1384,7 @@ export default {
     'templates.confirmApply': 'Adicionar tudo de {name} a {wedding}? O que ele já tem continua como está.',
     'templates.appliedWedding': '{name} adicionado a {wedding}.',
     'planner.startFrom': 'Começar de um modelo',
-    'planner.startEmpty': 'Um casamento vazio'
+    'planner.startEmpty': 'Um casamento vazio',
+    'planner.templateMissing':
+        '“{name}” está pronto para planejar. O modelo escolhido não foi encontrado, então o casamento começa vazio.'
 };

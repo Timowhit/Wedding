@@ -74,8 +74,9 @@ const createApp = (env = process.env) => {
                     ],
                     'style-src': ["'self'", 'https://fonts.googleapis.com'],
                     'font-src': ["'self'", 'https://fonts.gstatic.com'],
-                    // Spotify's embed player and its iFrame API (the DJ page plays a section in order).
-                    'script-src': ["'self'", 'https://open.spotify.com'],
+                    // Spotify's iFrame API (the DJ page plays a section in order): its embed path only,
+                    // so nothing else served from open.spotify.com can run here.
+                    'script-src': ["'self'", 'https://open.spotify.com/embed/'],
                     'frame-src': ['https://open.spotify.com'],
                     'form-action': ["'self'", 'https://accounts.google.com'],
                     'upgrade-insecure-requests': isProduction ? [] : null

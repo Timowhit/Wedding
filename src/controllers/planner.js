@@ -2,8 +2,7 @@ import { PLANNER_PAYMENT_FILTERS } from '../constants.js';
 import { countFoundingSpotsLeft } from '../models/founding.js';
 import { countPlannerOverdue, findPlannerPaymentsDue } from '../models/payments.js';
 import { createClientWedding, findPlannerOverview, findPlannerWorkload } from '../models/planner.js';
-import { findTemplate, findTemplates } from '../models/templates.js';
-import { applyWeddingTemplate } from './templates.js';
+import { applyWeddingTemplate, findTemplate, findTemplates } from '../models/templates.js';
 import { findUserById } from '../models/users.js';
 import { toSessionUser } from '../middleware/auth.js';
 import { switchActiveWedding } from '../middleware/wedding.js';
@@ -63,11 +62,14 @@ const processNewClientWedding = async (req, res) => {
     if (template?.kind === 'wedding') {
         await applyWeddingTemplate({ id: wedding.id, wedding_date: data.weddingDate }, template.items);
     }
+    // Deleted in another tab, or not theirs: the wedding is made, just without it.
+    const templateMissing = Boolean(readText(req.body?.template_id)) && template?.kind !== 'wedding';
     const refreshed = await findUserById(req.session.user.id);
     if (refreshed) req.session.user = toSessionUser(refreshed);
 
     if (foundingNumber)
         setFlash(req, 'success', 'planner.foundingClaimed', { number: foundingNumber, name: wedding.name });
+    else if (templateMissing) setFlash(req, 'info', 'planner.templateMissing', { name: wedding.name });
     else setFlash(req, 'success', 'planner.weddingCreated', { name: wedding.name });
     res.redirect('/planner');
 };

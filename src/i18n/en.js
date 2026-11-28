@@ -1424,5 +1424,7 @@ export default {
     'templates.confirmApply': 'Add everything in {name} to {wedding}? Things it already has stay as they are.',
     'templates.appliedWedding': 'Added {name} to {wedding}.',
     'planner.startFrom': 'Start from a template',
-    'planner.startEmpty': 'An empty wedding'
+    'planner.startEmpty': 'An empty wedding',
+    'planner.templateMissing':
+        '“{name}” is ready to plan. The template you chose could not be found, so the wedding starts empty.'
 };

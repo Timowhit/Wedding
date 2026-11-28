@@ -1399,5 +1399,7 @@ export default {
     'templates.confirmApply': 'Ajouter tout le contenu de {name} à {wedding} ? Ce qu’il a déjà reste tel quel.',
     'templates.appliedWedding': '{name} ajouté à {wedding}.',
     'planner.startFrom': 'Partir d’un modèle',
-    'planner.startEmpty': 'Un mariage vide'
+    'planner.startEmpty': 'Un mariage vide',
+    'planner.templateMissing':
+        '« {name} » est prêt à être organisé. Le modèle choisi est introuvable : le mariage commence donc vide.'
 };
