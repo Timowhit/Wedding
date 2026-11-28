@@ -127,6 +127,13 @@ import {
 } from '../controllers/schedule.js';
 import { showCustomCss } from '../controllers/themes.js';
 import {
+    processDeleteAppointment,
+    processEditAppointment,
+    processNewAppointment,
+    showAppointments,
+    showEditAppointment
+} from '../controllers/appointments.js';
+import {
     processAnswers,
     processDeleteMessage,
     processDeleteQuestionnaire,
@@ -294,6 +301,13 @@ router.post('/schedule/from-template', editor, processApplyTemplate('schedule'))
 router.get('/schedule/:id/edit', editor, showEditItem);
 router.post('/schedule/:id/edit', editor, processEditItem);
 router.post('/schedule/:id/delete', editor, processDeleteItem);
+
+/* Appointments -------------------------------------------------------------------------------- */
+router.get('/appointments', member, showAppointments);
+router.post('/appointments', editor, processNewAppointment);
+router.get('/appointments/:id/edit', editor, showEditAppointment);
+router.post('/appointments/:id/edit', editor, processEditAppointment);
+router.post('/appointments/:id/delete', editor, processDeleteAppointment);
 
 /* Seating chart ------------------------------------------------------------------------------- */
 router.get('/seating', member, showSeating);

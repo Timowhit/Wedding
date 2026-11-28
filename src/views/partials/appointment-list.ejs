@@ -1,0 +1,17 @@
+<%# A list of appointments. Expects: appointments, actions (show edit/delete links). %>
+<ul class="item-list">
+    <% appointments.forEach((appointment) => { %>
+        <li class="item-card"><div class="item-info">
+            <p class="item-name"><%= appointment.title %></p>
+            <p class="item-meta">
+                <span><%= formatDate(appointment.starts_on) %><% if (appointment.starts_at) { %>, <%= formatTime(appointment.starts_at) %><% if (appointment.ends_at) { %> – <%= formatTime(appointment.ends_at) %><% } %><% } %></span>
+                <% if (appointment.location) { %><span><%= appointment.location %></span><% } %>
+            </p>
+            <% if (appointment.attendees) { %><p class="item-meta"><%= t('appointments.with', { names: appointment.attendees }) %></p><% } %>
+            <% if (appointment.notes) { %><p class="item-notes preserve-lines"><%= appointment.notes %></p><% } %>
+            <% if (actions) { %>
+                <%- include('row-actions', { editHref: `/appointments/${appointment.id}/edit`, deleteAction: `/appointments/${appointment.id}/delete`, name: appointment.title, confirm: t('appointments.confirmDelete', { name: appointment.title }) }) %>
+            <% } %>
+        </div></li>
+    <% }); %>
+</ul>

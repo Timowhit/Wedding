@@ -65,6 +65,7 @@
                             <% entries.forEach((entry) => { %>
                                 <li class="agenda__entry agenda__entry--<%= entry.kind %>">
                                     <span class="tag"><%= t(kindKey(entry.kind)) %></span>
+                                    <% if (entry.time) { %><span class="agenda__time"><%= formatTime(entry.time) %></span><% } %>
                                     <%- include('partials/open-in-wedding', { weddingId: entry.wedding_id, page: entry.page, label: entry.kind === 'wedding' ? t('calendar.weddingDay') : entry.title }) %>
                                     <span class="agenda__wedding"><%= entry.wedding_name %></span>
                                     <% if (entry.amount) { %><span class="agenda__amount"><%= formatCurrency(entry.amount) %></span><% } %>

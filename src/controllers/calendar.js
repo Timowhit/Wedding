@@ -11,9 +11,10 @@ const ENTRY_PAGES = Object.freeze({
     decision: '/decisions',
     guest: '/guests',
     vendor: '/vendors',
-    schedule: '/schedule'
+    schedule: '/schedule',
+    appointment: '/appointments'
 });
-const SEARCH_KINDS = Object.freeze(['guest', 'vendor', 'task', 'decision', 'schedule']);
+const SEARCH_KINDS = Object.freeze(['guest', 'vendor', 'task', 'decision', 'schedule', 'appointment']);
 const SEARCH_MIN = 2;
 const SEARCH_MAX = 100;
 const RESULTS_PER_KIND = 20;

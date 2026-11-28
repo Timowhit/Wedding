@@ -2,7 +2,7 @@ Wedding-planner UX and feature ideas
 Status checked against the code on 2026-11-27. [x] done, [~] partly done (what's missing is listed), [ ] not started.
 
 Next up
-- Nothing queued: the questions under "Partly done" are waiting on answers (appointments, a vendor role, vendor availability, reminder choices).
+- Building the rest of "Partly done" with my own defaults (the questions weren't answered): reminder choices, then vendor availability and proposals, then a vendor role.
 
 Done
 - [x] Navigation grouped into dropdowns (Planning, Money, Guests & venue, Event day, Planner), a styled wedding menu, the task badge just under the header, a −/+ pill on each question in the questionnaire builder (− removes it, + adds one under it), a header on one line on wide screens, and stylesheets that always match the page (fixes the badge looking different between pages). (PR #17, merged; pill and one-line header in PR #19)
@@ -36,8 +36,8 @@ Done
 Partly done
 - [x] Wedding-specific templates for timelines, task lists, budgets, and vendor coordination.
       Checklist and timeline templates, and whole-wedding templates with the budget plan and vendors. (PR #23)
-- [~] A dashboard showing each wedding's next deadlines, appointments, outstanding decisions, and budget status.
-      Done: deadlines, decisions, payments due, budget, and a calendar. Missing: appointments (meetings with a time).
+- [x] A dashboard showing each wedding's next deadlines, appointments, outstanding decisions, and budget status.
+      Appointments (/appointments: date, times, place, who is coming, notes) on the dashboard, calendar, search and reminder email. My defaults, as the question wasn't answered. (PR to come, branch appointments)
 - [~] Vendor contacts, availability, proposals, notes, and key documents together.
       Done: contacts, notes, contract link and key terms, ratings after the wedding. Missing: availability and proposals.
 - [~] A shared client portal for couples to review plans, upload details, and approve decisions.
@@ -45,7 +45,7 @@ Partly done
 - [~] Role-based collaboration for planners, assistants, couples, and vendors.
       Done: owner, editor (assistant), client and viewer. Missing: a vendor role.
 - [~] Configurable reminders for meetings, deadlines, payments, and unanswered questions.
-      Done: daily email digest of tasks, payments and decisions, with a switch and unsubscribe. Missing: meetings, and choosing what or when.
+      Done: daily email digest of tasks, payments and decisions, with a switch and unsubscribe. Meetings are in the digest now (branch appointments). Missing: choosing what or when.
 
 Small follow-ups (from the reviews of PRs #11 to #15)
 - [x] Planner dashboard date filters use APP_TIME_ZONE like the rest. (PR #20)

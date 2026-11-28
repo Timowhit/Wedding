@@ -1,0 +1,39 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<main id="main-content">
+    <%- include('partials/page-header', { heading: 'appointments.heading', subtitle: 'appointments.subtitle' }) %>
+    <%- include('partials/flash') %>
+    <%- include('partials/read-only-notice') %>
+
+    <% if (canEdit) { %>
+        <%- include('partials/add-panel-start', { id: 'add-appointment', labelKey: 'appointments.add', open: upcoming.length === 0 || form.errors.length > 0 }) %>
+            <%- include('partials/form-errors', { errors: form.errors, id: 'appointment-errors' }) %>
+            <form method="post" action="/appointments" class="form-grid">
+                <%- include('partials/csrf-field') %>
+                <%- include('partials/appointment-fields', { values: form.values, errors: form.errors, errorsId: 'appointment-errors' }) %>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary"><%= t('appointments.addSubmit') %></button>
+                </div>
+            </form>
+        <%- include('partials/add-panel-end') %>
+    <% } %>
+
+    <section aria-labelledby="upcoming-heading">
+        <h2 class="section-heading" id="upcoming-heading"><%= t('appointments.upcoming') %></h2>
+        <% if (upcoming.length === 0) { %>
+            <p class="empty-state"><span aria-hidden="true">📅</span> <%= t('appointments.empty') %></p>
+        <% } else { %>
+            <%- include('partials/appointment-list', { appointments: upcoming, actions: canEdit }) %>
+        <% } %>
+    </section>
+
+    <% if (past.length > 0) { %>
+        <details class="appointments__past">
+            <summary><%= t('appointments.past', { count: past.length }) %></summary>
+            <%- include('partials/appointment-list', { appointments: past, actions: canEdit }) %>
+        </details>
+    <% } %>
+</main>
+
+<%- include('partials/footer') %>

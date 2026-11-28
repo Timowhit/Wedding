@@ -1,7 +1,7 @@
 import { findReminderCandidates, findReminderDigest, markReminded } from '../models/reminders.js';
 import { REMINDER_WINDOW_DAYS } from '../constants.js';
 import { translate } from '../i18n/index.js';
-import { formatCurrency, formatDate } from '../utils/format.js';
+import { formatCurrency, formatDate, formatTime } from '../utils/format.js';
 import { todayIso } from '../utils/today.js';
 import { unsubscribeToken } from '../utils/unsubscribe.js';
 import { escapeHtml, isEmailConfigured, sendReminderEmail } from './email.js';
@@ -9,6 +9,7 @@ import { escapeHtml, isEmailConfigured, sendReminderEmail } from './email.js';
 /** Section headings in the email, in the order they appear. */
 const GROUP_HEADINGS = Object.freeze({
     payments: 'reminders.payments',
+    appointments: 'reminders.appointments',
     tasks: 'reminders.tasks',
     decisions: 'reminders.decisions'
 });
@@ -27,6 +28,17 @@ const linesFor = (wedding, t, lang) => [
             date: formatDate(p.due_date, lang)
         })
     })),
+    ...wedding.appointments.map((a) => {
+        const date = formatDate(a.starts_on, lang);
+        const when = a.starts_at ? t('reminders.appointmentWhen', { date, time: formatTime(a.starts_at, lang) }) : date;
+        return {
+            group: 'appointments',
+            overdue: false,
+            text: a.location
+                ? t('reminders.appointmentLinePlace', { title: a.title, when, place: a.location })
+                : t('reminders.appointmentLine', { title: a.title, when })
+        };
+    }),
     ...wedding.tasks.map((task) => ({
         group: 'tasks',
         overdue: task.overdue,
