@@ -1,14 +1,21 @@
 import { createHandoverInvite, createInvite, deleteInvite, findInvitesForWedding } from '../models/invites.js';
 import {
     findPasswordHash,
-    setReminderEmails,
+    setReminderPreferences,
     updateAppearance,
     updateBusiness,
     updatePasswordHash,
     updateProfile,
     upgradeToPlanner
 } from '../models/users.js';
-import { CUSTOM_BACKGROUNDS, PALETTES, THEME_MODES } from '../constants.js';
+import {
+    CUSTOM_BACKGROUNDS,
+    PALETTES,
+    REMINDER_DAY_CHOICES,
+    REMINDER_FREQUENCIES,
+    REMINDER_KINDS,
+    THEME_MODES
+} from '../constants.js';
 import { parseColorsKey, resolveTheme } from '../themes.js';
 import { assignableRoles, findMembers, removeMember, updateMemberRole, updateWedding } from '../models/weddings.js';
 import { toSessionUser } from '../middleware/auth.js';
@@ -18,6 +25,7 @@ import { toIsoDate } from '../utils/format.js';
 import { hashPassword, verifyPassword } from '../utils/password.js';
 import { validateAppearance, validateBusiness, validatePasswordChange, validateProfile } from '../validators/auth.js';
 import { isUuid, readText } from '../validators/common.js';
+import { validateReminderPreferences } from '../validators/reminders.js';
 import { isLocalPath } from '../utils/session.js';
 import { readAssignableRole, validateHandover, validateInvite, validateWedding } from '../validators/weddings.js';
 
@@ -85,6 +93,18 @@ const renderSettings = async (req, res, { status = 200, forms = {} } = {}) => {
             errors: []
         },
         passwordForm: forms.password ?? { errors: [] },
+        remindersForm: forms.reminders ?? {
+            values: {
+                on: req.session.user.reminderEmails,
+                days: String(req.session.user.reminderDays),
+                frequency: req.session.user.reminderFrequency,
+                kinds: req.session.user.reminderKinds
+            },
+            errors: []
+        },
+        reminderDayChoices: REMINDER_DAY_CHOICES,
+        reminderFrequencies: REMINDER_FREQUENCIES,
+        reminderKinds: REMINDER_KINDS,
         palettes: PALETTES,
         themeModes: THEME_MODES,
         customBackgrounds: CUSTOM_BACKGROUNDS,
@@ -145,9 +165,16 @@ const processPassword = async (req, res) => {
     res.redirect('/settings');
 };
 
-/** "Email me a daily summary" (see services/reminders.js). An unticked checkbox sends nothing. */
+/** Reminder email choices (see services/reminders.js). An unticked checkbox sends nothing. */
 const processReminders = async (req, res) => {
-    const updated = await setReminderEmails(req.session.user.id, req.body?.reminder_emails === 'on');
+    const user = req.session.user;
+    const { values, data, errors } = validateReminderPreferences(req.body, {
+        days: user.reminderDays,
+        frequency: user.reminderFrequency,
+        kinds: user.reminderKinds
+    });
+    if (errors.length > 0) return renderSettings(req, res, { status: 400, forms: { reminders: { values, errors } } });
+    const updated = await setReminderPreferences(user.id, data);
     if (!updated) throw new Error('Current user disappeared during update');
     req.session.user = toSessionUser(updated);
     setFlash(req, 'success', updated.reminder_emails ? 'settings.remindersOn' : 'settings.remindersOff');

@@ -237,7 +237,7 @@ describe('reminders', { skip: skipWithoutDb }, () => {
             assert.equal(await remindersOn('rae@example.com'), false);
             assert.doesNotMatch((await person.get('/settings')).body, /name="reminder_emails"[^>]*checked/);
             await person.get('/settings');
-            await person.post('/settings/reminders', { reminder_emails: 'on' });
+            await person.post('/settings/reminders', { reminder_emails: 'on', remind_tasks: 'on' });
             assert.equal(await remindersOn('rae@example.com'), true);
         });
 

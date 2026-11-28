@@ -2,7 +2,7 @@ Wedding-planner UX and feature ideas
 Status checked against the code on 2026-11-27. [x] done, [~] partly done (what's missing is listed), [ ] not started.
 
 Next up
-- Building the rest of "Partly done" with my own defaults (the questions weren't answered): reminder choices, then vendor availability and proposals, then a vendor role.
+- Building the rest of "Partly done" with my own defaults (the questions weren't answered): vendor availability and proposals, then a vendor role.
 
 Done
 - [x] Navigation grouped into dropdowns (Planning, Money, Guests & venue, Event day, Planner), a styled wedding menu, the task badge just under the header, a −/+ pill on each question in the questionnaire builder (− removes it, + adds one under it), a header on one line on wide screens, and stylesheets that always match the page (fixes the badge looking different between pages). (PR #17, merged; pill and one-line header in PR #19)
@@ -44,8 +44,8 @@ Partly done
       Done: client role, decisions to approve, and file uploads (editors and clients).
 - [~] Role-based collaboration for planners, assistants, couples, and vendors.
       Done: owner, editor (assistant), client and viewer. Missing: a vendor role.
-- [~] Configurable reminders for meetings, deadlines, payments, and unanswered questions.
-      Done: daily email digest of tasks, payments and decisions, with a switch and unsubscribe. Meetings are in the digest now (branch appointments). Missing: choosing what or when.
+- [x] Configurable reminders for meetings, deadlines, payments, and unanswered questions.
+      Email summary of payments, tasks, decisions and appointments. In Settings each person picks every morning or Monday mornings, 1 to 30 days ahead, and which kinds. My defaults, as the question wasn't answered. (branch appointments)
 
 Small follow-ups (from the reviews of PRs #11 to #15)
 - [x] Planner dashboard date filters use APP_TIME_ZONE like the rest. (PR #20)

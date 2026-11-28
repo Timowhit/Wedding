@@ -216,8 +216,14 @@ const LAYOUT_FIXTURES = Object.freeze({
 /** Per template; more than any real checklist or timeline. */
 const MAX_TEMPLATE_ITEMS = 300;
 
-/** The daily summary lists what is overdue or due within this many days. */
+/** The summary lists what is overdue or due within this many days, unless the person picks another choice. */
 const REMINDER_WINDOW_DAYS = 7;
+const REMINDER_DAY_CHOICES = Object.freeze([1, 3, 7, 14, 30]);
+const REMINDER_FREQUENCIES = Object.freeze(['daily', 'weekly']);
+/** Weekly summaries go out on this ISO weekday (1 = Monday), in APP_TIME_ZONE. */
+const REMINDER_WEEKLY_DAY = 1;
+/** What a summary can include, in the order the email lists them. */
+const REMINDER_KINDS = Object.freeze(['payments', 'tasks', 'decisions', 'appointments']);
 /** A wedding that ended longer ago than this stops appearing in summaries (unticked leftovers would repeat forever). */
 const REMINDER_PAST_WEDDING_DAYS = 30;
 /** Roles that get the daily summary for a wedding (a viewer can't act on anything). */
@@ -298,6 +304,10 @@ export {
     LAYOUT_FIXTURES,
     MAX_TEMPLATE_ITEMS,
     REMINDER_WINDOW_DAYS,
+    REMINDER_DAY_CHOICES,
+    REMINDER_FREQUENCIES,
+    REMINDER_WEEKLY_DAY,
+    REMINDER_KINDS,
     REMINDER_ROLES,
     REMINDER_PAST_WEDDING_DAYS
 };

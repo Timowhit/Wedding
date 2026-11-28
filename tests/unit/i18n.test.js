@@ -87,6 +87,7 @@ const dynamicKeys = () => [
     ...WRAPUP_TASKS.map((task) => task.key),
     ...['wedding', 'task', 'payment', 'decision', 'appointment'].map((k) => `calendar.kind.${k}`),
     ...['guest', 'vendor', 'task', 'decision', 'schedule', 'appointment'].map((k) => `search.kind.${k}`),
+    ...['daily', 'weekly'].map((k) => `reminderFrequency.${k}`),
     ...['high', 'low'].map((p) => `priorityTag.${p}`),
     ...Object.keys(LAYOUT_FIXTURES).map((k) => `layoutKind.${k}`),
     ...LAYOUT_UNITS.map((u) => `layoutUnit.${u}`),

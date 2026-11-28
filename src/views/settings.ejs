@@ -219,13 +219,39 @@
     <div class="card-row">
         <section class="card" aria-labelledby="reminders-heading">
             <h2 class="card-title" id="reminders-heading"><%= t('settings.reminders') %></h2>
-            <form method="post" action="/settings/reminders">
+            <%- include('partials/form-errors', { errors: remindersForm.errors, id: 'reminders-errors' }) %>
+            <form method="post" action="/settings/reminders" class="form-stack">
                 <%- include('partials/csrf-field') %>
                 <label class="choice">
-                    <input type="checkbox" name="reminder_emails" value="on" aria-describedby="reminders-hint" <%= user.reminderEmails ? 'checked' : '' %>>
+                    <input type="checkbox" name="reminder_emails" value="on" aria-describedby="reminders-hint" <%= remindersForm.values.on ? 'checked' : '' %>>
                     <%= t('settings.remindersLabel') %>
                 </label>
                 <p class="hint" id="reminders-hint"><%= t('settings.remindersHint') %></p>
+                <div class="field">
+                    <label for="reminder_frequency"><%= t('field.reminderFrequency') %></label>
+                    <select id="reminder_frequency" name="reminder_frequency" <%- fieldState(remindersForm.errors, 'reminder_frequency', 'reminders-errors') %>>
+                        <% reminderFrequencies.forEach((frequency) => { %>
+                            <option value="<%= frequency %>" <%= frequency === remindersForm.values.frequency ? 'selected' : '' %>><%= t(`reminderFrequency.${frequency}`) %></option>
+                        <% }); %>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="reminder_days"><%= t('field.reminderDays') %></label>
+                    <select id="reminder_days" name="reminder_days" <%- fieldState(remindersForm.errors, 'reminder_days', 'reminders-errors') %>>
+                        <% reminderDayChoices.forEach((days) => { %>
+                            <option value="<%= days %>" <%= String(days) === remindersForm.values.days ? 'selected' : '' %>><%= t(days === 1 ? 'settings.reminderDaysOne' : 'settings.reminderDays', { days }) %></option>
+                        <% }); %>
+                    </select>
+                </div>
+                <fieldset class="choice-group" <%- fieldState(remindersForm.errors, 'remind_payments', 'reminders-errors') %>>
+                    <legend><%= t('settings.reminderKinds') %></legend>
+                    <% reminderKinds.forEach((kind) => { %>
+                        <label class="choice">
+                            <input type="checkbox" name="remind_<%= kind %>" value="on" <%= remindersForm.values.kinds.includes(kind) ? 'checked' : '' %>>
+                            <%= t(`reminders.${kind}`) %>
+                        </label>
+                    <% }); %>
+                </fieldset>
                 <button type="submit" class="btn btn-secondary"><%= t('action.save') %></button>
             </form>
         </section>

@@ -7,7 +7,8 @@ const CLEANUP_BATCH = 100;
 import { createWedding } from './weddings.js';
 
 const PUBLIC_RETURNING = `id, email, display_name, avatar_url, language, created_at, account_type, founding_number,
-                          business_name, theme_palette, theme_mode, theme_colors, brand_palette, reminder_emails, is_trial`;
+                          business_name, theme_palette, theme_mode, theme_colors, brand_palette, reminder_emails,
+                          reminder_days, reminder_frequency, reminder_kinds, is_trial`;
 
 const seedExamples = async (client, weddingId, { tasks, budget, expenses, guests, schedule }) => {
     const column = (rows, key) => rows.map((row) => row[key]);
