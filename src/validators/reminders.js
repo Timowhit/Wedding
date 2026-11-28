@@ -1,6 +1,9 @@
 import { REMINDER_DAY_CHOICES, REMINDER_FREQUENCIES, REMINDER_KINDS, REMINDER_WINDOW_DAYS } from '../constants.js';
 import { collectErrors, readChoice, readText } from './common.js';
 
+/** Days in a week: the least a weekly email looks ahead. */
+const WEEKLY_MIN_DAYS = 7;
+
 /**
  * The reminder settings form: an on/off box, days ahead, daily or weekly, and one box per kind
  * (`remind_<kind>`). With reminders on, at least one kind must be ticked; switching off needs nothing,
@@ -22,6 +25,9 @@ const validateReminderPreferences = (
     if (!REMINDER_DAY_CHOICES.includes(days)) fail('reminder_days', 'validation.choice');
     const frequency = values.frequency === '' ? current.frequency : readChoice(values.frequency, REMINDER_FREQUENCIES);
     if (!frequency) fail('reminder_frequency', 'validation.choice');
+    // A weekly email looking less than a week ahead would let things fall due between two emails.
+    if (frequency === 'weekly' && REMINDER_DAY_CHOICES.includes(days) && days < WEEKLY_MIN_DAYS)
+        fail('reminder_days', 'settings.reminderWeeklyDays', { days: WEEKLY_MIN_DAYS });
     if (on && kinds.length === 0) fail('remind_payments', 'settings.remindersNeedKind');
 
     // Switching off with nothing ticked keeps the kinds for when reminders go back on.

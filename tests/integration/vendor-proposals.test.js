@@ -68,7 +68,9 @@ describe('vendor availability and proposals', { skip: skipWithoutDb }, () => {
     });
 
     it('a hold needs its end date; unknown choices are refused', async () => {
-        assert.equal((await owner.post(`/vendors/${florist}/availability`, { availability: 'hold' })).status, 400);
+        const noDate = await owner.post(`/vendors/${florist}/availability`, { availability: 'hold' });
+        assert.equal(noDate.status, 400);
+        assert.doesNotMatch(noDate.body, /field\.[a-z_]+/, 'errors are labelled in words');
         assert.equal((await owner.post(`/vendors/${florist}/availability`, { availability: 'maybe' })).status, 400);
     });
 
@@ -104,8 +106,13 @@ describe('vendor availability and proposals', { skip: skipWithoutDb }, () => {
                 [weddingId, band]
             )
         ).rows[0].id;
-        const wrongFile = await owner.post(`/vendors/${florist}/proposals`, { title: 'Sneaky', file_id: otherFile });
+        const wrongFile = await owner.post(`/vendors/${florist}/proposals`, {
+            title: 'Sneaky',
+            file_id: otherFile,
+            valid_until: 'soon'
+        });
         assert.equal(wrongFile.status, 400);
+        assert.doesNotMatch(wrongFile.body, /field\.[a-z_]+/, 'errors are labelled in words');
         const noTitle = await owner.post(`/vendors/${florist}/proposals`, { title: '', amount: '300' });
         assert.equal(noTitle.status, 400);
         assert.match(noTitle.body, /value="300"/);

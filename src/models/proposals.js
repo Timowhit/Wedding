@@ -24,6 +24,7 @@ const findProposals = async (vendorId, weddingId) => {
 };
 
 /**
+ * One proposal of the wedding, with its file's name.
  * @param {string} id
  * @param {string} weddingId
  * @returns {Promise<Object|null>}
@@ -81,6 +82,7 @@ const createProposal = (vendorId, weddingId, values) =>
     });
 
 /**
+ * Marks a proposal received, accepted or declined, if it belongs to the wedding.
  * @param {string} id
  * @param {string} weddingId
  * @param {string} status - One of PROPOSAL_STATUSES.
@@ -95,6 +97,7 @@ const setProposalStatus = async (id, weddingId, status) => {
 };
 
 /**
+ * Deletes a proposal, if it belongs to the wedding (its file stays).
  * @param {string} id
  * @param {string} weddingId
  * @returns {Promise<{vendor_id: string}|null>} The deleted proposal's vendor, or null.

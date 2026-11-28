@@ -19,9 +19,9 @@ describe('reminder choices: how far ahead, how often, and what', { skip: skipWit
             )
         ).rows[0];
     const quiet = { info() {}, warn() {}, error() {} };
-    const runFor = async (today) => {
+    const runFor = async (today, sentOn = null) => {
         const { runReminders } = await import('../../src/services/reminders.js');
-        await q(`UPDATE users SET reminders_sent_on = NULL;`);
+        await q(`UPDATE users SET reminders_sent_on = $1;`, [sentOn]);
         const sent = [];
         await runReminders({ today, send: async (message) => sent.push(message), log: quiet });
         return sent.filter((message) => message.to === 'rae@example.com');
@@ -106,13 +106,50 @@ describe('reminder choices: how far ahead, how often, and what', { skip: skipWit
         assert.match(message.text, /next 14 days/);
     });
 
-    it('weekly sends nothing on other days; daily sends every day', async () => {
-        assert.equal((await runFor(TUESDAY)).length, 0);
+    it('weekly sends once a week; daily sends every day', async () => {
+        assert.equal((await runFor(TUESDAY, MONDAY)).length, 0, 'already sent this week');
         await q(`UPDATE users SET reminder_frequency = 'daily', reminder_days = 3 WHERE id = $1;`, [raeId]);
         const [message] = await runFor(TUESDAY);
         assert.ok(message);
         assert.match(message.text, /Soon task/);
         assert.doesNotMatch(message.text, /Later task/, 'only 3 days ahead');
+    });
+
+    it('a weekly email that failed on Monday is sent on the next run that week', async () => {
+        const { runReminders } = await import('../../src/services/reminders.js');
+        await q(
+            `UPDATE users SET reminder_emails = TRUE, reminder_frequency = 'weekly', reminder_days = 7, reminders_sent_on = NULL WHERE id = $1;`,
+            [raeId]
+        );
+        const failing = async () => {
+            throw new Error('SMTP down');
+        };
+        await runReminders({ today: MONDAY, send: failing, log: quiet });
+        const sent = [];
+        await runReminders({ today: TUESDAY, send: async (message) => sent.push(message), log: quiet });
+        assert.equal(sent.filter((message) => message.to === 'rae@example.com').length, 1, 'retried on Tuesday');
+        const again = [];
+        await runReminders({ today: '2027-03-17', send: async (message) => again.push(message), log: quiet });
+        assert.equal(again.filter((message) => message.to === 'rae@example.com').length, 0, 'once a week only');
+    });
+
+    it('weekly emails look at least a week ahead, so nothing is missed between them', async () => {
+        await rae.get('/settings');
+        const short = await rae.post('/settings/reminders', {
+            reminder_emails: 'on',
+            reminder_days: '3',
+            reminder_frequency: 'weekly',
+            remind_tasks: 'on'
+        });
+        assert.equal(short.status, 400);
+        assert.match(short.body, /Weekly emails look at least 7 days ahead/);
+    });
+
+    it('error summaries name the field in words, never by its key', async () => {
+        await rae.get('/settings');
+        const nothing = await rae.post('/settings/reminders', { reminder_emails: 'on', reminder_days: '99' });
+        assert.equal(nothing.status, 400);
+        assert.doesNotMatch(nothing.body, /field\.[a-z_]+/);
     });
 
     it('switching off still works with nothing ticked', async () => {

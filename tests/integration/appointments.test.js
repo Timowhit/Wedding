@@ -68,6 +68,8 @@ describe('appointments', { skip: skipWithoutDb }, () => {
         const backwards = await owner.post('/appointments', { ...tasting, starts_at: '16:00', ends_at: '15:00' });
         assert.equal(backwards.status, 400);
         assert.match(backwards.body, /value="Riverside Kitchen"/, 'what was typed is kept');
+        const noDate = await owner.post('/appointments', { ...tasting, starts_on: '', ends_at: '', starts_at: 'x' });
+        assert.doesNotMatch(noDate.body, /field\.[a-z_]+/, 'errors are labelled in words');
     });
 
     it('shows the next appointments on the dashboard and on the calendar', async () => {

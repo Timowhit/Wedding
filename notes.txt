@@ -37,7 +37,7 @@ Partly done
 - [x] Wedding-specific templates for timelines, task lists, budgets, and vendor coordination.
       Checklist and timeline templates, and whole-wedding templates with the budget plan and vendors. (PR #23)
 - [x] A dashboard showing each wedding's next deadlines, appointments, outstanding decisions, and budget status.
-      Appointments (/appointments: date, times, place, who is coming, notes) on the dashboard, calendar, search and reminder email. My defaults, as the question wasn't answered. (PR #24)
+      Appointments (/appointments: date, times, place, who is coming, notes) on each wedding's dashboard, the calendar, search and the reminder email (not yet on the planner's all-weddings page). My defaults, as the question wasn't answered. (PR #24)
 - [x] Vendor contacts, availability, proposals, notes, and key documents together.
       Contacts, notes, contract, files, ratings, and now availability on your date (free, holding it until a day, not free) and proposals (amount, valid until, a file, accepted or declined; never counted as money spent). Entered by whoever edits the wedding; my defaults. (PR #24)
 - [~] A shared client portal for couples to review plans, upload details, and approve decisions.
@@ -56,6 +56,14 @@ Small follow-ups (from the reviews of PRs #11 to #15)
 - [x] Files: a failed upload from a vendor page shows the error there; .docx/.xlsx files must contain a Word/Excel document without macros. (PR #20)
 - [ ] Files: check by hand that PDFs open in Chrome, Firefox and Safari under the download sandbox. (In ACTIONS.md: only you can do this.)
 - [x] Library: names unique without regard to capitals; at most 30 questionnaires per wedding; a chosen answer can be cleared ("No answer"); a warning instead of overwriting when a partner saved answers meanwhile; long messages suggest Copy. (PR #20)
+
+Small follow-ups (from the review of PR #24)
+- [ ] Planner's all-weddings page: show each wedding's next appointment.
+- [ ] Appointments that end after midnight (22:00 to 00:30) are refused as "end before start".
+- [ ] An appointment stays under "Coming up" until the end of its day, not its end time.
+- [ ] A weekly email looking 7 days ahead lists next Monday's items in both emails.
+- [ ] A proposal whose file is deleted while the form is being sent gives an error page instead of a message.
+- [ ] Accepting a proposal could decline the vendor's others and offer to mark the vendor Booked; an ended hold could go into reminders.
 
 Not started
 

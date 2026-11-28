@@ -102,6 +102,16 @@ const dynamicKeys = () => [
     ...LAYOUT_UNITS.map((u) => `layoutUnit.${u}`),
     ...LAYOUT_SHAPES.map((s) => `layoutShape.${s}`),
     ...['primary', 'secondary', 'accent'].map((f) => `field.${f}`),
+    // Form fields named only in error summaries (partials/form-errors.ejs labels them field.<name>).
+    ...[
+        'starts_on',
+        'reminder_days',
+        'reminder_frequency',
+        'remind_payments',
+        'hold_until',
+        'valid_until',
+        'file_id'
+    ].map((f) => `field.${f}`),
     ...FEATURES.flatMap(({ key }) => ['title', 'body', 'alt'].map((part) => `landing.feature.${key}.${part}`)),
     ...COMING_NEXT.map((item) => `landing.coming.${item}`),
     ...THEME_MODES.map((m) => `themeMode.${m}`),

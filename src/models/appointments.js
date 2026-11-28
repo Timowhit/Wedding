@@ -39,6 +39,7 @@ const findUpcomingAppointments = async (weddingId, today, limit) => {
 };
 
 /**
+ * One appointment of the wedding.
  * @param {string} id
  * @param {string} weddingId
  * @returns {Promise<Object|null>}
@@ -51,6 +52,7 @@ const findAppointment = async (id, weddingId) => {
 const toParams = (v) => [v.title, v.startsOn, v.startsAt, v.endsAt, v.location, v.attendees, v.notes];
 
 /**
+ * Adds an appointment to the wedding.
  * @param {string} weddingId
  * @param {{title: string, startsOn: string, startsAt: string|null, endsAt: string|null, location: string|null, attendees: string|null, notes: string|null}} values
  *        Already validated.
@@ -67,6 +69,7 @@ const createAppointment = async (weddingId, values) => {
 };
 
 /**
+ * Replaces an appointment's details, if it belongs to the wedding.
  * @param {string} id
  * @param {string} weddingId
  * @param {Object} values - As for createAppointment.
@@ -84,6 +87,7 @@ const updateAppointment = async (id, weddingId, values) => {
 };
 
 /**
+ * Deletes an appointment, if it belongs to the wedding.
  * @param {string} id
  * @param {string} weddingId
  * @returns {Promise<boolean>}

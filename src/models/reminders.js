@@ -11,7 +11,7 @@ import { decisionPermissions } from '../middleware/wedding.js';
 
 /**
  * People who may get today's summary: switched on, not yet sent today, daily (or weekly and
- * today is REMINDER_WEEKLY_DAY), and owner, editor or client of at least one wedding. Whether
+ * none sent since this week's REMINDER_WEEKLY_DAY), and owner, editor or client of at least one wedding. Whether
  * there is anything to report is decided per person.
  * @param {string} today - YYYY-MM-DD in APP_TIME_ZONE.
  * @returns {Promise<Array<{id: string, email: string, display_name: string, language: string, account_type: string, reminder_days: number, reminder_kinds: string[]}>>}
@@ -22,7 +22,12 @@ const findReminderCandidates = async (today) => {
          FROM users u
          WHERE u.reminder_emails AND NOT u.is_trial
            AND (u.reminders_sent_on IS NULL OR u.reminders_sent_on <> $1::date)
-           AND (u.reminder_frequency = 'daily' OR EXTRACT(ISODOW FROM $1::date) = $3)
+           -- Weekly: due from REMINDER_WEEKLY_DAY on, until one has gone out this week, so a failed
+           -- or missed run is caught up the next day rather than next week.
+           AND (u.reminder_frequency = 'daily'
+                OR (EXTRACT(ISODOW FROM $1::date) >= $3::int
+                    AND (u.reminders_sent_on IS NULL
+                         OR u.reminders_sent_on < $1::date - (EXTRACT(ISODOW FROM $1::date)::int - $3::int))))
            AND EXISTS (SELECT 1 FROM wedding_members wm WHERE wm.user_id = u.id AND wm.role = ANY($2))
          ORDER BY u.email ASC;`,
         [today, REMINDER_ROLES, REMINDER_WEEKLY_DAY]

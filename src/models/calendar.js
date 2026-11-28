@@ -39,8 +39,7 @@ const findCalendarEntries = async (userId, from, to, weddingId = null) => {
          FROM decisions d JOIN mine m ON m.id = d.wedding_id
          WHERE d.status = 'open' AND d.due_date BETWEEN $2 AND $3
          UNION ALL
-         SELECT 'appointment', to_char(a.starts_on, 'YYYY-MM-DD'),
-a.title, m.id, m.name, NULL, 4, to_char(a.starts_at, 'HH24:MI')
+         SELECT 'appointment', to_char(a.starts_on, 'YYYY-MM-DD'), a.title, m.id, m.name, NULL, 4, to_char(a.starts_at, 'HH24:MI')
          FROM appointments a JOIN mine m ON m.id = a.wedding_id
          WHERE a.starts_on BETWEEN $2 AND $3
          ORDER BY day, ord, time NULLS LAST, wedding_name, title;`,
