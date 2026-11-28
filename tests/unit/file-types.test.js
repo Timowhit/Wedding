@@ -2,6 +2,36 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { cleanFileName, contentDisposition, detectFileType } from '../../src/utils/file-types.js';
 
+/** A minimal zip (stored, empty entries) with these entry names, as Office files are. */
+const zipWith = (names) => {
+    const locals = [];
+    const centrals = [];
+    let offset = 0;
+    for (const name of names) {
+        const nameBytes = Buffer.from(name);
+        const local = Buffer.alloc(30);
+        local.writeUInt32LE(0x04034b50, 0);
+        local.writeUInt16LE(nameBytes.length, 26);
+        const central = Buffer.alloc(46);
+        central.writeUInt32LE(0x02014b50, 0);
+        central.writeUInt16LE(nameBytes.length, 28);
+        central.writeUInt32LE(offset, 42);
+        locals.push(local, nameBytes);
+        centrals.push(central, nameBytes);
+        offset += local.length + nameBytes.length;
+    }
+    const directory = Buffer.concat(centrals);
+    const end = Buffer.alloc(22);
+    end.writeUInt32LE(0x06054b50, 0);
+    end.writeUInt16LE(names.length, 8);
+    end.writeUInt16LE(names.length, 10);
+    end.writeUInt32LE(directory.length, 12);
+    end.writeUInt32LE(offset, 16);
+    return Buffer.concat([...locals, directory, end]);
+};
+const DOCX = ['[Content_Types].xml', '_rels/.rels', 'word/document.xml'];
+const XLSX = ['[Content_Types].xml', '_rels/.rels', 'xl/workbook.xml'];
+
 describe('file types', () => {
     it('recognises supported files by their first bytes, not their names', () => {
         assert.equal(detectFileType(Buffer.from('%PDF-1.7 ...'), 'x.txt').contentType, 'application/pdf');
@@ -11,10 +41,8 @@ describe('file types', () => {
             detectFileType(Buffer.from('RIFF\u0000\u0000\u0000\u0000WEBPVP8 '), 'a.webp').contentType,
             'image/webp'
         );
-        assert.match(
-            detectFileType(Buffer.from([0x50, 0x4b, 0x03, 0x04, 1]), 'Budget.XLSX').contentType,
-            /spreadsheetml/
-        );
+        assert.match(detectFileType(zipWith(XLSX), 'Budget.XLSX').contentType, /spreadsheetml/);
+        assert.match(detectFileType(zipWith(DOCX), 'Contract.docx').contentType, /wordprocessingml/);
         assert.equal(
             detectFileType(Buffer.from('Menu: fish or beef'), 'notes.txt').contentType,
             'text/plain; charset=utf-8'
@@ -32,6 +60,23 @@ describe('file types', () => {
         ]) {
             assert.equal(detectFileType(Buffer.from(bytes), name), null, name);
         }
+    });
+
+    it('checks what is inside Word and Excel files, not just that they are zips', () => {
+        assert.equal(detectFileType(zipWith(['notes.txt']), 'fake.docx'), null, 'any zip renamed');
+        assert.equal(detectFileType(zipWith(DOCX), 'Budget.xlsx'), null, 'a Word file named .xlsx');
+        assert.equal(detectFileType(zipWith(XLSX), 'Contract.docx'), null, 'an Excel file named .docx');
+        assert.equal(detectFileType(zipWith([...DOCX, 'word/vbaProject.bin']), 'm.docx'), null, 'macros');
+        assert.equal(detectFileType(Buffer.from([0x50, 0x4b, 0x03, 0x04, 1]), 'Budget.xlsx'), null, 'broken zip');
+        const truncated = zipWith(DOCX);
+        truncated.writeUInt32LE(0xffffff, truncated.length - 6); // directory offset past the end
+        assert.equal(detectFileType(truncated, 'x.docx'), null, 'bad directory');
+        // A comment after the end record may contain its signature; the real record is the one
+        // whose comment runs to the end of the file.
+        const commented = zipWith(DOCX);
+        const comment = Buffer.from(`PK\u0005\u0006${'x'.repeat(40)}`);
+        commented.writeUInt16LE(comment.length, commented.length - 2);
+        assert.match(detectFileType(Buffer.concat([commented, comment]), 'c.docx').contentType, /wordprocessingml/);
     });
 
     it('cleans names and encodes them for downloads', () => {

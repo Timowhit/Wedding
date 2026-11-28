@@ -78,6 +78,12 @@
                 </div>
                 <div class="form-actions"><button type="submit" class="btn btn-primary btn-small"><%= t('wrapup.saveRating') %></button></div>
             </form>
+            <% if (vendor.rating) { %>
+                <form method="post" action="/vendors/<%= vendor.id %>/rating/clear" class="inline-form" data-confirm="<%= t('wrapup.confirmClearRating', { name: vendor.name }) %>">
+                    <%- include('partials/csrf-field') %>
+                    <button type="submit" class="link-action link-action--danger"><%= t('wrapup.clearRating') %></button>
+                </form>
+            <% } %>
         <% } %>
     </section>
 <% } %>
@@ -90,9 +96,9 @@
             <%- include('partials/file-list', { files: vendorFiles }) %>
         <% } %>
         <% if (canEdit) { %>
-            <details class="disclosure">
+            <details class="disclosure" <%= uploadForm.errors.length > 0 ? 'open' : '' %>>
                 <summary><%= t('files.add') %></summary>
-                <%- include('partials/file-upload-form', { form: { values: { kind: 'contract', note: '', vendor_id: vendor.id }, errors: [] }, vendor, kinds: fileKinds, fileMaxMb, noteMax }) %>
+                <%- include('partials/file-upload-form', { form: uploadForm, vendor, kinds: fileKinds, fileMaxMb, noteMax }) %>
             </details>
         <% } %>
     </section>
