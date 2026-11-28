@@ -67,8 +67,9 @@ const processAddLink = async (req, res) => {
     try {
         track = await getTrackByLink(data.trackId);
     } catch (err) {
-        setFlash(req, 'error', serviceMessage(err));
-        return res.redirect('/music');
+        serviceMessage(err); // logs outages, rethrows anything that isn't a service error
+        const key = err.reason === 'not-found' ? 'music.linkMissing' : 'music.linkFailed';
+        return renderMusic(req, res, { status: 400, linkForm: { values, errors: [{ field: 'link', key }] } });
     }
     const added = await addTrack(req.wedding.id, { ...track, section: data.section.name });
     setFlash(req, added ? 'success' : 'info', added ? 'music.trackAdded' : 'music.trackDuplicate', {

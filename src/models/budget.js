@@ -180,7 +180,7 @@ const deleteBudgetCategory = async (id, weddingId) =>
 
 /**
  * Adds categories from a whole-wedding template (those the wedding lacks, up to the limit) and
- * sets their planned amounts.
+ * gives them the template's planned amounts where the wedding has none of its own.
  * @param {string} weddingId
  * @param {Array<{key: string|null, name: string|null, planned: number|null}>} categories - Already normalised.
  * @returns {Promise<void>}
@@ -191,11 +191,13 @@ const addCategoriesWithPlans = async (weddingId, categories) => {
         await client.query(`SELECT pg_advisory_xact_lock(hashtext('budget_categories:' || $1));`, [weddingId]);
         for (const { key, name, planned } of categories) {
             await insertCategory(client, weddingId, { builtinKey: key, name: key ? null : name, planned });
+            // Only where the wedding has no plan of its own yet: a template never overwrites one.
             if (planned !== null) {
                 await client.query(
-                    `UPDATE budget_categories SET planned = $3
-                     WHERE wedding_id = $1 AND LOWER(COALESCE(builtin_key, name)) = LOWER($2);`,
-                    [weddingId, key ?? name, planned]
+                    `UPDATE budget_categories SET planned = $4
+                     WHERE wedding_id = $1 AND planned IS NULL
+                       AND (builtin_key = $2 OR ($2::text IS NULL AND builtin_key IS NULL AND LOWER(name) = LOWER($3)));`,
+                    [weddingId, key, key ? null : name, planned]
                 );
             }
         }

@@ -77,7 +77,8 @@ const deleteSection = async (weddingId, section) => {
 const moveTrack = async (id, weddingId, direction) =>
     withTransaction(async (client) => {
         const track = await client.query(
-            `SELECT section FROM music_tracks WHERE id = $1 AND wedding_id = $2 FOR UPDATE;`,
+            // No row lock here: locking this row and then the section could deadlock with another move.
+            `SELECT section FROM music_tracks WHERE id = $1 AND wedding_id = $2;`,
             [id, weddingId]
         );
         if (track.rowCount === 0) return false;

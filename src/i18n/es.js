@@ -368,8 +368,11 @@ export default {
     'music.moveUpNamed': 'Subir {name}',
     'music.moveDownNamed': 'Bajar {name}',
     'music.playSection': 'Reproducir esta sección',
-    'music.previous': 'Canción anterior',
-    'music.next': 'Canción siguiente',
+    'music.playSectionNamed': 'Reproducir {section}',
+    'music.previousIn': 'Canción anterior en {section}',
+    'music.nextIn': 'Canción siguiente en {section}',
+    'music.linkMissing': 'Spotify no conoce esa canción. Revisa el enlace e inténtalo de nuevo.',
+    'music.linkFailed': 'Spotify no responde ahora mismo. Inténtalo de nuevo en un momento.',
     'music.nowPlaying': 'Sonando: {name} ({n} de {total})',
     'music.playerHint':
         'Cada sección suena en orden en el reproductor de Spotify, sin anuncios. Con Spotify Premium iniciado en este navegador oyes las canciones enteras; si no, avances de 30 segundos.',

@@ -1,6 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { TRIAL_IDLE_HOURS, TRIAL_TOUCH_MINUTES } from '../constants.js';
 import db, { withTransaction } from './db.js';
+
+// Trials deleted per clean-up, so a visitor starting a trial never waits on a large delete.
+const CLEANUP_BATCH = 100;
 import { createWedding } from './weddings.js';
 
 const PUBLIC_RETURNING = `id, email, display_name, avatar_url, language, created_at, account_type, founding_number,
@@ -68,14 +71,16 @@ const touchTrial = async (userId) => {
 };
 
 /**
- * Deletes trials left alone for TRIAL_IDLE_HOURS, and the weddings that only trials belonged to.
+ * Deletes up to CLEANUP_BATCH trials left alone for TRIAL_IDLE_HOURS, and the weddings that only
+ * trials belonged to.
  * @returns {Promise<number>} How many trials were deleted.
  */
 const deleteExpiredTrials = async () =>
     withTransaction(async (client) => {
         const expired = await client.query(
-            `SELECT id FROM users WHERE is_trial AND last_seen_at < NOW() - make_interval(hours => $1) FOR UPDATE SKIP LOCKED;`,
-            [TRIAL_IDLE_HOURS]
+            `SELECT id FROM users WHERE is_trial AND last_seen_at < NOW() - make_interval(hours => $1)
+             ORDER BY last_seen_at LIMIT $2 FOR UPDATE SKIP LOCKED;`,
+            [TRIAL_IDLE_HOURS, CLEANUP_BATCH]
         );
         const ids = expired.rows.map((row) => row.id);
         if (ids.length === 0) return 0;

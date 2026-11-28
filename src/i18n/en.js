@@ -369,8 +369,11 @@ export default {
     'music.moveUpNamed': 'Move {name} up',
     'music.moveDownNamed': 'Move {name} down',
     'music.playSection': 'Play this section',
-    'music.previous': 'Previous song',
-    'music.next': 'Next song',
+    'music.playSectionNamed': 'Play {section}',
+    'music.previousIn': 'Previous song in {section}',
+    'music.nextIn': 'Next song in {section}',
+    'music.linkMissing': 'Spotify doesn’t know that song. Check the link and try again.',
+    'music.linkFailed': 'Spotify isn’t answering right now. Try again in a moment.',
     'music.nowPlaying': 'Now playing: {name} ({n} of {total})',
     'music.playerHint':
         'Each section plays in order in Spotify’s player, without ads. Signed in to Spotify Premium in this browser, you hear whole songs; otherwise 30-second previews.',

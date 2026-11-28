@@ -70,7 +70,9 @@ const validateCustomValues = (body = {}, fields) => {
         }
         if (raw === '') continue;
         if (field.type === 'number') {
-            if (NUMBER.test(raw)) data[field.id] = Number(raw);
+            // A decimal comma (12,5) is how most of the app's languages write it.
+            const number = raw.replace(',', '.');
+            if (NUMBER.test(number)) data[field.id] = Number(number);
             else fail('fields.number');
         } else if (field.type === 'choice') {
             if (field.options.includes(raw)) data[field.id] = raw;

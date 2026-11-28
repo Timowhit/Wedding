@@ -1,5 +1,5 @@
 import { MAX_CUSTOM_FIELDS } from '../constants.js';
-import db from './db.js';
+import db, { withTransaction } from './db.js';
 
 // The table behind each entity: only these, never a name from a request.
 const ENTITY_TABLES = Object.freeze({ guest: 'guests', vendor: 'vendors', task: 'checklist_tasks' });
@@ -50,19 +50,20 @@ const addCustomField = async (weddingId, { entity, label, type, options }) => {
  * @param {string} weddingId
  * @returns {Promise<boolean>}
  */
-const deleteCustomField = async (id, weddingId) => {
-    const deleted = await db.query(`DELETE FROM custom_fields WHERE id = $1 AND wedding_id = $2 RETURNING entity;`, [
-        id,
-        weddingId
-    ]);
-    if (deleted.rowCount === 0) return false;
-    const table = ENTITY_TABLES[deleted.rows[0].entity];
-    await db.query(`UPDATE ${table} SET custom = custom - $2::text WHERE wedding_id = $1 AND custom ? $2::text;`, [
-        weddingId,
-        id
-    ]);
-    return true;
-};
+const deleteCustomField = async (id, weddingId) =>
+    withTransaction(async (client) => {
+        const deleted = await client.query(
+            `DELETE FROM custom_fields WHERE id = $1 AND wedding_id = $2 RETURNING entity;`,
+            [id, weddingId]
+        );
+        if (deleted.rowCount === 0) return false;
+        const table = ENTITY_TABLES[deleted.rows[0].entity];
+        await client.query(
+            `UPDATE ${table} SET custom = custom - $2::text WHERE wedding_id = $1 AND custom ? $2::text;`,
+            [weddingId, id]
+        );
+        return true;
+    });
 
 /**
  * Replaces a row's custom values.

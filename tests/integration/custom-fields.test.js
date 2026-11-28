@@ -123,6 +123,17 @@ describe('custom fields on guests, vendors and tasks', { skip: skipWithoutDb }, 
             [`cf_${crew}`]: '4'
         });
         assert.deepEqual((await q(`SELECT custom FROM vendors WHERE name = 'Bloom';`)).rows[0].custom, { [crew]: 4 });
+        await owner.post('/vendors', {
+            name: 'Petals',
+            category: 'Florist',
+            status: 'Researching',
+            [`cf_${crew}`]: '2,5'
+        });
+        assert.deepEqual(
+            (await q(`SELECT custom FROM vendors WHERE name = 'Petals';`)).rows[0].custom,
+            { [crew]: 2.5 },
+            'a decimal comma works, as in French, Spanish and Portuguese'
+        );
         await owner.get('/checklist');
         await owner.post('/checklist', {
             text: 'Book band',

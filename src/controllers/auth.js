@@ -144,9 +144,10 @@ const finishTrialSignup = async (req, res, signupAs, values, passwordHash) => {
         delete req.session.user;
         return renderRegister(req, res, 410, signupAs, values, [{ field: 'email', key: 'trial.expired' }]);
     }
-    await startUserSession(req, user);
+    // Back to the invite (or other page) that sent them to sign up, if any.
+    const next = await startUserSession(req, user);
     setFlash(req, 'success', 'trial.kept', { name: req.session.user.name });
-    res.redirect(signupAs === 'planner' ? '/planner' : '/');
+    res.redirect(next);
 };
 
 const processLogout = async (req, res) => {

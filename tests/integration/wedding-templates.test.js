@@ -117,4 +117,28 @@ describe('whole-wedding templates', { skip: skipWithoutDb }, () => {
         assert.equal((await pia.post('/templates/not-a-uuid/apply', {})).status, 404);
         assert.deepEqual(await setup(first), before);
     });
+
+    it('a template never overwrites a planned amount the wedding already has', async () => {
+        await pia.post('/weddings', { name: 'Third', wedding_date: '2028-01-01' });
+        const third = (await q(`SELECT id FROM weddings WHERE name = 'Third';`)).rows[0].id;
+        await pia.post('/wedding/switch', { wedding_id: third, return_to: '/budget' });
+        await pia.get('/budget');
+        await q(`UPDATE budget_categories SET planned = 12000 WHERE wedding_id = $1 AND builtin_key = 'Venue';`, [
+            third
+        ]);
+        await pia.post(`/templates/${await templateId('Garden wedding')}/apply`, {});
+        const venue = (
+            await q(
+                `SELECT planned::float AS p FROM budget_categories WHERE wedding_id = $1 AND builtin_key = 'Venue';`,
+                [third]
+            )
+        ).rows[0].p;
+        assert.equal(venue, 12000, 'the couple’s own figure stays');
+        const favours = (
+            await q(`SELECT planned::float AS p FROM budget_categories WHERE wedding_id = $1 AND name = 'Favours';`, [
+                third
+            ])
+        ).rows[0].p;
+        assert.equal(favours, 300, 'a new category gets the template’s plan');
+    });
 });

@@ -339,8 +339,11 @@ export default {
     'music.moveUpNamed': 'Subir {name}',
     'music.moveDownNamed': 'Descer {name}',
     'music.playSection': 'Tocar este momento',
-    'music.previous': 'Música anterior',
-    'music.next': 'Próxima música',
+    'music.playSectionNamed': 'Tocar {section}',
+    'music.previousIn': 'Música anterior em {section}',
+    'music.nextIn': 'Próxima música em {section}',
+    'music.linkMissing': 'O Spotify não conhece essa música. Confira o link e tente novamente.',
+    'music.linkFailed': 'O Spotify não está respondendo agora. Tente novamente em instantes.',
     'music.nowPlaying': 'Tocando: {name} ({n} de {total})',
     'music.playerHint':
         'Cada momento toca em ordem no player do Spotify, sem anúncios. Com o Spotify Premium conectado neste navegador, você ouve as músicas inteiras; caso contrário, prévias de 30 segundos.',

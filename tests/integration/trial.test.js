@@ -71,6 +71,11 @@ describe('playground: a private trial, kept on sign-up', { skip: skipWithoutDb }
             confirm_password: 'correct horse battery'
         });
         assert.equal(password.location, '/register');
+        assert.equal(
+            (await visitor.post('/settings/become-planner', {})).location,
+            '/register',
+            'no founding spots for trials'
+        );
         assert.match(textOf((await visitor.get('/register')).body), /Create your account to do that/);
         const invites = await q(`SELECT COUNT(*)::int AS n FROM wedding_invites;`);
         assert.equal(invites.rows[0].n, 0);

@@ -238,7 +238,7 @@ router.post('/invite/:token/decline', requireLogin, processDeclineInvite);
 
 /* Planner dashboard ---------------------------------------------------------------------------- */
 router.get('/planner', planner, showPlannerDashboard);
-router.post('/planner/weddings', planner, processNewClientWedding);
+router.post('/planner/weddings', planner, requireRealAccount, processNewClientWedding);
 router.post('/planner/weddings/:id/open', planner, processOpenWedding);
 
 /* Dashboard ----------------------------------------------------------------------------------- */
@@ -409,7 +409,7 @@ router.post('/settings/reminders', account, processReminders);
 router.get('/reminders/unsubscribe', showUnsubscribe);
 router.post('/reminders/unsubscribe', processUnsubscribe);
 router.post('/settings/business', account, processBusiness);
-router.post('/settings/become-planner', account, processBecomePlanner);
+router.post('/settings/become-planner', account, requireRealAccount, processBecomePlanner);
 router.post('/settings/password', account, requireRealAccount, passwordLimiter, processPassword);
 router.post('/settings/leave', member, processLeaveWedding);
 router.post('/settings/wedding', owner, processWeddingDetails);

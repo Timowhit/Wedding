@@ -94,11 +94,13 @@ describe('DJ page: songs from Spotify links, in order, played in the page', { sk
         const bad = await owner.post('/music/links', { link: 'https://evil.example/track/x', section: 'reception' });
         assert.equal(bad.status, 400);
         assert.match(bad.body, /aria-invalid="true"/);
-        await owner.post('/music/links', {
+        const unknown = await owner.post('/music/links', {
             link: `https://open.spotify.com/track/${'Z'.repeat(22)}`,
             section: 'reception'
         });
-        assert.match((await owner.get('/music')).body, /could not be found/);
+        assert.equal(unknown.status, 400, 'shown on the form, with the link kept');
+        assert.match(unknown.body, /Spotify doesn’t know that song/);
+        assert.match(unknown.body, /value="https:\/\/open\.spotify\.com\/track\/Z{22}"/);
         assert.equal((await owner.post('/music/links', { link: id(1), section: 'nope' })).status, 400);
     });
 

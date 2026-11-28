@@ -107,9 +107,9 @@
                 <div class="dj-player" data-dj-player data-tracks="<%= playlist.tracks.map((track) => track.track_id).join(',') %>"
                      data-now-template="<%= t('music.nowPlaying', { name: '{name}', n: '{n}', total: '{total}' }) %>" hidden>
                     <div class="dj-player__controls">
-                        <button type="button" class="btn btn-primary btn-small" data-dj-play><%= t('music.playSection') %></button>
-                        <button type="button" class="btn btn-ghost btn-small" data-dj-prev aria-label="<%= t('music.previous') %>">⏮</button>
-                        <button type="button" class="btn btn-ghost btn-small" data-dj-next aria-label="<%= t('music.next') %>">⏭</button>
+                        <button type="button" class="btn btn-primary btn-small" data-dj-play aria-label="<%= t('music.playSectionNamed', { section: t(`music.section.${playlist.slug}`) }) %>"><%= t('music.playSection') %></button>
+                        <button type="button" class="btn btn-ghost btn-small" data-dj-prev aria-label="<%= t('music.previousIn', { section: t(`music.section.${playlist.slug}`) }) %>">⏮</button>
+                        <button type="button" class="btn btn-ghost btn-small" data-dj-next aria-label="<%= t('music.nextIn', { section: t(`music.section.${playlist.slug}`) }) %>">⏭</button>
                     </div>
                     <p class="hint" data-dj-now aria-live="polite"></p>
                     <div class="dj-player__embed"><div data-dj-embed></div></div>
