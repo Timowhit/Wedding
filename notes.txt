@@ -37,15 +37,15 @@ Partly done
 - [x] Wedding-specific templates for timelines, task lists, budgets, and vendor coordination.
       Checklist and timeline templates, and whole-wedding templates with the budget plan and vendors. (PR #23)
 - [x] A dashboard showing each wedding's next deadlines, appointments, outstanding decisions, and budget status.
-      Appointments (/appointments: date, times, place, who is coming, notes) on the dashboard, calendar, search and reminder email. My defaults, as the question wasn't answered. (PR to come, branch appointments)
+      Appointments (/appointments: date, times, place, who is coming, notes) on the dashboard, calendar, search and reminder email. My defaults, as the question wasn't answered. (PR #24)
 - [x] Vendor contacts, availability, proposals, notes, and key documents together.
-      Contacts, notes, contract, files, ratings, and now availability on your date (free, holding it until a day, not free) and proposals (amount, valid until, a file, accepted or declined; never counted as money spent). Entered by whoever edits the wedding; my defaults. (branch appointments)
+      Contacts, notes, contract, files, ratings, and now availability on your date (free, holding it until a day, not free) and proposals (amount, valid until, a file, accepted or declined; never counted as money spent). Entered by whoever edits the wedding; my defaults. (PR #24)
 - [~] A shared client portal for couples to review plans, upload details, and approve decisions.
       Done: client role, decisions to approve, and file uploads (editors and clients).
 - [~] Role-based collaboration for planners, assistants, couples, and vendors.
       Done: owner, editor (assistant), client and viewer. Missing: a vendor role.
 - [x] Configurable reminders for meetings, deadlines, payments, and unanswered questions.
-      Email summary of payments, tasks, decisions and appointments. In Settings each person picks every morning or Monday mornings, 1 to 30 days ahead, and which kinds. My defaults, as the question wasn't answered. (branch appointments)
+      Email summary of payments, tasks, decisions and appointments. In Settings each person picks every morning or Monday mornings, 1 to 30 days ahead, and which kinds. My defaults, as the question wasn't answered. (PR #24)
 
 Small follow-ups (from the reviews of PRs #11 to #15)
 - [x] Planner dashboard date filters use APP_TIME_ZONE like the rest. (PR #20)
@@ -58,3 +58,17 @@ Small follow-ups (from the reviews of PRs #11 to #15)
 - [x] Library: names unique without regard to capitals; at most 30 questionnaires per wedding; a chosen answer can be cleared ("No answer"); a warning instead of overwriting when a partner saved answers meanwhile; long messages suggest Copy. (PR #20)
 
 Not started
+
+New ideas for you to review (mine, 2026-11-28; say which to build, change or drop)
+- [ ] Guest RSVP page: each guest (or household) gets a private link to answer yes/no, meal and needs themselves, instead of you typing replies in.
+- [ ] Guest import from a spreadsheet (CSV): paste or upload a list instead of adding guests one by one; duplicates are flagged.
+- [ ] Wedding website: a simple public page per wedding (date, place, schedule, travel and hotel notes, RSVP link), using the wedding's colours.
+- [ ] Gift and thank-you tracker: who gave what, and whether the thank-you card went out, with a count on the wrap-up card.
+- [ ] Hotel room blocks and travel: rooms held, booking deadline, which guests are staying where; deadlines go into reminders.
+- [ ] Vendor comparison view: proposals of the same category side by side (amount, valid until, availability), to pick one quickly.
+- [ ] Accepting a proposal can fill the vendor's contract total (with a confirm), so the budget picks it up without retyping.
+- [ ] Appointment invites: an .ics calendar file for each appointment, so it can be added to phone calendars.
+- [ ] Day-of checklist mode: a big-button, phone-first view of the event-day schedule that ticks items off as they happen, working offline.
+- [ ] Budget "what if": try a different guest count or category plan and see the total before saving.
+- [ ] Planner time tracking: hours per client wedding, for planners who bill by the hour.
+- [ ] Activity log per wedding: who changed what and when (useful once several people edit).
