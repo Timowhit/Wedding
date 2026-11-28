@@ -2,7 +2,7 @@ Wedding-planner UX and feature ideas
 Status checked against the code on 2026-11-27. [x] done, [~] partly done (what's missing is listed), [ ] not started.
 
 Next up
-- Building the rest of "Partly done" with my own defaults (the questions weren't answered): vendor availability and proposals, then a vendor role.
+- Building the rest of "Partly done" with my own defaults (the questions weren't answered): a vendor role is next.
 
 Done
 - [x] Navigation grouped into dropdowns (Planning, Money, Guests & venue, Event day, Planner), a styled wedding menu, the task badge just under the header, a −/+ pill on each question in the questionnaire builder (− removes it, + adds one under it), a header on one line on wide screens, and stylesheets that always match the page (fixes the badge looking different between pages). (PR #17, merged; pill and one-line header in PR #19)
