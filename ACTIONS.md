@@ -19,6 +19,7 @@ Without this nothing is sent, and nothing breaks.
 
 Cron Jobs are a paid Render instance type.
 
+<<<<<<< HEAD
 ## 2. Merge the three open pull requests, then update the Render database
 
 [Timowhit/Wedding#20](https://github.com/Timowhit/Wedding/pull/20) is merged. Merge these next, in this order, each once its checks have passed. If GitHub says one has a conflict after you merge the one before, tell me and I'll fix it.
@@ -56,3 +57,30 @@ Files are downloaded in a locked-down mode so nothing in them can run on the sit
 Uploaded files are stored in your Render database. Each wedding can use up to 250 MB, and each person can upload up to 1 GB in total. Render shows the database size on the database's page. If you get close to your plan's limit, tell me and I'll move files to cheaper storage.
 
 Playground trials are small and are deleted after a day without use, whenever someone starts a new trial. If you want them cleared even when nobody starts one, add a daily Render Cron Job running `npm run cleanup-trials` (optional).
+=======
+## 2. Keep an eye on file storage
+
+Uploaded files are stored in your Render database. Each wedding can use up to 250 MB, and each person can upload up to 1 GB in total. Render shows the database size on the database's page. If you get close to your plan's limit, tell me and I'll move files to cheaper storage.
+
+## 3. Merge the follow-ups, then update the Render database
+
+When [Timowhit/Wedding#20](https://github.com/Timowhit/Wedding/pull/20) passes its checks, merge it. Then, on your computer, in the project folder, with `.env` pointing at Render:
+
+```bash
+git checkout main
+```
+
+```bash
+git pull origin main
+```
+
+```bash
+npm run migrate
+```
+
+This adds migration `017`: it remembers which checklist milestones each wedding has celebrated, and makes message names unique without regard to capital letters. Then delete the `follow-ups` branch on GitHub.
+
+## 4. Check that PDFs open in your browsers
+
+Files are downloaded in a locked-down mode so nothing in them can run on the site. Open a PDF from **Event day → Files** in each browser you use (Chrome, Firefox, Safari, and on your phone). It should either show the PDF or download it. If one shows an empty or blocked page instead, tell me which browser.
+>>>>>>> origin/main
